@@ -26,7 +26,6 @@ proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
 pyo3 = { version = "0.28.2", optional = true, features = ["extension-module", "abi3-py38"] }
 quote = "1.0.45"
 rand = "0.10.0"
-regress = "0.11.0"
 rust_decimal = { version = "1.40" }
 serde = "1.0.228"
 strum = { version = "0.28.0", features = ["derive"] }

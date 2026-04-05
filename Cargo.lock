@@ -537,16 +537,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "regress"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07948de9abc2e83adbeb7543c061a5ddaf7d944afcafbdd6e6b39aeacd40504b"
-dependencies = [
- "hashbrown 0.16.1",
- "memchr",
-]
-
-[[package]]
 name = "rend"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -728,7 +718,6 @@ dependencies = [
  "pyo3",
  "quote",
  "rand 0.10.0",
- "regress 0.11.0",
  "rust_decimal",
  "serde",
  "strum",
@@ -919,7 +908,7 @@ dependencies = [
  "log",
  "proc-macro2",
  "quote",
- "regress 0.10.5",
+ "regress",
  "schemars",
  "semver",
  "serde",
