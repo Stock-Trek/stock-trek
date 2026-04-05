@@ -136,17 +136,15 @@ impl PyRollingWindow {
 }
 
 #[cfg(feature = "python")]
-impl From<&PyRollingWindow> for RollingWindow {
-    fn from(py: &PyRollingWindow) -> Self {
+impl From<PyRollingWindow> for RollingWindow {
+    fn from(py: PyRollingWindow) -> Self {
         py.inner
     }
 }
 
 #[cfg(feature = "python")]
-impl From<&RollingWindow> for PyRollingWindow {
-    fn from(inner: &RollingWindow) -> Self {
-        Self {
-            inner: inner.clone(),
-        }
+impl From<RollingWindow> for PyRollingWindow {
+    fn from(inner: RollingWindow) -> Self {
+        Self { inner: inner }
     }
 }

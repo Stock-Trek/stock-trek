@@ -1,25 +1,20 @@
 use crate::{
-    dto::raw_market_candle::RawMarketCandle, market_data::extract::dec_to_f64,
+    dto::raw_market_candle::RawMarketCandle,
+    market_data::{extract::dec_to_f64, market_candle::MarketCandle},
     rolling_window::RollingWindow,
 };
 use std::{collections::HashMap, sync::OnceLock};
 use strum::IntoEnumIterator;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MarketRollingWindow {
-    exact: HashMap<RollingWindow, RawMarketCandle>,
+    candles: HashMap<RollingWindow, MarketCandle>,
     ohlcv: OnceLock<HashMap<RollingWindow, OnceLock<Vec<f64>>>>,
 }
 
 impl MarketRollingWindow {
-    pub fn new(exact: HashMap<RollingWindow, RawMarketCandle>) -> Self {
-        Self {
-            exact,
-            ohlcv: OnceLock::new(),
-        }
-    }
-    pub fn exact(&self) -> &HashMap<RollingWindow, RawMarketCandle> {
-        &self.exact
+    pub fn candles(&self) -> &HashMap<RollingWindow, MarketCandle> {
+        &self.candles
     }
     pub fn ohlcv(&self, window: RollingWindow) -> &Vec<f64> {
         self.ohlcv
@@ -30,20 +25,33 @@ impl MarketRollingWindow {
     }
 
     fn ohlcv_values(&self, window: RollingWindow) -> Vec<f64> {
-        let ohlcv = self.exact.get(&window).unwrap().ohlcv();
+        let ohlcv = self.candles.get(&window).unwrap().ohlcv();
         vec![
-            dec_to_f64(ohlcv.open()),
-            dec_to_f64(ohlcv.high()),
-            dec_to_f64(ohlcv.low()),
-            dec_to_f64(ohlcv.close()),
-            dec_to_f64(ohlcv.volume()),
-            dec_to_f64(ohlcv.quote_volume()),
-            dec_to_f64(ohlcv.vwap()),
+            dec_to_f64(ohlcv.exact_open()),
+            dec_to_f64(ohlcv.exact_high()),
+            dec_to_f64(ohlcv.exact_low()),
+            dec_to_f64(ohlcv.exact_close()),
+            dec_to_f64(ohlcv.exact_volume()),
+            dec_to_f64(ohlcv.exact_quote_volume()),
+            dec_to_f64(ohlcv.exact_vwap()),
         ]
     }
     fn new_ohlcv_map(&self) -> HashMap<RollingWindow, OnceLock<Vec<f64>>> {
         RollingWindow::iter()
             .map(|window| (window, OnceLock::new()))
             .collect()
+    }
+}
+
+impl From<HashMap<RollingWindow, RawMarketCandle>> for MarketRollingWindow {
+    fn from(value: HashMap<RollingWindow, RawMarketCandle>) -> Self {
+        let candles = value
+            .into_iter()
+            .map(|(window, raw_candle)| (window, MarketCandle::from(raw_candle)))
+            .collect();
+        MarketRollingWindow {
+            candles,
+            ohlcv: OnceLock::new(),
+        }
     }
 }

@@ -5,8 +5,7 @@ use {
 };
 
 #[cfg(feature = "python")]
-#[pyclass(name = "StockTrekContext", from_py_object)]
-#[derive(Clone)]
+#[pyclass(name = "StockTrekContext")]
 pub struct PyStockTrekContext {
     inner: StockTrekContext,
 }
@@ -26,17 +25,8 @@ impl PyStockTrekContext {
 }
 
 #[cfg(feature = "python")]
-impl From<&StockTrekContext> for PyStockTrekContext {
-    fn from(exchange: &StockTrekContext) -> Self {
-        Self {
-            inner: exchange.to_owned(),
-        }
-    }
-}
-
-#[cfg(feature = "python")]
-impl PyStockTrekContext {
-    pub fn new_py(py: Python<'_>, context: &StockTrekContext) -> PyResult<Py<Self>> {
-        Py::new(py, PyStockTrekContext::from(context))
+impl From<StockTrekContext> for PyStockTrekContext {
+    fn from(exchange: StockTrekContext) -> Self {
+        Self { inner: exchange }
     }
 }

@@ -4,7 +4,6 @@ use {
         market_data::py_market_window::{PyAlignedWindow, PyRollingWindow},
         py_algorithm::PyStockTrekAlgorithm,
         py_context::PyStockTrekContext,
-        py_event::*,
         py_exchange::PyExchange,
         py_signal::*,
         py_trading_pair::PyTradingPair,
@@ -37,7 +36,6 @@ pub fn create_module_signal(py: Python) -> PyResult<Bound<PyModule>> {
     module.add_class::<PyProvenance>()?;
     module.add_class::<PyRegimePersistence>()?;
     module.add_class::<PyStockTrekSignal>()?;
-    module.add_class::<PyStockTrekEvent>()?;
     Ok(module)
 }
 
@@ -60,7 +58,6 @@ pub fn _stock_trek(py: Python<'_>, module: &Bound<'_, PyModule>) -> PyResult<()>
     module.add_class::<PyExchange>()?;
     module.add_class::<PyStockTrekAlgorithm>()?;
     module.add_class::<PyStockTrekContext>()?;
-    module.add_class::<PyStockTrekEvent>()?;
     module.add_class::<PyStockTrekSignal>()?;
     module.add_class::<PyTradingPair>()?;
     Ok(())

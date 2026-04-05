@@ -121,17 +121,15 @@ impl PyAlignedWindow {
 }
 
 #[cfg(feature = "python")]
-impl From<&PyAlignedWindow> for AlignedWindow {
-    fn from(py: &PyAlignedWindow) -> Self {
+impl From<PyAlignedWindow> for AlignedWindow {
+    fn from(py: PyAlignedWindow) -> Self {
         py.inner
     }
 }
 
 #[cfg(feature = "python")]
-impl From<&AlignedWindow> for PyAlignedWindow {
-    fn from(inner: &AlignedWindow) -> Self {
-        Self {
-            inner: inner.clone(),
-        }
+impl From<AlignedWindow> for PyAlignedWindow {
+    fn from(inner: AlignedWindow) -> Self {
+        Self { inner: inner }
     }
 }

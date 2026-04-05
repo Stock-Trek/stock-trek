@@ -1,16 +1,7 @@
 use crate::dto::raw_market_quote::RawMarketQuote;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct RawMarketOrderBook {
-    bids: Vec<RawMarketQuote>,
-    asks: Vec<RawMarketQuote>,
-}
-
-impl RawMarketOrderBook {
-    pub fn bids(&self) -> &Vec<RawMarketQuote> {
-        &self.bids
-    }
-    pub fn asks(&self) -> &Vec<RawMarketQuote> {
-        &self.asks
-    }
+    pub bids: Vec<RawMarketQuote>,
+    pub asks: Vec<RawMarketQuote>,
 }

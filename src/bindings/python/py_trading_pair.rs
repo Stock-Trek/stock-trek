@@ -60,15 +60,8 @@ impl PyTradingPair {
 }
 
 #[cfg(feature = "python")]
-impl From<&TradingPair> for PyTradingPair {
-    fn from(pair: &TradingPair) -> Self {
+impl From<TradingPair> for PyTradingPair {
+    fn from(pair: TradingPair) -> Self {
         Self::new(pair.base().to_owned(), pair.quote().to_owned())
-    }
-}
-
-#[cfg(feature = "python")]
-impl PyTradingPair {
-    pub fn new_py(py: Python<'_>, market_tick: &TradingPair) -> PyResult<Py<Self>> {
-        Py::new(py, PyTradingPair::from(market_tick))
     }
 }

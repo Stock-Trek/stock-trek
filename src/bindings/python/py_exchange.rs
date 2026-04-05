@@ -8,8 +8,7 @@ use {
 };
 
 #[cfg(feature = "python")]
-#[pyclass(name = "Exchange", from_py_object)]
-#[derive(Clone)]
+#[pyclass(name = "Exchange")]
 pub struct PyExchange {
     inner: Exchange,
 }
@@ -29,17 +28,8 @@ impl PyExchange {
 }
 
 #[cfg(feature = "python")]
-impl From<&Exchange> for PyExchange {
-    fn from(exchange: &Exchange) -> Self {
-        Self {
-            inner: exchange.to_owned(),
-        }
-    }
-}
-
-#[cfg(feature = "python")]
-impl PyExchange {
-    pub fn new_py(py: Python<'_>, exchange: &Exchange) -> PyResult<Py<Self>> {
-        Py::new(py, PyExchange::from(exchange))
+impl From<Exchange> for PyExchange {
+    fn from(exchange: Exchange) -> Self {
+        Self { inner: exchange }
     }
 }

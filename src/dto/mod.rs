@@ -1,5 +1,9 @@
+pub mod raw_context;
+pub mod raw_decimal;
+pub mod raw_exchange;
+pub mod raw_market;
 pub mod raw_market_candle;
-pub mod raw_market_dto;
+pub mod raw_market_candles;
 pub mod raw_market_ohlcv;
 pub mod raw_market_order_book;
 pub mod raw_market_quote;

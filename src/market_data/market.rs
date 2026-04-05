@@ -1,5 +1,5 @@
 use crate::{
-    dto::raw_market_dto::RawMarketDto,
+    dto::raw_market::RawMarket,
     market_data::{
         market_aligned_window::MarketAlignedWindow, market_order_book::MarketOrderBook,
         market_rolling_window::MarketRollingWindow, market_ticks::MarketTicks,
@@ -7,7 +7,7 @@ use crate::{
 };
 use rust_decimal::Decimal;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Market {
     base_increment: Decimal,
     quote_increment: Decimal,
@@ -19,26 +19,6 @@ pub struct Market {
 }
 
 impl Market {
-    pub fn new(raw_market: RawMarketDto) -> Self {
-        let RawMarketDto {
-            base_increment,
-            quote_increment,
-            minimum_notional,
-            ticks,
-            rolling,
-            aligned,
-            order_book,
-        } = raw_market;
-        Self {
-            base_increment,
-            quote_increment,
-            minimum_notional,
-            ticks: MarketTicks::new(ticks),
-            rolling: MarketRollingWindow::new(rolling),
-            aligned: MarketAlignedWindow::new(aligned),
-            order_book: MarketOrderBook::new(order_book),
-        }
-    }
     pub fn base_increment(&self) -> Decimal {
         self.base_increment
     }
@@ -59,5 +39,28 @@ impl Market {
     }
     pub fn order_book(&self) -> &MarketOrderBook {
         &self.order_book
+    }
+}
+
+impl From<RawMarket> for Market {
+    fn from(value: RawMarket) -> Self {
+        let RawMarket {
+            aligned,
+            base_increment,
+            minimum_notional,
+            order_book,
+            quote_increment,
+            rolling,
+            ticks,
+        } = value;
+        Market {
+            base_increment: Decimal::from(base_increment),
+            quote_increment: Decimal::from(quote_increment),
+            minimum_notional: Decimal::from(minimum_notional),
+            ticks: MarketTicks::from(ticks),
+            rolling: MarketRollingWindow::from(rolling),
+            aligned: MarketAlignedWindow::from(aligned),
+            order_book: MarketOrderBook::from(order_book),
+        }
     }
 }

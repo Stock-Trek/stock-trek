@@ -9,8 +9,6 @@ pub mod py_aligned_window;
 #[cfg(feature = "python")]
 pub mod py_context;
 #[cfg(feature = "python")]
-pub mod py_event;
-#[cfg(feature = "python")]
 pub mod py_exchange;
 #[cfg(feature = "python")]
 pub mod py_rolling_window;

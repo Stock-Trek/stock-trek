@@ -1,7 +1,8 @@
 pub mod algorithm;
 pub mod aligned_window;
-#[cfg(feature = "python")]
-pub mod bindings;
+// TODO finish python bindings
+// #[cfg(feature = "python")]
+// pub mod bindings;
 pub mod context;
 pub mod dto;
 pub mod errors;
