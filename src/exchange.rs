@@ -35,7 +35,8 @@ impl TryFrom<RawExchange> for Exchange {
             let base = currencies[0];
             let quote = currencies[1];
             let trading_pair = TradingPair::new(base, quote);
-            markets.insert(trading_pair, Market::from(raw_market));
+            let market = Market::try_from(raw_market)?;
+            markets.insert(trading_pair, market);
         }
         Ok(Exchange { markets })
     }

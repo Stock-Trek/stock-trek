@@ -93,20 +93,22 @@ fn windows_map() -> HashMap<AlignedWindow, OnceLock<Vec<f64>>> {
         .collect()
 }
 
-impl From<HashMap<AlignedWindow, RawMarketCandles>> for MarketAlignedWindow {
-    fn from(value: HashMap<AlignedWindow, RawMarketCandles>) -> Self {
-        let candles = value
-            .into_iter()
-            .map(|(window, raw_candles)| {
-                let candles = raw_candles
-                    .candles
-                    .into_iter()
-                    .map(MarketCandle::from)
-                    .collect();
-                (window, candles)
-            })
-            .collect();
-        MarketAlignedWindow {
+impl TryFrom<HashMap<u8, RawMarketCandles>> for MarketAlignedWindow {
+    type Error = String;
+
+    fn try_from(value: HashMap<u8, RawMarketCandles>) -> Result<Self, Self::Error> {
+        let mut candles = HashMap::new();
+        for (window_u8, raw_candles) in value {
+            let window =
+                AlignedWindow::from_repr(window_u8).ok_or("Invalid AlignedWindow value")?;
+            let window_candles = raw_candles
+                .candles
+                .into_iter()
+                .map(MarketCandle::from)
+                .collect();
+            candles.insert(window, window_candles);
+        }
+        Ok(MarketAlignedWindow {
             candles,
             opens: OnceLock::new(),
             highs: OnceLock::new(),
@@ -115,6 +117,6 @@ impl From<HashMap<AlignedWindow, RawMarketCandles>> for MarketAlignedWindow {
             volumes: OnceLock::new(),
             quote_volumes: OnceLock::new(),
             vwaps: OnceLock::new(),
-        }
+        })
     }
 }

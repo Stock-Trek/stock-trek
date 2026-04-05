@@ -43,15 +43,19 @@ impl MarketRollingWindow {
     }
 }
 
-impl From<HashMap<RollingWindow, RawMarketCandle>> for MarketRollingWindow {
-    fn from(value: HashMap<RollingWindow, RawMarketCandle>) -> Self {
-        let candles = value
-            .into_iter()
-            .map(|(window, raw_candle)| (window, MarketCandle::from(raw_candle)))
-            .collect();
-        MarketRollingWindow {
+impl TryFrom<HashMap<u8, RawMarketCandle>> for MarketRollingWindow {
+    type Error = String;
+
+    fn try_from(value: HashMap<u8, RawMarketCandle>) -> Result<Self, Self::Error> {
+        let mut candles = HashMap::new();
+        for (window_u8, raw_candle) in value {
+            let window =
+                RollingWindow::from_repr(window_u8).ok_or("Invalid RollingWindow value")?;
+            candles.insert(window, MarketCandle::from(raw_candle));
+        }
+        Ok(MarketRollingWindow {
             candles,
             ohlcv: OnceLock::new(),
-        }
+        })
     }
 }

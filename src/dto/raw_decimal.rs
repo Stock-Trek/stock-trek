@@ -5,8 +5,8 @@ pub struct RawDecimal {
     pub lo: u32,
     pub mid: u32,
     pub hi: u32,
-    pub negative: bool,
     pub scale: u32,
+    pub negative: bool,
 }
 
 impl From<RawDecimal> for Decimal {
@@ -15,8 +15,8 @@ impl From<RawDecimal> for Decimal {
             lo,
             mid,
             hi,
-            negative,
             scale,
+            negative,
         } = value;
         Decimal::from_parts(lo, mid, hi, negative, scale)
     }

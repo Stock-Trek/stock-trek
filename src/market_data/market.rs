@@ -42,25 +42,29 @@ impl Market {
     }
 }
 
-impl From<RawMarket> for Market {
-    fn from(value: RawMarket) -> Self {
+impl TryFrom<RawMarket> for Market {
+    type Error = String;
+
+    fn try_from(value: RawMarket) -> Result<Self, Self::Error> {
         let RawMarket {
-            aligned,
+            aligned: raw_aligned,
             base_increment,
             minimum_notional,
             order_book,
             quote_increment,
-            rolling,
+            rolling: raw_rolling,
             ticks,
         } = value;
-        Market {
+        let rolling = MarketRollingWindow::try_from(raw_rolling)?;
+        let aligned = MarketAlignedWindow::try_from(raw_aligned)?;
+        Ok(Market {
             base_increment: Decimal::from(base_increment),
             quote_increment: Decimal::from(quote_increment),
             minimum_notional: Decimal::from(minimum_notional),
             ticks: MarketTicks::from(ticks),
-            rolling: MarketRollingWindow::from(rolling),
-            aligned: MarketAlignedWindow::from(aligned),
+            rolling,
+            aligned,
             order_book: MarketOrderBook::from(order_book),
-        }
+        })
     }
 }

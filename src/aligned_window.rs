@@ -1,6 +1,6 @@
-use strum::EnumIter;
+use strum::{EnumIter, FromRepr};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter, FromRepr)]
 #[non_exhaustive]
 #[repr(u8)]
 pub enum AlignedWindow {
