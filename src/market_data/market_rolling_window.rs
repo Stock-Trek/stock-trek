@@ -1,5 +1,4 @@
 use crate::{
-    dto::raw_market_candle::RawMarketCandle,
     market_data::{extract::dec_to_f64, market_candle::MarketCandle},
     rolling_window::RollingWindow,
 };
@@ -13,6 +12,12 @@ pub struct MarketRollingWindow {
 }
 
 impl MarketRollingWindow {
+    pub fn new(candles: HashMap<RollingWindow, MarketCandle>) -> Self {
+        Self {
+            candles,
+            ohlcv: OnceLock::new(),
+        }
+    }
     pub fn candles(&self) -> &HashMap<RollingWindow, MarketCandle> {
         &self.candles
     }
@@ -40,22 +45,5 @@ impl MarketRollingWindow {
         RollingWindow::iter()
             .map(|window| (window, OnceLock::new()))
             .collect()
-    }
-}
-
-impl TryFrom<HashMap<u8, RawMarketCandle>> for MarketRollingWindow {
-    type Error = String;
-
-    fn try_from(value: HashMap<u8, RawMarketCandle>) -> Result<Self, Self::Error> {
-        let mut candles = HashMap::new();
-        for (window_u8, raw_candle) in value {
-            let window =
-                RollingWindow::from_repr(window_u8).ok_or("Invalid RollingWindow value")?;
-            candles.insert(window, MarketCandle::from(raw_candle));
-        }
-        Ok(MarketRollingWindow {
-            candles,
-            ohlcv: OnceLock::new(),
-        })
     }
 }

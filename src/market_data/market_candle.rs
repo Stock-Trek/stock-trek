@@ -1,7 +1,4 @@
-use crate::{
-    dto::raw_market_candle::RawMarketCandle, market_data::market_ohlcv::MarketOhlcv,
-    prelude::TimestampMillis,
-};
+use crate::{market_data::market_ohlcv::MarketOhlcv, prelude::TimestampMillis};
 
 #[derive(Debug)]
 pub struct MarketCandle {
@@ -14,6 +11,23 @@ pub struct MarketCandle {
 }
 
 impl MarketCandle {
+    pub fn new(
+        start_time_millis_inc: TimestampMillis,
+        end_time_millis_exc: TimestampMillis,
+        duration_millis: TimestampMillis,
+        is_candle_closed: bool,
+        ohlcv: MarketOhlcv,
+        trade_count: u64,
+    ) -> Self {
+        Self {
+            start_time_millis_inc,
+            end_time_millis_exc,
+            duration_millis,
+            is_candle_closed,
+            ohlcv,
+            trade_count,
+        }
+    }
     pub fn start_time_millis_inc(&self) -> TimestampMillis {
         self.start_time_millis_inc
     }
@@ -31,26 +45,5 @@ impl MarketCandle {
     }
     pub fn trade_count(&self) -> u64 {
         self.trade_count
-    }
-}
-
-impl From<RawMarketCandle> for MarketCandle {
-    fn from(value: RawMarketCandle) -> Self {
-        let RawMarketCandle {
-            start_time_millis_inc,
-            end_time_millis_exc,
-            duration_millis,
-            is_candle_closed,
-            ohlcv,
-            trade_count,
-        } = value;
-        MarketCandle {
-            start_time_millis_inc,
-            end_time_millis_exc,
-            duration_millis,
-            is_candle_closed,
-            ohlcv: MarketOhlcv::from(ohlcv),
-            trade_count,
-        }
     }
 }
