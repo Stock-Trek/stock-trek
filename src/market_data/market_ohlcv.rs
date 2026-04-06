@@ -1,7 +1,5 @@
 use rust_decimal::Decimal;
 
-use crate::dto::raw_market_ohlcv::RawMarketOhlcv;
-
 #[derive(Debug, Clone)]
 pub struct MarketOhlcv {
     exact_open: Decimal,
@@ -14,6 +12,25 @@ pub struct MarketOhlcv {
 }
 
 impl MarketOhlcv {
+    pub fn new(
+        exact_open: Decimal,
+        exact_high: Decimal,
+        exact_low: Decimal,
+        exact_close: Decimal,
+        exact_volume: Decimal,
+        exact_quote_volume: Decimal,
+        exact_vwap: Decimal,
+    ) -> Self {
+        Self {
+            exact_open,
+            exact_high,
+            exact_low,
+            exact_close,
+            exact_volume,
+            exact_quote_volume,
+            exact_vwap,
+        }
+    }
     pub fn exact_open(&self) -> Decimal {
         self.exact_open
     }
@@ -34,28 +51,5 @@ impl MarketOhlcv {
     }
     pub fn exact_vwap(&self) -> Decimal {
         self.exact_vwap
-    }
-}
-
-impl From<RawMarketOhlcv> for MarketOhlcv {
-    fn from(value: RawMarketOhlcv) -> Self {
-        let RawMarketOhlcv {
-            open,
-            high,
-            low,
-            close,
-            volume,
-            quote_volume,
-            vwap,
-        } = value;
-        MarketOhlcv {
-            exact_open: Decimal::from(open),
-            exact_high: Decimal::from(high),
-            exact_low: Decimal::from(low),
-            exact_close: Decimal::from(close),
-            exact_volume: Decimal::from(volume),
-            exact_quote_volume: Decimal::from(quote_volume),
-            exact_vwap: Decimal::from(vwap),
-        }
     }
 }

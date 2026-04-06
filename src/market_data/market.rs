@@ -1,9 +1,6 @@
-use crate::{
-    dto::raw_market::RawMarket,
-    market_data::{
-        market_aligned_window::MarketAlignedWindow, market_order_book::MarketOrderBook,
-        market_rolling_window::MarketRollingWindow, market_ticks::MarketTicks,
-    },
+use crate::market_data::{
+    market_aligned_window::MarketAlignedWindow, market_order_book::MarketOrderBook,
+    market_rolling_window::MarketRollingWindow, market_ticks::MarketTicks,
 };
 use rust_decimal::Decimal;
 
@@ -19,6 +16,25 @@ pub struct Market {
 }
 
 impl Market {
+    pub fn new(
+        base_increment: Decimal,
+        quote_increment: Decimal,
+        minimum_notional: Decimal,
+        ticks: MarketTicks,
+        rolling: MarketRollingWindow,
+        aligned: MarketAlignedWindow,
+        order_book: MarketOrderBook,
+    ) -> Self {
+        Self {
+            base_increment,
+            quote_increment,
+            minimum_notional,
+            ticks,
+            rolling,
+            aligned,
+            order_book,
+        }
+    }
     pub fn base_increment(&self) -> Decimal {
         self.base_increment
     }
@@ -39,32 +55,5 @@ impl Market {
     }
     pub fn order_book(&self) -> &MarketOrderBook {
         &self.order_book
-    }
-}
-
-impl TryFrom<RawMarket> for Market {
-    type Error = String;
-
-    fn try_from(value: RawMarket) -> Result<Self, Self::Error> {
-        let RawMarket {
-            aligned: raw_aligned,
-            base_increment,
-            minimum_notional,
-            order_book,
-            quote_increment,
-            rolling: raw_rolling,
-            ticks,
-        } = value;
-        let rolling = MarketRollingWindow::try_from(raw_rolling)?;
-        let aligned = MarketAlignedWindow::try_from(raw_aligned)?;
-        Ok(Market {
-            base_increment: Decimal::from(base_increment),
-            quote_increment: Decimal::from(quote_increment),
-            minimum_notional: Decimal::from(minimum_notional),
-            ticks: MarketTicks::from(ticks),
-            rolling,
-            aligned,
-            order_book: MarketOrderBook::from(order_book),
-        })
     }
 }

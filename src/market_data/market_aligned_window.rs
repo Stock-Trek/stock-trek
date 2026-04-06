@@ -1,6 +1,5 @@
 use crate::{
     aligned_window::AlignedWindow,
-    dto::raw_market_candles::RawMarketCandles,
     market_data::{extract::dec_to_f64, market_candle::MarketCandle, market_ohlcv::MarketOhlcv},
 };
 use rust_decimal::Decimal;
@@ -20,7 +19,19 @@ pub struct MarketAlignedWindow {
 }
 
 impl MarketAlignedWindow {
-    pub fn exact(&self) -> &HashMap<AlignedWindow, Vec<MarketCandle>> {
+    pub fn new(candles: HashMap<AlignedWindow, Vec<MarketCandle>>) -> Self {
+        Self {
+            candles,
+            opens: OnceLock::new(),
+            highs: OnceLock::new(),
+            lows: OnceLock::new(),
+            closes: OnceLock::new(),
+            volumes: OnceLock::new(),
+            quote_volumes: OnceLock::new(),
+            vwaps: OnceLock::new(),
+        }
+    }
+    pub fn candles(&self) -> &HashMap<AlignedWindow, Vec<MarketCandle>> {
         &self.candles
     }
     pub fn opens(&self, window: AlignedWindow) -> &Vec<f64> {
@@ -91,32 +102,4 @@ fn windows_map() -> HashMap<AlignedWindow, OnceLock<Vec<f64>>> {
     AlignedWindow::iter()
         .map(|window| (window, OnceLock::new()))
         .collect()
-}
-
-impl TryFrom<HashMap<u8, RawMarketCandles>> for MarketAlignedWindow {
-    type Error = String;
-
-    fn try_from(value: HashMap<u8, RawMarketCandles>) -> Result<Self, Self::Error> {
-        let mut candles = HashMap::new();
-        for (window_u8, raw_candles) in value {
-            let window =
-                AlignedWindow::from_repr(window_u8).ok_or("Invalid AlignedWindow value")?;
-            let window_candles = raw_candles
-                .candles
-                .into_iter()
-                .map(MarketCandle::from)
-                .collect();
-            candles.insert(window, window_candles);
-        }
-        Ok(MarketAlignedWindow {
-            candles,
-            opens: OnceLock::new(),
-            highs: OnceLock::new(),
-            lows: OnceLock::new(),
-            closes: OnceLock::new(),
-            volumes: OnceLock::new(),
-            quote_volumes: OnceLock::new(),
-            vwaps: OnceLock::new(),
-        })
-    }
 }

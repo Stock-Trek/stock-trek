@@ -1,5 +1,4 @@
 use crate::{
-    dto::raw_market_tick::RawMarketTick,
     market_data::{extract::dec_to_f64, market_quote::MarketQuote, market_tick::MarketTick},
     prelude::TimestampMillis,
 };
@@ -14,6 +13,14 @@ pub struct MarketTicks {
 }
 
 impl MarketTicks {
+    pub fn new(ticks: Vec<MarketTick>) -> Self {
+        Self {
+            ticks,
+            bids: OnceLock::new(),
+            asks: OnceLock::new(),
+            lasts: OnceLock::new(),
+        }
+    }
     pub fn ticks(&self) -> &Vec<MarketTick> {
         &self.ticks
     }
@@ -46,17 +53,5 @@ impl MarketTicks {
         let price = dec_to_f64(quote.price());
         let quantity = dec_to_f64(quote.quantity());
         (timestamp, price, quantity)
-    }
-}
-
-impl From<Vec<RawMarketTick>> for MarketTicks {
-    fn from(value: Vec<RawMarketTick>) -> Self {
-        let ticks = value.into_iter().map(MarketTick::from).collect();
-        MarketTicks {
-            ticks,
-            bids: OnceLock::new(),
-            asks: OnceLock::new(),
-            lasts: OnceLock::new(),
-        }
     }
 }

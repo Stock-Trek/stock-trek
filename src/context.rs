@@ -1,5 +1,4 @@
 use crate::{
-    dto::raw_context::RawContext,
     exchange::Exchange,
     statistics::{
         advanced::Advanced, decompose::Decompose, evaluation::Evaluation,
@@ -16,28 +15,8 @@ pub struct StockTrekContext {
 }
 
 impl StockTrekContext {
-    pub fn exchanges(&self) -> &HashMap<String, Exchange> {
-        &self.exchanges
-    }
-}
-
-impl TryFrom<RawContext> for StockTrekContext {
-    type Error = String;
-
-    fn try_from(value: RawContext) -> Result<Self, Self::Error> {
-        let RawContext {
-            exchanges: raw_exchanges,
-        } = value;
-        let mut exchanges = HashMap::new();
-        for (name, raw_exchange) in raw_exchanges {
-            match Exchange::try_from(raw_exchange) {
-                Ok(exchange) => {
-                    exchanges.insert(name, exchange);
-                }
-                Err(error) => return Err(error),
-            }
-        }
-        Ok(StockTrekContext {
+    pub fn new(exchanges: HashMap<String, Exchange>) -> Self {
+        Self {
             exchanges,
             stats: Stats {
                 advanced: Advanced,
@@ -52,6 +31,9 @@ impl TryFrom<RawContext> for StockTrekContext {
                 transformation: Transformation,
                 wavelet: Wavelet,
             },
-        })
+        }
+    }
+    pub fn exchanges(&self) -> &HashMap<String, Exchange> {
+        &self.exchanges
     }
 }
