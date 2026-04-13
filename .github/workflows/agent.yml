@@ -317,6 +317,13 @@ jobs:
           echo "summary<<EOF" >> $GITHUB_OUTPUT
           echo "${SUMMARY}" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+      - name: Commit code changes
+        if: (steps.save-response-type.outputs.response-type == 'CAN_ADDRESS_FULLY') && (steps.save-are-code-changes-required.outputs.are-code-changes-required == 'true')
+        run: |
+          git config --global user.email "agent@stock-trek.com"
+          git config --global user.name "Stock-Trek Agent"
+          git add .
+          git commit -m "Commit changes made by pi"
       - name: Reply if no code changes required
         if: (steps.save-response-type.outputs.response-type == 'CAN_ADDRESS_FULLY') && (steps.save-are-code-changes-required.outputs.are-code-changes-required == 'false')
         uses: actions/github-script@v7
