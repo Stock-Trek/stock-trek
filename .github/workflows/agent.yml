@@ -339,7 +339,6 @@ jobs:
           body: "${{ steps.save-address-issue-summary.outputs.summary }}"
           branch: ${{ needs.triage.outputs.issue-branch }}
           base: ${{ needs.triage.outputs.issue-branch-base }}
-          delete-branch: true
           draft: false
       - name: Reply with diff and PR link
         if: (steps.save-response-type.outputs.response-type == 'CAN_ADDRESS_FULLY') && (steps.save-are-code-changes-required.outputs.are-code-changes-required == 'true')
