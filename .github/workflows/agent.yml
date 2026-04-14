@@ -26,8 +26,6 @@ jobs:
       extra-information-required-base64: ${{ steps.prompts.outputs.extra-information-required-base64 }}
       issue-context-base64: ${{ steps.gather-context.outputs.context-base64 }}
       request-type: ${{ steps.save-request-type.outputs.request-type }}
-    env:
-      GITHUB_TOKEN: ${{ secrets.RAISE_PR_PAT }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -56,7 +54,7 @@ jobs:
           echo "classify-response-base64=$(cat .github/prompts/classify-response.txt | base64 -w 0)" >> $GITHUB_OUTPUT
           echo "extra-information-required-base64=$(cat .github/prompts/extra-information-required.txt | base64 -w 0)" >> $GITHUB_OUTPUT
 
-      - name: Get last 20 comments
+      - name: Get last 50 comments
         id: gather-context
         uses: actions/github-script@v7
         with:
@@ -70,10 +68,10 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              per_page: 20
+              per_page: 50
             });
-            const last20Comments = comments.slice(-20);
-            const history = last20Comments.map(comment => ({
+            const lastComments = comments.slice(-50);
+            const history = lastComments.map(comment => ({
               author: comment.user.login,
               date: comment.created_at,
               body: comment.body,
@@ -147,11 +145,12 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const body = "I'm sorry I wasn't able to understand the issue type. If it's either a question or code change please mention it specifically.";
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `I'm sorry I wasn't able to understand the issue type. If it's either a question or code change please mention it specifically.`
+              body
             });
 
   respond:
@@ -232,9 +231,9 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            let body = `I think this has already been addressed.\nIf it hasn't please add another comment.`;
+            let body = "I think this has already been addressed.\nIf it hasn't please add another comment.";
             if (${{ steps.checkout-issue-branch.outputs.issue-branch-exists }} == true) {
-              body += `\n[The changes I have made can be found here.](https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${{ needs.triage.outputs.issue-branch-base }}...${{ needs.triage.outputs.issue-branch }})`;
+              body += "\n[The changes I have made can be found here.](https://github.com/" + `${context.repo.owner}/${context.repo.repo}` + "/compare/${{ needs.triage.outputs.issue-branch-base }}...${{ needs.triage.outputs.issue-branch }})";
             }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -249,11 +248,12 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const body = "I'm sorry I cannot address this issue as it requires a human.";
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'I'm sorry I cannot address this issue as it requires a human.'
+              body
             });
 
 # Ask for more information
@@ -271,7 +271,7 @@ jobs:
         with:
           script: |
             const extraInfo = ${{ steps.save-extra-information-required.outputs.extra-information-required }};
-            let body = 'The following additional information is required:\n';
+            let body = "The following additional information is required:\n";
             if (Array.isArray(extraInfo)) {
               extraInfo.forEach(item => {
                 body += `- ${item}\n`;
@@ -283,7 +283,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: body
+              body
             });
 
 # Respond
@@ -317,45 +317,48 @@ jobs:
           echo "summary<<EOF" >> $GITHUB_OUTPUT
           echo "${SUMMARY}" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      - name: Commit code changes
+      - name: Commit and push code changes
         if: (steps.save-response-type.outputs.response-type == 'CAN_ADDRESS_FULLY') && (steps.save-are-code-changes-required.outputs.are-code-changes-required == 'true')
         run: |
           git config --global user.email "agent@stock-trek.com"
           git config --global user.name "Stock-Trek Agent"
           git add .
-          git commit -m "Commit changes made by pi"
+          git commit --allow-empty -m "Commit changes made by pi"
+          git push
       - name: Reply if no code changes required
         if: (steps.save-response-type.outputs.response-type == 'CAN_ADDRESS_FULLY') && (steps.save-are-code-changes-required.outputs.are-code-changes-required == 'false')
         uses: actions/github-script@v7
         with:
           script: |
+            const body = ${{ toJson(steps.save-address-issue-summary.outputs.summary) }};
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `${{ steps.save-address-issue-summary.outputs.summary }}`
+              body
             });
       - name: Raise PR if code changes required
         id: raise-pr
         if: (steps.save-response-type.outputs.response-type == 'CAN_ADDRESS_FULLY') && (steps.save-are-code-changes-required.outputs.are-code-changes-required == 'true')
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.RAISE_PR_PAT }}
-          commit-message: "Feature branch for ${{ github.event.issue.number }} ${{ github.event.issue.title }}"
-          title: "Closes #${{ github.event.issue.number }} ${{ github.event.issue.title }}"
-          body: "${{ steps.save-address-issue-summary.outputs.summary }}"
-          branch: ${{ needs.triage.outputs.issue-branch }}
-          base: ${{ needs.triage.outputs.issue-branch-base }}
-          branch-suffix: timestamp
-          draft: false
+        run: |
+          # Write body to a temporary file
+          cat > /tmp/pr_body.txt << 'EOF'
+          ${{ steps.save-address-issue-summary.outputs.summary }}
+          EOF
+          PR_URL=$(gh pr create \
+            --base "${{ needs.triage.outputs.issue-branch-base }}" \
+            --head "${{ needs.triage.outputs.issue-branch }}" \
+            --title "Closes #${{ github.event.issue.number }} ${{ github.event.issue.title }}" \
+            --body-file /tmp/pr_body.txt) || true
+          echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
       - name: Reply with diff and PR link
         if: (steps.save-response-type.outputs.response-type == 'CAN_ADDRESS_FULLY') && (steps.save-are-code-changes-required.outputs.are-code-changes-required == 'true')
         uses: actions/github-script@v7
         with:
           script: |
-            const body = 'I have now addressed this.' + '\n' +
-                          `[The changes I have made can be found here.](https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${{ needs.triage.outputs.issue-branch-base }}...${{ needs.triage.outputs.issue-branch }})` + '\n' +
-                          '[The PR is available here.](${{ steps.raise-pr.outputs.pull-request-url }})';
+            const body = "I have now addressed this.\n" +
+                          "[The changes I have made can be found here.](https://github.com/" + `${context.repo.owner}/${context.repo.repo}` + "/compare/${{ needs.triage.outputs.issue-branch-base }}...${{ needs.triage.outputs.issue-branch }})\n" +
+                          "[The PR is available here.](${{ steps.raise-pr.outputs.pull-request-url }})";
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
