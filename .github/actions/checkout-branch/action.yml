@@ -23,7 +23,7 @@ runs:
         BRANCH_EXISTS=
         if ! git branch -r | grep -q "origin/${{ inputs.branch }}"; then
           git checkout ${{ inputs.base }}
-          if [ "${{ inputs.create }}" == true ]; then
+          if [ "${{ inputs.create }}" == "true" ]; then
             git checkout -b ${{ inputs.branch }}
             git push -u origin HEAD
             BRANCH_EXISTS=true
@@ -32,6 +32,6 @@ runs:
           fi
         else
           git checkout ${{ inputs.branch }}
-            BRANCH_EXISTS=true
+          BRANCH_EXISTS=true
         fi
         echo "BRANCH_EXISTS=${BRANCH_EXISTS}" >> $GITHUB_OUTPUT
