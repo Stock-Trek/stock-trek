@@ -341,7 +341,7 @@ jobs:
         id: raise-pr
         if: (steps.save-response-type.outputs.response-type == 'CAN_ADDRESS_FULLY') && (steps.save-are-code-changes-required.outputs.are-code-changes-required == 'true')
         run: |
-          # Write body to a temporary file
+          # Write title and body to temporary files to handle quotes and backticks
           echo "Closes #${{ github.event.issue.number }} ${{ github.event.issue.title }}" > /tmp/pr_title.txt
           cat > /tmp/pr_body.txt << 'EOF'
           ${{ steps.save-address-issue-summary.outputs.summary }}
@@ -349,7 +349,7 @@ jobs:
           PR_URL=$(gh pr create \
             --base "${{ needs.triage.outputs.issue-branch-base }}" \
             --head "${{ needs.triage.outputs.issue-branch }}" \
-            --title-file /tmp/pr_title.txt \
+            --title "$(cat /tmp/pr_title.txt)" \
             --body-file /tmp/pr_body.txt) || true
           echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
       - name: Reply with diff and PR link
