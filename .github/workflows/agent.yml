@@ -155,7 +155,7 @@ jobs:
 
   respond:
     needs: [triage]
-    if: (needs.triage.outputs.request-type == 'CODE_CHANGE') || (needs.triage.outputs.request-type == 'QUESTION')
+    if: (needs.triage.outputs.request-type == 'BUG_FIX') || (needs.triage.outputs.request-type == 'FEATURE_REQUEST') || (needs.triage.outputs.request-type == 'INVESTIGATION') || (needs.triage.outputs.request-type == 'QUESTION')
     runs-on: ubuntu-latest
     permissions:
       contents: write
