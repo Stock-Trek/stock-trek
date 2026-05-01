@@ -19,6 +19,6 @@ impl ScratchPadPredicate {
 #[typetag::serde]
 impl PredicateTrait for ScratchPadPredicate {
     fn test(&self, context: &ResolvedContext) -> Result<bool> {
-        context.scratch_pad.read_required::<bool>(&self.key)
+        context.scratch_pad.read_flag_required(&self.key)
     }
 }

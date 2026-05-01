@@ -1,8 +1,4 @@
-use crate::{prelude::*, resolver_context::ResolverContext};
-use digdigdig3::{
-    core::{OrderRequest, TimeInForce},
-    AccountType, ExchangeId, OrderSide, OrderType, Symbol,
-};
+use crate::prelude::*;
 use std::cmp::Ordering;
 use strum::{Display, EnumString};
 
@@ -14,28 +10,26 @@ pub enum ScratchPadKey {
     SatoshiPrice,
 }
 
-pub struct Dca {}
+pub struct CostAveraging {}
 
-impl Default for Dca {
+impl Default for CostAveraging {
     fn default() -> Self {
         Self {}
     }
 }
 
 #[register_strategy(default)]
-impl Strategy for Dca {
+impl Strategy for CostAveraging {
     fn market_calculations(&self, context: StrategyContext) -> anyhow::Result<ScratchPad> {
         let mut scratch_pad = ScratchPad::new();
         if let Some(binance) = context.exchanges.get(&ExchangeId::Binance) {
-            let btc_usdt = Symbol::new(BTC, USDT);
+            let btc_usdt = context.symbol(BTC, USDT);
             let market_opt = binance.market_for(&btc_usdt)?;
             match market_opt {
                 Some(market) => {
+                    let key = ScratchPadKey::SatoshiPrice.to_string();
                     let satoshi_price = market.ticks.ticks[0].last.price / 1_000_000.0;
-                    scratch_pad.write(
-                        ScratchPadKey::SatoshiPrice.to_string(),
-                        ScratchValue::Number(satoshi_price),
-                    );
+                    scratch_pad.write_number(key, satoshi_price);
                 }
                 None => {}
             }

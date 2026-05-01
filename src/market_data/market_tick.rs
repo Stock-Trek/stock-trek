@@ -1,5 +1,4 @@
-use crate::market_data::market_quote::MarketQuote;
-use crate::prelude::TimestampMillis;
+use crate::market_data::{market_quote::MarketQuote, timestamp::TimestampMillis};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -1,4 +1,4 @@
-use crate::{market_data::market_ohlcv::MarketOhlcv, prelude::TimestampMillis};
+use crate::market_data::{market_ohlcv::MarketOhlcv, timestamp::TimestampMillis};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]

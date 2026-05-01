@@ -28,120 +28,75 @@ stock-trek also provides Python bindings which can be installed via
 
 ## Usage
 
-Implement the `StockTrekAlgorithm` and `Default` traits for your algorithm and register it with the annotation `#[register_algorithm(default)]`:
+Implement the `Strategy` and `Default` traits for your algorithm and register it with the annotation `#[register_strategy(default)]`.
+An example implementing a cost averaging strategy follows:
 
 ```rs
-use stock_trek::prelude::*;
-use stock_trek::signal::*;
+use crate::prelude::*;
+use std::cmp::Ordering;
+use strum::{Display, EnumString};
 
-pub struct MyAlgo;
+const BTC: &str = "BTC";
+const USDT: &str = "USDT";
 
-impl Default for MyAlgo {
+#[derive(Display, EnumString)]
+pub enum ScratchPadKey {
+    SatoshiPrice,
+}
+
+pub struct CostAveraging {}
+
+impl Default for CostAveraging {
     fn default() -> Self {
-        Self
+        Self {}
     }
 }
 
-#[register_algorithm(default)]
-impl StockTrekAlgorithm for MyAlgo {
-    fn create_signal(&self, context: StockTrekContext) -> StockTrekSignal {
-        StockTrekSignal::builder()
-            .instrument(
-                Instrument::builder()
-                    .product(stock_trek::signal::InstrumentProduct::Spot)
-                    .base("BTC")
-                    .quote("USDT"),
-            )
-            .market_context(
-                MarketContext::builder()
-                    .market_regime(
-                        MarketRegime::builder()
-                            .classifications(
-                                MarketRegimeClassifications::builder()
-                                    .confidence(0.5)
-                                    .dominant("")
-                                    .top_alternatives(std::collections::HashMap::from([
-                                        ("dskfsd".into(), 0.21),
-                                        ("irewtnvc".into(), 0.17),
-                                        ("cfhwrehk".into(), 0.15),
-                                    ]))
-                                    .unclassified(0.2),
-                            )
-                            .cycle(
-                                MarketRegimeCycle::builder()
-                                    .accumulation(0.3)
-                                    .distribution(0.5)
-                                    .markdown(0.1)
-                                    .markup(0.2)
-                                    .neutral(0.8),
-                            )
-                            .trend(
-                                MarketRegimeTrend::builder()
-                                    .bearish(0.6)
-                                    .bullish(0.2)
-                                    .sideways(0.2),
-                            )
-                            .volatility(
-                                MarketRegimeVolatility::builder()
-                                    .snapshot(
-                                        MarketRegimeVolatilitySnapshot::builder()
-                                            .high(0.1)
-                                            .low(0.9),
-                                    )
-                                    .trend(
-                                        MarketRegimeVolatilityTrend::builder()
-                                            .compression(0.5)
-                                            .expansion(0.5),
-                                    ),
-                            ),
-                    )
-                    .regime_persistence(
-                        RegimePersistence::builder()
-                            .regime_persistence_confidence(0.7)
-                            .remaining_durations_millis(483648732),
-                    ),
-            )
-            .prediction(
-                Prediction::builder()
-                    .horizon_confidences_by_millis(HorizonConfidencesByMillis(
-                        std::collections::HashMap::from([
-                            ("vgfhgkfd".into(), 549357438),
-                            ("cdiotkjr".into(), 549357438),
-                        ]),
-                    ))
-                    .optimal_horizon_millis(1000)
-                    .percentage_changes(
-                        ConfidencePercentageChanges::builder()
-                            .p01(-10.2)
-                            .p05(-5.1)
-                            .p10(-0.4)
-                            .p25(3.9)
-                            .p50(10.2)
-                            .p75(16.5)
-                            .p90(19.4)
-                            .p95(20.4)
-                            .p99(20.8),
-                    )
-                    .risk(
-                        PredictionRisk::builder()
-                            .percentage_risks(
-                                PredictionRiskPercentageRisks::builder()
-                                    .cvar_95(-6.8)
-                                    .cvar_99(-7.2)
-                                    .max_drawdown_95(25.3)
-                                    .max_drawdown_99(31.8)
-                                    .var_95(-3.7)
-                                    .var_99(-4.5),
-                            )
-                            .risk_factors(std::collections::HashMap::from([
-                                ("dvxvxvvodsgrg".into(), 0.63),
-                                ("cnnfgvcxojtnn".into(), 0.41),
-                            ])),
-                    )
-                    .validity_duration_millis(1_000_000),
-            )
-            .try_into()
-            .expect("Expected StockTrekSignal")
+#[register_strategy(default)]
+impl Strategy for CostAveraging {
+    fn market_calculations(&self, context: StrategyContext) -> anyhow::Result<ScratchPad> {
+        let mut scratch_pad = ScratchPad::new();
+        if let Some(binance) = context.exchanges.get(&ExchangeId::Binance) {
+            let btc_usdt = context.symbol(BTC, USDT);
+            let market_opt = binance.market_for(&btc_usdt)?;
+            match market_opt {
+                Some(market) => {
+                    let key = ScratchPadKey::SatoshiPrice.to_string();
+                    let satoshi_price = market.ticks.ticks[0].last.price / 1_000_000.0;
+                    scratch_pad.write_number(key, satoshi_price);
+                }
+                None => {}
+            }
+        }
+        Ok(scratch_pad)
+    }
+    fn action_resolver(&self, context: ResolverContext) -> anyhow::Result<Resolver> {
+        let exchange = ExchangeId::Binance;
+        let satoshi_price = context
+            .scratch_pad
+            .number(ScratchPadKey::SatoshiPrice.to_string());
+        let usdt = context.portfolio.asset_in_exchange(
+            context.literals.exchange(exchange),
+            context.literals.asset(USDT),
+        );
+        let can_buy = context
+            .predicates
+            .compare(usdt, Ordering::Greater, satoshi_price);
+        let order_request = OrderRequest {
+            account_type: AccountType::Spot,
+            client_order_id: None,
+            order_type: OrderType::Market,
+            quantity: 1.0 / 1_000_000.0,
+            reduce_only: false,
+            side: OrderSide::Buy,
+            symbol: Symbol::new(BTC, USDT),
+            time_in_force: TimeInForce::Fok,
+        };
+        let buy_one_satoshi_action = context.actions.order_request(exchange, order_request);
+        let buy_one_satoshi = context.resolvers.action(buy_one_satoshi_action);
+        let no_op = context.resolvers.no_op();
+        let resolver = context.resolvers.if_else(can_buy, buy_one_satoshi, no_op);
+        Ok(resolver)
     }
 }
 ```
@@ -155,7 +110,7 @@ cargo install stock-trek
 then run the verify command with
 
 ```sh
-stock-trek verify --file ./path/to/my/code/file.rs
+stock-trek verify --file ./path/strategy.rs
 ```
 
 ## Roadmap

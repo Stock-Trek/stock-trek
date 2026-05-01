@@ -1,6 +1,5 @@
+use crate::market_data::timestamp::TimestampMillis;
 use serde::{Deserialize, Serialize};
-
-use crate::prelude::TimestampMillis;
 
 pub type PriceQuantity = (f64, f64);
 pub type TimedPriceQuantity = (TimestampMillis, f64, f64);

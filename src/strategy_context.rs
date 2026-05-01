@@ -7,7 +7,7 @@ use crate::{
         time_series::TimeSeries, transformation::Transformation, wavelet::Wavelet,
     },
 };
-use digdigdig3::ExchangeId;
+use digdigdig3::{ExchangeId, Symbol};
 use std::collections::HashMap;
 
 pub struct StrategyContext {
@@ -33,5 +33,8 @@ impl StrategyContext {
                 wavelet: Wavelet,
             },
         }
+    }
+    pub fn symbol(&self, base: impl AsRef<str>, quote: impl AsRef<str>) -> Symbol {
+        Symbol::new(base.as_ref(), quote.as_ref())
     }
 }
