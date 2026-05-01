@@ -25,7 +25,7 @@ jobs:
 
       - name: Get version, check if tag exists, create if not
         run: |
-          VERSION=$(cargo pkgid | sed 's|.*#||; s|.*:||; s|^v||')
+          VERSION=$(cargo pkgid | cut -d @ -f 2)
           TAG="v${VERSION}"
           if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "refs/tags/${TAG}"; then
             echo "Tag ${TAG} already exists"
