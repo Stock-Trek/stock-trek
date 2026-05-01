@@ -1,9 +1,8 @@
-use std::cmp::Ordering;
-
 use serde::{
-    Deserialize, Deserializer, Serialize, Serializer,
     de::{Error, Unexpected},
+    Deserialize, Deserializer, Serialize, Serializer,
 };
+use std::cmp::Ordering;
 
 pub fn serialize<S: Serializer>(ordering: &Ordering, serializer: S) -> Result<S::Ok, S::Error> {
     (*ordering as i8).serialize(serializer)
