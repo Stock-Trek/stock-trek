@@ -1,49 +1,12 @@
 use crate::{market_data::market_ohlcv::MarketOhlcv, prelude::TimestampMillis};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MarketCandle {
-    start_time_millis_inc: TimestampMillis,
-    end_time_millis_exc: TimestampMillis,
-    duration_millis: TimestampMillis,
-    is_candle_closed: bool,
-    ohlcv: MarketOhlcv,
-    trade_count: u64,
-}
-
-impl MarketCandle {
-    pub fn new(
-        start_time_millis_inc: TimestampMillis,
-        end_time_millis_exc: TimestampMillis,
-        duration_millis: TimestampMillis,
-        is_candle_closed: bool,
-        ohlcv: MarketOhlcv,
-        trade_count: u64,
-    ) -> Self {
-        Self {
-            start_time_millis_inc,
-            end_time_millis_exc,
-            duration_millis,
-            is_candle_closed,
-            ohlcv,
-            trade_count,
-        }
-    }
-    pub fn start_time_millis_inc(&self) -> TimestampMillis {
-        self.start_time_millis_inc
-    }
-    pub fn end_time_millis_exc(&self) -> TimestampMillis {
-        self.end_time_millis_exc
-    }
-    pub fn duration_millis(&self) -> TimestampMillis {
-        self.duration_millis
-    }
-    pub fn is_candle_closed(&self) -> bool {
-        self.is_candle_closed
-    }
-    pub fn ohlcv(&self) -> &MarketOhlcv {
-        &self.ohlcv
-    }
-    pub fn trade_count(&self) -> u64 {
-        self.trade_count
-    }
+    pub start_time_millis_inc: TimestampMillis,
+    pub end_time_millis_exc: TimestampMillis,
+    pub duration_millis: TimestampMillis,
+    pub is_candle_closed: bool,
+    pub ohlcv: MarketOhlcv,
+    pub trade_count: u64,
 }

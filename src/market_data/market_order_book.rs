@@ -1,27 +1,51 @@
-use crate::market_data::{extract::vec_quote_to_f64, market_quote::MarketQuote};
+use crate::market_data::market_quote::{MarketQuote, PriceQuantity};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::sync::OnceLock;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct MarketOrderBook {
-    exact_bids: Vec<MarketQuote>,
-    exact_asks: Vec<MarketQuote>,
-    bids: OnceLock<Vec<(f64, f64)>>,
-    asks: OnceLock<Vec<(f64, f64)>>,
+    pub bids: Vec<MarketQuote>,
+    pub asks: Vec<MarketQuote>,
+    #[serde(skip)]
+    bid_price_quantities: OnceLock<Vec<PriceQuantity>>,
+    #[serde(skip)]
+    ask_price_quantities: OnceLock<Vec<PriceQuantity>>,
+}
+
+impl<'de> Deserialize<'de> for MarketOrderBook {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct Helper {
+            exact_bids: Vec<MarketQuote>,
+            exact_asks: Vec<MarketQuote>,
+        }
+        let helper = Helper::deserialize(deserializer)?;
+        Ok(MarketOrderBook::new(helper.exact_bids, helper.exact_asks))
+    }
 }
 
 impl MarketOrderBook {
-    pub fn new(exact_bids: Vec<MarketQuote>, exact_asks: Vec<MarketQuote>) -> Self {
+    pub fn new(bids: Vec<MarketQuote>, asks: Vec<MarketQuote>) -> Self {
         Self {
-            exact_bids,
-            exact_asks,
-            bids: OnceLock::new(),
-            asks: OnceLock::new(),
+            bids,
+            asks,
+            bid_price_quantities: OnceLock::new(),
+            ask_price_quantities: OnceLock::new(),
         }
     }
-    pub fn bids(&self) -> &Vec<(f64, f64)> {
-        self.bids.get_or_init(|| vec_quote_to_f64(&self.exact_bids))
+    pub fn bid_price_quantities(&self) -> &Vec<PriceQuantity> {
+        self.bid_price_quantities
+            .get_or_init(|| to_price_quantities(&self.bids))
     }
-    pub fn asks(&self) -> &Vec<(f64, f64)> {
-        self.asks.get_or_init(|| vec_quote_to_f64(&self.exact_asks))
+    pub fn ask_price_quantities(&self) -> &Vec<PriceQuantity> {
+        self.ask_price_quantities
+            .get_or_init(|| to_price_quantities(&self.asks))
     }
+}
+
+fn to_price_quantities(vec: &[MarketQuote]) -> Vec<PriceQuantity> {
+    vec.iter().map(|quote| quote.to_price_quantity()).collect()
 }

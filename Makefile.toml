@@ -1,3 +1,0 @@
-[tasks.generate-types]
-command = "cargo"
-args = ["typify", "src/schema/signal.json", "--no-builder", "--output", "src/signal_generated.rs"]

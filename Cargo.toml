@@ -20,17 +20,20 @@ name = "stock_trek"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+anyhow = "1.0.102"
+async-trait = "0.1.89"
 chrono = { version = "0.4", features = ["serde"] }
+digdigdig3 = "0.1.32"
 larpa = "0.1.1"
 num-complex = "0.4.6"
 proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
 quote = "1.0.45"
 rand = "0.10.0"
-rust_decimal = "1.40"
 serde = "1.0.228"
 strum = { version = "0.28.0", features = ["derive"] }
 syn = { version = "2.0.117", features = ["visit"] }
 thiserror = "1.0"
 traitreg = "0.4.0"
+typetag = "0.2.21"
 typify = "0.6.1"
 uuid = { version = "1.23.0", features = ["serde"] }

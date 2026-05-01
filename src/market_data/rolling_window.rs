@@ -1,0 +1,48 @@
+use serde::{Deserialize, Serialize};
+use strum::{EnumIter, FromRepr};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter, FromRepr, Serialize, Deserialize)]
+#[non_exhaustive]
+#[repr(u8)]
+pub enum RollingWindow {
+    Seconds5,
+    Seconds10,
+    Seconds15,
+    Seconds30,
+    Seconds60,
+    Minutes1,
+    Minutes2,
+    Minutes3,
+    Minutes5,
+    Minutes10,
+    Minutes15,
+    Minutes30,
+    Minutes45,
+    Minutes60,
+    Minutes90,
+    Hours1,
+    Hours2,
+    Hours3,
+    Hours4,
+    Hours6,
+    Hours8,
+    Hours12,
+    Hours24,
+    Days1,
+    Days2,
+    Days3,
+    Days7,
+    Days14,
+    Days30,
+    Days45,
+    Days60,
+    Days90,
+    Days180,
+    Days360,
+    Weeks1,
+    Weeks2,
+    Weeks4,
+    Weeks10,
+    Weeks20,
+    Weeks40,
+}

@@ -1,31 +1,35 @@
-pub mod algorithm;
-pub mod aligned_window;
-pub mod context;
-pub mod errors;
-pub mod exchange;
+pub mod actions;
+pub mod assembler_context;
+pub mod assemblers;
+pub mod example;
+pub mod exchanges;
 pub mod market_data;
-pub mod rolling_window;
-pub mod signal;
+pub mod portfolio;
+pub mod predicates;
+pub mod scratch_pad;
 pub mod statistics;
-pub mod trading_pair;
+pub mod strategy;
+pub mod strategy_context;
+pub mod util;
+pub mod values;
 pub mod verification;
 
-pub mod window {
-    pub use crate::aligned_window::AlignedWindow;
-    pub use crate::rolling_window::RollingWindow;
-}
-
 pub mod prelude {
-    pub use crate::algorithm::StockTrekAlgorithm;
-    pub use crate::context::StockTrekContext;
-    pub use crate::exchange::Exchange;
-    pub use crate::signal::StockTrekEvent;
-    pub use crate::signal::StockTrekSignal;
-    pub use crate::trading_pair::TradingPair;
-    pub use crate::window;
+    pub use crate::{
+        actions::actions::Actions,
+        assemblers::{assembler::Assembler, assemblers::Assemblers},
+        portfolio::portfolios::Portfolios,
+        predicates::predicates::Predicates,
+        scratch_pad::{ScratchPad, ScratchValue},
+        strategy::Strategy,
+        strategy_context::StrategyContext,
+        values::values::Values,
+    };
+
+    pub use digdigdig3::{Asset, ExchangeId, Symbol};
 
     pub use traitreg;
-    pub use traitreg::register as register_algorithm;
+    pub use traitreg::register as register_strategy;
 
     pub type TimestampMillis = u64;
 }

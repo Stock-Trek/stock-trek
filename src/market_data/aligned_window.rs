@@ -1,0 +1,42 @@
+use serde::{Deserialize, Serialize};
+use strum::{EnumIter, FromRepr};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter, FromRepr, Serialize, Deserialize)]
+#[non_exhaustive]
+#[repr(u8)]
+pub enum AlignedWindow {
+    Seconds5,
+    Seconds10,
+    Seconds15,
+    Seconds30,
+    Seconds60,
+    Minutes1,
+    Minutes2,
+    Minutes3,
+    Minutes5,
+    Minutes10,
+    Minutes15,
+    Minutes30,
+    Minutes60,
+    Hours1,
+    Hours2,
+    Hours3,
+    Hours4,
+    Hours6,
+    Hours8,
+    Hours12,
+    Hours24,
+    Days1,
+    Days7,
+    Weeks1,
+    Weeks2,
+    Weeks4,
+    Months1,
+    Months2,
+    Months3,
+    Months4,
+    Months6,
+    Months12,
+    Years1,
+    Years2,
+}

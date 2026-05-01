@@ -1,14 +1,11 @@
-use crate::{
-    errors::{StatsError, StockTrekError},
-    statistics::{
-        advanced::Advanced, decompose::Decompose, evaluation::Evaluation,
-        exponential_smoothing::ExponentialSmoothing, filter::Filter, frequency::Frequency,
-        hypothesis::Hypothesis, moving_average::MovingAverage, stats, time_series::TimeSeries,
-        transformation::Transformation, wavelet::Wavelet,
-    },
+use crate::statistics::{
+    advanced::Advanced, decompose::Decompose, evaluation::Evaluation,
+    exponential_smoothing::ExponentialSmoothing, filter::Filter, frequency::Frequency,
+    hypothesis::Hypothesis, moving_average::MovingAverage, stats, stats_error::StatsError,
+    stats_result::StatsResult, time_series::TimeSeries, transformation::Transformation,
+    wavelet::Wavelet,
 };
 
-#[allow(dead_code)]
 #[derive(Clone, Default)]
 pub struct Stats {
     pub advanced: Advanced,
@@ -25,54 +22,48 @@ pub struct Stats {
 }
 
 impl Stats {
-    pub fn mean(&self, values: &[f64]) -> Result<f64, StockTrekError> {
+    pub fn mean(&self, values: &[f64]) -> StatsResult<f64> {
         stats::mean(values)
     }
-    pub fn variance(
-        &self,
-        values: &[f64],
-        delta_degrees_of_freedom: usize,
-    ) -> Result<f64, StockTrekError> {
+    pub fn variance(&self, values: &[f64], delta_degrees_of_freedom: usize) -> StatsResult<f64> {
         stats::variance(values, delta_degrees_of_freedom)
     }
     pub fn standard_deviation(
         &self,
         values: &[f64],
         delta_degrees_of_freedom: usize,
-    ) -> Result<f64, StockTrekError> {
+    ) -> StatsResult<f64> {
         stats::standard_deviation(values, delta_degrees_of_freedom)
     }
-    pub fn covariance(&self, first: &[f64], second: &[f64]) -> Result<f64, StockTrekError> {
+    pub fn covariance(&self, first: &[f64], second: &[f64]) -> StatsResult<f64> {
         stats::covariance(first, second)
     }
-    pub fn correlation(&self, first: &[f64], second: &[f64]) -> Result<f64, StockTrekError> {
+    pub fn correlation(&self, first: &[f64], second: &[f64]) -> StatsResult<f64> {
         stats::correlation(first, second)
     }
-    pub fn skewness(&self, values: &[f64]) -> Result<f64, StockTrekError> {
+    pub fn skewness(&self, values: &[f64]) -> StatsResult<f64> {
         stats::skewness(values)
     }
-    pub fn kurtosis(&self, values: &[f64]) -> Result<f64, StockTrekError> {
+    pub fn kurtosis(&self, values: &[f64]) -> StatsResult<f64> {
         stats::kurtosis(values)
     }
 }
 
-pub fn mean(values: &[f64]) -> Result<f64, StockTrekError> {
+pub fn mean(values: &[f64]) -> StatsResult<f64> {
     if values.is_empty() {
-        return Err(StockTrekError::Stats(StatsError::EmptyInput));
+        return Err(StatsError::EmptyInput);
     }
     let mean = values.iter().sum::<f64>() / values.len() as f64;
     Ok(mean)
 }
 
-pub fn variance(values: &[f64], delta_degrees_of_freedom: usize) -> Result<f64, StockTrekError> {
+pub fn variance(values: &[f64], delta_degrees_of_freedom: usize) -> StatsResult<f64> {
     let n = values.len();
     if n == 0 {
-        return Err(StockTrekError::Stats(StatsError::EmptyInput));
+        return Err(StatsError::EmptyInput);
     }
     if n <= delta_degrees_of_freedom {
-        return Err(StockTrekError::Stats(
-            StatsError::InsufficientDegreesOfFreedom,
-        ));
+        return Err(StatsError::InsufficientDegreesOfFreedom);
     }
     let mu = stats::mean(values)?;
     let sum_sq: f64 = values
@@ -86,22 +77,19 @@ pub fn variance(values: &[f64], delta_degrees_of_freedom: usize) -> Result<f64, 
     Ok(variance)
 }
 
-pub fn standard_deviation(
-    values: &[f64],
-    delta_degrees_of_freedom: usize,
-) -> Result<f64, StockTrekError> {
+pub fn standard_deviation(values: &[f64], delta_degrees_of_freedom: usize) -> StatsResult<f64> {
     let standard_deviation_sq = stats::variance(values, delta_degrees_of_freedom)?;
     let standard_deviation = standard_deviation_sq.sqrt();
     Ok(standard_deviation)
 }
 
-pub fn covariance(first: &[f64], second: &[f64]) -> Result<f64, StockTrekError> {
+pub fn covariance(first: &[f64], second: &[f64]) -> StatsResult<f64> {
     let n = first.len();
     if n == 0 {
-        return Err(StockTrekError::Stats(StatsError::EmptyInput));
+        return Err(StatsError::EmptyInput);
     }
     if n != second.len() {
-        return Err(StockTrekError::Stats(StatsError::MismatchedLengths));
+        return Err(StatsError::MismatchedLengths);
     }
     let mean_x = stats::mean(first)?;
     let mean_y = stats::mean(second)?;
@@ -114,26 +102,26 @@ pub fn covariance(first: &[f64], second: &[f64]) -> Result<f64, StockTrekError> 
     Ok(covariance)
 }
 
-pub fn correlation(first: &[f64], second: &[f64]) -> Result<f64, StockTrekError> {
+pub fn correlation(first: &[f64], second: &[f64]) -> StatsResult<f64> {
     let cov = stats::covariance(first, second)?;
     let std_x = stats::standard_deviation(first, 0)?;
     let std_y = stats::standard_deviation(second, 0)?;
     if std_x == 0.0 || std_y == 0.0 {
-        return Err(StockTrekError::Stats(StatsError::ZeroVariance));
+        return Err(StatsError::ZeroVariance);
     }
     let correlation = cov / (std_x * std_y);
     Ok(correlation)
 }
 
-pub fn skewness(values: &[f64]) -> Result<f64, StockTrekError> {
+pub fn skewness(values: &[f64]) -> StatsResult<f64> {
     let n = values.len();
     if n == 0 {
-        return Err(StockTrekError::Stats(StatsError::EmptyInput));
+        return Err(StatsError::EmptyInput);
     }
     let mu = stats::mean(values)?;
     let std = stats::standard_deviation(values, 0)?;
     if std == 0.0 {
-        return Err(StockTrekError::Stats(StatsError::ZeroVariance));
+        return Err(StatsError::ZeroVariance);
     }
     let m3: f64 = values
         .iter()
@@ -146,15 +134,15 @@ pub fn skewness(values: &[f64]) -> Result<f64, StockTrekError> {
     Ok(m3)
 }
 
-pub fn kurtosis(values: &[f64]) -> Result<f64, StockTrekError> {
+pub fn kurtosis(values: &[f64]) -> StatsResult<f64> {
     let n = values.len();
     if n == 0 {
-        return Err(StockTrekError::Stats(StatsError::EmptyInput));
+        return Err(StatsError::EmptyInput);
     }
     let mu = stats::mean(values)?;
     let std = stats::standard_deviation(values, 0)?;
     if std == 0.0 {
-        return Err(StockTrekError::Stats(StatsError::ZeroVariance));
+        return Err(StatsError::ZeroVariance);
     }
     let m4: f64 = values
         .iter()

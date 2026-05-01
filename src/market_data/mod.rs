@@ -1,4 +1,4 @@
-pub mod extract;
+pub mod aligned_window;
 pub mod market;
 pub mod market_aligned_window;
 pub mod market_candle;
@@ -8,3 +8,4 @@ pub mod market_quote;
 pub mod market_rolling_window;
 pub mod market_tick;
 pub mod market_ticks;
+pub mod rolling_window;

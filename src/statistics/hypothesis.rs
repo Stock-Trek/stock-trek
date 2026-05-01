@@ -1,6 +1,5 @@
-use crate::{
-    errors::{StatsError, StockTrekError},
-    statistics::{hypothesis, stats, time_series},
+use crate::statistics::{
+    hypothesis, stats, stats_error::StatsError, stats_result::StatsResult, time_series,
 };
 
 #[derive(Clone, Default)]
@@ -11,30 +10,26 @@ impl Hypothesis {
         &self,
         time_series_values: &[f64],
         maximum_lag: usize,
-    ) -> Result<(f64, f64), StockTrekError> {
+    ) -> StatsResult<(f64, f64)> {
         hypothesis::augmented_dickey_fuller(time_series_values, maximum_lag)
     }
 
-    pub fn durbin_watson(&self, residual_values: &[f64]) -> Result<f64, StockTrekError> {
+    pub fn durbin_watson(&self, residual_values: &[f64]) -> StatsResult<f64> {
         hypothesis::durbin_watson(residual_values)
     }
 
-    pub fn jarque_bera(&self, time_series_values: &[f64]) -> Result<(f64, f64), StockTrekError> {
+    pub fn jarque_bera(&self, time_series_values: &[f64]) -> StatsResult<(f64, f64)> {
         hypothesis::jarque_bera(time_series_values)
     }
 
     pub fn kwiatkowski_phillips_schmidt_shin(
         &self,
         time_series_values: &[f64],
-    ) -> Result<(f64, f64), StockTrekError> {
+    ) -> StatsResult<(f64, f64)> {
         hypothesis::kwiatkowski_phillips_schmidt_shin(time_series_values)
     }
 
-    pub fn ljung_box(
-        &self,
-        time_series_values: &[f64],
-        number_of_lags: usize,
-    ) -> Result<f64, StockTrekError> {
+    pub fn ljung_box(&self, time_series_values: &[f64], number_of_lags: usize) -> StatsResult<f64> {
         hypothesis::ljung_box(time_series_values, number_of_lags)
     }
 }
@@ -42,10 +37,10 @@ impl Hypothesis {
 pub fn augmented_dickey_fuller(
     time_series_values: &[f64],
     maximum_lag: usize,
-) -> Result<(f64, f64), StockTrekError> {
+) -> StatsResult<(f64, f64)> {
     let n = time_series_values.len();
     if n <= maximum_lag + 1 {
-        return Err(StockTrekError::Stats(StatsError::InvalidParameters));
+        return Err(StatsError::InvalidParameters);
     }
     // Δy_t
     let mut diff = Vec::with_capacity(n - 1);
@@ -68,7 +63,7 @@ pub fn augmented_dickey_fuller(
         den += (y_lag[i] - mean_x).powi(2);
     }
     if den == 0.0 {
-        return Err(StockTrekError::Stats(StatsError::DivisionByZero));
+        return Err(StatsError::DivisionByZero);
     }
     let beta = num / den;
     // crude t-stat approximation
@@ -78,10 +73,10 @@ pub fn augmented_dickey_fuller(
     Ok((stat, p_value))
 }
 
-pub fn durbin_watson(residual_values: &[f64]) -> Result<f64, StockTrekError> {
+pub fn durbin_watson(residual_values: &[f64]) -> StatsResult<f64> {
     let n = residual_values.len();
     if n < 2 {
-        return Err(StockTrekError::Stats(StatsError::InvalidParameters));
+        return Err(StatsError::InvalidParameters);
     }
     let mut num = 0.0;
     let mut den = 0.0;
@@ -92,20 +87,20 @@ pub fn durbin_watson(residual_values: &[f64]) -> Result<f64, StockTrekError> {
         den += e.powi(2);
     }
     if den == 0.0 {
-        return Err(StockTrekError::Stats(StatsError::DivisionByZero));
+        return Err(StatsError::DivisionByZero);
     }
     Ok(num / den)
 }
 
-pub fn jarque_bera(time_series_values: &[f64]) -> Result<(f64, f64), StockTrekError> {
+pub fn jarque_bera(time_series_values: &[f64]) -> StatsResult<(f64, f64)> {
     let n = time_series_values.len();
     if n == 0 {
-        return Err(StockTrekError::Stats(StatsError::EmptyInput));
+        return Err(StatsError::EmptyInput);
     }
     let mu = stats::mean(time_series_values)?;
     let var = stats::variance(time_series_values, 0)?;
     if var == 0.0 {
-        return Err(StockTrekError::Stats(StatsError::DivisionByZero));
+        return Err(StatsError::DivisionByZero);
     }
     let std = var.sqrt();
     let mut skew = 0.0;
@@ -122,12 +117,10 @@ pub fn jarque_bera(time_series_values: &[f64]) -> Result<(f64, f64), StockTrekEr
     Ok((jb, p_value))
 }
 
-pub fn kwiatkowski_phillips_schmidt_shin(
-    time_series_values: &[f64],
-) -> Result<(f64, f64), StockTrekError> {
+pub fn kwiatkowski_phillips_schmidt_shin(time_series_values: &[f64]) -> StatsResult<(f64, f64)> {
     let n = time_series_values.len();
     if n == 0 {
-        return Err(StockTrekError::Stats(StatsError::EmptyInput));
+        return Err(StatsError::EmptyInput);
     }
     let mu = stats::mean(time_series_values)?;
     let mut cumulative = Vec::with_capacity(n);
@@ -139,21 +132,21 @@ pub fn kwiatkowski_phillips_schmidt_shin(
     let eta = cumulative.iter().map(|x| x.powi(2)).sum::<f64>() / (n as f64 * n as f64);
     let var = stats::variance(time_series_values, 0)?;
     if var == 0.0 {
-        return Err(StockTrekError::Stats(StatsError::DivisionByZero));
+        return Err(StatsError::DivisionByZero);
     }
     let stat = eta / var;
     let p_value = (-stat).exp();
     Ok((stat, p_value))
 }
 
-pub fn ljung_box(time_series_values: &[f64], number_of_lags: usize) -> Result<f64, StockTrekError> {
+pub fn ljung_box(time_series_values: &[f64], number_of_lags: usize) -> StatsResult<f64> {
     let n = time_series_values.len();
     if n == 0 || number_of_lags == 0 || number_of_lags >= n {
-        return Err(StockTrekError::Stats(StatsError::InvalidParameters));
+        return Err(StatsError::InvalidParameters);
     }
     let var = stats::variance(time_series_values, 0)?;
     if var == 0.0 {
-        return Err(StockTrekError::Stats(StatsError::DivisionByZero));
+        return Err(StatsError::DivisionByZero);
     }
     let mut q = 0.0;
     for k in 1..=number_of_lags {

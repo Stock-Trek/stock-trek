@@ -1,19 +1,21 @@
-use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+use crate::prelude::TimestampMillis;
+
+pub type PriceQuantity = (f64, f64);
+pub type TimedPriceQuantity = (TimestampMillis, f64, f64);
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MarketQuote {
-    price: Decimal,
-    quantity: Decimal,
+    pub price: f64,
+    pub quantity: f64,
 }
 
 impl MarketQuote {
-    pub fn new(price: Decimal, quantity: Decimal) -> Self {
-        Self { price, quantity }
+    pub fn to_price_quantity(&self) -> PriceQuantity {
+        (self.price, self.quantity)
     }
-    pub fn price(&self) -> Decimal {
-        self.price
-    }
-    pub fn quantity(&self) -> Decimal {
-        self.quantity
+    pub fn to_timed_price_quantity(&self, timestamp: TimestampMillis) -> TimedPriceQuantity {
+        (timestamp, self.price, self.quantity)
     }
 }

@@ -1,52 +1,40 @@
-use crate::{
-    errors::{StatsError, StockTrekError},
-    statistics::{stats, time_series},
-};
+use crate::statistics::{stats, stats_error::StatsError, stats_result::StatsResult, time_series};
 
 #[derive(Clone, Default)]
 pub struct TimeSeries;
 
 impl TimeSeries {
-    pub fn autocorrelation(&self, values: &[f64], lag: usize) -> Result<f64, StockTrekError> {
+    pub fn autocorrelation(&self, values: &[f64], lag: usize) -> StatsResult<f64> {
         time_series::autocorrelation(values, lag)
     }
-    pub fn autocovariance(&self, values: &[f64], lag: usize) -> Result<f64, StockTrekError> {
+    pub fn autocovariance(&self, values: &[f64], lag: usize) -> StatsResult<f64> {
         time_series::autocovariance(values, lag)
     }
-    pub fn cross_correlation(
-        &self,
-        first: &[f64],
-        second: &[f64],
-        lag: isize,
-    ) -> Result<f64, StockTrekError> {
+    pub fn cross_correlation(&self, first: &[f64], second: &[f64], lag: isize) -> StatsResult<f64> {
         time_series::cross_correlation(first, second, lag)
     }
-    pub fn partial_autocorrelation(
-        &self,
-        values: &[f64],
-        max_lag: usize,
-    ) -> Result<Vec<f64>, StockTrekError> {
+    pub fn partial_autocorrelation(&self, values: &[f64], max_lag: usize) -> StatsResult<Vec<f64>> {
         time_series::partial_autocorrelation(values, max_lag)
     }
 }
 
-pub fn autocorrelation(values: &[f64], lag: usize) -> Result<f64, StockTrekError> {
+pub fn autocorrelation(values: &[f64], lag: usize) -> StatsResult<f64> {
     let gamma_0 = time_series::autocovariance(values, 0)?;
     if gamma_0 == 0.0 {
-        return Err(StockTrekError::Stats(StatsError::ZeroVariance));
+        return Err(StatsError::ZeroVariance);
     }
     let gamma_k = time_series::autocovariance(values, lag)?;
     let autocorrelation = gamma_k / gamma_0;
     Ok(autocorrelation)
 }
 
-pub fn autocovariance(values: &[f64], lag: usize) -> Result<f64, StockTrekError> {
+pub fn autocovariance(values: &[f64], lag: usize) -> StatsResult<f64> {
     let n = values.len();
     if n == 0 {
-        return Err(StockTrekError::Stats(StatsError::EmptyInput));
+        return Err(StatsError::EmptyInput);
     }
     if lag >= n {
-        return Err(StockTrekError::Stats(StatsError::InvalidLag));
+        return Err(StatsError::InvalidLag);
     }
     let mu = stats::mean(values)?;
     let sum: f64 = (lag..n)
@@ -56,13 +44,13 @@ pub fn autocovariance(values: &[f64], lag: usize) -> Result<f64, StockTrekError>
     Ok(autocovariance)
 }
 
-pub fn cross_correlation(first: &[f64], second: &[f64], lag: isize) -> Result<f64, StockTrekError> {
+pub fn cross_correlation(first: &[f64], second: &[f64], lag: isize) -> StatsResult<f64> {
     let n = first.len();
     if n == 0 {
-        return Err(StockTrekError::Stats(StatsError::EmptyInput));
+        return Err(StatsError::EmptyInput);
     }
     if n != second.len() {
-        return Err(StockTrekError::Stats(StatsError::MismatchedLengths));
+        return Err(StatsError::MismatchedLengths);
     }
     let mean_x = stats::mean(first)?;
     let mean_y = stats::mean(second)?;
@@ -82,13 +70,13 @@ pub fn cross_correlation(first: &[f64], second: &[f64], lag: isize) -> Result<f6
     Ok(cross_correlation)
 }
 
-pub fn partial_autocorrelation(values: &[f64], max_lag: usize) -> Result<Vec<f64>, StockTrekError> {
+pub fn partial_autocorrelation(values: &[f64], max_lag: usize) -> StatsResult<Vec<f64>> {
     let n = values.len();
     if n == 0 {
-        return Err(StockTrekError::Stats(StatsError::EmptyInput));
+        return Err(StatsError::EmptyInput);
     }
     if max_lag >= n {
-        return Err(StockTrekError::Stats(StatsError::InvalidLag));
+        return Err(StatsError::InvalidLag);
     }
     // Precompute ACF
     let acf = (0..=max_lag)
@@ -106,7 +94,7 @@ pub fn partial_autocorrelation(values: &[f64], max_lag: usize) -> Result<Vec<f64
         let sum: f64 = (1..k).map(|j| phi[k - 1][j] * acf[k - j]).sum();
         let denom: f64 = 1.0 - (1..k).map(|j| phi[k - 1][j] * acf[j]).sum::<f64>();
         if denom == 0.0 {
-            return Err(StockTrekError::Stats(StatsError::ZeroVariance));
+            return Err(StatsError::ZeroVariance);
         }
         let phi_kk = (acf[k] - sum) / denom;
         phi[k][k] = phi_kk;

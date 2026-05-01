@@ -1,15 +1,33 @@
-use crate::{
-    market_data::{extract::dec_to_f64, market_quote::MarketQuote, market_tick::MarketTick},
-    prelude::TimestampMillis,
+use crate::market_data::{
+    market_quote::{MarketQuote, TimedPriceQuantity},
+    market_tick::MarketTick,
 };
+use serde::{Deserialize, Deserializer, Serialize};
 use std::sync::OnceLock;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct MarketTicks {
-    ticks: Vec<MarketTick>,
-    bids: OnceLock<Vec<(TimestampMillis, f64, f64)>>,
-    asks: OnceLock<Vec<(TimestampMillis, f64, f64)>>,
-    lasts: OnceLock<Vec<(TimestampMillis, f64, f64)>>,
+    pub ticks: Vec<MarketTick>,
+    #[serde(skip)]
+    bids: OnceLock<Vec<TimedPriceQuantity>>,
+    #[serde(skip)]
+    asks: OnceLock<Vec<TimedPriceQuantity>>,
+    #[serde(skip)]
+    lasts: OnceLock<Vec<TimedPriceQuantity>>,
+}
+
+impl<'de> Deserialize<'de> for MarketTicks {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct Helper {
+            ticks: Vec<MarketTick>,
+        }
+        let helper = Helper::deserialize(deserializer)?;
+        Ok(MarketTicks::new(helper.ticks))
+    }
 }
 
 impl MarketTicks {
@@ -21,23 +39,17 @@ impl MarketTicks {
             lasts: OnceLock::new(),
         }
     }
-    pub fn ticks(&self) -> &Vec<MarketTick> {
-        &self.ticks
+    pub fn bid_timed_price_quantities(&self) -> &Vec<TimedPriceQuantity> {
+        self.bids.get_or_init(|| self.values(|tick| &tick.bid))
     }
-    pub fn bids(&self) -> &Vec<(TimestampMillis, f64, f64)> {
-        self.bids.get_or_init(|| self.values(|tick| tick.bid()))
+    pub fn ask_timed_price_quantities(&self) -> &Vec<TimedPriceQuantity> {
+        self.asks.get_or_init(|| self.values(|tick| &tick.ask))
     }
-    pub fn asks(&self) -> &Vec<(TimestampMillis, f64, f64)> {
-        self.asks.get_or_init(|| self.values(|tick| tick.ask()))
-    }
-    pub fn lasts(&self) -> &Vec<(TimestampMillis, f64, f64)> {
-        self.lasts.get_or_init(|| self.values(|tick| tick.last()))
+    pub fn last_timed_price_quantities(&self) -> &Vec<TimedPriceQuantity> {
+        self.lasts.get_or_init(|| self.values(|tick| &tick.last))
     }
 
-    fn values(
-        &self,
-        to_quote: impl Fn(&MarketTick) -> &MarketQuote,
-    ) -> Vec<(TimestampMillis, f64, f64)> {
+    fn values(&self, to_quote: impl Fn(&MarketTick) -> &MarketQuote) -> Vec<TimedPriceQuantity> {
         self.ticks
             .iter()
             .map(|tick| self.to_tick_tuple(tick, &to_quote))
@@ -47,11 +59,9 @@ impl MarketTicks {
         &self,
         tick: &MarketTick,
         to_quote: impl Fn(&MarketTick) -> &MarketQuote,
-    ) -> (TimestampMillis, f64, f64) {
-        let timestamp = tick.timestamp_millis();
+    ) -> TimedPriceQuantity {
+        let timestamp = tick.timestamp_millis;
         let quote = to_quote(tick);
-        let price = dec_to_f64(quote.price());
-        let quantity = dec_to_f64(quote.quantity());
-        (timestamp, price, quantity)
+        quote.to_timed_price_quantity(timestamp)
     }
 }

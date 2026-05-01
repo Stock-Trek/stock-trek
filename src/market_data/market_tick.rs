@@ -1,38 +1,11 @@
 use crate::market_data::market_quote::MarketQuote;
 use crate::prelude::TimestampMillis;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MarketTick {
-    timestamp_millis: TimestampMillis,
-    bid: MarketQuote,
-    ask: MarketQuote,
-    last: MarketQuote,
-}
-
-impl MarketTick {
-    pub fn new(
-        timestamp_millis: TimestampMillis,
-        bid: MarketQuote,
-        ask: MarketQuote,
-        last: MarketQuote,
-    ) -> Self {
-        Self {
-            timestamp_millis,
-            bid,
-            ask,
-            last,
-        }
-    }
-    pub fn timestamp_millis(&self) -> TimestampMillis {
-        self.timestamp_millis
-    }
-    pub fn bid(&self) -> &MarketQuote {
-        &self.bid
-    }
-    pub fn ask(&self) -> &MarketQuote {
-        &self.ask
-    }
-    pub fn last(&self) -> &MarketQuote {
-        &self.last
-    }
+    pub timestamp_millis: TimestampMillis,
+    pub bid: MarketQuote,
+    pub ask: MarketQuote,
+    pub last: MarketQuote,
 }

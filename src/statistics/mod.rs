@@ -7,6 +7,8 @@ pub mod frequency;
 pub mod hypothesis;
 pub mod moving_average;
 pub mod stats;
+pub mod stats_error;
+pub mod stats_result;
 pub mod time_series;
 pub mod transformation;
 pub mod wavelet;
