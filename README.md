@@ -20,9 +20,9 @@ Add to your Cargo.toml:
 stock-trek = "0.4.1"
 ```
 
-## Python Bindings
+## Python Bindings (coming soon)
 
-stock-trek also provides Python bindings which can be installed via
+stock-trek will also provide Python bindings in the future, available for installation via
 
 `pip install stock-trek`
 
