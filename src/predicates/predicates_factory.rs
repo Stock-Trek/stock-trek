@@ -9,6 +9,7 @@ use crate::{
         quantity_of_predicate::{QuantityOf, QuantityOfPredicate},
         scratch_pad_predicate::ScratchPadPredicate,
     },
+    prelude::ScratchKey,
     values::value::NumberValue,
 };
 use digdigdig3::{Asset, ExchangeId};
@@ -40,7 +41,7 @@ impl PredicatesFactory {
     pub fn quantity_of(&self, quantity_of: QuantityOf, predicates: Vec<Predicate>) -> Predicate {
         QuantityOfPredicate::new(quantity_of, predicates)
     }
-    pub fn scratch_pad(&self, key: String) -> Predicate {
-        ScratchPadPredicate::new(key)
+    pub fn scratch_pad(&self, key: ScratchKey<bool>) -> Predicate {
+        ScratchPadPredicate::new(key.key())
     }
 }

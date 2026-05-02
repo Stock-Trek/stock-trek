@@ -59,15 +59,15 @@ impl LiteralValuesFactory {
 
 impl ScratchPadValuesFactory {
     pub fn asset(&self, key: &ScratchKey<Asset>) -> AssetValue {
-        ScratchPadValue::new(key.key())
+        ScratchPadValue::new(key)
     }
     pub fn exchange(&self, key: &ScratchKey<ExchangeId>) -> ExchangeValue {
-        ScratchPadValue::new(key.key())
+        ScratchPadValue::new(key)
     }
     pub fn flag(&self, key: &ScratchKey<bool>) -> FlagValue {
-        ScratchPadValue::new(key.key())
+        ScratchPadValue::new(key)
     }
     pub fn number(&self, key: &ScratchKey<f64>) -> NumberValue {
-        ScratchPadValue::new(key.key())
+        ScratchPadValue::new(key)
     }
 }

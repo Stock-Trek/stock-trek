@@ -16,8 +16,11 @@ pub struct ScratchPadValue {
 }
 
 impl ScratchPadValue {
-    pub fn new(key: String) -> Box<Self> {
-        Box::new(Self { key })
+    pub fn new<T>(key: &ScratchKey<T>) -> Box<Self>
+    where
+        T: ScratchPadKeyType + Into<ScratchValue> + TryFrom<ScratchValue, Error = StockTrekError>,
+    {
+        Box::new(Self { key: key.key() })
     }
     pub fn read<T>(&self, context: &ResolvedContext) -> StockTrekResult<T>
     where
