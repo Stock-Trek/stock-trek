@@ -26,14 +26,14 @@ jobs:
           cargo clippy
           cargo test
 
-      - name: Get version, check if tag exists, create if not
-        run: |
-          VERSION=$(cargo pkgid | cut -d @ -f 2)
-          TAG="v${VERSION}"
-          if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "refs/tags/${TAG}"; then
-            echo "Tag ${TAG} already exists"
-          else
-            echo "Creating tag ${TAG}"
-            git tag "${TAG}"
-            git push origin "${TAG}"
-          fi
+      # - name: Get version, check if tag exists, create if not
+      #   run: |
+      #     VERSION=$(cargo pkgid | cut -d @ -f 2) // TODO sometimes @, sometimes #
+      #     TAG="v${VERSION}"
+      #     if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "refs/tags/${TAG}"; then
+      #       echo "Tag ${TAG} already exists"
+      #     else
+      #       echo "Creating tag ${TAG}"
+      #       git tag "${TAG}"
+      #       git push origin "${TAG}"
+      #     fi
