@@ -1,4 +1,4 @@
-use crate::{error::result::StockTrekError, scratch_pad::value::ScratchValue};
+use crate::{error::result::StockTrekError, scratch::value::ScratchValue};
 use digdigdig3::{Asset, ExchangeId};
 use std::{fmt::Display, marker::PhantomData};
 

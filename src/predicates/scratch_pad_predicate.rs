@@ -2,7 +2,7 @@ use crate::{
     error::result::StockTrekResult,
     predicates::predicate::{Predicate, PredicateTrait},
     resolved_context::ResolvedContext,
-    scratch_pad::key::ScratchKey,
+    scratch::key::ScratchKey,
 };
 use serde::{Deserialize, Serialize};
 

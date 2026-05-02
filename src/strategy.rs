@@ -1,6 +1,6 @@
 use crate::{
     error::result::StockTrekResult, resolver_context::ResolverContext,
-    resolvers::resolver::Resolver, scratch_pad::scratch_pad::ScratchPad,
+    resolvers::resolver::Resolver, scratch::scratch_pad::ScratchPad,
     strategy_context::StrategyContext,
 };
 

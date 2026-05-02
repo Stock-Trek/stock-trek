@@ -1,5 +1,5 @@
 use crate::{
-    scratch_pad::key::ScratchKey,
+    scratch::key::ScratchKey,
     values::{
         asset_in_exchange_value::AssetInExchangeValue,
         asset_total_value::AssetTotalValue,

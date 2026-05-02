@@ -1,4 +1,4 @@
-use crate::{portfolios::portfolio::Portfolio, scratch_pad::scratch_pad::ScratchPad};
+use crate::{portfolios::portfolio::Portfolio, scratch::scratch_pad::ScratchPad};
 
 pub struct ResolvedContext {
     pub portfolio: Portfolio,

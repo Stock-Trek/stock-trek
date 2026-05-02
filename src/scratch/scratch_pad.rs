@@ -3,7 +3,7 @@ use crate::{
         result::{StockTrekError, StockTrekResult},
         value::ValueError,
     },
-    scratch_pad::{key::ScratchKey, key::ScratchPadKeyType, value::ScratchValue},
+    scratch::{key::ScratchKey, key::ScratchPadKeyType, value::ScratchValue},
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, convert::TryFrom};

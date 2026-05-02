@@ -1,7 +1,7 @@
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
     resolved_context::ResolvedContext,
-    scratch_pad::{
+    scratch::{
         key::{ScratchKey, ScratchPadKeyType},
         value::ScratchValue,
     },

@@ -8,7 +8,7 @@ pub mod predicates;
 pub mod resolved_context;
 pub mod resolver_context;
 pub mod resolvers;
-pub mod scratch_pad;
+pub mod scratch;
 pub mod statistics;
 pub mod strategy;
 pub mod strategy_context;
@@ -21,7 +21,7 @@ pub mod prelude {
         error::result::{StockTrekError, StockTrekResult},
         resolver_context::ResolverContext,
         resolvers::resolver::Resolver,
-        scratch_pad::{key::ScratchKey, scratch_pad::ScratchPad, value::ScratchValue},
+        scratch::{key::ScratchKey, scratch_pad::ScratchPad, value::ScratchValue},
         strategy::Strategy,
         strategy_context::StrategyContext,
     };

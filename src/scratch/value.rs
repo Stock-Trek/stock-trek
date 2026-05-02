@@ -13,24 +13,24 @@ pub enum ScratchValue {
     Number(f64),
 }
 
-impl Into<ScratchValue> for String {
-    fn into(self) -> ScratchValue {
-        ScratchValue::Asset(self)
+impl From<String> for ScratchValue {
+    fn from(value: String) -> Self {
+        ScratchValue::Asset(value)
     }
 }
-impl Into<ScratchValue> for ExchangeId {
-    fn into(self) -> ScratchValue {
-        ScratchValue::Exchange(self)
+impl From<ExchangeId> for ScratchValue {
+    fn from(value: ExchangeId) -> Self {
+        ScratchValue::Exchange(value)
     }
 }
-impl Into<ScratchValue> for bool {
-    fn into(self) -> ScratchValue {
-        ScratchValue::Flag(self)
+impl From<bool> for ScratchValue {
+    fn from(value: bool) -> Self {
+        ScratchValue::Flag(value)
     }
 }
-impl Into<ScratchValue> for f64 {
-    fn into(self) -> ScratchValue {
-        ScratchValue::Number(self)
+impl From<f64> for ScratchValue {
+    fn from(value: f64) -> Self {
+        ScratchValue::Number(value)
     }
 }
 
