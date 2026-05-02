@@ -5,12 +5,14 @@ const BTC: &str = "BTC";
 const USDT: &str = "USDT";
 
 pub struct CostAveraging {
+    key_market_exists: ScratchKey<bool>,
     key_satoshi_price: ScratchKey<f64>,
 }
 
 impl Default for CostAveraging {
     fn default() -> Self {
         Self {
+            key_market_exists: ScratchKey::new("MARKET_EXISTS"),
             key_satoshi_price: ScratchKey::new("SATOSHI_PRICE"),
         }
     }
@@ -20,10 +22,12 @@ impl Default for CostAveraging {
 impl Strategy for CostAveraging {
     fn market_calculations(&self, context: StrategyContext) -> StockTrekResult<ScratchPad> {
         let mut scratch_pad = ScratchPad::new();
+        scratch_pad.write(&self.key_market_exists, false);
         if let Some(binance) = context.exchanges.get(&ExchangeId::Binance) {
             let btc_usdt = context.symbol(BTC, USDT);
             let market_opt = binance.market_for(&btc_usdt)?;
             if let Some(market) = market_opt {
+                scratch_pad.write(&self.key_market_exists, true);
                 let satoshi_price = market.ticks.ticks[0].last.price / 1_000_000.0;
                 scratch_pad.write(&self.key_satoshi_price, satoshi_price);
             }
@@ -53,7 +57,12 @@ impl Strategy for CostAveraging {
         let buy_one_satoshi_action = context.actions.order_request(exchange, order_request);
         let buy_one_satoshi = context.resolvers.action(buy_one_satoshi_action);
         let no_op = context.resolvers.no_op();
-        let resolver = context.resolvers.if_else(can_buy, buy_one_satoshi, no_op);
+        let market_exists = context.predicates.scratch_pad(&self.key_market_exists);
+        let buy_if_possible = context.resolvers.if_else(can_buy, buy_one_satoshi, no_op);
+        let do_nothing = context.resolvers.no_op();
+        let resolver = context
+            .resolvers
+            .if_else(market_exists, buy_if_possible, do_nothing);
         Ok(resolver)
     }
 }

@@ -12,7 +12,7 @@ use crate::{
     prelude::ScratchKey,
     values::value::NumberValue,
 };
-use digdigdig3::{Asset, ExchangeId};
+use digdigdig3::ExchangeId;
 use std::cmp::Ordering;
 
 pub struct PredicatesFactory {}
@@ -32,16 +32,20 @@ impl PredicatesFactory {
     pub fn not(&self, predicate: Predicate) -> Predicate {
         NotPredicate::new(predicate)
     }
-    pub fn owns_asset_in_exchange(&self, asset: Asset, exchange: ExchangeId) -> Predicate {
-        OwnsAssetInExchangePredicate::new(asset, exchange)
+    pub fn owns_asset_in_exchange(
+        &self,
+        asset: impl AsRef<str>,
+        exchange: ExchangeId,
+    ) -> Predicate {
+        OwnsAssetInExchangePredicate::new(asset.as_ref().to_string(), exchange)
     }
-    pub fn owns_asset(&self, asset: Asset) -> Predicate {
-        OwnsAssetPredicate::new(asset)
+    pub fn owns_asset(&self, asset: impl AsRef<str>) -> Predicate {
+        OwnsAssetPredicate::new(asset.as_ref().to_string())
     }
     pub fn quantity_of(&self, quantity_of: QuantityOf, predicates: Vec<Predicate>) -> Predicate {
         QuantityOfPredicate::new(quantity_of, predicates)
     }
-    pub fn scratch_pad(&self, key: ScratchKey<bool>) -> Predicate {
+    pub fn scratch_pad(&self, key: &ScratchKey<bool>) -> Predicate {
         ScratchPadPredicate::new(key.key())
     }
 }
