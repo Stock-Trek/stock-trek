@@ -7,7 +7,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct NoOpResolver {}
+pub struct NoOpResolver;
 
 impl NoOpResolver {
     pub fn new() -> Resolver {

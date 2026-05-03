@@ -13,10 +13,10 @@ use crate::{
 };
 use digdigdig3::{Asset, ExchangeId};
 
-pub struct PortfolioValuesFactory {}
-pub struct CalculationValuesFactory {}
-pub struct LiteralValuesFactory {}
-pub struct ScratchPadValuesFactory {}
+pub struct PortfolioValuesFactory;
+pub struct CalculationValuesFactory;
+pub struct LiteralValuesFactory;
+pub struct ScratchPadValuesFactory;
 
 impl PortfolioValuesFactory {
     pub fn asset_in_exchange(&self, exchange: ExchangeValue, asset: AssetValue) -> NumberValue {

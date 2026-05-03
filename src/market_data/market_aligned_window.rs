@@ -5,7 +5,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::{collections::HashMap, sync::OnceLock};
 use strum::IntoEnumIterator;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MarketAlignedWindow {
     pub candles: HashMap<AlignedWindow, Vec<MarketCandle>>,
     #[serde(skip)]

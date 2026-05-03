@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
+use strum::EnumIter;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OrderCapability {
     Market,
     Limit,

@@ -7,7 +7,7 @@ pub struct FileExistenceVerifier;
 
 impl FileExistenceVerifier {
     pub fn new() -> Self {
-        Self {}
+        Self
     }
     pub fn verify(&self, path: String) -> StockTrekResult<String> {
         match std::fs::read_to_string(path) {

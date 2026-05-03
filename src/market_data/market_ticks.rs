@@ -5,7 +5,7 @@ use crate::market_data::{
 use serde::{Deserialize, Deserializer, Serialize};
 use std::sync::OnceLock;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MarketTicks {
     pub ticks: Vec<MarketTick>,
     #[serde(skip)]

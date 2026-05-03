@@ -20,6 +20,6 @@ impl AssetTotalValue {
 impl NumberValueTrait for AssetTotalValue {
     fn number(&self, context: &ResolvedContext) -> StockTrekResult<f64> {
         let asset = self.asset.asset(context)?;
-        Ok(context.portfolio.asset_total(asset))
+        Ok(context.portfolio.asset_total(&asset))
     }
 }

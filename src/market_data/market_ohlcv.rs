@@ -10,3 +10,25 @@ pub struct MarketOhlcv {
     pub quote_volume: f64,
     pub vwap: f64,
 }
+
+impl MarketOhlcv {
+    pub fn new(
+        open: f64,
+        high: f64,
+        low: f64,
+        close: f64,
+        volume: f64,
+        quote_volume: f64,
+        vwap: f64,
+    ) -> Self {
+        Self {
+            open,
+            high,
+            low,
+            close,
+            volume,
+            quote_volume,
+            vwap,
+        }
+    }
+}

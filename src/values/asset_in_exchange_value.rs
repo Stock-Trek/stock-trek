@@ -22,6 +22,6 @@ impl NumberValueTrait for AssetInExchangeValue {
     fn number(&self, context: &ResolvedContext) -> StockTrekResult<f64> {
         let exchange = self.exchange.exchange(context)?;
         let asset = self.asset.asset(context)?;
-        Ok(context.portfolio.asset_in_exchange(asset, exchange))
+        Ok(context.portfolio.asset_in_exchange(&asset, &exchange))
     }
 }

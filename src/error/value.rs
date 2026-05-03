@@ -4,8 +4,8 @@ use thiserror::Error;
 #[non_exhaustive]
 #[repr(u8)]
 pub enum ValueError {
-    #[error("{name} not found for '{key}'")]
+    #[error("{} not found for '{}'", name, key)]
     NotFound { name: String, key: String },
-    #[error("Value expects type '{expected}' but found type '{found}'")]
+    #[error("Value expects type '{}' but found type '{}'", expected, found)]
     IncorrectType { expected: String, found: String },
 }

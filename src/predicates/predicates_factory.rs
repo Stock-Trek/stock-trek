@@ -14,7 +14,7 @@ use crate::{
 use digdigdig3::ExchangeId;
 use std::cmp::Ordering;
 
-pub struct PredicatesFactory {}
+pub struct PredicatesFactory;
 
 impl PredicatesFactory {
     pub fn compare(

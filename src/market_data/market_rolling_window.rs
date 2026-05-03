@@ -5,7 +5,7 @@ use strum::IntoEnumIterator;
 
 pub type Ohlcv = (f64, f64, f64, f64, f64, f64, f64);
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MarketRollingWindow {
     pub candles: HashMap<RollingWindow, MarketCandle>,
     #[serde(skip)]

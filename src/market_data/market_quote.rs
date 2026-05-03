@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub type PriceQuantity = (f64, f64);
 pub type TimedPriceQuantity = (TimestampMillis, f64, f64);
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketQuote {
     pub price: f64,
     pub quantity: f64,

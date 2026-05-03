@@ -3,7 +3,7 @@ use digdigdig3::core::OrderRequest;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use uuid::Uuid;
 
-pub struct ClientOrderIdBuilder {}
+pub struct ClientOrderIdBuilder;
 
 impl ClientOrderIdBuilder {
     pub fn from(order_request: &OrderRequest) -> Option<String> {

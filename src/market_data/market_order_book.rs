@@ -2,7 +2,7 @@ use crate::market_data::market_quote::{MarketQuote, PriceQuantity};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::sync::OnceLock;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MarketOrderBook {
     pub bids: Vec<MarketQuote>,
     pub asks: Vec<MarketQuote>,
