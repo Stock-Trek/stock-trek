@@ -12,8 +12,8 @@ pub struct CostAveraging {
 impl Default for CostAveraging {
     fn default() -> Self {
         Self {
-            key_market_exists: ScratchKey::new("MARKET_EXISTS"),
-            key_satoshi_price: ScratchKey::new("SATOSHI_PRICE"),
+            key_market_exists: ScratchKey::new_optional("MARKET_EXISTS", false),
+            key_satoshi_price: ScratchKey::new_required("SATOSHI_PRICE"),
         }
     }
 }
@@ -22,7 +22,6 @@ impl Default for CostAveraging {
 impl Strategy for CostAveraging {
     fn market_calculations(&self, context: StrategyContext) -> StockTrekResult<ScratchPad> {
         let mut scratch_pad = ScratchPad::new();
-        scratch_pad.write(&self.key_market_exists, false);
         if let Some(binance) = context.exchanges.get(&ExchangeId::Binance) {
             let btc_usdt = context.symbol(BTC, USDT);
             let market_opt = binance.market_for(&btc_usdt)?;

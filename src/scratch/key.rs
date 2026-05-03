@@ -1,16 +1,24 @@
-use crate::{error::result::StockTrekError, scratch::value::ScratchValue};
+use crate::{
+    error::result::StockTrekError, prelude::StockTrekResult, resolved_context::ResolvedContext,
+    scratch::value::ScratchValue,
+};
 use digdigdig3::{Asset, ExchangeId};
+use serde::{Deserialize, Serialize};
 use std::{fmt::Display, marker::PhantomData};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScratchKey<T> {
     key: String,
+    default: Option<T>,
     _phantom: PhantomData<T>,
 }
 
 impl<T> Display for ScratchKey<T>
 where
-    T: ScratchPadKeyType,
+    T: Clone
+        + ScratchPadKeyType
+        + Into<ScratchValue>
+        + TryFrom<ScratchValue, Error = StockTrekError>,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "ScratchPadKey::{}({})", T::KEY_NAME, &self.key)
@@ -19,16 +27,33 @@ where
 
 impl<T> ScratchKey<T>
 where
-    T: ScratchPadKeyType + Into<ScratchValue> + TryFrom<ScratchValue, Error = StockTrekError>,
+    T: Clone
+        + ScratchPadKeyType
+        + Into<ScratchValue>
+        + TryFrom<ScratchValue, Error = StockTrekError>,
 {
-    pub fn new(key: impl AsRef<str>) -> Self {
+    pub fn new_required(key: impl AsRef<str>) -> Self {
         Self {
             key: key.as_ref().to_string(),
+            default: None,
             _phantom: PhantomData,
         }
     }
-    pub fn key(&self) -> String {
-        self.key.to_string()
+    pub fn new_optional(key: impl AsRef<str>, default: T) -> Self {
+        Self {
+            key: key.as_ref().to_string(),
+            default: Some(default),
+            _phantom: PhantomData,
+        }
+    }
+    pub fn key(&self) -> &str {
+        &self.key
+    }
+    pub fn default(&self) -> Option<T> {
+        self.default.clone()
+    }
+    pub fn read(&self, context: &ResolvedContext) -> StockTrekResult<T> {
+        context.scratch_pad.read(self)
     }
 }
 

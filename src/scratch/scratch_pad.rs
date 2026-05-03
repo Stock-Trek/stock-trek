@@ -30,14 +30,21 @@ impl Default for ScratchPad {
 impl ScratchPad {
     pub fn read<T>(&self, key: &ScratchKey<T>) -> StockTrekResult<T>
     where
-        T: ScratchPadKeyType + Into<ScratchValue> + TryFrom<ScratchValue, Error = StockTrekError>,
+        T: Clone
+            + ScratchPadKeyType
+            + Into<ScratchValue>
+            + TryFrom<ScratchValue, Error = StockTrekError>,
     {
-        let v = self.values.get(&key.key());
+        let key_str = key.key();
+        let v = self.values.get(key_str);
         match v {
-            None => Err(StockTrekError::Value(ValueError::NotFound {
-                name: "Key".to_string(),
-                key: key.key(),
-            })),
+            None => match key.default() {
+                None => Err(StockTrekError::Value(ValueError::NotFound {
+                    name: "Key".to_string(),
+                    key: key_str.to_string(),
+                })),
+                Some(d) => Ok(d),
+            },
             Some(v) => {
                 let typed = T::try_from(v.clone())?;
                 Ok(typed)
@@ -46,8 +53,11 @@ impl ScratchPad {
     }
     pub fn write<T>(&mut self, key: &ScratchKey<T>, value: T)
     where
-        T: ScratchPadKeyType + Into<ScratchValue> + TryFrom<ScratchValue, Error = StockTrekError>,
+        T: Clone
+            + ScratchPadKeyType
+            + Into<ScratchValue>
+            + TryFrom<ScratchValue, Error = StockTrekError>,
     {
-        self.values.insert(key.key(), value.into());
+        self.values.insert(key.key().to_string(), value.into());
     }
 }

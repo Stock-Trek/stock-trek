@@ -7,7 +7,6 @@ use crate::{
         literal_value::{
             LiteralAssetValue, LiteralExchangeValue, LiteralFlagValue, LiteralNumberValue,
         },
-        scratch_pad_value::ScratchPadValue,
         unary_calculation_value::{UnaryCalculationValue, UnaryOperator},
         value::{AssetValue, ExchangeValue, FlagValue, NumberValue},
     },
@@ -59,15 +58,15 @@ impl LiteralValuesFactory {
 
 impl ScratchPadValuesFactory {
     pub fn asset(&self, key: &ScratchKey<Asset>) -> AssetValue {
-        ScratchPadValue::new(key)
+        Box::new(key.clone())
     }
     pub fn exchange(&self, key: &ScratchKey<ExchangeId>) -> ExchangeValue {
-        ScratchPadValue::new(key)
+        Box::new(key.clone())
     }
     pub fn flag(&self, key: &ScratchKey<bool>) -> FlagValue {
-        ScratchPadValue::new(key)
+        Box::new(key.clone())
     }
     pub fn number(&self, key: &ScratchKey<f64>) -> NumberValue {
-        ScratchPadValue::new(key)
+        Box::new(key.clone())
     }
 }

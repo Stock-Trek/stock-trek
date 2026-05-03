@@ -7,7 +7,6 @@ use crate::{
         owns_asset_predicate::OwnsAssetPredicate,
         predicate::Predicate,
         quantity_of_predicate::{QuantityOf, QuantityOfPredicate},
-        scratch_pad_predicate::ScratchPadPredicate,
     },
     prelude::ScratchKey,
     values::value::NumberValue,
@@ -46,6 +45,6 @@ impl PredicatesFactory {
         QuantityOfPredicate::new(quantity_of, predicates)
     }
     pub fn scratch_pad(&self, key: &ScratchKey<bool>) -> Predicate {
-        ScratchPadPredicate::new(key.key())
+        Box::new(key.clone())
     }
 }
