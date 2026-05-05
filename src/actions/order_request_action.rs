@@ -32,7 +32,7 @@ impl ActionTrait for OrderRequestAction {
     }
     fn complete(
         &self,
-        bot_id: &String,
+        bot_id: &str,
         exchanges: &HashMap<ExchangeId, Exchange>,
     ) -> StockTrekResult<()> {
         if let Some(exchange) = exchanges.get(&self.exchange) {

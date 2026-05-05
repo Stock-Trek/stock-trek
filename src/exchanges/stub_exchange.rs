@@ -93,7 +93,7 @@ impl ExchangeTrait for StubExchange {
     fn market_for(&self, _symbol: &Symbol) -> StockTrekResult<Option<&Market>> {
         Ok(Some(&self.market_stub))
     }
-    fn place_order(&self, _bot_id: &String, request: &OrderRequest) -> StockTrekResult<Order> {
+    fn place_order(&self, _bot_id: &str, request: &OrderRequest) -> StockTrekResult<Order> {
         let price = match request.order_type {
             OrderType::Bracket {
                 price,

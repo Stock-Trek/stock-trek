@@ -9,7 +9,7 @@ pub trait ActionTrait: Send + Sync {
     fn clone_box(&self) -> Box<dyn ActionTrait>;
     fn complete(
         &self,
-        bot_id: &String,
+        bot_id: &str,
         exchanges: &HashMap<ExchangeId, Exchange>,
     ) -> StockTrekResult<()>;
 }
