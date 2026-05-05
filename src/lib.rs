@@ -19,7 +19,10 @@ pub mod verification;
 pub mod prelude {
     pub use crate::{
         error::result::{StockTrekError, StockTrekResult},
-        exchanges::{client_order_id::ClientOrderId, exchange_factory::ExchangeFactory},
+        exchanges::{
+            client_order_id::ClientOrderId, exchange_factory::ExchangeFactory,
+            order_capability::OrderCapability,
+        },
         portfolios::portfolio_factory::PortfolioFactory,
         resolved_context::ResolvedContext,
         resolver_context::ResolverContext,
