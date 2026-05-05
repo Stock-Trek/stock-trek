@@ -17,7 +17,7 @@ Add to your Cargo.toml:
 
 ```rs
 [dependencies]
-stock-trek = "0.4.12"
+stock-trek = "0.4.13"
 ```
 
 ## Python Bindings (coming soon)
@@ -39,6 +39,7 @@ const BTC: &str = "BTC";
 const USDT: &str = "USDT";
 
 pub struct CostAveraging {
+    key_has_capability: ScratchKey<bool>,
     key_market_exists: ScratchKey<bool>,
     key_satoshi_price: ScratchKey<f64>,
 }
@@ -46,6 +47,7 @@ pub struct CostAveraging {
 impl Default for CostAveraging {
     fn default() -> Self {
         Self {
+            key_has_capability: ScratchKey::new_optional("HAS_CAPABILITY", false),
             key_market_exists: ScratchKey::new_optional("MARKET_EXISTS", false),
             key_satoshi_price: ScratchKey::new_required("SATOSHI_PRICE"),
         }
@@ -57,6 +59,8 @@ impl Strategy for CostAveraging {
     fn market_calculations(&self, c: &StrategyContext) -> StockTrekResult<ScratchPad> {
         let mut scratch_pad = ScratchPad::new();
         if let Some(binance) = c.exchanges.get(&ExchangeId::Binance) {
+            let is_capable = binance.has_capability(&OrderCapability::Market)?;
+            scratch_pad.write(&self.key_has_capability, is_capable);
             let btc_usdt = c.symbol(BTC, USDT);
             let market_opt = binance.market_for(&btc_usdt)?;
             if let Some(market) = market_opt {
@@ -72,29 +76,33 @@ impl Strategy for CostAveraging {
     }
     fn action_resolver(&self, c: &ResolverContext) -> StockTrekResult<Resolver> {
         Ok(c.resolvers.if_else(
-            c.predicates.scratch_pad(&self.key_market_exists),
+            c.predicates.scratch_pad(&self.key_has_capability),
             c.resolvers.if_else(
-                c.predicates.compare(
-                    c.portfolio.asset_in_exchange(
-                        c.literals.exchange(ExchangeId::Binance),
-                        c.literals.asset(USDT),
+                c.predicates.scratch_pad(&self.key_market_exists),
+                c.resolvers.if_else(
+                    c.predicates.compare(
+                        c.portfolio.asset_in_exchange(
+                            c.literals.exchange(ExchangeId::Binance),
+                            c.literals.asset(USDT),
+                        ),
+                        Ordering::Greater,
+                        c.scratch_pad.number(&self.key_satoshi_price),
                     ),
-                    Ordering::Greater,
-                    c.scratch_pad.number(&self.key_satoshi_price),
+                    c.resolvers.action(c.actions.order_request(
+                        ExchangeId::Binance,
+                        OrderRequest {
+                            account_type: AccountType::Spot,
+                            client_order_id: None,
+                            order_type: OrderType::Market,
+                            quantity: 1.0 / 1_000_000.0,
+                            reduce_only: false,
+                            side: OrderSide::Buy,
+                            symbol: Symbol::new(BTC, USDT),
+                            time_in_force: TimeInForce::Fok,
+                        },
+                    )),
+                    c.resolvers.no_op(),
                 ),
-                c.resolvers.action(c.actions.order_request(
-                    ExchangeId::Binance,
-                    OrderRequest {
-                        account_type: AccountType::Spot,
-                        client_order_id: None,
-                        order_type: OrderType::Market,
-                        quantity: 1.0 / 1_000_000.0,
-                        reduce_only: false,
-                        side: OrderSide::Buy,
-                        symbol: Symbol::new(BTC, USDT),
-                        time_in_force: TimeInForce::Fok,
-                    },
-                )),
                 c.resolvers.no_op(),
             ),
             c.resolvers.no_op(),
