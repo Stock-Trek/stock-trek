@@ -73,8 +73,8 @@ impl Strategy for CostAveraging {
             a_last_ask.partial_cmp(&b_last_ask).unwrap()
         });
         if let Some((cheapest_exchange_name, market)) = min_by_last_ask {
-            scratch_pad.write(&self.key_market_exists, true);
             scratch_pad.write(&self.key_exchange, cheapest_exchange_name);
+            scratch_pad.write(&self.key_market_exists, true);
             let satoshi_price = market.ticks.ticks[0].ask.price / 1_000_000.0;
             scratch_pad.write(&self.key_satoshi_price, satoshi_price);
         }
