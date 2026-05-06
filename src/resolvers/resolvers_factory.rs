@@ -11,13 +11,6 @@ use crate::{
 pub struct ResolversFactory;
 
 impl ResolversFactory {
-    pub fn place_order(
-        &self,
-        exchange_value: ExchangeValue,
-        order_request: OrderRequest<TokenValue, NumberValue>,
-    ) -> Resolver {
-        PlaceOrderResolver::new(exchange_value, order_request)
-    }
     pub fn if_else(&self, condition: Predicate, if_true: Resolver, if_false: Resolver) -> Resolver {
         IfResolver::new(condition, if_true, if_false)
     }
@@ -27,4 +20,15 @@ impl ResolversFactory {
     pub fn no_op(&self) -> Resolver {
         NoOpResolver::new()
     }
+    pub fn place_order(
+        &self,
+        exchange_value: ExchangeValue,
+        order_request: OrderRequest<TokenValue, NumberValue>,
+    ) -> Resolver {
+        PlaceOrderResolver::new(exchange_value, order_request)
+    }
+    // TODO
+    // pub fn cancel_order(&self, exchange_value: ExchangeValue, order_id: OrderId) -> Resolver {
+    //     CancelOrderResolver::new(exchange_value, order_id)
+    // }
 }

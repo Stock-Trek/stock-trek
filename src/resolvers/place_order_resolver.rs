@@ -34,7 +34,7 @@ impl ResolverTrait for PlaceOrderResolver {
         let exchange = self.exchange_value.exchange(c)?;
         if let Some(exchange) = c.exchanges.get(&exchange) {
             let order = exchange.place_order(&c.bot_id, &self.order_request)?;
-            println!("{:?}", order);
+            println!("order {:?}", order);
             Ok(())
         } else {
             Err(StockTrekError::Value(ValueError::NotFound {

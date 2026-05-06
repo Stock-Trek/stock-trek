@@ -34,4 +34,19 @@ impl PortfolioTrait for StubPortfolio {
     fn token_in_exchange(&self, _token: &TokenName, _exchange: &ExchangeName) -> f64 {
         1_000_000.0
     }
+    // TODO
+    // fn order_by_order_id(
+    //     &self,
+    //     _exchange: &ExchangeName,
+    //     _order_id: &OrderId,
+    // ) -> Option<OrderResponse> {
+    //     None
+    // }
+    // fn order_by_client_order_id(
+    //     &self,
+    //     _exchange: &ExchangeName,
+    //     _client_order_id: &ClientOrderId,
+    // ) -> Option<OrderResponse> {
+    //     None
+    // }
 }

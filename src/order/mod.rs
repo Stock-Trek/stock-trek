@@ -1,6 +1,6 @@
 pub mod cancel_request;
-pub mod client_order_id;
 pub mod order_factory;
+pub mod order_id;
 pub mod order_intent;
 pub mod order_pricing;
 pub mod order_quantity;

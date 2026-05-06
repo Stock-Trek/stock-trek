@@ -25,7 +25,7 @@ pub mod prelude {
             order_request::OrderRequest, order_response::OrderResponse, order_side::OrderSide,
             order_status::OrderStatus, order_time_in_force::OrderTimeInForce,
             order_timing::OrderTiming, order_trigger_direction::OrderTriggerDirection,
-            single_order::SingleOrder, trading_pair::TradingPair,
+            single_order::SingleOrder,
         },
         portfolios::portfolio_factory::PortfolioFactory,
         resolved_context::ResolvedContext,

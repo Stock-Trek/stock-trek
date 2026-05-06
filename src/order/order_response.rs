@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrderResponse {
-    pub id: String,
-    pub client_order_ids: Vec<String>,
+    // TODO
+    // pub id: OrderId,
+    // pub client_order_id: ClientOrderId,
 }

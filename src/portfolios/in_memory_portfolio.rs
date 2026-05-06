@@ -61,6 +61,27 @@ impl PortfolioTrait for InMemoryPortfolio {
             .copied()
             .unwrap_or(0.0)
     }
+    // TODO
+    // fn order_by_order_id(
+    //     &self,
+    //     exchange: &ExchangeName,
+    //     order_id: &OrderId,
+    // ) -> Option<OrderResponse> {
+    //     self.exchange_orders
+    //         .get(exchange)
+    //         .and_then(|v| v.iter().find(|o| &o.id == order_id))
+    //         .cloned()
+    // }
+    // fn order_by_client_order_id(
+    //     &self,
+    //     exchange: &ExchangeName,
+    //     client_order_id: &ClientOrderId,
+    // ) -> Option<OrderResponse> {
+    //     self.exchange_orders
+    //         .get(exchange)
+    //         .and_then(|v| v.iter().find(|o| &o.client_order_id == client_order_id))
+    //         .cloned()
+    // }
 }
 
 #[derive(Clone, Default)]

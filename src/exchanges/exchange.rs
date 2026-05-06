@@ -13,4 +13,6 @@ pub trait ExchangeTrait: Send + Sync {
         bot_id: &BotId,
         request: &OrderRequest<TokenValue, NumberValue>,
     ) -> StockTrekResult<OrderResponse>;
+    // TODO
+    // fn cancel_order(&self, bot_id: &BotId, order_id: &OrderId) -> StockTrekResult<bool>;
 }
