@@ -1,73 +1,38 @@
 use crate::{
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
+    scratch::key::{ExchangeName, TokenName},
     values::value::{
-        AssetValue, AssetValueTrait, ExchangeValue, ExchangeValueTrait, FlagValue, FlagValueTrait,
-        NumberValue, NumberValueTrait,
+        ExchangeValue, ExchangeValueTrait, FlagValue, FlagValueTrait, NumberValue,
+        NumberValueTrait, TokenValue, TokenValueTrait,
     },
 };
-use digdigdig3::{Asset, ExchangeId};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
-pub struct LiteralAssetValue {
-    literal: Asset,
-}
-#[derive(Serialize, Deserialize)]
-pub struct LiteralExchangeValue {
-    literal: ExchangeId,
-}
-#[derive(Serialize, Deserialize)]
-pub struct LiteralFlagValue {
-    literal: bool,
-}
-#[derive(Serialize, Deserialize)]
-pub struct LiteralNumberValue {
-    literal: f64,
-}
-
-impl LiteralAssetValue {
-    pub fn new(literal: Asset) -> AssetValue {
-        Box::new(Self { literal })
-    }
-}
-impl LiteralExchangeValue {
-    pub fn new(literal: ExchangeId) -> ExchangeValue {
-        Box::new(Self { literal })
-    }
-}
-impl LiteralFlagValue {
-    pub fn new(literal: bool) -> FlagValue {
-        Box::new(Self { literal })
-    }
-}
-impl LiteralNumberValue {
-    pub fn new(literal: f64) -> NumberValue {
-        Box::new(Self { literal })
-    }
+macro_rules! literal_value {
+    ($name:ident, $trait_name:ident, $raw_type:ident, $getter:ident, $clone_type:ident) => {
+        #[derive(Clone, Serialize, Deserialize)]
+        pub struct $name {
+            literal: $raw_type,
+        }
+        impl $name {
+            pub fn new(literal: $raw_type) -> $clone_type {
+                Box::new(Self { literal })
+            }
+        }
+        #[typetag::serde]
+        impl $trait_name for $name {
+            fn clone_box(&self) -> $clone_type {
+                Box::new(self.clone())
+            }
+            fn $getter(&self, _: &ResolvedContext) -> StockTrekResult<$raw_type> {
+                Ok(self.literal.clone())
+            }
+        }
+    };
 }
 
-#[typetag::serde]
-impl AssetValueTrait for LiteralAssetValue {
-    fn asset(&self, _: &ResolvedContext) -> StockTrekResult<Asset> {
-        Ok(self.literal.clone())
-    }
-}
-#[typetag::serde]
-impl ExchangeValueTrait for LiteralExchangeValue {
-    fn exchange(&self, _: &ResolvedContext) -> StockTrekResult<ExchangeId> {
-        Ok(self.literal)
-    }
-}
-#[typetag::serde]
-impl FlagValueTrait for LiteralFlagValue {
-    fn flag(&self, _: &ResolvedContext) -> StockTrekResult<bool> {
-        Ok(self.literal)
-    }
-}
-#[typetag::serde]
-impl NumberValueTrait for LiteralNumberValue {
-    fn number(&self, _: &ResolvedContext) -> StockTrekResult<f64> {
-        Ok(self.literal)
-    }
-}
+literal_value! {LiteralExchangeValue, ExchangeValueTrait, ExchangeName, exchange, ExchangeValue}
+literal_value! {LiteralTokenValue, TokenValueTrait, TokenName, token, TokenValue}
+literal_value! {LiteralFlagValue, FlagValueTrait, bool, flag, FlagValue}
+literal_value! {LiteralNumberValue, NumberValueTrait, f64, number, NumberValue}

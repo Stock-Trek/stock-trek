@@ -1,7 +1,6 @@
+use crate::statistics::frequency;
 use num_complex::Complex;
 use std::f64::consts::PI;
-
-use crate::statistics::frequency;
 
 #[derive(Clone, Default)]
 pub struct Frequency;

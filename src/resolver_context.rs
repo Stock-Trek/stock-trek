@@ -1,5 +1,5 @@
 use crate::{
-    actions::actions_factory::ActionsFactory,
+    order::order_factory::OrderFactory,
     predicates::predicates_factory::PredicatesFactory,
     resolvers::resolvers_factory::ResolversFactory,
     values::values_factory::{
@@ -9,9 +9,9 @@ use crate::{
 };
 
 pub struct ResolverContext {
-    pub actions: ActionsFactory,
     pub calculations: CalculationValuesFactory,
     pub literals: LiteralValuesFactory,
+    pub orders: OrderFactory,
     pub portfolio: PortfolioValuesFactory,
     pub predicates: PredicatesFactory,
     pub resolvers: ResolversFactory,
@@ -21,9 +21,9 @@ pub struct ResolverContext {
 impl ResolverContext {
     pub fn new() -> Self {
         Self {
-            actions: ActionsFactory {},
             calculations: CalculationValuesFactory {},
             literals: LiteralValuesFactory {},
+            orders: OrderFactory {},
             portfolio: PortfolioValuesFactory {},
             predicates: PredicatesFactory {},
             resolvers: ResolversFactory {},

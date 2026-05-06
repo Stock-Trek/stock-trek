@@ -1,27 +1,43 @@
-use crate::{error::result::StockTrekResult, resolved_context::ResolvedContext};
-use digdigdig3::{Asset, ExchangeId};
+use crate::{
+    error::result::StockTrekResult,
+    resolved_context::ResolvedContext,
+    scratch::key::{ExchangeName, TokenName},
+};
+use std::{
+    fmt::{Debug, Formatter},
+    hash::{Hash, Hasher},
+};
 
-pub type AssetValue = Box<dyn AssetValueTrait>;
-pub type ExchangeValue = Box<dyn ExchangeValueTrait>;
-pub type FlagValue = Box<dyn FlagValueTrait>;
-pub type NumberValue = Box<dyn NumberValueTrait>;
-
-#[typetag::serde]
-pub trait AssetValueTrait: Send + Sync {
-    fn asset(&self, c: &ResolvedContext) -> StockTrekResult<Asset>;
+macro_rules! value_type {
+    ($name:ident, $trait_name:ident, $getter:ident, $value:ident) => {
+        pub type $name = Box<dyn $trait_name>;
+        impl Debug for $name {
+            fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+                f.debug_tuple(stringify!($name)).finish()
+            }
+        }
+        impl Clone for $name {
+            fn clone(&self) -> $name {
+                (**self).clone_box()
+            }
+        }
+        impl Hash for $name {
+            fn hash<H>(&self, state: &mut H)
+            where
+                H: Hasher,
+            {
+                stringify!($name).hash(state)
+            }
+        }
+        #[typetag::serde]
+        pub trait $trait_name: Send + Sync {
+            fn clone_box(&self) -> $name;
+            fn $getter(&self, c: &ResolvedContext) -> StockTrekResult<$value>;
+        }
+    };
 }
 
-#[typetag::serde]
-pub trait ExchangeValueTrait: Send + Sync {
-    fn exchange(&self, c: &ResolvedContext) -> StockTrekResult<ExchangeId>;
-}
-
-#[typetag::serde]
-pub trait FlagValueTrait: Send + Sync {
-    fn flag(&self, c: &ResolvedContext) -> StockTrekResult<bool>;
-}
-
-#[typetag::serde]
-pub trait NumberValueTrait: Send + Sync {
-    fn number(&self, c: &ResolvedContext) -> StockTrekResult<f64>;
-}
+value_type! {ExchangeValue, ExchangeValueTrait, exchange, ExchangeName}
+value_type! {TokenValue, TokenValueTrait, token, TokenName}
+value_type! {FlagValue, FlagValueTrait, flag, bool}
+value_type! {NumberValue, NumberValueTrait, number, f64}

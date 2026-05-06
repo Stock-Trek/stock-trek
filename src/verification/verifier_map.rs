@@ -96,7 +96,7 @@ pub fn node_to_location<T: Spanned>(node: &T) -> NodeLocation {
 macro_rules! syntax_elements {
     ($($variant:ident => $syn:ty),* $(,)?) => {
 
-        #[derive(Hash, Eq, PartialEq, Debug, Clone, Copy)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
         pub enum SyntaxElement {
             $($variant),*
         }

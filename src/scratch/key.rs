@@ -3,7 +3,6 @@ use crate::{
     resolved_context::ResolvedContext,
     scratch::value::ScratchValue,
 };
-use digdigdig3::{Asset, ExchangeId};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, marker::PhantomData};
 
@@ -59,16 +58,16 @@ where
 }
 
 mod sealed {
-    use digdigdig3::{Asset, ExchangeId};
+    use crate::scratch::key::{ExchangeName, TokenName};
 
     pub trait Sealed {
         const KEY_NAME: &str;
     }
-    impl Sealed for Asset {
-        const KEY_NAME: &str = "Asset";
-    }
-    impl Sealed for ExchangeId {
+    impl Sealed for ExchangeName {
         const KEY_NAME: &str = "Exchange";
+    }
+    impl Sealed for TokenName {
+        const KEY_NAME: &str = "Token";
     }
     impl Sealed for bool {
         const KEY_NAME: &str = "Flag";
@@ -80,7 +79,57 @@ mod sealed {
 
 pub trait ScratchPadKeyType: sealed::Sealed {}
 
-impl ScratchPadKeyType for Asset {}
-impl ScratchPadKeyType for ExchangeId {}
+impl ScratchPadKeyType for ExchangeName {}
+impl ScratchPadKeyType for TokenName {}
 impl ScratchPadKeyType for bool {}
 impl ScratchPadKeyType for f64 {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct ExchangeName(pub String);
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct TokenName(pub String);
+
+macro_rules! impl_string_wrapper_key {
+    ($name:ident) => {
+        impl AsRef<str> for $name {
+            fn as_ref(&self) -> &str {
+                &self.0
+            }
+        }
+        impl std::ops::Deref for $name {
+            type Target = String;
+            fn deref(&self) -> &String {
+                &self.0
+            }
+        }
+        impl std::ops::DerefMut for $name {
+            fn deref_mut(&mut self) -> &mut String {
+                &mut self.0
+            }
+        }
+        impl From<String> for $name {
+            fn from(s: String) -> Self {
+                $name(s)
+            }
+        }
+        impl From<&str> for $name {
+            fn from(s: &str) -> Self {
+                $name(s.to_string())
+            }
+        }
+        impl std::fmt::Display for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{}", self.0)
+            }
+        }
+        impl std::borrow::Borrow<str> for $name {
+            fn borrow(&self) -> &str {
+                &self.0
+            }
+        }
+    };
+}
+
+impl_string_wrapper_key!(ExchangeName);
+impl_string_wrapper_key!(TokenName);

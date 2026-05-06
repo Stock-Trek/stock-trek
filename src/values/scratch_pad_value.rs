@@ -1,32 +1,28 @@
 use crate::{
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
-    scratch::key::ScratchKey,
-    values::value::{AssetValueTrait, ExchangeValueTrait, FlagValueTrait, NumberValueTrait},
+    scratch::key::{ExchangeName, ScratchKey, TokenName},
+    values::value::{
+        ExchangeValue, ExchangeValueTrait, FlagValue, FlagValueTrait, NumberValue,
+        NumberValueTrait, TokenValue, TokenValueTrait,
+    },
 };
-use digdigdig3::{Asset, ExchangeId};
 
-#[typetag::serde]
-impl AssetValueTrait for ScratchKey<Asset> {
-    fn asset(&self, c: &ResolvedContext) -> StockTrekResult<Asset> {
-        self.read(c)
-    }
+macro_rules! scratch_pad_value {
+    ($trait_name:ident, $raw_type:ident, $getter:ident, $clone_type:ident) => {
+        #[typetag::serde]
+        impl $trait_name for ScratchKey<$raw_type> {
+            fn clone_box(&self) -> $clone_type {
+                Box::new(self.clone())
+            }
+            fn $getter(&self, c: &ResolvedContext) -> StockTrekResult<$raw_type> {
+                self.read(c)
+            }
+        }
+    };
 }
-#[typetag::serde]
-impl ExchangeValueTrait for ScratchKey<ExchangeId> {
-    fn exchange(&self, c: &ResolvedContext) -> StockTrekResult<ExchangeId> {
-        self.read(c)
-    }
-}
-#[typetag::serde]
-impl FlagValueTrait for ScratchKey<bool> {
-    fn flag(&self, c: &ResolvedContext) -> StockTrekResult<bool> {
-        self.read(c)
-    }
-}
-#[typetag::serde]
-impl NumberValueTrait for ScratchKey<f64> {
-    fn number(&self, c: &ResolvedContext) -> StockTrekResult<f64> {
-        self.read(c)
-    }
-}
+
+scratch_pad_value! {ExchangeValueTrait, ExchangeName, exchange, ExchangeValue}
+scratch_pad_value! {TokenValueTrait, TokenName, token, TokenValue}
+scratch_pad_value! {FlagValueTrait, bool, flag, FlagValue}
+scratch_pad_value! {NumberValueTrait, f64, number, NumberValue}

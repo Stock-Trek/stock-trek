@@ -1,17 +1,16 @@
 use crate::{
-    scratch::key::ScratchKey,
+    scratch::key::{ExchangeName, ScratchKey, TokenName},
     values::{
-        asset_in_exchange_value::AssetInExchangeValue,
-        asset_total_value::AssetTotalValue,
         binary_calculation_value::{BinaryCalculationValue, BinaryOperator},
         literal_value::{
-            LiteralAssetValue, LiteralExchangeValue, LiteralFlagValue, LiteralNumberValue,
+            LiteralExchangeValue, LiteralFlagValue, LiteralNumberValue, LiteralTokenValue,
         },
+        token_in_exchange_value::TokenInExchangeValue,
+        token_total_value::TokenTotalValue,
         unary_calculation_value::{UnaryCalculationValue, UnaryOperator},
-        value::{AssetValue, ExchangeValue, FlagValue, NumberValue},
+        value::{ExchangeValue, FlagValue, NumberValue, TokenValue},
     },
 };
-use digdigdig3::{Asset, ExchangeId};
 
 pub struct PortfolioValuesFactory;
 pub struct CalculationValuesFactory;
@@ -19,11 +18,11 @@ pub struct LiteralValuesFactory;
 pub struct ScratchPadValuesFactory;
 
 impl PortfolioValuesFactory {
-    pub fn asset_in_exchange(&self, exchange: ExchangeValue, asset: AssetValue) -> NumberValue {
-        AssetInExchangeValue::new(exchange, asset)
+    pub fn token_in_exchange(&self, exchange: ExchangeValue, token: TokenValue) -> NumberValue {
+        TokenInExchangeValue::new(exchange, token)
     }
-    pub fn asset_total(&self, asset: AssetValue) -> NumberValue {
-        AssetTotalValue::new(asset)
+    pub fn token_total(&self, token: TokenValue) -> NumberValue {
+        TokenTotalValue::new(token)
     }
 }
 
@@ -42,11 +41,11 @@ impl CalculationValuesFactory {
 }
 
 impl LiteralValuesFactory {
-    pub fn asset(&self, literal: impl AsRef<str>) -> AssetValue {
-        LiteralAssetValue::new(literal.as_ref().to_string())
-    }
-    pub fn exchange(&self, literal: ExchangeId) -> ExchangeValue {
+    pub fn exchange(&self, literal: ExchangeName) -> ExchangeValue {
         LiteralExchangeValue::new(literal)
+    }
+    pub fn token(&self, literal: TokenName) -> TokenValue {
+        LiteralTokenValue::new(literal)
     }
     pub fn flag(&self, literal: bool) -> FlagValue {
         LiteralFlagValue::new(literal)
@@ -57,10 +56,10 @@ impl LiteralValuesFactory {
 }
 
 impl ScratchPadValuesFactory {
-    pub fn asset(&self, key: &ScratchKey<Asset>) -> AssetValue {
+    pub fn exchange(&self, key: &ScratchKey<ExchangeName>) -> ExchangeValue {
         Box::new(key.clone())
     }
-    pub fn exchange(&self, key: &ScratchKey<ExchangeId>) -> ExchangeValue {
+    pub fn token(&self, key: &ScratchKey<TokenName>) -> TokenValue {
         Box::new(key.clone())
     }
     pub fn flag(&self, key: &ScratchKey<bool>) -> FlagValue {

@@ -1,5 +1,7 @@
-use crate::portfolios::portfolio::{Portfolio, PortfolioTrait};
-use digdigdig3::{Asset, ExchangeId};
+use crate::{
+    portfolios::portfolio::{Portfolio, PortfolioTrait},
+    scratch::key::{ExchangeName, TokenName},
+};
 
 #[derive(Debug, Clone, Default)]
 pub struct StubPortfolio;
@@ -17,19 +19,19 @@ impl From<StubPortfolio> for Portfolio {
 }
 
 impl PortfolioTrait for StubPortfolio {
-    fn has_account_in_exchange(&self, _exchange: &ExchangeId) -> bool {
+    fn has_account_in_exchange(&self, _exchange: &ExchangeName) -> bool {
         true
     }
-    fn owns_asset(&self, _asset: &Asset) -> bool {
+    fn owns_token(&self, _token: &TokenName) -> bool {
         true
     }
-    fn owns_asset_in_exchange(&self, _asset: &Asset, _exchange: &ExchangeId) -> bool {
+    fn owns_token_in_exchange(&self, _token: &TokenName, _exchange: &ExchangeName) -> bool {
         true
     }
-    fn asset_total(&self, _asset: &Asset) -> f64 {
+    fn token_total(&self, _token: &TokenName) -> f64 {
         1_000_000.0
     }
-    fn asset_in_exchange(&self, _asset: &Asset, _exchange: &ExchangeId) -> f64 {
+    fn token_in_exchange(&self, _token: &TokenName, _exchange: &ExchangeName) -> f64 {
         1_000_000.0
     }
 }

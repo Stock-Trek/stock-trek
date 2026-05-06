@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::market_data::{
     aligned_window::AlignedWindow,
     market_aligned_window::MarketAlignedWindow,
@@ -13,6 +11,7 @@ use crate::market_data::{
     timestamp::TimestampMillis,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Market {

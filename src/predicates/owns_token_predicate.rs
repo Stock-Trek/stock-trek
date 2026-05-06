@@ -2,24 +2,24 @@ use crate::{
     error::result::StockTrekResult,
     predicates::predicate::{Predicate, PredicateTrait},
     resolved_context::ResolvedContext,
+    scratch::key::TokenName,
 };
-use digdigdig3::Asset;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct OwnsAssetPredicate {
-    asset: Asset,
+pub struct OwnsTokenPredicate {
+    token: TokenName,
 }
 
-impl OwnsAssetPredicate {
-    pub fn new(asset: Asset) -> Predicate {
-        Box::new(Self { asset })
+impl OwnsTokenPredicate {
+    pub fn new(token: TokenName) -> Predicate {
+        Box::new(Self { token })
     }
 }
 
 #[typetag::serde]
-impl PredicateTrait for OwnsAssetPredicate {
+impl PredicateTrait for OwnsTokenPredicate {
     fn test(&self, c: &ResolvedContext) -> StockTrekResult<bool> {
-        Ok(c.portfolio.owns_asset(&self.asset))
+        Ok(c.portfolio.owns_token(&self.token))
     }
 }

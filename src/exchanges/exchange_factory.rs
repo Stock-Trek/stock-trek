@@ -4,7 +4,7 @@ pub struct ExchangeFactory;
 
 impl ExchangeFactory {
     pub fn stub() -> Exchange {
-        StubExchange::new().into()
+        StubExchange.into()
     }
     // TODO simulated, mocked, delayed, failing
 }

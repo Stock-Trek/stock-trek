@@ -1,5 +1,4 @@
 use crate::{
-    actions::action::Action,
     error::result::StockTrekResult,
     predicates::predicate::Predicate,
     resolved_context::ResolvedContext,
@@ -26,12 +25,12 @@ impl IfResolver {
 
 #[typetag::serde]
 impl ResolverTrait for IfResolver {
-    fn resolve(&self, c: &ResolvedContext, actions: &mut Vec<Action>) -> StockTrekResult<()> {
+    fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
         let predicate = self.condition.test(c)?;
         if predicate {
-            self.if_true.resolve(c, actions)?;
+            self.if_true.resolve(c)?;
         } else {
-            self.if_false.resolve(c, actions)?;
+            self.if_false.resolve(c)?;
         }
         Ok(())
     }

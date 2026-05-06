@@ -2,17 +2,17 @@ use crate::{
     error::result::StockTrekResult,
     predicates::predicate::{Predicate, PredicateTrait},
     resolved_context::ResolvedContext,
+    scratch::key::ExchangeName,
 };
-use digdigdig3::ExchangeId;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct HasAccountInExchangePredicate {
-    exchange: ExchangeId,
+    exchange: ExchangeName,
 }
 
 impl HasAccountInExchangePredicate {
-    pub fn new(exchange: ExchangeId) -> Predicate {
+    pub fn new(exchange: ExchangeName) -> Predicate {
         Box::new(Self { exchange })
     }
 }

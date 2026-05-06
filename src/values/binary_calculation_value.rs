@@ -20,7 +20,7 @@ pub enum BinaryOperator {
     Atan2,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct BinaryCalculationValue {
     left: NumberValue,
     operator: BinaryOperator,
@@ -39,6 +39,9 @@ impl BinaryCalculationValue {
 
 #[typetag::serde]
 impl NumberValueTrait for BinaryCalculationValue {
+    fn clone_box(&self) -> NumberValue {
+        Box::new(self.clone())
+    }
     fn number(&self, c: &ResolvedContext) -> StockTrekResult<f64> {
         let left_value = self.left.number(c)?;
         let right_value = self.right.number(c)?;

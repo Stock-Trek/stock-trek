@@ -1,5 +1,4 @@
 use crate::{
-    actions::action::Action,
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
     resolvers::resolver::{Resolver, ResolverTrait},
@@ -19,9 +18,9 @@ impl ListResolver {
 
 #[typetag::serde]
 impl ResolverTrait for ListResolver {
-    fn resolve(&self, c: &ResolvedContext, actions: &mut Vec<Action>) -> StockTrekResult<()> {
+    fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
         for assembler in &self.assemblers {
-            assembler.resolve(c, actions)?;
+            assembler.resolve(c)?;
         }
         Ok(())
     }

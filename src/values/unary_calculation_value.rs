@@ -38,7 +38,7 @@ pub enum UnaryOperator {
     Atanh,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct UnaryCalculationValue {
     number: NumberValue,
     operator: UnaryOperator,
@@ -52,6 +52,9 @@ impl UnaryCalculationValue {
 
 #[typetag::serde]
 impl NumberValueTrait for UnaryCalculationValue {
+    fn clone_box(&self) -> NumberValue {
+        Box::new(self.clone())
+    }
     fn number(&self, c: &ResolvedContext) -> StockTrekResult<f64> {
         let value = self.number.number(c)?;
         let calculation_result = match self.operator {
