@@ -13,7 +13,7 @@ pub type ExchangeAdapter = Box<dyn ExchangeAdapterTrait>;
 
 #[async_trait]
 pub trait ExchangeAdapterTrait {
-    fn id(&self) -> ExchangeId;
+    fn id(&self) -> &ExchangeId;
     fn capabilities(&self) -> &Vec<Capability>;
     fn increments(&self) -> &HashMap<TradingPair, IncrementSizes>;
     fn asset_ticker(&self, asset_id: &AssetId) -> &str {
