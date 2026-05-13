@@ -1,6 +1,8 @@
 use crate::{
+    asset_id::AssetId,
     error::result::StockTrekResult,
-    execute::capability::{combine_capabilities, Capability, HasRequiredCapabilities},
+    capability::{combine_capabilities, Capability, HasRequiredCapabilities},
+    order::order_request::OrderRequest,
     predicates::predicate::Predicate,
     resolved_context::ResolvedContext,
     resolvers::resolver::{Resolver, ResolverTrait},
@@ -26,12 +28,16 @@ impl IfResolver {
 
 #[typetag::serde]
 impl ResolverTrait for IfResolver {
-    fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
+    fn resolve(
+        &self,
+        c: &ResolvedContext,
+        order_requests: &mut Vec<OrderRequest<AssetId, f64>>,
+    ) -> StockTrekResult<()> {
         let predicate = self.condition.test(c)?;
         if predicate {
-            self.if_true.resolve(c)?;
+            self.if_true.resolve(c, order_requests)?;
         } else {
-            self.if_false.resolve(c)?;
+            self.if_false.resolve(c, order_requests)?;
         }
         Ok(())
     }

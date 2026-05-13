@@ -1,6 +1,8 @@
 use crate::{
+    asset_id::AssetId,
+    capability::{Capability, HasRequiredCapabilities},
     error::result::StockTrekResult,
-    execute::capability::{Capability, HasRequiredCapabilities},
+    order::order_request::OrderRequest,
     resolved_context::ResolvedContext,
     resolvers::resolver::{Resolver, ResolverTrait},
 };
@@ -19,9 +21,13 @@ impl ListResolver {
 
 #[typetag::serde]
 impl ResolverTrait for ListResolver {
-    fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
+    fn resolve(
+        &self,
+        c: &ResolvedContext,
+        order_requests: &mut Vec<OrderRequest<AssetId, f64>>,
+    ) -> StockTrekResult<()> {
         for resolver in &self.resolvers {
-            resolver.resolve(c)?;
+            resolver.resolve(c, order_requests)?;
         }
         Ok(())
     }

@@ -1,12 +1,13 @@
 pub mod asset_id;
+pub mod capability;
 pub mod error;
 pub mod examples;
 pub mod exchange_id;
-pub mod execute;
 pub mod market_data;
 pub mod order;
 pub mod portfolios;
 pub mod predicates;
+pub mod preferences;
 pub mod resolved_context;
 pub mod resolver_context;
 pub mod resolvers;
@@ -23,7 +24,6 @@ pub mod prelude {
         asset_id::AssetId,
         error::result::{StockTrekError, StockTrekResult},
         exchange_id::ExchangeId,
-        execute::executor_factory::ExecutorFactory,
         order::{
             order_activation::OrderActivation,
             order_constraint::OrderConstraint,
@@ -46,6 +46,7 @@ pub mod prelude {
             },
         },
         portfolios::portfolio_factory::PortfolioFactory,
+        preferences::{MultiLeg, OnDifferent, Preferences},
         resolved_context::ResolvedContext,
         resolver_context::ResolverContext,
         resolvers::resolver::Resolver,

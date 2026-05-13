@@ -1,7 +1,7 @@
 use crate::{
     asset_id::AssetId,
+    capability::{combine_capabilities, Capability, HasRequiredCapabilities},
     error::result::StockTrekResult,
-    execute::capability::{combine_capabilities, Capability, HasRequiredCapabilities},
     order::orders::single::SingleOrderGeneric,
     resolved_context::ResolvedContext,
     resolvers::resolveable::Resolvable,

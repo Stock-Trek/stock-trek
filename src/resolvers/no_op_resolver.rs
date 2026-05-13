@@ -1,6 +1,8 @@
 use crate::{
+    asset_id::AssetId,
+    capability::{Capability, HasRequiredCapabilities},
     error::result::StockTrekResult,
-    execute::capability::{Capability, HasRequiredCapabilities},
+    order::order_request::OrderRequest,
     resolved_context::ResolvedContext,
     resolvers::resolver::{Resolver, ResolverTrait},
 };
@@ -17,7 +19,11 @@ impl NoOpResolver {
 
 #[typetag::serde]
 impl ResolverTrait for NoOpResolver {
-    fn resolve(&self, _: &ResolvedContext) -> StockTrekResult<()> {
+    fn resolve(
+        &self,
+        _: &ResolvedContext,
+        _: &mut Vec<OrderRequest<AssetId, f64>>,
+    ) -> StockTrekResult<()> {
         Ok(())
     }
 }

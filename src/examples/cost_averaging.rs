@@ -1,10 +1,4 @@
-use crate::{
-    order::{
-        check::multi_leg_check::{MultiLegCheck, OnDifferent},
-        order_preferences::OrderPreferences,
-    },
-    prelude::*,
-};
+use crate::prelude::*;
 use std::cmp::Ordering;
 
 pub struct CostAveraging {
@@ -27,9 +21,9 @@ impl Default for CostAveraging {
 
 #[register_strategy(default)]
 impl Strategy for CostAveraging {
-    fn preferences(&self) -> StockTrekResult<OrderPreferences> {
-        Ok(OrderPreferences {
-            multi_leg: MultiLegCheck {
+    fn preferences(&self) -> StockTrekResult<Preferences> {
+        Ok(Preferences {
+            multi_leg: MultiLeg {
                 if_different_price_unsupported: OnDifferent::PreferPrimary,
                 if_different_symbol_unsupported: OnDifferent::PreferPrimary,
             },

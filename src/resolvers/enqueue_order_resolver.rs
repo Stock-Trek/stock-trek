@@ -1,6 +1,7 @@
 use crate::{
+    asset_id::AssetId,
+    capability::{Capability, HasRequiredCapabilities},
     error::result::StockTrekResult,
-    execute::capability::{Capability, HasRequiredCapabilities},
     order::order_request::OrderRequest,
     resolved_context::ResolvedContext,
     resolvers::{
@@ -31,26 +32,13 @@ impl EnqueueOrderResolver {
 
 #[typetag::serde]
 impl ResolverTrait for EnqueueOrderResolver {
-    fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
-        let exchange_id = self.exchange_id_value.exchange_id(c)?;
-        if let Some(adapter) = c.exchanges.adapter(&exchange_id) {
-            let resolved_order_request = self.order_request.try_resolve(c)?;
-            let mut precise_order_request = resolved_order_request.into_precise(
-                adapter.increments(),
-                c.price_rounding,
-                c.quantity_rounding,
-                c.rate_rounding,
-            )?;
-            for order_check in &c.order_checks {
-                order_check.check(&mut precise_order_request)?;
-            }
-            if adapter.is_valid(&precise_order_request)? {
-                adapter.enqueue_order(&precise_order_request, &c.executor)?;
-                println!("enqueued order {:?}", precise_order_request);
-            } else {
-                println!("order is not valid {:?}", precise_order_request);
-            }
-        }
+    fn resolve(
+        &self,
+        c: &ResolvedContext,
+        order_requests: &mut Vec<OrderRequest<AssetId, f64>>,
+    ) -> StockTrekResult<()> {
+        let resolved_order_request = self.order_request.try_resolve(c)?;
+        order_requests.push(resolved_order_request);
         Ok(())
     }
 }
