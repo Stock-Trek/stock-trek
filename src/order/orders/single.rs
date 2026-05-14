@@ -1,6 +1,6 @@
 use crate::{
     asset_id::AssetId,
-    capability::{Capability, HasRequiredCapabilities},
+    capability::{Capability, HasRequiredCapabilities, QuoteQuantityCapability},
     error::result::StockTrekResult,
     order::{
         order_activation::OrderActivation, order_constraint::OrderConstraint,
@@ -48,14 +48,15 @@ impl<A, N> HasRequiredCapabilities for SingleOrderGeneric<A, N> {
         let mut capabilities = Vec::new();
         if let OrderQuantity::OfQuote(_) = self.quantity {
             if let OrderPricing::Limit { .. } = self.pricing {
-                capabilities.push(Capability::QuoteQuantityWithLimitPricing);
+                capabilities.push(Capability::QuoteQuantity(
+                    QuoteQuantityCapability::AllowLimitPricing,
+                ));
             }
             match self.activation {
-                OrderActivation::PriceTriggered { .. } => {
-                    capabilities.push(Capability::QuoteQuantityWithTriggeredTiming);
-                }
-                OrderActivation::Trailing { .. } => {
-                    capabilities.push(Capability::QuoteQuantityWithTriggeredTiming);
+                OrderActivation::PriceTriggered { .. } | OrderActivation::Trailing { .. } => {
+                    capabilities.push(Capability::QuoteQuantity(
+                        QuoteQuantityCapability::AllowTriggeredTiming,
+                    ));
                 }
                 _ => {}
             }

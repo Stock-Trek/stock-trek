@@ -1,6 +1,6 @@
 use crate::{
     asset_id::AssetId,
-    capability::{Capability, HasRequiredCapabilities},
+    capability::{Capability, HasRequiredCapabilities, MultiLegCapability},
     error::result::StockTrekResult,
     order::orders::{one_cancels_other::OneCancelsOtherOrderGeneric, single::SingleOrderGeneric},
     resolved_context::ResolvedContext,
@@ -29,9 +29,10 @@ impl Resolvable<OneTriggersOcoOrder> for OneTriggersOcoOrderRaw {
 
 impl<A, N> HasRequiredCapabilities for OneTriggersOcoOrderGeneric<A, N> {
     fn required_capabilities(&self) -> Vec<Capability> {
-        let mut capabilities = Vec::new();
-        capabilities.extend(self.primary.required_capabilities());
-        capabilities.extend(self.oco_order.required_capabilities());
-        capabilities
+        let mut required_capabilities = Vec::new();
+        required_capabilities.extend(self.primary.required_capabilities());
+        required_capabilities.extend(self.oco_order.required_capabilities());
+        required_capabilities.push(Capability::MultiLeg(MultiLegCapability::OneTriggersOco));
+        required_capabilities
     }
 }
