@@ -21,15 +21,15 @@ impl Default for CostAveraging {
 
 #[register_strategy(default)]
 impl Strategy for CostAveraging {
-    fn preferences(&self) -> StockTrekResult<Preferences> {
-        Ok(Preferences {
+    fn preferences(&self) -> Preferences {
+        Preferences {
             multi_leg: MultiLeg {
                 if_different_price_unsupported: OnDifferent::PreferPrimary,
                 if_different_symbol_unsupported: OnDifferent::PreferPrimary,
             },
-        })
+        }
     }
-    fn calculate(&self, c: &StrategyContext) -> StockTrekResult<ScratchPad> {
+    fn calculate(&self, c: &StrategyContext) -> ScratchPad {
         let mut scratch_pad = ScratchPad::new();
         let one_millionth = 1.0 / 1_000_000.0;
         scratch_pad.write(&self.key_satoshi_quantity, one_millionth);
@@ -45,15 +45,15 @@ impl Strategy for CostAveraging {
             let satoshi_price = market.ticks.ticks[0].ask.price / 1_000_000.0;
             scratch_pad.write(&self.key_satoshi_price, satoshi_price);
         }
-        Ok(scratch_pad)
+        scratch_pad
     }
-    fn resolver(&self, c: &ResolverContext) -> StockTrekResult<Resolver> {
+    fn resolver(&self, c: &ResolverContext) -> Resolver {
         let exchange = c.scratch_pad.exchange_id(&self.key_exchange);
         let btc = c.literals.asset_id(AssetId::Bitcoin);
         let usdt = c.literals.asset_id(AssetId::Tether);
         let satoshi_price = c.scratch_pad.number(&self.key_satoshi_price);
         let quantity = c.scratch_pad.number(&self.key_satoshi_quantity);
-        Ok(c.resolvers.if_else(
+        c.resolvers.if_else(
             c.predicates.scratch_pad(&self.key_market_exists),
             c.resolvers.if_else(
                 c.predicates.compare(
@@ -80,6 +80,6 @@ impl Strategy for CostAveraging {
                 c.resolvers.no_op(),
             ),
             c.resolvers.no_op(),
-        ))
+        )
     }
 }

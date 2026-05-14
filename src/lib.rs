@@ -22,7 +22,6 @@ pub mod verification;
 pub mod prelude {
     pub use crate::{
         asset_id::AssetId,
-        error::result::{StockTrekError, StockTrekResult},
         exchange_id::ExchangeId,
         order::{
             order_activation::OrderActivation,
