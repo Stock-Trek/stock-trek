@@ -1,6 +1,9 @@
 use crate::exchange_id::ExchangeId;
 
 pub enum Capability {
+    MultiLegAllowDifferentSymbol,
+    MultiLegAllowDifferentPricing,
+    MultiLegAllowDifferentTiming,
     QuoteQuantityWithTriggeredTiming,
     QuoteQuantityWithLimitPricing,
     OneCancelsOther,
