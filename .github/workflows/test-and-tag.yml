@@ -11,11 +11,20 @@ jobs:
   test-and-tag:
     name: Test and tag
     runs-on: ubuntu-latest
+    environment: master
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+  
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-tags: true
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -27,8 +36,6 @@ jobs:
           cargo test
 
       - name: Get version, check if tag exists, create if not
-        env:
-          GITHUB_TOKEN: ${{ secrets.PUSH_TAG_PAT }}
         run: |
           VERSION=$(cargo pkgid | rev | cut -d '@' -f 1 | cut -d '#' -f 1 | rev)
           TAG="v${VERSION}"
@@ -37,7 +44,7 @@ jobs:
           else
             echo "Creating tag ${TAG}"
             git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.email '${{ steps.app-token.outputs.app-id }}+CreateTags[bot]@users.noreply.github.com'
             git tag "${TAG}"
             git push origin "${TAG}"
           fi
