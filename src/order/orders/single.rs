@@ -35,8 +35,8 @@ impl Resolvable<SingleOrder> for SingleOrderRaw {
             quote: self.quote.asset_id(context)?,
             activation: self.activation.try_resolve(context)?,
             pricing: self.pricing.try_resolve(context)?,
-            intent: self.intent.clone(),
-            side: self.side.clone(),
+            intent: self.intent,
+            side: self.side,
             quantity: self.quantity.try_resolve(context)?,
             constraints: self.constraints.clone(),
         })

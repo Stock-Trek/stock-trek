@@ -3,7 +3,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
-#[derive(Debug, Display, Clone, Hash, Serialize, Deserialize)]
+#[derive(Debug, Display, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OrderConstraint {
     NotionalCap(Decimal),
     PriceDeviationCap {

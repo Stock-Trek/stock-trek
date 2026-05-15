@@ -25,7 +25,7 @@ impl Resolvable<OrderPricing<f64>> for OrderPricing<NumberValue> {
                 time_in_force,
             } => Ok(OrderPricing::Limit {
                 price: price.number(context)?,
-                time_in_force: time_in_force.clone(),
+                time_in_force: *time_in_force,
             }),
         }
     }

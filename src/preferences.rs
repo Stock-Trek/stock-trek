@@ -1,3 +1,6 @@
+use serde::{Deserialize, Serialize};
+use strum::Display;
+
 pub struct Preferences {
     pub multi_leg: MultiLeg,
 }
@@ -7,7 +10,7 @@ pub struct MultiLeg {
     pub if_different_price_unsupported: OnDifferent,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OnDifferent {
     UseDataFromPrimary,
     SkipThisOrder,

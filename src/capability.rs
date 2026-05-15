@@ -1,10 +1,14 @@
 use crate::exchange_id::ExchangeId;
+use serde::{Deserialize, Serialize};
+use strum::Display;
 
+#[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Capability {
     MultiLeg(MultiLegCapability),
     QuoteQuantity(QuoteQuantityCapability),
 }
 
+#[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MultiLegCapability {
     AllowDifferentSymbol,
     AllowDifferentPricing,
@@ -14,6 +18,7 @@ pub enum MultiLegCapability {
     OneTriggersOco,
 }
 
+#[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum QuoteQuantityCapability {
     AllowTriggeredTiming,
     AllowLimitPricing,

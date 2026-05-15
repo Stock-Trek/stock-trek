@@ -38,9 +38,9 @@ impl Resolvable<OrderActivation<f64>> for OrderActivation<NumberValue> {
                 mode,
                 price,
             } => Ok(OrderActivation::PriceTriggered {
-                basis: basis.clone(),
-                direction: direction.clone(),
-                mode: mode.clone(),
+                basis: *basis,
+                direction: *direction,
+                mode: *mode,
                 price: price.number(context)?,
             }),
             Self::Trailing {
@@ -50,9 +50,9 @@ impl Resolvable<OrderActivation<f64>> for OrderActivation<NumberValue> {
                 direction,
             } => Ok(OrderActivation::Trailing {
                 activation_price: activation_price.number(context)?,
-                basis: basis.clone(),
+                basis: *basis,
                 callback_rate_bps: callback_rate.number(context)?,
-                direction: direction.clone(),
+                direction: *direction,
             }),
         }
     }
