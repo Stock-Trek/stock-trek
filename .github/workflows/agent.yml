@@ -154,6 +154,11 @@ jobs:
           client-id: ${{ env.GITHUB_APP_AGENT_HELPER_CLIENT_ID }}
           private-key: ${{ env.GITHUB_APP_AGENT_HELPER_PRIVATE_KEY }}
 
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
       - name: Thumbs down
         uses: ./.github/actions/emoji-react
         with:
@@ -188,6 +193,11 @@ jobs:
         with:
           client-id: ${{ env.GITHUB_APP_AGENT_HELPER_CLIENT_ID }}
           private-key: ${{ env.GITHUB_APP_AGENT_HELPER_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: React confused
         uses: ./.github/actions/emoji-react
