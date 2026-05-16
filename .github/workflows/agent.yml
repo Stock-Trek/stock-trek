@@ -426,6 +426,8 @@ jobs:
       - name: Raise PR if code changes required
         id: raise-pr
         if: (steps.save-response-type.outputs.response-type == 'CAN_ADDRESS_FULLY') && (steps.save-are-code-changes-required.outputs.are-code-changes-required == 'true')
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           # Write title and body to temporary files to handle quotes and backticks
           echo "Closes #${{ github.event.issue.number }} ${{ github.event.issue.title }}" > /tmp/pr_title.txt
