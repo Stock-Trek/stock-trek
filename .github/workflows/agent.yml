@@ -356,14 +356,14 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const extraInfo = ${{ steps.save-extra-information-required.outputs.extra-information-required }};
+            const extraInfo = ${{ toJson(steps.save-extra-information-required.outputs.extra-information-required) }};
             let body = "The following additional information is required:\n";
             if (Array.isArray(extraInfo)) {
               extraInfo.forEach(item => {
                 body += `- ${item}\n`;
               });
-            } else if (typeof extraInfo === 'string') {
-              body += extraInfo;
+            } else {
+              body += `${extraInfo}`;
             }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
