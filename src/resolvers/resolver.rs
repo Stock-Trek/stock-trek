@@ -1,15 +1,11 @@
 use crate::{
-    asset_id::AssetId, capability::HasRequiredCapabilities, error::result::StockTrekResult,
-    order::order_request::OrderRequest, resolved_context::ResolvedContext,
+    capability::HasRequiredCapabilities, error::result::StockTrekResult,
+    resolved_context::ResolvedContext,
 };
 
 pub type Resolver = Box<dyn ResolverTrait>;
 
 #[typetag::serde]
 pub trait ResolverTrait: HasRequiredCapabilities + Send + Sync {
-    fn resolve(
-        &self,
-        c: &ResolvedContext,
-        order_requests: &mut Vec<OrderRequest<AssetId, f64>>,
-    ) -> StockTrekResult<()>;
+    fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()>;
 }

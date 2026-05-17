@@ -1,5 +1,4 @@
 use crate::{
-    asset_id::AssetId,
     capability::{Capability, HasRequiredCapabilities},
     error::result::StockTrekResult,
     order::order_request::OrderRequest,
@@ -32,13 +31,10 @@ impl EnqueueOrderResolver {
 
 #[typetag::serde]
 impl ResolverTrait for EnqueueOrderResolver {
-    fn resolve(
-        &self,
-        c: &ResolvedContext,
-        order_requests: &mut Vec<OrderRequest<AssetId, f64>>,
-    ) -> StockTrekResult<()> {
+    fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
+        let exchange_id = self.exchange_id_value.exchange_id(c)?;
         let resolved_order_request = self.order_request.try_resolve(c)?;
-        order_requests.push(resolved_order_request);
+        (c.enqueue_order)(&exchange_id, &resolved_order_request);
         Ok(())
     }
 }
