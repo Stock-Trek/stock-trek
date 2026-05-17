@@ -1,4 +1,4 @@
-name: Test and tag
+name: Test, tag and publish
 
 on:
   push:
@@ -6,19 +6,30 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   test-and-tag:
     name: Test and tag
     runs-on: ubuntu-latest
-    environment: master
     steps:
+      - name: Get secrets
+        uses: Infisical/secrets-action@v1.0.16
+        with:
+          method: "oidc"
+          identity-id: "a8dda831-0ca0-4ddb-bd07-15ccb8d10396"
+          project-slug: "publish"
+          env-slug: "prod"
+
       - name: Generate GitHub App token
         id: app-token
         uses: actions/create-github-app-token@v3
+        env:
+          GITHUB_APP_CREATE_TAGS_CLIENT_ID: ${{ env.GITHUB_APP_CREATE_TAGS_CLIENT_ID }}
+          GITHUB_APP_CREATE_TAGS_PRIVATE_KEY: ${{ env.GITHUB_APP_CREATE_TAGS_PRIVATE_KEY }}
         with:
-          client-id: ${{ secrets.CLIENT_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          client-id: ${{ env.GITHUB_APP_CREATE_TAGS_CLIENT_ID }}
+          private-key: ${{ env.GITHUB_APP_CREATE_TAGS_PRIVATE_KEY }}
 
       - name: Checkout
         uses: actions/checkout@v5
@@ -35,7 +46,9 @@ jobs:
           cargo clippy
           cargo test
 
-      - name: Get version, check if tag exists, create if not
+      - name: Get version, check if tag exists, create and publish if not
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ env.CARGO_REGISTRY_TOKEN }}
         run: |
           VERSION=$(cargo pkgid | rev | cut -d '@' -f 1 | cut -d '#' -f 1 | rev)
           TAG="v${VERSION}"
@@ -44,7 +57,8 @@ jobs:
           else
             echo "Creating tag ${TAG}"
             git config user.name "github-actions[bot]"
-            git config user.email '${{ steps.app-token.outputs.app-id }}+CreateTags[bot]@users.noreply.github.com'
+            git config user.email 'CreateTags[bot]@users.noreply.github.com'
             git tag "${TAG}"
             git push origin "${TAG}"
+            cargo publish
           fi
