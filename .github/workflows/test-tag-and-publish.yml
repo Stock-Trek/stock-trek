@@ -9,8 +9,8 @@ permissions:
   id-token: write
 
 jobs:
-  test-and-tag:
-    name: Test and tag
+  test-tag-publish:
+    name: Test, tag and publish
     runs-on: ubuntu-latest
     steps:
       - name: Get secrets
