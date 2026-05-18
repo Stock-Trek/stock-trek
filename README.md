@@ -17,7 +17,7 @@ Add to your Cargo.toml:
 
 ```rs
 [dependencies]
-stock-trek = "0.7.0"
+stock-trek = "0.7.1"
 ```
 
 ## Python Bindings (coming soon)
@@ -57,6 +57,11 @@ impl Default for CostAveraging {
 impl Strategy for CostAveraging {
     fn preferences(&self) -> Preferences {
         Preferences {
+            rounding: Rounding {
+                price: RoundingStrategy::ToZero,
+                quantity: RoundingStrategy::ToZero,
+                callback_rate: RoundingStrategy::ToZero,
+            },
             multi_leg: MultiLeg {
                 if_different_price_unsupported: OnDifferent::UseDataFromPrimary,
                 if_different_symbol_unsupported: OnDifferent::UseDataFromPrimary,

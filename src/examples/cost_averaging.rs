@@ -23,6 +23,11 @@ impl Default for CostAveraging {
 impl Strategy for CostAveraging {
     fn preferences(&self) -> Preferences {
         Preferences {
+            rounding: Rounding {
+                price: RoundingStrategy::ToZero,
+                quantity: RoundingStrategy::ToZero,
+                callback_rate: RoundingStrategy::ToZero,
+            },
             multi_leg: MultiLeg {
                 if_different_price_unsupported: OnDifferent::UseDataFromPrimary,
                 if_different_symbol_unsupported: OnDifferent::UseDataFromPrimary,

@@ -45,7 +45,7 @@ pub mod prelude {
             },
         },
         portfolios::portfolio_factory::PortfolioFactory,
-        preferences::{MultiLeg, OnDifferent, Preferences},
+        preferences::{MultiLeg, OnDifferent, Preferences, Rounding},
         resolved_context::ResolvedContext,
         resolver_context::ResolverContext,
         resolvers::resolver::Resolver,
@@ -53,6 +53,8 @@ pub mod prelude {
         strategy::Strategy,
         strategy_context::StrategyContext,
     };
+
+    pub use rust_decimal::RoundingStrategy;
 
     pub use traitreg;
     pub use traitreg::register as register_strategy;
