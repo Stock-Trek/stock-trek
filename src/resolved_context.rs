@@ -11,4 +11,4 @@ pub struct ResolvedContext {
 }
 
 pub type EnqueueOrderRequestFn =
-    fn(exchange_id: &ExchangeId, order_request: &OrderRequest<AssetId, f64>) -> StockTrekResult<()>;
+    fn(exchange_id: ExchangeId, order_request: OrderRequest<AssetId, f64>) -> StockTrekResult<()>;

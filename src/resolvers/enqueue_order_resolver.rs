@@ -34,7 +34,7 @@ impl ResolverTrait for EnqueueOrderResolver {
     fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
         let exchange_id = self.exchange_id_value.exchange_id(c)?;
         let resolved_order_request = self.order_request.try_resolve(c)?;
-        (c.enqueue_order)(&exchange_id, &resolved_order_request)
+        (c.enqueue_order)(exchange_id, resolved_order_request)
     }
 }
 
