@@ -33,7 +33,7 @@ impl Strategy for CostAveraging {
         let mut scratch_pad = ScratchPad::new();
         let one_millionth = 1.0 / 1_000_000.0;
         scratch_pad.write(&self.key_satoshi_quantity, one_millionth);
-        let iter = c.exchange_markets_for(&AssetId::Bitcoin, &AssetId::Bitcoin);
+        let iter = c.exchange_markets_for(AssetId::bitcoin_native(), AssetId::ethereum_usdt());
         let min_by_last_ask = iter.min_by(|(_a_exch, a_market), (_b_exch, b_market)| {
             let a_last_ask = a_market.ticks.ticks[0].ask.price;
             let b_last_ask = b_market.ticks.ticks[0].ask.price;
@@ -49,8 +49,8 @@ impl Strategy for CostAveraging {
     }
     fn resolver(&self, c: &ResolverContext) -> Resolver {
         let exchange = c.scratch_pad.exchange_id(&self.key_exchange);
-        let btc = c.literals.asset_id(AssetId::Bitcoin);
-        let usdt = c.literals.asset_id(AssetId::Tether);
+        let btc = c.literals.asset_id(AssetId::bitcoin_native());
+        let usdt = c.literals.asset_id(AssetId::ethereum_usdt());
         let satoshi_price = c.scratch_pad.number(&self.key_satoshi_price);
         let quantity = c.scratch_pad.number(&self.key_satoshi_quantity);
         c.resolvers.if_else(

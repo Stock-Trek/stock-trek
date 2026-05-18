@@ -35,18 +35,18 @@ impl StrategyContext {
             },
         }
     }
-    pub fn exchange_markets_for<'context>(
-        &'context self,
-        base: &'context AssetId,
-        quote: &'context AssetId,
-    ) -> impl Iterator<Item = (ExchangeId, &'context Market)> + 'context {
+    pub fn exchange_markets_for(
+        &self,
+        base: AssetId,
+        quote: AssetId,
+    ) -> impl Iterator<Item = (ExchangeId, &Market)> {
         self.market_data
             .iter()
             .filter_map(move |(exchange, by_base)| {
                 by_base
                     .markets_by_base
-                    .get(base)
-                    .and_then(|by_quote| by_quote.markets_by_quote.get(quote))
+                    .get(&base)
+                    .and_then(|by_quote| by_quote.markets_by_quote.get(&quote))
                     .map(|market| (exchange.clone(), market))
             })
     }
