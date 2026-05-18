@@ -15,10 +15,10 @@ use strum::Display;
 pub enum OrderActivation<N> {
     Immediate,
     PriceTriggered {
+        activation_price: N,
         basis: OrderPriceBasis,
         direction: OrderTriggerDirection,
         mode: OrderTriggerMode,
-        price: N,
     },
     Trailing {
         activation_price: N,
@@ -33,25 +33,25 @@ impl Resolvable<OrderActivation<f64>> for OrderActivation<NumberValue> {
         match self {
             Self::Immediate => Ok(OrderActivation::Immediate),
             Self::PriceTriggered {
+                activation_price,
                 basis,
                 direction,
                 mode,
-                price,
             } => Ok(OrderActivation::PriceTriggered {
+                activation_price: activation_price.number(context)?,
                 basis: *basis,
                 direction: *direction,
                 mode: *mode,
-                price: price.number(context)?,
             }),
             Self::Trailing {
                 activation_price,
                 basis,
-                callback_rate_bps: callback_rate,
+                callback_rate_bps,
                 direction,
             } => Ok(OrderActivation::Trailing {
                 activation_price: activation_price.number(context)?,
                 basis: *basis,
-                callback_rate_bps: callback_rate.number(context)?,
+                callback_rate_bps: callback_rate_bps.number(context)?,
                 direction: *direction,
             }),
         }

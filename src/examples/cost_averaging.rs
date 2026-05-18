@@ -24,9 +24,11 @@ impl Strategy for CostAveraging {
     fn preferences(&self) -> Preferences {
         Preferences {
             rounding: Rounding {
+                activation_price_triggered_above: RoundingStrategy::AwayFromZero,
+                activation_price_triggered_below: RoundingStrategy::ToZero,
                 price: RoundingStrategy::ToZero,
                 quantity: RoundingStrategy::ToZero,
-                callback_rate: RoundingStrategy::ToZero,
+                callback_rate_bps: RoundingStrategy::ToZero,
             },
             multi_leg: MultiLeg {
                 if_different_price_unsupported: OnDifferent::UseDataFromPrimary,

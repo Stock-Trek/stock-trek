@@ -11,9 +11,11 @@ pub struct Preferences {
 
 #[derive(Debug, Clone)]
 pub struct Rounding {
+    pub activation_price_triggered_above: RoundingStrategy,
+    pub activation_price_triggered_below: RoundingStrategy,
     pub price: RoundingStrategy,
     pub quantity: RoundingStrategy,
-    pub callback_rate: RoundingStrategy,
+    pub callback_rate_bps: RoundingStrategy,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,14 +37,24 @@ impl Serialize for Rounding {
         S: Serializer,
     {
         let Rounding {
+            activation_price_triggered_above: activation_price_above,
+            activation_price_triggered_below: activation_price_below,
             price,
             quantity,
-            callback_rate,
+            callback_rate_bps,
         } = self;
-        let mut state = serializer.serialize_struct("Rounding", 3)?;
+        let mut state = serializer.serialize_struct("Rounding", 5)?;
+        state.serialize_field(
+            "activation_price_above",
+            &serialize_rounding(activation_price_above),
+        )?;
+        state.serialize_field(
+            "activation_price_below",
+            &serialize_rounding(activation_price_below),
+        )?;
         state.serialize_field("price", &serialize_rounding(price))?;
         state.serialize_field("quantity", &serialize_rounding(quantity))?;
-        state.serialize_field("callback_rate", &serialize_rounding(callback_rate))?;
+        state.serialize_field("callback_rate_bps", &serialize_rounding(callback_rate_bps))?;
         state.end()
     }
 }
@@ -54,20 +66,30 @@ impl<'de> Deserialize<'de> for Rounding {
     {
         #[derive(Deserialize)]
         struct RoundingHelper {
+            activation_price_above: String,
+            activation_price_below: String,
             price: String,
             quantity: String,
-            callback_rate: String,
+            callback_rate_bps: String,
         }
 
         let helper = RoundingHelper::deserialize(deserializer)?;
-
         Ok(Rounding {
+            activation_price_triggered_above: deserialize_rounding(&helper.activation_price_above)
+                .map_err(|e| {
+                    D::Error::custom(format!("Invalid activation_price_above rounding: {}", e))
+                })?,
+            activation_price_triggered_below: deserialize_rounding(&helper.activation_price_below)
+                .map_err(|e| {
+                    D::Error::custom(format!("Invalid activation_price_below rounding: {}", e))
+                })?,
             price: deserialize_rounding(&helper.price)
                 .map_err(|e| D::Error::custom(format!("Invalid price rounding: {}", e)))?,
             quantity: deserialize_rounding(&helper.quantity)
                 .map_err(|e| D::Error::custom(format!("Invalid quantity rounding: {}", e)))?,
-            callback_rate: deserialize_rounding(&helper.callback_rate)
-                .map_err(|e| D::Error::custom(format!("Invalid callback_rate rounding: {}", e)))?,
+            callback_rate_bps: deserialize_rounding(&helper.callback_rate_bps).map_err(|e| {
+                D::Error::custom(format!("Invalid callback_rate_bps rounding: {}", e))
+            })?,
         })
     }
 }
