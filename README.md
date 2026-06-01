@@ -28,7 +28,7 @@ stock-trek will also provide Python bindings in the future, available for instal
 
 ## Usage
 
-Implement the `Strategy` and `Default` traits for your algorithm and register it with the annotation `#[register_strategy(default)]`.
+Implement the `Strategy` and `Default` traits for your algorithm and register it with the annotation `#[register_algorithm(default)]`.
 An example implementing a cost averaging strategy follows:
 
 ```rs
@@ -53,8 +53,8 @@ impl Default for CostAveraging {
     }
 }
 
-#[register_strategy(default)]
-impl Strategy for CostAveraging {
+#[register_algorithm(default)]
+impl Algorithm for CostAveraging {
     fn preferences(&self) -> Preferences {
         Preferences {
             rounding: Rounding {
@@ -70,7 +70,7 @@ impl Strategy for CostAveraging {
             },
         }
     }
-    fn create_signals(&self, c: &SignalContext) -> Signals {
+    fn signals(&self, c: &SignalContext) -> Signals {
         let mut signals = Signals::new();
         let one_millionth = 1.0 / 1_000_000.0;
         signals.write(&self.key_satoshi_quantity, one_millionth);
@@ -88,22 +88,22 @@ impl Strategy for CostAveraging {
         }
         signals
     }
-    fn resolver(&self, c: &ResolverContext) -> Resolver {
+    fn strategy(&self, c: &StrategyContext) -> Command {
         let exchange = c.signals.exchange_id(&self.key_exchange);
         let btc = c.literals.asset_id(AssetId::bitcoin_native());
         let usdt = c.literals.asset_id(AssetId::ethereum_usdt());
         let satoshi_price = c.signals.number(&self.key_satoshi_price);
         let quantity = c.signals.number(&self.key_satoshi_quantity);
-        c.resolvers.if_else(
+        c.commands.if_else(
             c.predicates.signal(&self.key_market_exists),
-            c.resolvers.if_else(
+            c.commands.if_else(
                 c.predicates.compare(
                     c.portfolio
                         .asset_in_exchange(exchange.clone(), usdt.clone()),
                     Ordering::Greater,
                     satoshi_price,
                 ),
-                c.resolvers.enqueue_order(
+                c.commands.enqueue_order(
                     exchange.clone(),
                     c.orders.single(
                         btc,
@@ -118,9 +118,9 @@ impl Strategy for CostAveraging {
                         }],
                     ),
                 ),
-                c.resolvers.no_op(),
+                c.commands.no_op(),
             ),
-            c.resolvers.no_op(),
+            c.commands.no_op(),
         )
     }
 }

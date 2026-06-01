@@ -1,6 +1,7 @@
 use crate::{
     asset_id::AssetId,
     capability::{Capability, HasRequiredCapabilities},
+    commands::resolveable::Resolvable,
     error::result::StockTrekResult,
     order::orders::{
         one_cancels_other::OneCancelsOtherOrderGeneric,
@@ -8,7 +9,6 @@ use crate::{
         one_triggers_other::OneTriggersOtherOrderGeneric, single::SingleOrderGeneric,
     },
     resolved_context::ResolvedContext,
-    resolvers::resolveable::Resolvable,
     values::value::{AssetIdValue, NumberValue},
 };
 use serde::{Deserialize, Serialize};

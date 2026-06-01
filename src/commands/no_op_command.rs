@@ -1,28 +1,28 @@
 use crate::{
     capability::{Capability, HasRequiredCapabilities},
+    commands::command::{Command, CommandTrait},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
-    resolvers::resolver::{Resolver, ResolverTrait},
 };
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct NoOpResolver;
+pub struct NoOpCommand;
 
-impl NoOpResolver {
-    pub fn new() -> Resolver {
+impl NoOpCommand {
+    pub fn new() -> Command {
         Box::new(Self {})
     }
 }
 
 #[typetag::serde]
-impl ResolverTrait for NoOpResolver {
+impl CommandTrait for NoOpCommand {
     fn resolve(&self, _: &ResolvedContext) -> StockTrekResult<()> {
         Ok(())
     }
 }
 
-impl HasRequiredCapabilities for NoOpResolver {
+impl HasRequiredCapabilities for NoOpCommand {
     fn required_capabilities(&self) -> Vec<Capability> {
         Vec::new()
     }

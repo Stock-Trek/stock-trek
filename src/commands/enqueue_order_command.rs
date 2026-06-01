@@ -1,27 +1,27 @@
 use crate::{
     capability::{Capability, HasRequiredCapabilities},
+    commands::{
+        command::{Command, CommandTrait},
+        resolveable::Resolvable,
+    },
     error::result::StockTrekResult,
     order::order_request::OrderRequest,
     resolved_context::ResolvedContext,
-    resolvers::{
-        resolveable::Resolvable,
-        resolver::{Resolver, ResolverTrait},
-    },
     values::value::{AssetIdValue, ExchangeIdValue, NumberValue},
 };
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct EnqueueOrderResolver {
+pub struct EnqueueOrderCommand {
     exchange_id_value: ExchangeIdValue,
     order_request: OrderRequest<AssetIdValue, NumberValue>,
 }
 
-impl EnqueueOrderResolver {
+impl EnqueueOrderCommand {
     pub fn new(
         exchange_id_value: ExchangeIdValue,
         order_request: OrderRequest<AssetIdValue, NumberValue>,
-    ) -> Resolver {
+    ) -> Command {
         Box::new(Self {
             exchange_id_value,
             order_request,
@@ -30,7 +30,7 @@ impl EnqueueOrderResolver {
 }
 
 #[typetag::serde]
-impl ResolverTrait for EnqueueOrderResolver {
+impl CommandTrait for EnqueueOrderCommand {
     fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
         let exchange_id = self.exchange_id_value.exchange_id(c)?;
         let resolved_order_request = self.order_request.try_resolve(c)?;
@@ -38,7 +38,7 @@ impl ResolverTrait for EnqueueOrderResolver {
     }
 }
 
-impl HasRequiredCapabilities for EnqueueOrderResolver {
+impl HasRequiredCapabilities for EnqueueOrderCommand {
     fn required_capabilities(&self) -> Vec<Capability> {
         self.order_request.required_capabilities()
     }

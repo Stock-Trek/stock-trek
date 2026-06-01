@@ -3,9 +3,9 @@ use crate::{
     resolved_context::ResolvedContext,
 };
 
-pub type Resolver = Box<dyn ResolverTrait>;
+pub type Command = Box<dyn CommandTrait>;
 
 #[typetag::serde]
-pub trait ResolverTrait: HasRequiredCapabilities + Send + Sync {
+pub trait CommandTrait: HasRequiredCapabilities + Send + Sync {
     fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()>;
 }

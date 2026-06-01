@@ -1,6 +1,7 @@
 use crate::{
     asset_id::AssetId,
     capability::{Capability, HasRequiredCapabilities, QuoteQuantityCapability},
+    commands::resolveable::Resolvable,
     error::result::StockTrekResult,
     order::{
         order_activation::OrderActivation, order_constraint::OrderConstraint,
@@ -8,7 +9,6 @@ use crate::{
         order_side::OrderSide,
     },
     resolved_context::ResolvedContext,
-    resolvers::resolveable::Resolvable,
     values::value::{AssetIdValue, NumberValue},
 };
 use serde::{Deserialize, Serialize};

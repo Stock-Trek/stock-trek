@@ -1,24 +1,24 @@
 use crate::{
     capability::{Capability, HasRequiredCapabilities},
+    commands::command::{Command, CommandTrait},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
-    resolvers::resolver::{Resolver, ResolverTrait},
 };
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct ListResolver {
-    resolvers: Vec<Resolver>,
+pub struct ListCommand {
+    resolvers: Vec<Command>,
 }
 
-impl ListResolver {
-    pub fn new(resolvers: Vec<Resolver>) -> Resolver {
+impl ListCommand {
+    pub fn new(resolvers: Vec<Command>) -> Command {
         Box::new(Self { resolvers })
     }
 }
 
 #[typetag::serde]
-impl ResolverTrait for ListResolver {
+impl CommandTrait for ListCommand {
     fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
         for resolver in &self.resolvers {
             resolver.resolve(c)?;
@@ -27,7 +27,7 @@ impl ResolverTrait for ListResolver {
     }
 }
 
-impl HasRequiredCapabilities for ListResolver {
+impl HasRequiredCapabilities for ListCommand {
     fn required_capabilities(&self) -> Vec<Capability> {
         let mut capabilities = Vec::new();
         for resolver in &self.resolvers {

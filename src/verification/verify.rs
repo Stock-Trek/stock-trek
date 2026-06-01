@@ -15,7 +15,7 @@ pub fn verify(path: String) -> StockTrekResult<()> {
     match file_existence_verifier.verify(path) {
         Err(e) => Err(e),
         Ok(contents) => {
-            let mut syntax_verifier = create_syntax_verifier();
+            let mut syntax_verifier = syntax_verifier();
             syntax_verifier.verify(&contents)
         }
     }
@@ -37,7 +37,7 @@ fn allowed_by_prefix(path_str: &str) -> bool {
         .any(|&p| path_str.starts_with(p))
 }
 
-fn create_syntax_verifier() -> SyntaxVerifier {
+fn syntax_verifier() -> SyntaxVerifier {
     let mut verifiers = VerifierMap::new();
     verifiers
         .allow::<rust_node::AngleBracketedGenericArguments>()

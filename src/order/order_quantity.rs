@@ -1,6 +1,6 @@
 use crate::{
-    error::result::StockTrekResult, resolved_context::ResolvedContext,
-    resolvers::resolveable::Resolvable, values::value::NumberValue,
+    commands::resolveable::Resolvable, error::result::StockTrekResult,
+    resolved_context::ResolvedContext, values::value::NumberValue,
 };
 use serde::{Deserialize, Serialize};
 use strum::Display;

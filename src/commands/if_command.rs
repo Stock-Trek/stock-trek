@@ -1,21 +1,21 @@
 use crate::{
     capability::{combine_capabilities, Capability, HasRequiredCapabilities},
+    commands::command::{Command, CommandTrait},
     error::result::StockTrekResult,
     predicates::predicate::Predicate,
     resolved_context::ResolvedContext,
-    resolvers::resolver::{Resolver, ResolverTrait},
 };
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct IfResolver {
+pub struct IfCommand {
     condition: Predicate,
-    if_true: Resolver,
-    if_false: Resolver,
+    if_true: Command,
+    if_false: Command,
 }
 
-impl IfResolver {
-    pub fn new(condition: Predicate, if_true: Resolver, if_false: Resolver) -> Resolver {
+impl IfCommand {
+    pub fn new(condition: Predicate, if_true: Command, if_false: Command) -> Command {
         Box::new(Self {
             condition,
             if_true,
@@ -25,7 +25,7 @@ impl IfResolver {
 }
 
 #[typetag::serde]
-impl ResolverTrait for IfResolver {
+impl CommandTrait for IfCommand {
     fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
         let predicate = self.condition.test(c)?;
         if predicate {
@@ -37,7 +37,7 @@ impl ResolverTrait for IfResolver {
     }
 }
 
-impl HasRequiredCapabilities for IfResolver {
+impl HasRequiredCapabilities for IfCommand {
     fn required_capabilities(&self) -> Vec<Capability> {
         combine_capabilities(&[self.if_false.as_ref(), self.if_true.as_ref()])
     }

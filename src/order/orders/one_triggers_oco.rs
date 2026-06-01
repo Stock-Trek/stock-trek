@@ -1,10 +1,10 @@
 use crate::{
     asset_id::AssetId,
     capability::{Capability, HasRequiredCapabilities, MultiLegCapability},
+    commands::resolveable::Resolvable,
     error::result::StockTrekResult,
     order::orders::{one_cancels_other::OneCancelsOtherOrderGeneric, single::SingleOrderGeneric},
     resolved_context::ResolvedContext,
-    resolvers::resolveable::Resolvable,
     values::value::{AssetIdValue, NumberValue},
 };
 use serde::{Deserialize, Serialize};

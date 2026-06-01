@@ -1,5 +1,7 @@
+pub mod algorithm;
 pub mod asset_id;
 pub mod capability;
+pub mod commands;
 pub mod error;
 pub mod examples;
 pub mod exchange_id;
@@ -9,19 +11,19 @@ pub mod portfolios;
 pub mod predicates;
 pub mod preferences;
 pub mod resolved_context;
-pub mod resolver_context;
-pub mod resolvers;
 pub mod signal;
 pub mod signal_context;
 pub mod statistics;
-pub mod strategy;
+pub mod strategy_context;
 pub mod util;
 pub mod values;
 pub mod verification;
 
 pub mod prelude {
     pub use crate::{
+        algorithm::Algorithm,
         asset_id::AssetId,
+        commands::command::Command,
         exchange_id::ExchangeId,
         order::{
             order_activation::OrderActivation,
@@ -47,15 +49,13 @@ pub mod prelude {
         portfolios::portfolio_factory::PortfolioFactory,
         preferences::{MultiLeg, OnDifferent, Preferences, Rounding},
         resolved_context::ResolvedContext,
-        resolver_context::ResolverContext,
-        resolvers::resolver::Resolver,
         signal::{key::SignalKey, signals::Signals, value::SignalValue},
         signal_context::SignalContext,
-        strategy::Strategy,
+        strategy_context::StrategyContext,
     };
 
     pub use rust_decimal::RoundingStrategy;
 
     pub use traitreg;
-    pub use traitreg::register as register_strategy;
+    pub use traitreg::register as register_algorithm;
 }

@@ -1,23 +1,23 @@
 use crate::{
+    commands::command_factory::CommandFactory,
     order::order_factory::OrderFactory,
     predicates::predicates_factory::PredicatesFactory,
-    resolvers::resolvers_factory::ResolversFactory,
     values::values_factory::{
         CalculationValuesFactory, LiteralValuesFactory, PortfolioValuesFactory, SignalValuesFactory,
     },
 };
 
-pub struct ResolverContext {
+pub struct StrategyContext {
     pub calculations: CalculationValuesFactory,
     pub literals: LiteralValuesFactory,
     pub orders: OrderFactory,
     pub portfolio: PortfolioValuesFactory,
     pub predicates: PredicatesFactory,
-    pub resolvers: ResolversFactory,
+    pub commands: CommandFactory,
     pub signals: SignalValuesFactory,
 }
 
-impl ResolverContext {
+impl StrategyContext {
     pub fn new() -> Self {
         Self {
             calculations: CalculationValuesFactory,
@@ -25,13 +25,13 @@ impl ResolverContext {
             orders: OrderFactory,
             portfolio: PortfolioValuesFactory,
             predicates: PredicatesFactory,
-            resolvers: ResolversFactory,
+            commands: CommandFactory,
             signals: SignalValuesFactory,
         }
     }
 }
 
-impl Default for ResolverContext {
+impl Default for StrategyContext {
     fn default() -> Self {
         Self::new()
     }
