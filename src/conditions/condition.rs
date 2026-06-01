@@ -1,8 +1,8 @@
 use crate::{error::result::StockTrekResult, resolved_context::ResolvedContext};
 
-pub type Predicate = Box<dyn PredicateTrait>;
+pub type Condition = Box<dyn ConditionTrait>;
 
 #[typetag::serde]
-pub trait PredicateTrait: Send + Sync {
+pub trait ConditionTrait: Send + Sync {
     fn test(&self, c: &ResolvedContext) -> StockTrekResult<bool>;
 }

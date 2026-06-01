@@ -1,7 +1,7 @@
 use crate::{
     commands::command_factory::CommandFactory,
+    conditions::condition_factory::ConditionFactory,
     order::order_factory::OrderFactory,
-    predicates::predicates_factory::PredicatesFactory,
     values::values_factory::{
         CalculationValuesFactory, LiteralValuesFactory, PortfolioValuesFactory, SignalValuesFactory,
     },
@@ -12,7 +12,7 @@ pub struct StrategyContext {
     pub literals: LiteralValuesFactory,
     pub orders: OrderFactory,
     pub portfolio: PortfolioValuesFactory,
-    pub predicates: PredicatesFactory,
+    pub conditions: ConditionFactory,
     pub commands: CommandFactory,
     pub signals: SignalValuesFactory,
 }
@@ -24,7 +24,7 @@ impl StrategyContext {
             literals: LiteralValuesFactory,
             orders: OrderFactory,
             portfolio: PortfolioValuesFactory,
-            predicates: PredicatesFactory,
+            conditions: ConditionFactory,
             commands: CommandFactory,
             signals: SignalValuesFactory,
         }

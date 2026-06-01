@@ -1,9 +1,0 @@
-pub mod compare_predicate;
-pub mod has_account_in_exchange_predicate;
-pub mod not_predicate;
-pub mod owns_asset_in_exchange_predicate;
-pub mod owns_asset_predicate;
-pub mod predicate;
-pub mod predicates_factory;
-pub mod quantity_of_predicate;
-pub mod signal_predicate;

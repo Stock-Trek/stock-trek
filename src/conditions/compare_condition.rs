@@ -1,9 +1,9 @@
 use crate::{
+    conditions::condition::{Condition, ConditionTrait},
     error::{
         general::GeneralError,
         result::{StockTrekError, StockTrekResult},
     },
-    predicates::predicate::{Predicate, PredicateTrait},
     resolved_context::ResolvedContext,
     util::serde_ordering,
     values::value::NumberValue,
@@ -12,15 +12,15 @@ use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
 #[derive(Serialize, Deserialize)]
-pub struct ComparePredicate {
+pub struct CompareCondition {
     left: NumberValue,
     #[serde(with = "serde_ordering")]
     comparison: Ordering,
     right: NumberValue,
 }
 
-impl ComparePredicate {
-    pub fn new(left: NumberValue, comparison: Ordering, right: NumberValue) -> Predicate {
+impl CompareCondition {
+    pub fn new(left: NumberValue, comparison: Ordering, right: NumberValue) -> Condition {
         Box::new(Self {
             left,
             comparison,
@@ -30,7 +30,7 @@ impl ComparePredicate {
 }
 
 #[typetag::serde]
-impl PredicateTrait for ComparePredicate {
+impl ConditionTrait for CompareCondition {
     fn test(&self, c: &ResolvedContext) -> StockTrekResult<bool> {
         let left_value = self.left.number(c)?;
         let right_value = self.right.number(c)?;

@@ -1,21 +1,21 @@
 use crate::{
     capability::{combine_capabilities, Capability, HasRequiredCapabilities},
     commands::command::{Command, CommandTrait},
+    conditions::condition::Condition,
     error::result::StockTrekResult,
-    predicates::predicate::Predicate,
     resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct IfCommand {
-    condition: Predicate,
+    condition: Condition,
     if_true: Command,
     if_false: Command,
 }
 
 impl IfCommand {
-    pub fn new(condition: Predicate, if_true: Command, if_false: Command) -> Command {
+    pub fn new(condition: Condition, if_true: Command, if_false: Command) -> Command {
         Box::new(Self {
             condition,
             if_true,
@@ -27,8 +27,8 @@ impl IfCommand {
 #[typetag::serde]
 impl CommandTrait for IfCommand {
     fn resolve(&self, c: &ResolvedContext) -> StockTrekResult<()> {
-        let predicate = self.condition.test(c)?;
-        if predicate {
+        let condition = self.condition.test(c)?;
+        if condition {
             self.if_true.resolve(c)?;
         } else {
             self.if_false.resolve(c)?;

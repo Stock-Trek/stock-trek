@@ -1,6 +1,6 @@
 use crate::{
+    conditions::condition::{Condition, ConditionTrait},
     error::result::StockTrekResult,
-    predicates::predicate::{Predicate, PredicateTrait},
     resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
@@ -15,24 +15,24 @@ pub enum QuantityOf {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct QuantityOfPredicate {
+pub struct QuantityOfCondition {
     quantity_of: QuantityOf,
-    predicates: Vec<Predicate>,
+    conditions: Vec<Condition>,
 }
 
-impl QuantityOfPredicate {
-    pub fn new(quantity_of: QuantityOf, predicates: Vec<Predicate>) -> Predicate {
+impl QuantityOfCondition {
+    pub fn new(quantity_of: QuantityOf, conditions: Vec<Condition>) -> Condition {
         Box::new(Self {
             quantity_of,
-            predicates,
+            conditions,
         })
     }
 }
 
 #[typetag::serde]
-impl PredicateTrait for QuantityOfPredicate {
+impl ConditionTrait for QuantityOfCondition {
     fn test(&self, c: &ResolvedContext) -> StockTrekResult<bool> {
-        if self.predicates.is_empty() {
+        if self.conditions.is_empty() {
             let empty_result = match self.quantity_of {
                 QuantityOf::All => true,
                 QuantityOf::Partial => false,
@@ -43,8 +43,8 @@ impl PredicateTrait for QuantityOfPredicate {
         }
         let mut true_count = 0;
         let mut false_count = 0;
-        for predicate in &self.predicates {
-            if predicate.test(c)? {
+        for condition in &self.conditions {
+            if condition.test(c)? {
                 true_count += 1;
             } else {
                 false_count += 1;

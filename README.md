@@ -95,9 +95,9 @@ impl Algorithm for CostAveraging {
         let satoshi_price = c.signals.number(&self.key_satoshi_price);
         let quantity = c.signals.number(&self.key_satoshi_quantity);
         c.commands.if_else(
-            c.predicates.signal(&self.key_market_exists),
+            c.conditions.signal(&self.key_market_exists),
             c.commands.if_else(
-                c.predicates.compare(
+                c.conditions.compare(
                     c.portfolio
                         .asset_in_exchange(exchange.clone(), usdt.clone()),
                     Ordering::Greater,
