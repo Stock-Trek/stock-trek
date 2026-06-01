@@ -3,40 +3,37 @@ use crate::{
         result::{StockTrekError, StockTrekResult},
         value::ValueError,
     },
-    scratch::{key::ScratchKey, key::ScratchPadKeyType, value::ScratchValue},
+    signal::{key::SignalKey, key::SignalKeyType, value::SignalValue},
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, convert::TryFrom};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ScratchPad {
-    values: HashMap<String, ScratchValue>,
+pub struct Signals {
+    signal_values: HashMap<String, SignalValue>,
 }
 
-impl ScratchPad {
+impl Signals {
     pub fn new() -> Self {
         Self {
-            values: HashMap::new(),
+            signal_values: HashMap::new(),
         }
     }
 }
 
-impl Default for ScratchPad {
+impl Default for Signals {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl ScratchPad {
-    pub fn read<T>(&self, key: &ScratchKey<T>) -> StockTrekResult<T>
+impl Signals {
+    pub fn read<T>(&self, key: &SignalKey<T>) -> StockTrekResult<T>
     where
-        T: Clone
-            + ScratchPadKeyType
-            + Into<ScratchValue>
-            + TryFrom<ScratchValue, Error = StockTrekError>,
+        T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
     {
         let key_str = key.key();
-        let v = self.values.get(key_str);
+        let v = self.signal_values.get(key_str);
         match v {
             None => match key.default() {
                 None => Err(StockTrekError::Value(ValueError::NotFound {
@@ -51,13 +48,11 @@ impl ScratchPad {
             }
         }
     }
-    pub fn write<T>(&mut self, key: &ScratchKey<T>, value: T)
+    pub fn write<T>(&mut self, key: &SignalKey<T>, value: T)
     where
-        T: Clone
-            + ScratchPadKeyType
-            + Into<ScratchValue>
-            + TryFrom<ScratchValue, Error = StockTrekError>,
+        T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
     {
-        self.values.insert(key.key().to_string(), value.into());
+        self.signal_values
+            .insert(key.key().to_string(), value.into());
     }
 }

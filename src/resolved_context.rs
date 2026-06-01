@@ -1,13 +1,12 @@
 use crate::{
     asset_id::AssetId, error::result::StockTrekResult, exchange_id::ExchangeId,
-    order::order_request::OrderRequest, portfolios::portfolio::Portfolio,
-    scratch::scratch_pad::ScratchPad,
+    order::order_request::OrderRequest, portfolios::portfolio::Portfolio, signal::signals::Signals,
 };
 
 pub struct ResolvedContext {
     pub enqueue_order: EnqueueOrderRequestFn,
     pub portfolio: Portfolio,
-    pub scratch_pad: ScratchPad,
+    pub signals: Signals,
 }
 
 pub type EnqueueOrderRequestFn =

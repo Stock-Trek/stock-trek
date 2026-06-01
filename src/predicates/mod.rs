@@ -6,4 +6,4 @@ pub mod owns_asset_predicate;
 pub mod predicate;
 pub mod predicates_factory;
 pub mod quantity_of_predicate;
-pub mod scratch_pad_predicate;
+pub mod signal_predicate;

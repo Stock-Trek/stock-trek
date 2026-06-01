@@ -2,7 +2,7 @@ pub mod asset_in_exchange_value;
 pub mod asset_total_value;
 pub mod binary_calculation_value;
 pub mod literal_value;
-pub mod scratch_pad_value;
+pub mod signal_value;
 pub mod unary_calculation_value;
 pub mod value;
 pub mod values_factory;

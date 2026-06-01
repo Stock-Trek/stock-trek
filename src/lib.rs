@@ -11,10 +11,10 @@ pub mod preferences;
 pub mod resolved_context;
 pub mod resolver_context;
 pub mod resolvers;
-pub mod scratch;
+pub mod signal;
+pub mod signal_context;
 pub mod statistics;
 pub mod strategy;
-pub mod strategy_context;
 pub mod util;
 pub mod values;
 pub mod verification;
@@ -49,9 +49,9 @@ pub mod prelude {
         resolved_context::ResolvedContext,
         resolver_context::ResolverContext,
         resolvers::resolver::Resolver,
-        scratch::{key::ScratchKey, scratch_pad::ScratchPad, value::ScratchValue},
+        signal::{key::SignalKey, signals::Signals, value::SignalValue},
+        signal_context::SignalContext,
         strategy::Strategy,
-        strategy_context::StrategyContext,
     };
 
     pub use rust_decimal::RoundingStrategy;

@@ -3,36 +3,30 @@ use crate::{
     error::result::{StockTrekError, StockTrekResult},
     exchange_id::ExchangeId,
     resolved_context::ResolvedContext,
-    scratch::value::ScratchValue,
+    signal::value::SignalValue,
 };
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, marker::PhantomData};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ScratchKey<T> {
+pub struct SignalKey<T> {
     key: String,
     default: Option<T>,
     _phantom: PhantomData<T>,
 }
 
-impl<T> Display for ScratchKey<T>
+impl<T> Display for SignalKey<T>
 where
-    T: Clone
-        + ScratchPadKeyType
-        + Into<ScratchValue>
-        + TryFrom<ScratchValue, Error = StockTrekError>,
+    T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ScratchPadKey::{}({})", T::KEY_NAME, &self.key)
+        write!(f, "SignalKey::{}({})", T::KEY_NAME, &self.key)
     }
 }
 
-impl<T> ScratchKey<T>
+impl<T> SignalKey<T>
 where
-    T: Clone
-        + ScratchPadKeyType
-        + Into<ScratchValue>
-        + TryFrom<ScratchValue, Error = StockTrekError>,
+    T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
 {
     pub fn new_required(key: impl AsRef<str>) -> Self {
         Self {
@@ -55,12 +49,12 @@ where
         self.default.clone()
     }
     pub fn read(&self, c: &ResolvedContext) -> StockTrekResult<T> {
-        c.scratch_pad.read(self)
+        c.signals.read(self)
     }
 }
 
 mod sealed {
-    use crate::{asset_id::AssetId, scratch::key::ExchangeId};
+    use crate::{asset_id::AssetId, signal::key::ExchangeId};
 
     pub trait Sealed {
         const KEY_NAME: &str;
@@ -79,9 +73,9 @@ mod sealed {
     }
 }
 
-pub trait ScratchPadKeyType: sealed::Sealed {}
+pub trait SignalKeyType: sealed::Sealed {}
 
-impl ScratchPadKeyType for ExchangeId {}
-impl ScratchPadKeyType for AssetId {}
-impl ScratchPadKeyType for bool {}
-impl ScratchPadKeyType for f64 {}
+impl SignalKeyType for ExchangeId {}
+impl SignalKeyType for AssetId {}
+impl SignalKeyType for bool {}
+impl SignalKeyType for f64 {}

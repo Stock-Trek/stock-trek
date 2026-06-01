@@ -11,12 +11,12 @@ use crate::{
 };
 use std::collections::HashMap;
 
-pub struct StrategyContext {
+pub struct SignalContext {
     market_data: HashMap<ExchangeId, MarketDataByBaseContext>,
     pub stats: Stats,
 }
 
-impl StrategyContext {
+impl SignalContext {
     pub fn new(market_data: HashMap<ExchangeId, MarketDataByBaseContext>) -> Self {
         Self {
             market_data,

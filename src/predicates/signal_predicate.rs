@@ -1,11 +1,11 @@
 use crate::{
     error::result::StockTrekResult, predicates::predicate::PredicateTrait,
-    resolved_context::ResolvedContext, scratch::key::ScratchKey,
+    resolved_context::ResolvedContext, signal::key::SignalKey,
 };
 
 #[typetag::serde]
-impl PredicateTrait for ScratchKey<bool> {
+impl PredicateTrait for SignalKey<bool> {
     fn test(&self, c: &ResolvedContext) -> StockTrekResult<bool> {
-        c.scratch_pad.read(self)
+        c.signals.read(self)
     }
 }

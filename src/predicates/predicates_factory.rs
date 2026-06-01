@@ -10,7 +10,7 @@ use crate::{
         predicate::Predicate,
         quantity_of_predicate::{QuantityOf, QuantityOfPredicate},
     },
-    scratch::key::ScratchKey,
+    signal::key::SignalKey,
     values::value::NumberValue,
 };
 use std::cmp::Ordering;
@@ -41,7 +41,7 @@ impl PredicatesFactory {
     pub fn quantity_of(&self, quantity_of: QuantityOf, predicates: Vec<Predicate>) -> Predicate {
         QuantityOfPredicate::new(quantity_of, predicates)
     }
-    pub fn scratch_pad(&self, key: &ScratchKey<bool>) -> Predicate {
+    pub fn signal(&self, key: &SignalKey<bool>) -> Predicate {
         Box::new(key.clone())
     }
 }

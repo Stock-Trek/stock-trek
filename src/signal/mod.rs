@@ -1,3 +1,3 @@
 pub mod key;
-pub mod scratch_pad;
+pub mod signals;
 pub mod value;

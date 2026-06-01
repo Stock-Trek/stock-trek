@@ -3,8 +3,7 @@ use crate::{
     predicates::predicates_factory::PredicatesFactory,
     resolvers::resolvers_factory::ResolversFactory,
     values::values_factory::{
-        CalculationValuesFactory, LiteralValuesFactory, PortfolioValuesFactory,
-        ScratchPadValuesFactory,
+        CalculationValuesFactory, LiteralValuesFactory, PortfolioValuesFactory, SignalValuesFactory,
     },
 };
 
@@ -15,7 +14,7 @@ pub struct ResolverContext {
     pub portfolio: PortfolioValuesFactory,
     pub predicates: PredicatesFactory,
     pub resolvers: ResolversFactory,
-    pub scratch_pad: ScratchPadValuesFactory,
+    pub signals: SignalValuesFactory,
 }
 
 impl ResolverContext {
@@ -27,7 +26,7 @@ impl ResolverContext {
             portfolio: PortfolioValuesFactory,
             predicates: PredicatesFactory,
             resolvers: ResolversFactory,
-            scratch_pad: ScratchPadValuesFactory,
+            signals: SignalValuesFactory,
         }
     }
 }

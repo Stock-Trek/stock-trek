@@ -1,7 +1,7 @@
 use crate::{
     asset_id::AssetId,
     exchange_id::ExchangeId,
-    scratch::key::ScratchKey,
+    signal::key::SignalKey,
     values::{
         asset_in_exchange_value::AssetInExchangeValue,
         asset_total_value::AssetTotalValue,
@@ -17,7 +17,7 @@ use crate::{
 pub struct PortfolioValuesFactory;
 pub struct CalculationValuesFactory;
 pub struct LiteralValuesFactory;
-pub struct ScratchPadValuesFactory;
+pub struct SignalValuesFactory;
 
 impl PortfolioValuesFactory {
     pub fn asset_in_exchange(
@@ -61,17 +61,17 @@ impl LiteralValuesFactory {
     }
 }
 
-impl ScratchPadValuesFactory {
-    pub fn exchange_id(&self, key: &ScratchKey<ExchangeId>) -> ExchangeIdValue {
+impl SignalValuesFactory {
+    pub fn exchange_id(&self, key: &SignalKey<ExchangeId>) -> ExchangeIdValue {
         Box::new(key.clone())
     }
-    pub fn asset_id(&self, key: &ScratchKey<AssetId>) -> AssetIdValue {
+    pub fn asset_id(&self, key: &SignalKey<AssetId>) -> AssetIdValue {
         Box::new(key.clone())
     }
-    pub fn flag(&self, key: &ScratchKey<bool>) -> FlagValue {
+    pub fn flag(&self, key: &SignalKey<bool>) -> FlagValue {
         Box::new(key.clone())
     }
-    pub fn number(&self, key: &ScratchKey<f64>) -> NumberValue {
+    pub fn number(&self, key: &SignalKey<f64>) -> NumberValue {
         Box::new(key.clone())
     }
 }
