@@ -1,4 +1,5 @@
 use crate::{
+    actions::action_factory::ActionFactory,
     commands::command_factory::CommandFactory,
     conditions::condition_factory::ConditionFactory,
     order::order_factory::OrderFactory,
@@ -8,6 +9,7 @@ use crate::{
 };
 
 pub struct StrategyContext {
+    pub actions: ActionFactory,
     pub calculations: CalculationValuesFactory,
     pub commands: CommandFactory,
     pub conditions: ConditionFactory,
@@ -20,6 +22,7 @@ pub struct StrategyContext {
 impl StrategyContext {
     pub fn new() -> Self {
         Self {
+            actions: ActionFactory,
             calculations: CalculationValuesFactory,
             commands: CommandFactory,
             conditions: ConditionFactory,

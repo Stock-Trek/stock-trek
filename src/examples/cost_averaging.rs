@@ -69,7 +69,7 @@ impl Algorithm for CostAveraging {
                     Ordering::Greater,
                     satoshi_price,
                 ),
-                c.commands.enqueue_order(
+                c.commands.plan(vec![c.actions.place_order(
                     exchange.clone(),
                     c.orders.single(
                         btc,
@@ -83,7 +83,12 @@ impl Algorithm for CostAveraging {
                             allow_partial: true,
                         }],
                     ),
-                ),
+                    StaleOutMillis(5_000),
+                    RecoveryPolicy::new(ErrorResponse::Stop).on_error(
+                        ErrorCause::TemporaryExchangeRejection,
+                        ErrorResponse::Retry { max_retries: 3 },
+                    ),
+                )]),
                 c.commands.no_op(),
             ),
             c.commands.no_op(),

@@ -17,7 +17,7 @@ Add to your Cargo.toml:
 
 ```rs
 [dependencies]
-stock-trek = "0.7.6"
+stock-trek = "0.8.0"
 ```
 
 ## Python Bindings (coming soon)
@@ -28,8 +28,8 @@ stock-trek will also provide Python bindings in the future, available for instal
 
 ## Usage
 
-Implement the `Strategy` and `Default` traits for your algorithm and register it with the annotation `#[register_algorithm(default)]`.
-An example implementing a cost averaging strategy follows:
+Implement the `Algorithm` and `Default` traits for your algorithm and register it with the annotation `#[register_algorithm(default)]`.
+An example implementing a cost averaging algorithm follows:
 
 ```rs
 use stock_trek::prelude::*;
@@ -103,7 +103,7 @@ impl Algorithm for CostAveraging {
                     Ordering::Greater,
                     satoshi_price,
                 ),
-                c.commands.enqueue_order(
+                c.commands.plan(vec![c.actions.place_order(
                     exchange.clone(),
                     c.orders.single(
                         btc,
@@ -117,7 +117,12 @@ impl Algorithm for CostAveraging {
                             allow_partial: true,
                         }],
                     ),
-                ),
+                    StaleOutMillis(5_000),
+                    RecoveryPolicy::new(ErrorResponse::Stop).on_error(
+                        ErrorCause::TemporaryExchangeRejection,
+                        ErrorResponse::Retry { max_retries: 3 },
+                    ),
+                )]),
                 c.commands.no_op(),
             ),
             c.commands.no_op(),

@@ -1,3 +1,4 @@
+pub mod actions;
 pub mod algorithm;
 pub mod asset_id;
 pub mod capability;
@@ -22,6 +23,10 @@ pub mod verification;
 
 pub mod prelude {
     pub use crate::{
+        actions::{
+            place_order_action::StaleOutMillis,
+            recoverable_action::{ErrorCause, ErrorResponse, RecoveryPolicy},
+        },
         algorithm::Algorithm,
         asset_id::AssetId,
         commands::command::Command,
