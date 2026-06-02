@@ -1,11 +1,10 @@
 use crate::{
+    actions::recoverable_action::RecoverableAction,
     commands::{
-        command::Command, enqueue_order_command::EnqueueOrderCommand, if_command::IfCommand,
-        list_command::ListCommand, no_op_command::NoOpCommand,
+        command::Command, if_command::IfCommand, list_command::ListCommand,
+        no_op_command::NoOpCommand, plan_command::PlanCommand,
     },
     conditions::condition::Condition,
-    order::order_request::OrderRequest,
-    values::value::{AssetIdValue, ExchangeIdValue, NumberValue},
 };
 
 pub struct CommandFactory;
@@ -20,15 +19,7 @@ impl CommandFactory {
     pub fn no_op(&self) -> Command {
         NoOpCommand::new()
     }
-    pub fn enqueue_order(
-        &self,
-        exchange_id_value: ExchangeIdValue,
-        order_request: OrderRequest<AssetIdValue, NumberValue>,
-    ) -> Command {
-        EnqueueOrderCommand::new(exchange_id_value, order_request)
+    pub fn plan(&self, actions: Vec<RecoverableAction>) -> Command {
+        PlanCommand::new(actions)
     }
-    // TODO
-    // pub fn cancel_order(&self, exchange_id_value: ExchangeIdValue, order_id: OrderId) -> Command {
-    //     CancelOrderCommand::new(exchange_id_value, order_id)
-    // }
 }
