@@ -3,35 +3,13 @@ use crate::statistics::filter;
 #[derive(Clone, Default)]
 pub struct Filter;
 
-/// Iteration method used by the Hodrick-Prescott filter.
-///
-/// - `GaussSeidel`: Updates trend values in-place during each sweep, so each
-///   step uses the most recently computed neighbor values. This converges faster
-///   but the update order matters.
-/// - `Jacobi`: Computes all new trend values from the previous iteration's
-///   values, then swaps. This is order-independent and embarrassingly parallel.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum HodrickPrescottMethod {
-    GaussSeidel,
-    Jacobi,
-}
-
 impl Filter {
     pub fn hodrick_prescott_filter(
         &self,
         time_series_values: &[f64],
         lambda: f64,
     ) -> (Vec<f64>, Vec<f64>) {
-        filter::hodrick_prescott_filter(time_series_values, lambda, HodrickPrescottMethod::GaussSeidel)
-    }
-
-    pub fn hodrick_prescott_filter_with_method(
-        &self,
-        time_series_values: &[f64],
-        lambda: f64,
-        method: HodrickPrescottMethod,
-    ) -> (Vec<f64>, Vec<f64>) {
-        filter::hodrick_prescott_filter(time_series_values, lambda, method)
+        filter::hodrick_prescott_filter(time_series_values, lambda)
     }
 
     pub fn wiener_filter(&self, time_series_values: &[f64], window_size: usize) -> Vec<f64> {
@@ -39,62 +17,71 @@ impl Filter {
     }
 }
 
-/// Apply the Hodrick-Prescott filter with a configurable iteration method,
-/// convergence-based stopping, and a safety-bound on iterations.
+/// Apply the Hodrick-Prescott filter using a direct tridiagonal matrix solve
+/// via the Thomas algorithm (TDMA).
 ///
-/// Iterates until the maximum absolute change in trend values falls below `1e-6`
-/// or a maximum of `10_000` iterations is reached.
+/// Solves `(I + λ * DᵀD) * trend = y` where `D` is the second-difference matrix.
+/// This produces the exact trend in O(n) time without iteration.
+///
+/// The tridiagonal system is:
+///   (1+λ) * trend[0]     - λ * trend[1]                                    = y[0]
+///   -λ * trend[t-1]  + (1+2λ) * trend[t]  - λ * trend[t+1]                 = y[t]    (1 ≤ t ≤ n-2)
+///   -λ * trend[n-2]  + (1+λ) * trend[n-1]                                  = y[n-1]
 pub fn hodrick_prescott_filter(
     time_series_values: &[f64],
     lambda: f64,
-    method: HodrickPrescottMethod,
 ) -> (Vec<f64>, Vec<f64>) {
     let n = time_series_values.len();
-    let mut trend = time_series_values.to_vec();
     if n < 3 {
-        return (trend.clone(), vec![0.0; n]);
+        let trend = time_series_values.to_vec();
+        let cyclical = vec![0.0; n];
+        return (trend, cyclical);
     }
 
-    const MAX_ITERATIONS: usize = 10_000;
-    const TOLERANCE: f64 = 1e-6;
+    // Thomas algorithm (TDMA) for the tridiagonal system.
+    //
+    // Sub-diagonal (a[i]): coefficient of trend[i-1], i = 1..n-1
+    // Main diagonal (b[i]): coefficient of trend[i],   i = 0..n-1
+    // Super-diagonal (c[i]): coefficient of trend[i+1], i = 0..n-2
+    // RHS (d[i]): y[i]
 
-    match method {
-        HodrickPrescottMethod::GaussSeidel => {
-            for _ in 0..MAX_ITERATIONS {
-                let mut max_change = 0.0_f64;
-                for t in 1..n - 1 {
-                    let old = trend[t];
-                    trend[t] = (time_series_values[t] + lambda * (trend[t - 1] + trend[t + 1]))
-                        / (1.0 + 2.0 * lambda);
-                    let change = (trend[t] - old).abs();
-                    if change > max_change {
-                        max_change = change;
-                    }
-                }
-                if max_change < TOLERANCE {
-                    break;
-                }
-            }
-        }
-        HodrickPrescottMethod::Jacobi => {
-            let mut next_trend = trend.clone();
-            for _ in 0..MAX_ITERATIONS {
-                let mut max_change = 0.0_f64;
-                for t in 1..n - 1 {
-                    let new_val = (time_series_values[t] + lambda * (trend[t - 1] + trend[t + 1]))
-                        / (1.0 + 2.0 * lambda);
-                    let change = (new_val - trend[t]).abs();
-                    if change > max_change {
-                        max_change = change;
-                    }
-                    next_trend[t] = new_val;
-                }
-                std::mem::swap(&mut trend, &mut next_trend);
-                if max_change < TOLERANCE {
-                    break;
-                }
-            }
-        }
+    let neg_lambda = -lambda;
+    let one_plus_2lambda = 1.0 + 2.0 * lambda;
+    let one_plus_lambda = 1.0 + lambda;
+
+    // Slices for the tridiagonal coefficients.
+    // To avoid per-element allocations, we operate on vectors.
+    let mut c_star = vec![0.0; n]; // modified super-diagonal for forward sweep
+    let mut d_star = vec![0.0; n]; // modified RHS for forward sweep
+    let mut trend = vec![0.0; n];
+
+    // Forward sweep
+    // For i = 0 (first row): b[0] = 1+λ, c[0] = -λ, d[0] = y[0]
+    c_star[0] = neg_lambda / one_plus_lambda;
+    d_star[0] = time_series_values[0] / one_plus_lambda;
+
+    for i in 1..n - 1 {
+        // Row i: a[i] = -λ, b[i] = 1+2λ, c[i] = -λ, d[i] = y[i]
+        let a_i = neg_lambda;
+        let b_i = one_plus_2lambda;
+        let denom = b_i + a_i * c_star[i - 1];
+        c_star[i] = neg_lambda / denom;
+        d_star[i] = (time_series_values[i] - a_i * d_star[i - 1]) / denom;
+    }
+
+    // Last row i = n-1: a[n-1] = -λ, b[n-1] = 1+λ, c[n-1] = 0 (unused), d[n-1] = y[n-1]
+    {
+        let i = n - 1;
+        let a_i = neg_lambda;
+        let b_i = one_plus_lambda;
+        let denom = b_i + a_i * c_star[i - 1];
+        d_star[i] = (time_series_values[i] - a_i * d_star[i - 1]) / denom;
+    }
+
+    // Back substitution
+    trend[n - 1] = d_star[n - 1];
+    for i in (0..n - 1).rev() {
+        trend[i] = d_star[i] - c_star[i] * trend[i + 1];
     }
 
     let cyclical: Vec<f64> = time_series_values
