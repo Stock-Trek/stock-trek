@@ -90,7 +90,10 @@ impl NumberValueTrait for BinaryCalculationValue {
                 if left_value < 0.0 {
                     return Err(StockTrekError::Stats(StatsError::ComplexLogarithm {
                         operator: "Log",
-                        detail: format!("argument {} < 0 would produce a complex number", left_value),
+                        detail: format!(
+                            "argument {} < 0 would produce a complex number",
+                            left_value
+                        ),
                     }));
                 }
                 if right_value < 0.0 {

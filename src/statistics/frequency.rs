@@ -211,18 +211,8 @@ mod tests {
 
         assert_eq!(result.len(), expected.len());
         for (v, e) in result.iter().zip(expected.iter()) {
-            assert!(
-                (v.re - e.re).abs() < 1e-10,
-                "re {} != {}",
-                v.re,
-                e.re
-            );
-            assert!(
-                (v.im - e.im).abs() < 1e-10,
-                "im {} != {}",
-                v.im,
-                e.im
-            );
+            assert!((v.re - e.re).abs() < 1e-10, "re {} != {}", v.re, e.re);
+            assert!((v.im - e.im).abs() < 1e-10, "im {} != {}", v.im, e.im);
         }
     }
 

@@ -17,14 +17,6 @@ pub enum HodrickPrescottMethod {
 }
 
 impl Filter {
-    pub fn hodrick_prescott_filter(
-        &self,
-        time_series_values: &[f64],
-        lambda: f64,
-    ) -> (Vec<f64>, Vec<f64>) {
-        filter::hodrick_prescott_filter(time_series_values, lambda, HodrickPrescottMethod::GaussSeidel)
-    }
-
     pub fn hodrick_prescott_filter_with_method(
         &self,
         time_series_values: &[f64],

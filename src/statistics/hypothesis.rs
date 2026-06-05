@@ -47,9 +47,9 @@ impl Hypothesis {
 /// Coefficients for significance levels 1%, 5%, 10%.
 const MACKINNON_CRITICAL_VALUES: [(f64, f64, f64, f64); 3] = [
     // (significance level, b_inf, b1, b2)
-    (0.01, -3.430_35, -6.539_30, -16.786_00),  // 1%
-    (0.05, -2.861_54, -2.890_10, -13.123_40),  // 5%
-    (0.10, -2.566_77, -1.538_40, -4.887_00),   // 10%
+    (0.01, -3.430_35, -6.539_30, -16.786_00), // 1%
+    (0.05, -2.861_54, -2.890_10, -13.123_40), // 5%
+    (0.10, -2.566_77, -1.538_40, -4.887_00),  // 10%
 ];
 
 /// Compute MacKinnon critical value for a given sample size and significance level.
@@ -131,7 +131,10 @@ pub fn augmented_dickey_fuller(
     if eff_n < 1 {
         return Err(StockTrekError::Stats(StatsError::InvalidParameters {
             function: "augmented_dickey_fuller",
-            message: format!("effective n={} after accounting for lags, need at least 1", eff_n),
+            message: format!(
+                "effective n={} after accounting for lags, need at least 1",
+                eff_n
+            ),
         }));
     }
 
@@ -159,6 +162,7 @@ pub fn augmented_dickey_fuller(
         let mut row = vec![0.0_f64; num_regressors];
         row[0] = 1.0; // constant
         row[1] = y_lag; // y_{t-1}
+
         // Lagged differences: Δy_{t-1}, Δy_{t-2}, ..., Δy_{t-maximum_lag}
         for j in 0..maximum_lag {
             row[2 + j] = diff[maximum_lag + t - 1 - j];
@@ -241,11 +245,13 @@ pub fn augmented_dickey_fuller(
 
     let dof = eff_n as f64 - num_regressors as f64;
     if dof <= 0.0 {
-        return Err(StockTrekError::Stats(StatsError::InsufficientDegreesOfFreedom {
-            function: "augmented_dickey_fuller",
-            dof: 0,
-            needed: 1,
-        }));
+        return Err(StockTrekError::Stats(
+            StatsError::InsufficientDegreesOfFreedom {
+                function: "augmented_dickey_fuller",
+                dof: 0,
+                needed: 1,
+            },
+        ));
     }
     let mse = sse / dof;
 

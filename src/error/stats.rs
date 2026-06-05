@@ -62,7 +62,10 @@ pub enum StatsError {
         value: f64,
         relation: &'static str,
     },
-    IncomparableValues { left: f64, right: f64 },
+    IncomparableValues {
+        left: f64,
+        right: f64,
+    },
     // Moved from GeneralError: calculation domain error with value bounds
     CalculationDomainError {
         operator: &'static str,
