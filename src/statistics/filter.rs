@@ -3,31 +3,100 @@ use crate::statistics::filter;
 #[derive(Clone, Default)]
 pub struct Filter;
 
+/// Iteration method used by the Hodrick-Prescott filter.
+///
+/// - `GaussSeidel`: Updates trend values in-place during each sweep, so each
+///   step uses the most recently computed neighbor values. This converges faster
+///   but the update order matters.
+/// - `Jacobi`: Computes all new trend values from the previous iteration's
+///   values, then swaps. This is order-independent and embarrassingly parallel.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum HodrickPrescottMethod {
+    GaussSeidel,
+    Jacobi,
+}
+
 impl Filter {
     pub fn hodrick_prescott_filter(
         &self,
         time_series_values: &[f64],
         lambda: f64,
     ) -> (Vec<f64>, Vec<f64>) {
-        filter::hodrick_prescott_filter(time_series_values, lambda)
+        filter::hodrick_prescott_filter(time_series_values, lambda, HodrickPrescottMethod::GaussSeidel)
     }
+
+    pub fn hodrick_prescott_filter_with_method(
+        &self,
+        time_series_values: &[f64],
+        lambda: f64,
+        method: HodrickPrescottMethod,
+    ) -> (Vec<f64>, Vec<f64>) {
+        filter::hodrick_prescott_filter(time_series_values, lambda, method)
+    }
+
     pub fn wiener_filter(&self, time_series_values: &[f64], window_size: usize) -> Vec<f64> {
         filter::wiener_filter(time_series_values, window_size)
     }
 }
 
-pub fn hodrick_prescott_filter(time_series_values: &[f64], lambda: f64) -> (Vec<f64>, Vec<f64>) {
+/// Apply the Hodrick-Prescott filter with a configurable iteration method,
+/// convergence-based stopping, and a safety-bound on iterations.
+///
+/// Iterates until the maximum absolute change in trend values falls below `1e-6`
+/// or a maximum of `10_000` iterations is reached.
+pub fn hodrick_prescott_filter(
+    time_series_values: &[f64],
+    lambda: f64,
+    method: HodrickPrescottMethod,
+) -> (Vec<f64>, Vec<f64>) {
     let n = time_series_values.len();
     let mut trend = time_series_values.to_vec();
     if n < 3 {
         return (trend.clone(), vec![0.0; n]);
     }
-    for _ in 0..100 {
-        for t in 1..n - 1 {
-            trend[t] = (time_series_values[t] + lambda * (trend[t - 1] + trend[t + 1]))
-                / (1.0 + 2.0 * lambda);
+
+    const MAX_ITERATIONS: usize = 10_000;
+    const TOLERANCE: f64 = 1e-6;
+
+    match method {
+        HodrickPrescottMethod::GaussSeidel => {
+            for _ in 0..MAX_ITERATIONS {
+                let mut max_change = 0.0_f64;
+                for t in 1..n - 1 {
+                    let old = trend[t];
+                    trend[t] = (time_series_values[t] + lambda * (trend[t - 1] + trend[t + 1]))
+                        / (1.0 + 2.0 * lambda);
+                    let change = (trend[t] - old).abs();
+                    if change > max_change {
+                        max_change = change;
+                    }
+                }
+                if max_change < TOLERANCE {
+                    break;
+                }
+            }
+        }
+        HodrickPrescottMethod::Jacobi => {
+            let mut next_trend = trend.clone();
+            for _ in 0..MAX_ITERATIONS {
+                let mut max_change = 0.0_f64;
+                for t in 1..n - 1 {
+                    let new_val = (time_series_values[t] + lambda * (trend[t - 1] + trend[t + 1]))
+                        / (1.0 + 2.0 * lambda);
+                    let change = (new_val - trend[t]).abs();
+                    if change > max_change {
+                        max_change = change;
+                    }
+                    next_trend[t] = new_val;
+                }
+                std::mem::swap(&mut trend, &mut next_trend);
+                if max_change < TOLERANCE {
+                    break;
+                }
+            }
         }
     }
+
     let cyclical: Vec<f64> = time_series_values
         .iter()
         .zip(trend.iter())
