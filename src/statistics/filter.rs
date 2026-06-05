@@ -124,7 +124,12 @@ pub fn wiener_filter(time_series_values: &[f64], window_size: usize) -> Vec<f64>
             })
             .sum::<f64>()
             / window.len() as f64;
-        let noise = var;
+        // Estimate noise variance from local differences (simple noise floor)
+        let noise = window
+            .windows(2)
+            .map(|w| (w[1] - w[0]) * (w[1] - w[0]))
+            .sum::<f64>()
+            / (window.len().max(1) - 1).max(1) as f64;
         let signal = (var - noise).max(0.0);
         let value = mean + (signal / (signal + noise + 1e-12)) * (time_series_values[i] - mean);
         result.push(value);
