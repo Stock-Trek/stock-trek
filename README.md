@@ -1,15 +1,6 @@
 # stock-trek
 
-A lightweight, composable time series and statistical toolkit designed for running crypto bots on [stock-trek.com](https://stock-trek.com). Rust-native core with optional Python bindings
-
-## Overview
-
-stock-trek provides core abstractions and utilities for working with market data, including:
-
-- Order books
-- Aligned/Rolling windows
-- Ticks
-- Statistical and analytical functions
+A tool for running crypto bots on [stock-trek.com](https://stock-trek.com). Rust-native core with optional Python bindings (coming soon)
 
 ## Installation
 
@@ -142,13 +133,6 @@ then run the verify command with
 ```sh
 stock-trek-check verify --file ./path/algorithm.rs
 ```
-
-## Roadmap
-
-Planned features include:
-
-- Technical indicators (EMA, RSI, MACD, etc.)
-- Backtesting and simulation utilities
 
 ## Status
 

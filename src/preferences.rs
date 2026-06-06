@@ -1,6 +1,6 @@
 use rust_decimal::RoundingStrategy;
 use serde::de::Error;
-use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeStruct};
 use strum::Display;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,6 +1,6 @@
 use crate::{
     asset_id::AssetId,
-    capability::{combine_capabilities, Capability, HasRequiredCapabilities, MultiLegCapability},
+    capability::{Capability, HasRequiredCapabilities, MultiLegCapability, combine_capabilities},
     error::result::StockTrekResult,
     order::orders::single::SingleOrderGeneric,
     resolveable::Resolvable,

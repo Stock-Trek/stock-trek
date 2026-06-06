@@ -1,6 +1,6 @@
 use serde::{
-    de::{Error, Unexpected},
     Deserialize, Deserializer, Serialize, Serializer,
+    de::{Error, Unexpected},
 };
 use std::cmp::Ordering;
 
