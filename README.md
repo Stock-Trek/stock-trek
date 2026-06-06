@@ -131,16 +131,16 @@ impl Algorithm for CostAveraging {
 }
 ```
 
-Stock-Trek verifies code before running it and disallows certain syntax elements. To verify code locally, install it with
+Stock-Trek verifies code before running it and disallows certain syntax elements. To verify code locally, install the verifier [stock-trek-check](https://crates.io/crates/stock-trek-check) with
 
 ```sh
-cargo install stock-trek
+cargo install stock-trek-check
 ```
 
 then run the verify command with
 
 ```sh
-stock-trek verify --file ./path/strategy.rs
+stock-trek-check verify --file ./path/algorithm.rs
 ```
 
 ## Roadmap

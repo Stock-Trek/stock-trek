@@ -1,6 +1,6 @@
 [package]
 name = "stock-trek"
-version = "0.8.0"
+version = "0.8.1"
 edition = "2021"
 description = "Stock Trek time-series analysis"
 authors = ["stock-trek.com <stock-trek@proton.me>"]
@@ -22,15 +22,11 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 async-trait = "0.1.89"
 chrono = { version = "0.4", features = ["serde"] }
-larpa = "0.1.1"
 num-complex = "0.4.6"
-proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
-quote = "1.0.45"
 rust_decimal = "1.42.0"
 serde = "1.0.228"
 serde_json = {version = "1.0.149", features = ["float_roundtrip"] }
 strum = { version = "0.28.0", features = ["derive"] }
-syn = { version = "2.0.117", features = ["visit"] }
 table_enum = "0.3.0"
 thiserror = "1.0"
 traitreg = "0.4.0"

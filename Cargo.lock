@@ -381,26 +381,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "larpa"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d0e499f51bc1e0ca0d0cdbdb471a95ba17c198aba280435057d55cef8dca261"
-dependencies = [
- "larpa-derive",
-]
-
-[[package]]
-name = "larpa-derive"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a37111f3c719a9d989ce7b2acf44fc87930c5bc7b6838e661322ee1bfef43b6a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
 name = "leb128fmt"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -783,19 +763,15 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "stock-trek"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "async-trait",
  "chrono",
- "larpa",
  "num-complex",
- "proc-macro2",
- "quote",
  "rust_decimal",
  "serde",
  "serde_json",
  "strum",
- "syn 2.0.117",
  "table_enum",
  "thiserror 1.0.69",
  "traitreg",

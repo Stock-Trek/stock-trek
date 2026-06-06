@@ -19,7 +19,6 @@ pub mod statistics;
 pub mod strategy_context;
 pub mod util;
 pub mod values;
-pub mod verification;
 
 pub mod prelude {
     pub use crate::{
