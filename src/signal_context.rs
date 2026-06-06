@@ -1,39 +1,13 @@
-use crate::{
-    asset_id::AssetId,
-    exchange_id::ExchangeId,
-    market_data::market::Market,
-    statistics::{
-        advanced::Advanced, decompose::Decompose, evaluation::Evaluation,
-        exponential_smoothing::ExponentialSmoothing, filter::Filter, frequency::Frequency,
-        hypothesis::Hypothesis, moving_average::MovingAverage, stats::Stats,
-        time_series::TimeSeries, transformation::Transformation, wavelet::Wavelet,
-    },
-};
+use crate::{asset_id::AssetId, exchange_id::ExchangeId, market_data::market::Market};
 use std::collections::HashMap;
 
 pub struct SignalContext {
     market_data: HashMap<ExchangeId, MarketDataByBaseContext>,
-    pub stats: Stats,
 }
 
 impl SignalContext {
     pub fn new(market_data: HashMap<ExchangeId, MarketDataByBaseContext>) -> Self {
-        Self {
-            market_data,
-            stats: Stats {
-                advanced: Advanced,
-                decompose: Decompose,
-                evaluation: Evaluation,
-                exponential_smoothing: ExponentialSmoothing,
-                filter: Filter,
-                frequency: Frequency,
-                hypothesis: Hypothesis,
-                moving_average: MovingAverage,
-                time_series: TimeSeries,
-                transformation: Transformation,
-                wavelet: Wavelet,
-            },
-        }
+        Self { market_data }
     }
     pub fn exchange_markets_for(
         &self,

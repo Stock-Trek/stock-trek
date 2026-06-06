@@ -15,7 +15,6 @@ pub mod resolveable;
 pub mod resolved_context;
 pub mod signal;
 pub mod signal_context;
-pub mod statistics;
 pub mod strategy_context;
 pub mod util;
 pub mod values;
