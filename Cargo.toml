@@ -10,11 +10,8 @@ readme = "README.md"
 categories = ["finance", "mathematics"]
 keywords = [
   "algorithm",
-  "automation",
   "bot",
   "crypto",
-  "ohlcv",
-  "portfolio",
   "quant",
   "trading",
 ]
