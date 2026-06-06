@@ -9,10 +9,14 @@ repository = "https://github.com/Stock-Trek/stock-trek"
 readme = "README.md"
 categories = ["finance", "mathematics"]
 keywords = [
-  "indicators",
+  "algorithm",
+  "automation",
+  "bot",
+  "crypto",
   "ohlcv",
-  "statistics",
-  "timeseries",
+  "portfolio",
+  "quant",
+  "trading",
 ]
 
 [lib]
