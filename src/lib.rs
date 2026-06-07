@@ -21,10 +21,7 @@ pub mod values;
 
 pub mod prelude {
     pub use crate::{
-        actions::{
-            place_order_action::StaleOutMillis,
-            recoverable_action::{ErrorCause, ErrorResponse, RecoveryPolicy},
-        },
+        actions::recoverable_action::{ErrorCause, ErrorResponse, RecoveryPolicy},
         algorithm::Algorithm,
         asset_id::AssetId,
         commands::command::Command,

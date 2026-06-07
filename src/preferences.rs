@@ -5,6 +5,7 @@ use strum::Display;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Preferences {
+    pub max_network_delay_millis: u32,
     pub rounding: Rounding,
     pub multi_leg: MultiLeg,
 }
