@@ -41,7 +41,7 @@ pub struct RecoveryPolicy {
 }
 
 impl RecoveryPolicy {
-    pub fn new(default: ErrorResponse) -> Self {
+    pub fn with_default(default: ErrorResponse) -> Self {
         Self {
             default,
             on_error: HashMap::new(),
