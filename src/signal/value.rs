@@ -1,10 +1,9 @@
 use crate::{
-    asset_id::AssetId,
+    cex::{asset_id::AssetId, exchange_id::ExchangeId},
     error::{
         result::{StockTrekError, StockTrekResult},
         value::ValueError,
     },
-    exchange_id::ExchangeId,
 };
 use serde::{Deserialize, Serialize};
 use strum::Display;

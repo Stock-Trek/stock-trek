@@ -1,6 +1,6 @@
 use crate::{
     actions::action::Action,
-    capability::{Capability, HasRequiredCapabilities},
+    cex::capability::{Capability, HasRequiredCapabilities},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
 };

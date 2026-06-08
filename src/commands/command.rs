@@ -1,5 +1,5 @@
 use crate::{
-    capability::HasRequiredCapabilities, error::result::StockTrekResult,
+    cex::capability::HasRequiredCapabilities, error::result::StockTrekResult,
     resolved_context::ResolvedContext,
 };
 

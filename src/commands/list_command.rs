@@ -1,5 +1,5 @@
 use crate::{
-    capability::{Capability, HasRequiredCapabilities},
+    cex::capability::{Capability, HasRequiredCapabilities},
     commands::command::{Command, CommandTrait},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,

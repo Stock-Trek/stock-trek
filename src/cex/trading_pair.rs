@@ -1,4 +1,4 @@
-use crate::asset_id::AssetId;
+use crate::cex::asset_id::AssetId;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -1,7 +1,7 @@
 use crate::{
+    cex::exchange_id::ExchangeId,
     conditions::condition::{Condition, ConditionTrait},
     error::result::StockTrekResult,
-    exchange_id::ExchangeId,
     resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};

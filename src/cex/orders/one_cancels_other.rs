@@ -1,8 +1,12 @@
 use crate::{
-    asset_id::AssetId,
-    capability::{Capability, HasRequiredCapabilities, MultiLegCapability, combine_capabilities},
+    cex::{
+        asset_id::AssetId,
+        capability::{
+            Capability, HasRequiredCapabilities, MultiLegCapability, combine_capabilities,
+        },
+        orders::single::SingleOrderGeneric,
+    },
     error::result::StockTrekResult,
-    order::orders::single::SingleOrderGeneric,
     resolveable::Resolvable,
     resolved_context::ResolvedContext,
     values::value::{AssetIdValue, NumberValue},

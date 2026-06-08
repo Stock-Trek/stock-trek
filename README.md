@@ -8,7 +8,7 @@ Add to your Cargo.toml:
 
 ```rs
 [dependencies]
-stock-trek = "0.8.4"
+stock-trek = "0.8.5"
 ```
 
 ## Python Bindings (coming soon)
@@ -48,17 +48,19 @@ impl Default for CostAveraging {
 impl Algorithm for CostAveraging {
     fn preferences(&self) -> Preferences {
         Preferences {
-            max_network_delay_millis: 5000,
-            rounding: Rounding {
-                activation_price_triggered_above: RoundingStrategy::AwayFromZero,
-                activation_price_triggered_below: RoundingStrategy::ToZero,
-                price: RoundingStrategy::ToZero,
-                quantity: RoundingStrategy::ToZero,
-                callback_rate_bps: RoundingStrategy::ToZero,
-            },
-            multi_leg: MultiLeg {
-                if_different_price_unsupported: OnDifferent::UseDataFromPrimary,
-                if_different_symbol_unsupported: OnDifferent::UseDataFromPrimary,
+            cex: CexPreferences {
+                max_network_delay_millis: 5000,
+                rounding: Rounding {
+                    activation_price_triggered_above: RoundingStrategy::AwayFromZero,
+                    activation_price_triggered_below: RoundingStrategy::ToZero,
+                    price: RoundingStrategy::ToZero,
+                    quantity: RoundingStrategy::ToZero,
+                    callback_rate_bps: RoundingStrategy::ToZero,
+                },
+                multi_leg: MultiLeg {
+                    if_different_price_unsupported: OnDifferent::UseDataFromPrimary,
+                    if_different_symbol_unsupported: OnDifferent::UseDataFromPrimary,
+                },
             },
         }
     }
@@ -66,7 +68,7 @@ impl Algorithm for CostAveraging {
         let mut signals = Signals::new();
         let one_millionth = 1.0 / 1_000_000.0;
         signals.write(&self.key_satoshi_quantity, one_millionth);
-        let iter = c.exchange_markets_for(AssetId::bitcoin_native(), AssetId::ethereum_usdt());
+        let iter = c.exchange_markets_for(AssetId::bitcoin(), AssetId::usdt());
         let min_by_last_ask = iter.min_by(|(_a_exch, a_market), (_b_exch, b_market)| {
             let a_last_ask = a_market.ticks.ticks[0].ask.price;
             let b_last_ask = b_market.ticks.ticks[0].ask.price;
@@ -82,8 +84,8 @@ impl Algorithm for CostAveraging {
     }
     fn strategy(&self, c: &StrategyContext) -> Command {
         let exchange = c.signals.exchange_id(&self.key_exchange);
-        let btc = c.literals.asset_id(AssetId::bitcoin_native());
-        let usdt = c.literals.asset_id(AssetId::ethereum_usdt());
+        let btc = c.literals.asset_id(AssetId::bitcoin());
+        let usdt = c.literals.asset_id(AssetId::usdt());
         let satoshi_price = c.signals.number(&self.key_satoshi_price);
         let quantity = c.signals.number(&self.key_satoshi_quantity);
         c.commands.if_else(
@@ -95,7 +97,7 @@ impl Algorithm for CostAveraging {
                     Ordering::Greater,
                     satoshi_price,
                 ),
-                c.commands.plan(vec![c.actions.place_order(
+                c.commands.plan(vec![c.actions.send_order_request(
                     exchange.clone(),
                     c.orders.single(
                         btc,

@@ -1,4 +1,4 @@
-use crate::{asset_id::AssetId, exchange_id::ExchangeId, order::order_request::OrderRequest};
+use crate::cex::{asset_id::AssetId, exchange_id::ExchangeId, order_request::OrderRequest};
 use serde::{Deserialize, Serialize};
 use strum::Display;
 

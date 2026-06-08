@@ -1,7 +1,6 @@
 use crate::{
-    asset_id::AssetId,
+    cex::{asset_id::AssetId, exchange_id::ExchangeId},
     error::result::{StockTrekError, StockTrekResult},
-    exchange_id::ExchangeId,
     resolved_context::ResolvedContext,
     signal::value::SignalValue,
 };
@@ -54,7 +53,7 @@ where
 }
 
 mod sealed {
-    use crate::{asset_id::AssetId, signal::key::ExchangeId};
+    use crate::{cex::asset_id::AssetId, signal::key::ExchangeId};
 
     pub trait Sealed {
         const KEY_NAME: &str;

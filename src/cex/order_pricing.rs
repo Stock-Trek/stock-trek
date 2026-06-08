@@ -1,5 +1,5 @@
 use crate::{
-    error::result::StockTrekResult, order::order_time_in_force::OrderTimeInForce,
+    cex::order_time_in_force::OrderTimeInForce, error::result::StockTrekResult,
     resolveable::Resolvable, resolved_context::ResolvedContext, values::value::NumberValue,
 };
 use rust_decimal::Decimal;

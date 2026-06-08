@@ -1,4 +1,4 @@
-use crate::exchange_id::ExchangeId;
+use crate::cex::exchange_id::ExchangeId;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 

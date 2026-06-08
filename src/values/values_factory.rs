@@ -1,6 +1,5 @@
 use crate::{
-    asset_id::AssetId,
-    exchange_id::ExchangeId,
+    cex::{asset_id::AssetId, exchange_id::ExchangeId},
     signal::key::SignalKey,
     values::{
         asset_in_exchange_value::AssetInExchangeValue,

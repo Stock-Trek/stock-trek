@@ -1,4 +1,7 @@
-use crate::{asset_id::AssetId, exchange_id::ExchangeId, market_data::market::Market};
+use crate::{
+    cex::{asset_id::AssetId, exchange_id::ExchangeId},
+    market_data::market::Market,
+};
 use std::collections::HashMap;
 
 pub struct SignalContext {

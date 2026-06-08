@@ -1,5 +1,5 @@
 use crate::{
-    asset_id::AssetId,
+    cex::{asset_id::AssetId, exchange_id::ExchangeId},
     conditions::{
         compare_condition::CompareCondition,
         condition::Condition,
@@ -9,7 +9,6 @@ use crate::{
         owns_asset_in_exchange_condition::OwnsAssetInExchangeCondition,
         quantity_of_condition::{QuantityOf, QuantityOfCondition},
     },
-    exchange_id::ExchangeId,
     signal::key::SignalKey,
     values::value::NumberValue,
 };
