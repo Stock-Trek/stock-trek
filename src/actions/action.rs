@@ -1,5 +1,5 @@
 use crate::{
-    actions::resolved_action::ResolvedAction, capability::HasRequiredCapabilities,
+    actions::resolved_action::ResolvedAction, cex::capability::HasRequiredCapabilities,
     resolveable::Resolvable,
 };
 

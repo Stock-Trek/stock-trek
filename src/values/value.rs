@@ -1,5 +1,6 @@
 use crate::{
-    asset_id::AssetId, error::result::StockTrekResult, exchange_id::ExchangeId,
+    cex::{asset_id::AssetId, exchange_id::ExchangeId},
+    error::result::StockTrekResult,
     resolved_context::ResolvedContext,
 };
 use std::{

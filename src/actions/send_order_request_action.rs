@@ -3,9 +3,11 @@ use crate::{
         action::{Action, ActionTrait},
         resolved_action::ResolvedAction,
     },
-    capability::{Capability, HasRequiredCapabilities},
+    cex::{
+        capability::{Capability, HasRequiredCapabilities},
+        order_request::OrderRequest,
+    },
     error::result::StockTrekResult,
-    order::order_request::OrderRequest,
     resolveable::Resolvable,
     resolved_context::ResolvedContext,
     values::value::{AssetIdValue, ExchangeIdValue, NumberValue},
@@ -13,12 +15,12 @@ use crate::{
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct PlaceOrderAction {
+pub struct SendOrderRequestAction {
     exchange_id_value: ExchangeIdValue,
     order_request: OrderRequest<AssetIdValue, NumberValue>,
 }
 
-impl PlaceOrderAction {
+impl SendOrderRequestAction {
     pub fn new(
         exchange_id_value: ExchangeIdValue,
         order_request: OrderRequest<AssetIdValue, NumberValue>,
@@ -31,9 +33,9 @@ impl PlaceOrderAction {
 }
 
 #[typetag::serde]
-impl ActionTrait for PlaceOrderAction {}
+impl ActionTrait for SendOrderRequestAction {}
 
-impl Resolvable<ResolvedAction> for PlaceOrderAction {
+impl Resolvable<ResolvedAction> for SendOrderRequestAction {
     fn try_resolve(&self, c: &ResolvedContext) -> StockTrekResult<ResolvedAction> {
         let exchange_id = self.exchange_id_value.exchange_id(c)?;
         let order_request = self.order_request.try_resolve(c)?;
@@ -44,7 +46,7 @@ impl Resolvable<ResolvedAction> for PlaceOrderAction {
     }
 }
 
-impl HasRequiredCapabilities for PlaceOrderAction {
+impl HasRequiredCapabilities for SendOrderRequestAction {
     fn required_capabilities(&self) -> Vec<Capability> {
         self.order_request.required_capabilities()
     }

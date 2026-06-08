@@ -1,14 +1,12 @@
 pub mod actions;
 pub mod algorithm;
-pub mod asset_id;
-pub mod capability;
+pub mod cex;
 pub mod commands;
 pub mod conditions;
+// pub mod dex;
 pub mod error;
 pub mod examples;
-pub mod exchange_id;
 pub mod market_data;
-pub mod order;
 pub mod portfolios;
 pub mod preferences;
 pub mod resolveable;
@@ -23,10 +21,10 @@ pub mod prelude {
     pub use crate::{
         actions::recoverable_action::{ErrorCause, ErrorResponse, RecoveryPolicy},
         algorithm::Algorithm,
-        asset_id::AssetId,
-        commands::command::Command,
-        exchange_id::ExchangeId,
-        order::{
+        cex::{
+            asset_id::AssetId,
+            cex_preferences::{CexPreferences, MultiLeg, OnDifferent, Rounding},
+            exchange_id::ExchangeId,
             order_activation::OrderActivation,
             order_constraint::OrderConstraint,
             order_intent::OrderIntent,
@@ -47,9 +45,9 @@ pub mod prelude {
                 single::{SingleOrder, SingleOrderRaw},
             },
         },
+        commands::command::Command,
         portfolios::portfolio_factory::PortfolioFactory,
-        preferences::{MultiLeg, OnDifferent, Preferences, Rounding},
-        resolved_context::ResolvedContext,
+        preferences::Preferences,
         signal::{key::SignalKey, signals::Signals, value::SignalValue},
         signal_context::SignalContext,
         strategy_context::StrategyContext,

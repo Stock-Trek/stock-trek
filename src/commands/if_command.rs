@@ -1,5 +1,5 @@
 use crate::{
-    capability::{Capability, HasRequiredCapabilities, combine_capabilities},
+    cex::capability::{Capability, HasRequiredCapabilities, combine_capabilities},
     commands::command::{Command, CommandTrait},
     conditions::condition::Condition,
     error::result::StockTrekResult,

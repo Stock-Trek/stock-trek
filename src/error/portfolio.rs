@@ -1,4 +1,4 @@
-use crate::{asset_id::AssetId, exchange_id::ExchangeId};
+use crate::cex::{asset_id::AssetId, exchange_id::ExchangeId};
 use thiserror::Error;
 
 #[derive(Error, Debug)]

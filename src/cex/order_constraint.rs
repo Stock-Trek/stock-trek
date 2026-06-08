@@ -1,4 +1,4 @@
-use crate::order::order_price_basis::OrderPriceBasis;
+use crate::cex::order_price_basis::OrderPriceBasis;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use strum::Display;

@@ -1,7 +1,6 @@
 use crate::{
-    asset_id::AssetId,
+    cex::{asset_id::AssetId, exchange_id::ExchangeId},
     error::result::StockTrekResult,
-    exchange_id::ExchangeId,
     resolved_context::ResolvedContext,
     values::value::{
         AssetIdValue, AssetIdValueTrait, ExchangeIdValue, ExchangeIdValueTrait, FlagValue,

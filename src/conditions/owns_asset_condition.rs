@@ -1,5 +1,5 @@
 use crate::{
-    asset_id::AssetId,
+    cex::asset_id::AssetId,
     conditions::condition::{Condition, ConditionTrait},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
