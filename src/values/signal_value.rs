@@ -4,8 +4,8 @@ use crate::{
     resolved_context::ResolvedContext,
     signal::key::SignalKey,
     values::value::{
-        AssetIdValue, AssetIdValueTrait, CexIdValue, CexIdValueTrait, FlagValue,
-        FlagValueTrait, NumberValue, NumberValueTrait,
+        AssetIdValue, AssetIdValueTrait, CexIdValue, CexIdValueTrait, FlagValue, FlagValueTrait,
+        NumberValue, NumberValueTrait,
     },
 };
 

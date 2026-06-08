@@ -34,7 +34,9 @@ impl Resolvable<OneCancelsOtherOrder> for OneCancelsOtherOrderRaw {
 impl<A, N> HasRequiredCapabilities for OneCancelsOtherOrderGeneric<A, N> {
     fn required_capabilities(&self) -> Vec<CexCapability> {
         let mut required_capabilities = combine_capabilities(&[&self.primary, &self.secondary]);
-        required_capabilities.push(CexCapability::MultiLeg(MultiLegCexCapability::OneCancelsOther));
+        required_capabilities.push(CexCapability::MultiLeg(
+            MultiLegCexCapability::OneCancelsOther,
+        ));
         required_capabilities
     }
 }
