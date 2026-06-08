@@ -1,7 +1,7 @@
 use crate::{
     cex::{
         asset_id::AssetId,
-        capability::{Capability, HasRequiredCapabilities, MultiLegCapability},
+        capability::{CexCapability, HasRequiredCapabilities, MultiLegCexCapability},
         orders::{one_cancels_other::OneCancelsOtherOrderGeneric, single::SingleOrderGeneric},
     },
     error::result::StockTrekResult,
@@ -30,11 +30,13 @@ impl Resolvable<OneTriggersOcoOrder> for OneTriggersOcoOrderRaw {
 }
 
 impl<A, N> HasRequiredCapabilities for OneTriggersOcoOrderGeneric<A, N> {
-    fn required_capabilities(&self) -> Vec<Capability> {
+    fn required_capabilities(&self) -> Vec<CexCapability> {
         let mut required_capabilities = Vec::new();
         required_capabilities.extend(self.primary.required_capabilities());
         required_capabilities.extend(self.oco_order.required_capabilities());
-        required_capabilities.push(Capability::MultiLeg(MultiLegCapability::OneTriggersOco));
+        required_capabilities.push(CexCapability::MultiLeg(
+            MultiLegCexCapability::OneTriggersOco,
+        ));
         required_capabilities
     }
 }

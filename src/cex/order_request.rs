@@ -1,7 +1,7 @@
 use crate::{
     cex::{
         asset_id::AssetId,
-        capability::{Capability, HasRequiredCapabilities},
+        capability::{CexCapability, HasRequiredCapabilities},
         orders::{
             one_cancels_other::OneCancelsOtherOrderGeneric,
             one_triggers_oco::OneTriggersOcoOrderGeneric,
@@ -46,7 +46,7 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
 }
 
 impl<A, N> HasRequiredCapabilities for OrderRequest<A, N> {
-    fn required_capabilities(&self) -> Vec<Capability> {
+    fn required_capabilities(&self) -> Vec<CexCapability> {
         match self {
             Self::Single(order) => order.required_capabilities(),
             Self::OneCancelsOther(order) => order.required_capabilities(),

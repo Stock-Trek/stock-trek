@@ -1,16 +1,16 @@
 use crate::{
-    cex::{asset_id::AssetId, exchange_id::ExchangeId},
+    cex::{asset_id::AssetId, cex_id::CexId},
     portfolios::portfolio::{Portfolio, PortfolioTrait},
 };
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Default)]
 pub struct InMemoryPortfolio {
-    exchange_assets: HashMap<ExchangeId, Assets>,
+    cex_assets: HashMap<CexId, Assets>,
 }
 impl InMemoryPortfolio {
-    pub fn new(exchange_assets: HashMap<ExchangeId, Assets>) -> Self {
-        Self { exchange_assets }
+    pub fn new(cex_assets: HashMap<CexId, Assets>) -> Self {
+        Self { cex_assets }
     }
     pub fn builder() -> Builder {
         Builder::new()
@@ -34,29 +34,29 @@ impl Assets {
 }
 
 impl PortfolioTrait for InMemoryPortfolio {
-    fn has_account_in_exchange(&self, exchange_id: &ExchangeId) -> bool {
-        self.exchange_assets.contains_key(exchange_id)
+    fn has_account_in_cex(&self, cex_id: &CexId) -> bool {
+        self.cex_assets.contains_key(cex_id)
     }
     fn owns_asset(&self, asset_id: &AssetId) -> bool {
-        self.exchange_assets
+        self.cex_assets
             .values()
             .any(|assets| assets.asset_counts.contains_key(asset_id))
     }
-    fn owns_asset_in_exchange(&self, asset_id: &AssetId, exchange_id: &ExchangeId) -> bool {
-        self.exchange_assets
-            .get(exchange_id)
+    fn owns_asset_in_cex(&self, asset_id: &AssetId, cex_id: &CexId) -> bool {
+        self.cex_assets
+            .get(cex_id)
             .map(|assets| assets.asset_counts.contains_key(asset_id))
             .unwrap_or(false)
     }
     fn asset_total(&self, asset_id: &AssetId) -> f64 {
-        self.exchange_assets
+        self.cex_assets
             .values()
             .map(|assets| assets.asset_counts.get(asset_id).unwrap_or(&0.0))
             .sum()
     }
-    fn asset_in_exchange(&self, asset_id: &AssetId, exchange_id: &ExchangeId) -> f64 {
-        self.exchange_assets
-            .get(exchange_id)
+    fn asset_in_cex(&self, asset_id: &AssetId, cex_id: &CexId) -> f64 {
+        self.cex_assets
+            .get(cex_id)
             .and_then(|assets| assets.asset_counts.get(asset_id))
             .copied()
             .unwrap_or(0.0)
@@ -64,21 +64,21 @@ impl PortfolioTrait for InMemoryPortfolio {
     // TODO
     // fn order_by_order_id(
     //     &self,
-    //     exchange: &ExchangeId,
+    //     cex_id: &CexId,
     //     order_id: &OrderId,
     // ) -> Option<OrderResponse> {
-    //     self.exchange_orders
-    //         .get(exchange)
+    //     self.cex_orders
+    //         .get(cex_id)
     //         .and_then(|v| v.iter().find(|o| &o.id == order_id))
     //         .cloned()
     // }
     // fn order_by_client_order_id(
     //     &self,
-    //     exchange: &ExchangeId,
+    //     cex_id: &CexId,
     //     client_order_id: &ClientOrderId,
     // ) -> Option<OrderResponse> {
-    //     self.exchange_orders
-    //         .get(exchange)
+    //     self.cex_orders
+    //         .get(cex_id)
     //         .and_then(|v| v.iter().find(|o| &o.client_order_id == client_order_id))
     //         .cloned()
     // }
@@ -86,23 +86,18 @@ impl PortfolioTrait for InMemoryPortfolio {
 
 #[derive(Clone, Default)]
 pub struct Builder {
-    exchange_assets: HashMap<ExchangeId, Assets>,
+    cex_assets: HashMap<CexId, Assets>,
 }
 
 impl Builder {
     pub fn new() -> Self {
         Self {
-            exchange_assets: HashMap::new(),
+            cex_assets: HashMap::new(),
         }
     }
-    pub fn assets(
-        &mut self,
-        exchange_id: ExchangeId,
-        asset_id: AssetId,
-        quantity: f64,
-    ) -> &mut Self {
-        self.exchange_assets
-            .entry(exchange_id)
+    pub fn assets(&mut self, cex_id: CexId, asset_id: AssetId, quantity: f64) -> &mut Self {
+        self.cex_assets
+            .entry(cex_id)
             .or_insert_with(|| Assets::new(HashMap::new()))
             .asset_counts
             .entry(asset_id)
@@ -111,6 +106,6 @@ impl Builder {
         self
     }
     pub fn build(&self) -> InMemoryPortfolio {
-        InMemoryPortfolio::new(self.exchange_assets.clone())
+        InMemoryPortfolio::new(self.cex_assets.clone())
     }
 }

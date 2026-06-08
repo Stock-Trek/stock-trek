@@ -1,5 +1,5 @@
 use crate::{
-    cex::capability::{Capability, HasRequiredCapabilities, combine_capabilities},
+    cex::capability::{CexCapability, HasRequiredCapabilities, combine_capabilities},
     commands::command::{Command, CommandTrait},
     conditions::condition::Condition,
     error::result::StockTrekResult,
@@ -38,7 +38,7 @@ impl CommandTrait for IfCommand {
 }
 
 impl HasRequiredCapabilities for IfCommand {
-    fn required_capabilities(&self) -> Vec<Capability> {
+    fn required_capabilities(&self) -> Vec<CexCapability> {
         combine_capabilities(&[self.if_false.as_ref(), self.if_true.as_ref()])
     }
 }

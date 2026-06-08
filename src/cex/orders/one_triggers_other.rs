@@ -2,7 +2,7 @@ use crate::{
     cex::{
         asset_id::AssetId,
         capability::{
-            Capability, HasRequiredCapabilities, MultiLegCapability, combine_capabilities,
+            CexCapability, HasRequiredCapabilities, MultiLegCexCapability, combine_capabilities,
         },
         orders::single::SingleOrderGeneric,
     },
@@ -32,9 +32,11 @@ impl Resolvable<OneTriggersOtherOrder> for OneTriggersOtherOrderRaw {
 }
 
 impl<A, N> HasRequiredCapabilities for OneTriggersOtherOrderGeneric<A, N> {
-    fn required_capabilities(&self) -> Vec<Capability> {
+    fn required_capabilities(&self) -> Vec<CexCapability> {
         let mut required_capabilities = combine_capabilities(&[&self.primary, &self.secondary]);
-        required_capabilities.push(Capability::MultiLeg(MultiLegCapability::OneTriggersOther));
+        required_capabilities.push(CexCapability::MultiLeg(
+            MultiLegCexCapability::OneTriggersOther,
+        ));
         required_capabilities
     }
 }

@@ -1,15 +1,15 @@
 use crate::{
-    cex::{asset_id::AssetId, exchange_id::ExchangeId},
+    cex::{asset_id::AssetId, cex_id::CexId},
     signal::key::SignalKey,
     values::{
-        asset_in_exchange_value::AssetInExchangeValue,
+        asset_in_cex_value::AssetInCexValue,
         asset_total_value::AssetTotalValue,
         binary_calculation_value::{BinaryCalculationValue, BinaryOperator},
         literal_value::{
-            LiteralAssetIdValue, LiteralExchangeIdValue, LiteralFlagValue, LiteralNumberValue,
+            LiteralAssetIdValue, LiteralCexIdValue, LiteralFlagValue, LiteralNumberValue,
         },
         unary_calculation_value::{UnaryCalculationValue, UnaryOperator},
-        value::{AssetIdValue, ExchangeIdValue, FlagValue, NumberValue},
+        value::{AssetIdValue, CexIdValue, FlagValue, NumberValue},
     },
 };
 
@@ -19,12 +19,12 @@ pub struct LiteralValuesFactory;
 pub struct SignalValuesFactory;
 
 impl PortfolioValuesFactory {
-    pub fn asset_in_exchange(
+    pub fn asset_in_cex(
         &self,
-        exchange_id_value: ExchangeIdValue,
+        cex_id_value: CexIdValue,
         asset_id_value: AssetIdValue,
     ) -> NumberValue {
-        AssetInExchangeValue::new(exchange_id_value, asset_id_value)
+        AssetInCexValue::new(cex_id_value, asset_id_value)
     }
     pub fn asset_total(&self, asset_id_value: AssetIdValue) -> NumberValue {
         AssetTotalValue::new(asset_id_value)
@@ -46,8 +46,8 @@ impl CalculationValuesFactory {
 }
 
 impl LiteralValuesFactory {
-    pub fn exchange_id(&self, literal: ExchangeId) -> ExchangeIdValue {
-        LiteralExchangeIdValue::new(literal)
+    pub fn cex_id(&self, literal: CexId) -> CexIdValue {
+        LiteralCexIdValue::new(literal)
     }
     pub fn asset_id(&self, literal: AssetId) -> AssetIdValue {
         LiteralAssetIdValue::new(literal)
@@ -61,7 +61,7 @@ impl LiteralValuesFactory {
 }
 
 impl SignalValuesFactory {
-    pub fn exchange_id(&self, key: &SignalKey<ExchangeId>) -> ExchangeIdValue {
+    pub fn cex_id(&self, key: &SignalKey<CexId>) -> CexIdValue {
         Box::new(key.clone())
     }
     pub fn asset_id(&self, key: &SignalKey<AssetId>) -> AssetIdValue {

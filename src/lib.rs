@@ -23,8 +23,8 @@ pub mod prelude {
         algorithm::Algorithm,
         cex::{
             asset_id::AssetId,
+            cex_id::CexId,
             cex_preferences::{CexPreferences, MultiLeg, OnDifferent, Rounding},
-            exchange_id::ExchangeId,
             order_activation::OrderActivation,
             order_constraint::OrderConstraint,
             order_intent::OrderIntent,

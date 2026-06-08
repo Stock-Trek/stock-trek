@@ -1,5 +1,5 @@
 use crate::{
-    cex::{asset_id::AssetId, exchange_id::ExchangeId},
+    cex::{asset_id::AssetId, cex_id::CexId},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
 };
@@ -37,7 +37,7 @@ macro_rules! value_type {
     };
 }
 
-value_type! {ExchangeIdValue, ExchangeIdValueTrait, exchange_id, ExchangeId}
+value_type! {CexIdValue, CexIdValueTrait, cex_id, CexId}
 value_type! {AssetIdValue, AssetIdValueTrait, asset_id, AssetId}
 value_type! {FlagValue, FlagValueTrait, flag, bool}
 value_type! {NumberValue, NumberValueTrait, number, f64}

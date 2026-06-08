@@ -1,5 +1,5 @@
 use crate::{
-    cex::{asset_id::AssetId, exchange_id::ExchangeId},
+    cex::{asset_id::AssetId, cex_id::CexId},
     error::{
         result::{StockTrekError, StockTrekResult},
         value::ValueError,
@@ -10,7 +10,7 @@ use strum::Display;
 
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 pub enum SignalValue {
-    ExchangeId(ExchangeId),
+    CexId(CexId),
     AssetId(AssetId),
     Flag(bool),
     Number(f64),
@@ -21,9 +21,9 @@ impl From<AssetId> for SignalValue {
         SignalValue::AssetId(value)
     }
 }
-impl From<ExchangeId> for SignalValue {
-    fn from(value: ExchangeId) -> Self {
-        SignalValue::ExchangeId(value)
+impl From<CexId> for SignalValue {
+    fn from(value: CexId) -> Self {
+        SignalValue::CexId(value)
     }
 }
 impl From<bool> for SignalValue {
@@ -37,14 +37,14 @@ impl From<f64> for SignalValue {
     }
 }
 
-impl TryFrom<SignalValue> for ExchangeId {
+impl TryFrom<SignalValue> for CexId {
     type Error = StockTrekError;
     fn try_from(value: SignalValue) -> StockTrekResult<Self> {
         match value {
-            SignalValue::ExchangeId(e) => Ok(e),
-            SignalValue::AssetId(_) => err("ExchangeId", "AssetId"),
-            SignalValue::Flag(_) => err("ExchangeId", "Flag"),
-            SignalValue::Number(_) => err("ExchangeId", "Number"),
+            SignalValue::CexId(e) => Ok(e),
+            SignalValue::AssetId(_) => err("CexId", "AssetId"),
+            SignalValue::Flag(_) => err("CexId", "Flag"),
+            SignalValue::Number(_) => err("CexId", "Number"),
         }
     }
 }
@@ -52,7 +52,7 @@ impl TryFrom<SignalValue> for AssetId {
     type Error = StockTrekError;
     fn try_from(value: SignalValue) -> StockTrekResult<Self> {
         match value {
-            SignalValue::ExchangeId(_) => err("AssetId", "ExchangeId"),
+            SignalValue::CexId(_) => err("AssetId", "CexId"),
             SignalValue::AssetId(a) => Ok(a),
             SignalValue::Flag(_) => err("AssetId", "Flag"),
             SignalValue::Number(_) => err("AssetId", "Number"),
@@ -63,7 +63,7 @@ impl TryFrom<SignalValue> for bool {
     type Error = StockTrekError;
     fn try_from(value: SignalValue) -> StockTrekResult<Self> {
         match value {
-            SignalValue::ExchangeId(_) => err("Flag", "ExchangeId"),
+            SignalValue::CexId(_) => err("Flag", "CexId"),
             SignalValue::AssetId(_) => err("Flag", "AssetId"),
             SignalValue::Flag(f) => Ok(f),
             SignalValue::Number(_) => err("Flag", "Number"),
@@ -74,7 +74,7 @@ impl TryFrom<SignalValue> for f64 {
     type Error = StockTrekError;
     fn try_from(value: SignalValue) -> StockTrekResult<Self> {
         match value {
-            SignalValue::ExchangeId(_) => err("Number", "ExchangeId"),
+            SignalValue::CexId(_) => err("Number", "CexId"),
             SignalValue::AssetId(_) => err("Number", "AssetId"),
             SignalValue::Flag(_) => err("Number", "Flag"),
             SignalValue::Number(n) => Ok(n),

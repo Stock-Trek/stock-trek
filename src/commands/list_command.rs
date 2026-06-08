@@ -1,5 +1,5 @@
 use crate::{
-    cex::capability::{Capability, HasRequiredCapabilities},
+    cex::capability::{CexCapability, HasRequiredCapabilities},
     commands::command::{Command, CommandTrait},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
@@ -28,7 +28,7 @@ impl CommandTrait for ListCommand {
 }
 
 impl HasRequiredCapabilities for ListCommand {
-    fn required_capabilities(&self) -> Vec<Capability> {
+    fn required_capabilities(&self) -> Vec<CexCapability> {
         let mut capabilities = Vec::new();
         for command in &self.commands {
             capabilities.extend(command.required_capabilities());

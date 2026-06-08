@@ -4,7 +4,7 @@ use crate::{
         send_order_request_action::SendOrderRequestAction,
     },
     cex::order_request::OrderRequest,
-    values::value::{AssetIdValue, ExchangeIdValue, NumberValue},
+    values::value::{AssetIdValue, CexIdValue, NumberValue},
 };
 
 pub struct ActionFactory;
@@ -12,19 +12,19 @@ pub struct ActionFactory;
 impl ActionFactory {
     pub fn send_order_request(
         &self,
-        exchange_id_value: ExchangeIdValue,
+        cex_id_value: CexIdValue,
         order_request: OrderRequest<AssetIdValue, NumberValue>,
         recovery_policy: RecoveryPolicy,
     ) -> RecoverableAction {
         RecoverableAction::new(
-            SendOrderRequestAction::new(exchange_id_value, order_request),
+            SendOrderRequestAction::new(cex_id_value, order_request),
             recovery_policy,
         )
     }
     // TODO
-    // pub fn cancel_order(&self, exchange_id_value: ExchangeIdValue, order_id: OrderId, recovery_policy: RecoveryPolicy) -> RecoverableAction {
+    // pub fn cancel_order(&self, cex_id_value: CexIdValue, order_id: OrderId, recovery_policy: RecoveryPolicy) -> RecoverableAction {
     //   RecoverableAction::new(
-    //     PlaceOrderAction::new(exchange_id_value, order_request),
+    //     PlaceOrderAction::new(cex_id_value, order_request),
     //     recovery_policy,
     //   )
     // }
