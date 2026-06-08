@@ -1,60 +1,60 @@
 use crate::{
-    cex::{asset_id::AssetId, exchange_id::ExchangeId},
+    cex::{asset_id::AssetId, cex_id::CexId},
     market_data::market::Market,
 };
 use std::collections::HashMap;
 
 pub struct SignalContext {
-    market_data: HashMap<ExchangeId, MarketDataByBaseContext>,
+    cex_market_data: HashMap<CexId, CexMarketDataByBaseContext>,
 }
 
 impl SignalContext {
-    pub fn new(market_data: HashMap<ExchangeId, MarketDataByBaseContext>) -> Self {
-        Self { market_data }
+    pub fn new(cex_market_data: HashMap<CexId, CexMarketDataByBaseContext>) -> Self {
+        Self { cex_market_data }
     }
-    pub fn exchange_markets_for(
+    pub fn cex_markets_for(
         &self,
         base: AssetId,
         quote: AssetId,
-    ) -> impl Iterator<Item = (ExchangeId, &Market)> {
-        self.market_data
+    ) -> impl Iterator<Item = (CexId, &Market)> {
+        self.cex_market_data
             .iter()
-            .filter_map(move |(exchange, by_base)| {
+            .filter_map(move |(cex_id, by_base)| {
                 by_base
                     .markets_by_base
                     .get(&base)
                     .and_then(|by_quote| by_quote.markets_by_quote.get(&quote))
-                    .map(|market| (exchange.clone(), market))
+                    .map(|market| (cex_id.clone(), market))
             })
     }
-    pub fn market_for(
+    pub fn cex_market_for(
         &self,
-        exchange_id: &ExchangeId,
+        cex_id: &CexId,
         base: &AssetId,
         quote: &AssetId,
     ) -> Option<&Market> {
-        self.market_data
-            .get(exchange_id)
+        self.cex_market_data
+            .get(cex_id)
             .and_then(|m| m.markets_by_base.get(base))
             .and_then(|m| m.markets_by_quote.get(quote))
     }
 }
 
-pub struct MarketDataByBaseContext {
-    markets_by_base: HashMap<AssetId, MarketDataByQuoteContext>,
+pub struct CexMarketDataByBaseContext {
+    markets_by_base: HashMap<AssetId, CexMarketDataByQuoteContext>,
 }
 
-impl MarketDataByBaseContext {
-    pub fn new(markets_by_base: HashMap<AssetId, MarketDataByQuoteContext>) -> Self {
+impl CexMarketDataByBaseContext {
+    pub fn new(markets_by_base: HashMap<AssetId, CexMarketDataByQuoteContext>) -> Self {
         Self { markets_by_base }
     }
 }
 
-pub struct MarketDataByQuoteContext {
+pub struct CexMarketDataByQuoteContext {
     markets_by_quote: HashMap<AssetId, Market>,
 }
 
-impl MarketDataByQuoteContext {
+impl CexMarketDataByQuoteContext {
     pub fn new(markets_by_quote: HashMap<AssetId, Market>) -> Self {
         Self { markets_by_quote }
     }

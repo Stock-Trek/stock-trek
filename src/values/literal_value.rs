@@ -1,10 +1,10 @@
 use crate::{
-    cex::{asset_id::AssetId, exchange_id::ExchangeId},
+    cex::{asset_id::AssetId, cex_id::CexId},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
     values::value::{
-        AssetIdValue, AssetIdValueTrait, ExchangeIdValue, ExchangeIdValueTrait, FlagValue,
-        FlagValueTrait, NumberValue, NumberValueTrait,
+        AssetIdValue, AssetIdValueTrait, CexIdValue, CexIdValueTrait, FlagValue, FlagValueTrait,
+        NumberValue, NumberValueTrait,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -32,7 +32,7 @@ macro_rules! literal_value {
     };
 }
 
-literal_value! {LiteralExchangeIdValue, ExchangeIdValueTrait, ExchangeId, exchange_id, ExchangeIdValue}
+literal_value! {LiteralCexIdValue, CexIdValueTrait, CexId, cex_id, CexIdValue}
 literal_value! {LiteralAssetIdValue, AssetIdValueTrait, AssetId, asset_id, AssetIdValue}
 literal_value! {LiteralFlagValue, FlagValueTrait, bool, flag, FlagValue}
 literal_value! {LiteralNumberValue, NumberValueTrait, f64, number, NumberValue}

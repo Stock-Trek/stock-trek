@@ -8,7 +8,7 @@ Add to your Cargo.toml:
 
 ```rs
 [dependencies]
-stock-trek = "0.8.5"
+stock-trek = "0.8.6"
 ```
 
 ## Python Bindings (coming soon)
@@ -27,7 +27,7 @@ use stock_trek::prelude::*;
 use std::cmp::Ordering;
 
 pub struct CostAveraging {
-    key_exchange: SignalKey<ExchangeId>,
+    key_cex: SignalKey<CexId>,
     key_market_exists: SignalKey<bool>,
     key_satoshi_price: SignalKey<f64>,
     key_satoshi_quantity: SignalKey<f64>,
@@ -36,7 +36,7 @@ pub struct CostAveraging {
 impl Default for CostAveraging {
     fn default() -> Self {
         Self {
-            key_exchange: SignalKey::new_required("EXCHANGE"),
+            key_cex: SignalKey::new_required("CEX"),
             key_market_exists: SignalKey::new_optional("MARKET_EXISTS", false),
             key_satoshi_price: SignalKey::new_required("SATOSHI_PRICE"),
             key_satoshi_quantity: SignalKey::new_required("SATOSHI_QUANTITY"),
@@ -68,14 +68,14 @@ impl Algorithm for CostAveraging {
         let mut signals = Signals::new();
         let one_millionth = 1.0 / 1_000_000.0;
         signals.write(&self.key_satoshi_quantity, one_millionth);
-        let iter = c.exchange_markets_for(AssetId::bitcoin(), AssetId::usdt());
+        let iter = c.cex_markets_for(AssetId::bitcoin(), AssetId::usdt());
         let min_by_last_ask = iter.min_by(|(_a_exch, a_market), (_b_exch, b_market)| {
             let a_last_ask = a_market.ticks.ticks[0].ask.price;
             let b_last_ask = b_market.ticks.ticks[0].ask.price;
             a_last_ask.partial_cmp(&b_last_ask).unwrap()
         });
-        if let Some((cheapest_exchange_name, market)) = min_by_last_ask {
-            signals.write(&self.key_exchange, cheapest_exchange_name);
+        if let Some((cheapest_cex_name, market)) = min_by_last_ask {
+            signals.write(&self.key_cex, cheapest_cex_name);
             signals.write(&self.key_market_exists, true);
             let satoshi_price = market.ticks.ticks[0].ask.price / 1_000_000.0;
             signals.write(&self.key_satoshi_price, satoshi_price);
@@ -83,7 +83,7 @@ impl Algorithm for CostAveraging {
         signals
     }
     fn strategy(&self, c: &StrategyContext) -> Command {
-        let exchange = c.signals.exchange_id(&self.key_exchange);
+        let cex = c.signals.cex_id(&self.key_cex);
         let btc = c.literals.asset_id(AssetId::bitcoin());
         let usdt = c.literals.asset_id(AssetId::usdt());
         let satoshi_price = c.signals.number(&self.key_satoshi_price);
@@ -92,13 +92,12 @@ impl Algorithm for CostAveraging {
             c.conditions.signal(&self.key_market_exists),
             c.commands.if_else(
                 c.conditions.compare(
-                    c.portfolio
-                        .asset_in_exchange(exchange.clone(), usdt.clone()),
+                    c.portfolio.asset_in_cex(cex.clone(), usdt.clone()),
                     Ordering::Greater,
                     satoshi_price,
                 ),
                 c.commands.plan(vec![c.actions.send_order_request(
-                    exchange.clone(),
+                    cex.clone(),
                     c.orders.single(
                         btc,
                         usdt.clone(),
@@ -112,7 +111,7 @@ impl Algorithm for CostAveraging {
                         }],
                     ),
                     RecoveryPolicy::with_default(ErrorResponse::Stop).on_error(
-                        ErrorCause::TemporaryExchangeRejection,
+                        ErrorCause::TemporaryCexRejection,
                         ErrorResponse::Retry { max_retries: 3 },
                     ),
                 )]),

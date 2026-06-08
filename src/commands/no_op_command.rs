@@ -1,5 +1,5 @@
 use crate::{
-    cex::capability::{Capability, HasRequiredCapabilities},
+    cex::capability::{CexCapability, HasRequiredCapabilities},
     commands::command::{Command, CommandTrait},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
@@ -23,7 +23,7 @@ impl CommandTrait for NoOpCommand {
 }
 
 impl HasRequiredCapabilities for NoOpCommand {
-    fn required_capabilities(&self) -> Vec<Capability> {
+    fn required_capabilities(&self) -> Vec<CexCapability> {
         Vec::new()
     }
 }

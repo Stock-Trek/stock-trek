@@ -1,5 +1,5 @@
 use crate::{
-    cex::{asset_id::AssetId, exchange_id::ExchangeId},
+    cex::{asset_id::AssetId, cex_id::CexId},
     error::result::{StockTrekError, StockTrekResult},
     resolved_context::ResolvedContext,
     signal::value::SignalValue,
@@ -53,13 +53,13 @@ where
 }
 
 mod sealed {
-    use crate::{cex::asset_id::AssetId, signal::key::ExchangeId};
+    use crate::{cex::asset_id::AssetId, signal::key::CexId};
 
     pub trait Sealed {
         const KEY_NAME: &str;
     }
-    impl Sealed for ExchangeId {
-        const KEY_NAME: &str = "ExchangeId";
+    impl Sealed for CexId {
+        const KEY_NAME: &str = "CexId";
     }
     impl Sealed for AssetId {
         const KEY_NAME: &str = "AssetId";
@@ -74,7 +74,7 @@ mod sealed {
 
 pub trait SignalKeyType: sealed::Sealed {}
 
-impl SignalKeyType for ExchangeId {}
+impl SignalKeyType for CexId {}
 impl SignalKeyType for AssetId {}
 impl SignalKeyType for bool {}
 impl SignalKeyType for f64 {}

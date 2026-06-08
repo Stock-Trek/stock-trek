@@ -1,11 +1,11 @@
 use crate::{
-    cex::{asset_id::AssetId, exchange_id::ExchangeId},
+    cex::{asset_id::AssetId, cex_id::CexId},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
     signal::key::SignalKey,
     values::value::{
-        AssetIdValue, AssetIdValueTrait, ExchangeIdValue, ExchangeIdValueTrait, FlagValue,
-        FlagValueTrait, NumberValue, NumberValueTrait,
+        AssetIdValue, AssetIdValueTrait, CexIdValue, CexIdValueTrait, FlagValue, FlagValueTrait,
+        NumberValue, NumberValueTrait,
     },
 };
 
@@ -23,7 +23,7 @@ macro_rules! signal_value {
     };
 }
 
-signal_value! {ExchangeIdValueTrait, ExchangeId, exchange_id, ExchangeIdValue}
+signal_value! {CexIdValueTrait, CexId, cex_id, CexIdValue}
 signal_value! {AssetIdValueTrait, AssetId, asset_id, AssetIdValue}
 signal_value! {FlagValueTrait, bool, flag, FlagValue}
 signal_value! {NumberValueTrait, f64, number, NumberValue}

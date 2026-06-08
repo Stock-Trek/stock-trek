@@ -1,7 +1,7 @@
 use crate::{
     cex::{
         asset_id::AssetId,
-        capability::{Capability, HasRequiredCapabilities, QuoteQuantityCapability},
+        capability::{CexCapability, HasRequiredCapabilities, QuoteQuantityCexCapability},
         order_activation::OrderActivation,
         order_constraint::OrderConstraint,
         order_intent::OrderIntent,
@@ -47,18 +47,18 @@ impl Resolvable<SingleOrder> for SingleOrderRaw {
 }
 
 impl<A, N> HasRequiredCapabilities for SingleOrderGeneric<A, N> {
-    fn required_capabilities(&self) -> Vec<Capability> {
+    fn required_capabilities(&self) -> Vec<CexCapability> {
         let mut capabilities = Vec::new();
         if let OrderQuantity::OfQuote(_) = self.quantity {
             if let OrderPricing::Limit { .. } = self.pricing {
-                capabilities.push(Capability::QuoteQuantity(
-                    QuoteQuantityCapability::AllowLimitPricing,
+                capabilities.push(CexCapability::QuoteQuantity(
+                    QuoteQuantityCexCapability::AllowLimitPricing,
                 ));
             }
             match self.activation {
                 OrderActivation::PriceTriggered { .. } | OrderActivation::Trailing { .. } => {
-                    capabilities.push(Capability::QuoteQuantity(
-                        QuoteQuantityCapability::AllowTriggeredTiming,
+                    capabilities.push(CexCapability::QuoteQuantity(
+                        QuoteQuantityCexCapability::AllowTriggeredTiming,
                     ));
                 }
                 _ => {}

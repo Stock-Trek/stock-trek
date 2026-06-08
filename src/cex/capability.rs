@@ -1,15 +1,15 @@
-use crate::cex::exchange_id::ExchangeId;
+use crate::cex::cex_id::CexId;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Capability {
-    MultiLeg(MultiLegCapability),
-    QuoteQuantity(QuoteQuantityCapability),
+pub enum CexCapability {
+    MultiLeg(MultiLegCexCapability),
+    QuoteQuantity(QuoteQuantityCexCapability),
 }
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum MultiLegCapability {
+pub enum MultiLegCexCapability {
     AllowDifferentSymbol,
     AllowDifferentPricing,
     AllowDifferentTiming,
@@ -19,21 +19,23 @@ pub enum MultiLegCapability {
 }
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum QuoteQuantityCapability {
+pub enum QuoteQuantityCexCapability {
     AllowTriggeredTiming,
     AllowLimitPricing,
 }
 
-pub trait Capabilities {
-    fn exchange_id(&self) -> ExchangeId;
-    fn capabilities(&self) -> Vec<Capability>;
+pub trait CexCapabilities {
+    fn cex_id(&self) -> CexId;
+    fn capabilities(&self) -> Vec<CexCapability>;
 }
 
 pub trait HasRequiredCapabilities {
-    fn required_capabilities(&self) -> Vec<Capability>;
+    fn required_capabilities(&self) -> Vec<CexCapability>;
 }
 
-pub fn combine_capabilities<T: HasRequiredCapabilities + ?Sized>(array: &[&T]) -> Vec<Capability> {
+pub fn combine_capabilities<T: HasRequiredCapabilities + ?Sized>(
+    array: &[&T],
+) -> Vec<CexCapability> {
     let mut capabilities = Vec::new();
     for element in array {
         capabilities.extend(element.required_capabilities());

@@ -1,4 +1,4 @@
-pub mod asset_in_exchange_value;
+pub mod asset_in_cex_value;
 pub mod asset_total_value;
 pub mod binary_calculation_value;
 pub mod literal_value;

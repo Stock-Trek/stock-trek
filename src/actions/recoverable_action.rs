@@ -1,6 +1,6 @@
 use crate::{
     actions::action::Action,
-    cex::capability::{Capability, HasRequiredCapabilities},
+    cex::capability::{CexCapability, HasRequiredCapabilities},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
 };
@@ -29,7 +29,7 @@ impl RecoverableAction {
 }
 
 impl HasRequiredCapabilities for RecoverableAction {
-    fn required_capabilities(&self) -> Vec<Capability> {
+    fn required_capabilities(&self) -> Vec<CexCapability> {
         self.action.required_capabilities()
     }
 }
@@ -63,8 +63,8 @@ pub enum ErrorResponse {
 
 #[derive(Debug, Display, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ErrorCause {
-    PermanentExchangeRejection,
-    TemporaryExchangeRejection,
+    PermanentCexRejection,
+    TemporaryCexRejection,
     InsufficientBalance,
     StaleAction,
 }
