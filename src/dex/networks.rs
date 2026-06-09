@@ -43,10 +43,10 @@ pub mod arbitrum {
         super::evm_mainnet(42161)
     }
     pub fn sepolia() -> Network {
-        super::evm_network_named(&NetworkName::Sepolia, 421614)
+        super::evm_network(&NetworkName::Sepolia, 421614)
     }
     pub fn nova() -> Network {
-        super::evm_network_named(&NetworkName::Nova, 42170)
+        super::evm_network(&NetworkName::Nova, 42170)
     }
 }
 
@@ -77,7 +77,7 @@ pub mod avalanche {
         super::evm_mainnet(43114)
     }
     pub fn fuji() -> Network {
-        super::evm_network_named(&NetworkName::Fuji, 43113)
+        super::evm_network(&NetworkName::Fuji, 43113)
     }
 }
 
@@ -108,7 +108,7 @@ pub mod base {
         super::evm_mainnet(8453)
     }
     pub fn sepolia() -> Network {
-        super::evm_network_named(&NetworkName::Sepolia, 84532)
+        super::evm_network(&NetworkName::Sepolia, 84532)
     }
 }
 
@@ -151,10 +151,10 @@ pub mod bitcoin {
         super::testnet()
     }
     pub fn signet() -> Network {
-        super::network_named(&NetworkName::Signet)
+        super::network(&NetworkName::Signet)
     }
     pub fn regtest() -> Network {
-        super::network_named(&NetworkName::Regtest)
+        super::network(&NetworkName::Regtest)
     }
 }
 
@@ -252,7 +252,7 @@ pub mod celo {
         super::evm_mainnet(42220)
     }
     pub fn alfajores() -> Network {
-        super::evm_network_named(&NetworkName::Alfajores, 44787)
+        super::evm_network(&NetworkName::Alfajores, 44787)
     }
 }
 
@@ -263,17 +263,15 @@ pub mod cosmos {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
-        Mainnet,
-        Testnet,
         Hub,
+        Testnet,
     }
 
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
-                NetworkName::Mainnet => write!(f, "mainnet"),
-                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Hub => write!(f, "hub"),
+                NetworkName::Testnet => write!(f, "testnet"),
             }
         }
     }
@@ -287,7 +285,7 @@ pub mod cosmos {
         )
     }
     pub fn hub() -> Network {
-        super::network_named(&NetworkName::Hub)
+        super::network(&NetworkName::Hub)
     }
     pub fn testnet() -> Network {
         super::testnet()
@@ -390,10 +388,10 @@ pub mod ethereum {
         super::evm_mainnet(1)
     }
     pub fn sepolia() -> Network {
-        super::evm_network_named(&NetworkName::Sepolia, 11155111)
+        super::evm_network(&NetworkName::Sepolia, 11155111)
     }
     pub fn holesky() -> Network {
-        super::evm_network_named(&NetworkName::Holesky, 17000)
+        super::evm_network(&NetworkName::Holesky, 17000)
     }
 }
 
@@ -455,7 +453,7 @@ pub mod gnosis {
         super::evm_mainnet(100)
     }
     pub fn chiado() -> Network {
-        super::evm_network_named(&NetworkName::Chiado, 10200)
+        super::evm_network(&NetworkName::Chiado, 10200)
     }
 }
 
@@ -522,7 +520,7 @@ pub mod moonbeam {
         super::evm_mainnet(1284)
     }
     pub fn moonbase() -> Network {
-        super::evm_network_named(&NetworkName::Moonbase, 1287)
+        super::evm_network(&NetworkName::Moonbase, 1287)
     }
 }
 
@@ -589,7 +587,7 @@ pub mod optimism {
         super::evm_mainnet(10)
     }
     pub fn sepolia() -> Network {
-        super::evm_network_named(&NetworkName::Sepolia, 11155420)
+        super::evm_network(&NetworkName::Sepolia, 11155420)
     }
 }
 
@@ -658,13 +656,12 @@ pub mod polygon {
         super::evm_mainnet(137)
     }
     pub fn amoy() -> Network {
-        super::evm_network_named(&NetworkName::Amoy, 80002)
+        super::evm_network(&NetworkName::Amoy, 80002)
     }
     pub fn mumbai() -> Network {
-        super::evm_network_named(&NetworkName::Mumbai, 80001)
+        super::evm_network(&NetworkName::Mumbai, 80001)
     }
 }
-
 
 pub mod solana {
     use crate::dex::{blockchain::Blockchain, network::Network};
@@ -703,7 +700,7 @@ pub mod solana {
         super::testnet()
     }
     pub fn devnet() -> Network {
-        super::network_named(&NetworkName::Devnet)
+        super::network(&NetworkName::Devnet)
     }
 }
 
@@ -741,10 +738,10 @@ pub mod tron {
         super::mainnet()
     }
     pub fn shasta() -> Network {
-        super::network_named(&NetworkName::Shasta)
+        super::network(&NetworkName::Shasta)
     }
     pub fn nile() -> Network {
-        super::network_named(&NetworkName::Nile)
+        super::network(&NetworkName::Nile)
     }
 }
 
@@ -779,11 +776,7 @@ fn testnet() -> Network {
     Network::new(NetworkId::Testnet, None)
 }
 
-fn network(network_id: &str) -> Network {
-    Network::new(NetworkId::Other(network_id.to_string()), None)
-}
-
-fn network_named(network_name: &impl std::fmt::Display) -> Network {
+fn network(network_name: &impl std::fmt::Display) -> Network {
     Network::new(NetworkId::Other(network_name.to_string()), None)
 }
 
@@ -795,14 +788,7 @@ fn evm_testnet(chain_id: u64) -> Network {
     Network::new(NetworkId::Testnet, Some(ChainId::new(chain_id)))
 }
 
-fn evm_network(network_id: &str, chain_id: u64) -> Network {
-    Network::new(
-        NetworkId::Other(network_id.to_string()),
-        Some(ChainId::new(chain_id)),
-    )
-}
-
-fn evm_network_named(network_name: &impl std::fmt::Display, chain_id: u64) -> Network {
+fn evm_network(network_name: &impl std::fmt::Display, chain_id: u64) -> Network {
     Network::new(
         NetworkId::Other(network_name.to_string()),
         Some(ChainId::new(chain_id)),

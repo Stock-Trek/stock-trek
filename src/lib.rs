@@ -3,7 +3,7 @@ pub mod algorithm;
 pub mod cex;
 pub mod commands;
 pub mod conditions;
-// pub mod dex;
+pub mod dex;
 pub mod error;
 pub mod examples;
 pub mod market_data;
