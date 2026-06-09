@@ -36,6 +36,16 @@ pub mod arbitrum {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 42161,
+                NetworkName::Sepolia => 421614,
+                NetworkName::Nova => 42170,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -47,6 +57,15 @@ pub mod arbitrum {
     }
     pub fn nova() -> Network {
         super::evm_network(&NetworkName::Nova, 42170)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -70,6 +89,15 @@ pub mod avalanche {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 43114,
+                NetworkName::Fuji => 43113,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -78,6 +106,15 @@ pub mod avalanche {
     }
     pub fn fuji() -> Network {
         super::evm_network(&NetworkName::Fuji, 43113)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -101,6 +138,15 @@ pub mod base {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 8453,
+                NetworkName::Sepolia => 84532,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -109,6 +155,15 @@ pub mod base {
     }
     pub fn sepolia() -> Network {
         super::evm_network(&NetworkName::Sepolia, 84532)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -214,6 +269,15 @@ pub mod bsc {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 56,
+                NetworkName::Testnet => 97,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -222,6 +286,15 @@ pub mod bsc {
     }
     pub fn testnet() -> Network {
         super::evm_testnet(97)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -245,6 +318,15 @@ pub mod celo {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 42220,
+                NetworkName::Alfajores => 44787,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -253,6 +335,15 @@ pub mod celo {
     }
     pub fn alfajores() -> Network {
         super::evm_network(&NetworkName::Alfajores, 44787)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -312,6 +403,15 @@ pub mod cronos {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 25,
+                NetworkName::Testnet => 338,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -320,6 +420,15 @@ pub mod cronos {
     }
     pub fn testnet() -> Network {
         super::evm_testnet(338)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -381,6 +490,16 @@ pub mod ethereum {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 1,
+                NetworkName::Sepolia => 11155111,
+                NetworkName::Holesky => 17000,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -392,6 +511,15 @@ pub mod ethereum {
     }
     pub fn holesky() -> Network {
         super::evm_network(&NetworkName::Holesky, 17000)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -415,6 +543,15 @@ pub mod fantom {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 250,
+                NetworkName::Testnet => 4002,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -423,6 +560,15 @@ pub mod fantom {
     }
     pub fn testnet() -> Network {
         super::evm_testnet(4002)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -446,6 +592,15 @@ pub mod gnosis {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 100,
+                NetworkName::Chiado => 10200,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -454,6 +609,15 @@ pub mod gnosis {
     }
     pub fn chiado() -> Network {
         super::evm_network(&NetworkName::Chiado, 10200)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -513,6 +677,15 @@ pub mod moonbeam {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 1284,
+                NetworkName::Moonbase => 1287,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -521,6 +694,15 @@ pub mod moonbeam {
     }
     pub fn moonbase() -> Network {
         super::evm_network(&NetworkName::Moonbase, 1287)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -580,6 +762,15 @@ pub mod optimism {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 10,
+                NetworkName::Sepolia => 11155420,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -588,6 +779,15 @@ pub mod optimism {
     }
     pub fn sepolia() -> Network {
         super::evm_network(&NetworkName::Sepolia, 11155420)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -649,6 +849,16 @@ pub mod polygon {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 137,
+                NetworkName::Amoy => 80002,
+                NetworkName::Mumbai => 80001,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -660,6 +870,15 @@ pub mod polygon {
     }
     pub fn mumbai() -> Network {
         super::evm_network(&NetworkName::Mumbai, 80001)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
