@@ -19,6 +19,21 @@ pub mod arbitrum {
 
     pub const BLOCKCHAIN_ID: &str = "arbitrum";
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Sepolia,
+        Nova,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Sepolia => write!(f, "sepolia"),
+                NetworkName::Nova => write!(f, "nova"),
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -26,10 +41,10 @@ pub mod arbitrum {
         super::evm_mainnet(42161)
     }
     pub fn sepolia() -> Network {
-        super::evm_network("sepolia", 421614)
+        super::evm_network_named(&NetworkName::Sepolia, 421614)
     }
     pub fn nova() -> Network {
-        super::evm_network("nova", 42170)
+        super::evm_network_named(&NetworkName::Nova, 42170)
     }
 }
 
@@ -38,6 +53,19 @@ pub mod avalanche {
 
     pub const BLOCKCHAIN_ID: &str = "avalanche";
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Fuji,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Fuji => write!(f, "fuji"),
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -45,7 +73,7 @@ pub mod avalanche {
         super::evm_mainnet(43114)
     }
     pub fn fuji() -> Network {
-        super::evm_network("fuji", 43113)
+        super::evm_network_named(&NetworkName::Fuji, 43113)
     }
 }
 
@@ -54,6 +82,19 @@ pub mod base {
 
     pub const BLOCKCHAIN_ID: &str = "base";
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Sepolia,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Sepolia => write!(f, "sepolia"),
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -61,7 +102,7 @@ pub mod base {
         super::evm_mainnet(8453)
     }
     pub fn sepolia() -> Network {
-        super::evm_network("sepolia", 84532)
+        super::evm_network_named(&NetworkName::Sepolia, 84532)
     }
 }
 
@@ -69,6 +110,21 @@ pub mod bitcoin {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "bitcoin";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Signet,
+        Regtest,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Signet => write!(f, "signet"),
+                NetworkName::Regtest => write!(f, "regtest"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::blockchain(
@@ -85,10 +141,10 @@ pub mod bitcoin {
         super::testnet()
     }
     pub fn signet() -> Network {
-        super::network("signet")
+        super::network_named(&NetworkName::Signet)
     }
     pub fn regtest() -> Network {
-        super::network("regtest")
+        super::network_named(&NetworkName::Regtest)
     }
 }
 
@@ -96,6 +152,21 @@ pub mod bitcoin_cash {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "bitcoin-cash";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Mainnet,
+        Testnet,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::blockchain(
@@ -118,6 +189,21 @@ pub mod bsc {
 
     pub const BLOCKCHAIN_ID: &str = "bsc";
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Mainnet,
+        Testnet,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -134,6 +220,19 @@ pub mod celo {
 
     pub const BLOCKCHAIN_ID: &str = "celo";
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Alfajores,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Alfajores => write!(f, "alfajores"),
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -141,7 +240,7 @@ pub mod celo {
         super::evm_mainnet(42220)
     }
     pub fn alfajores() -> Network {
-        super::evm_network("alfajores", 44787)
+        super::evm_network_named(&NetworkName::Alfajores, 44787)
     }
 }
 
@@ -149,6 +248,19 @@ pub mod cosmos {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "cosmos";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Hub,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Hub => write!(f, "hub"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::blockchain(
@@ -159,7 +271,7 @@ pub mod cosmos {
         )
     }
     pub fn hub() -> Network {
-        super::network("hub")
+        super::network_named(&NetworkName::Hub)
     }
     pub fn testnet() -> Network {
         super::testnet()
@@ -170,6 +282,21 @@ pub mod cronos {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "cronos";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Mainnet,
+        Testnet,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
@@ -186,6 +313,21 @@ pub mod dogecoin {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "dogecoin";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Mainnet,
+        Testnet,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::blockchain(
@@ -208,6 +350,21 @@ pub mod ethereum {
 
     pub const BLOCKCHAIN_ID: &str = "ethereum";
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Sepolia,
+        Holesky,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Sepolia => write!(f, "sepolia"),
+                NetworkName::Holesky => write!(f, "holesky"),
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -215,10 +372,10 @@ pub mod ethereum {
         super::evm_mainnet(1)
     }
     pub fn sepolia() -> Network {
-        super::evm_network("sepolia", 11155111)
+        super::evm_network_named(&NetworkName::Sepolia, 11155111)
     }
     pub fn holesky() -> Network {
-        super::evm_network("holesky", 17000)
+        super::evm_network_named(&NetworkName::Holesky, 17000)
     }
 }
 
@@ -226,6 +383,21 @@ pub mod fantom {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "fantom";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Mainnet,
+        Testnet,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
@@ -243,6 +415,19 @@ pub mod gnosis {
 
     pub const BLOCKCHAIN_ID: &str = "gnosis";
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Chiado,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Chiado => write!(f, "chiado"),
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -250,7 +435,7 @@ pub mod gnosis {
         super::evm_mainnet(100)
     }
     pub fn chiado() -> Network {
-        super::evm_network("chiado", 10200)
+        super::evm_network_named(&NetworkName::Chiado, 10200)
     }
 }
 
@@ -258,6 +443,21 @@ pub mod litecoin {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "litecoin";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Mainnet,
+        Testnet,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::blockchain(
@@ -280,6 +480,19 @@ pub mod moonbeam {
 
     pub const BLOCKCHAIN_ID: &str = "moonbeam";
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Moonbase,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Moonbase => write!(f, "moonbase"),
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -287,7 +500,7 @@ pub mod moonbeam {
         super::evm_mainnet(1284)
     }
     pub fn moonbase() -> Network {
-        super::evm_network("moonbase", 1287)
+        super::evm_network_named(&NetworkName::Moonbase, 1287)
     }
 }
 
@@ -295,6 +508,21 @@ pub mod near {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "near";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Mainnet,
+        Testnet,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::blockchain(
@@ -317,6 +545,19 @@ pub mod optimism {
 
     pub const BLOCKCHAIN_ID: &str = "optimism";
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Sepolia,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Sepolia => write!(f, "sepolia"),
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -324,7 +565,7 @@ pub mod optimism {
         super::evm_mainnet(10)
     }
     pub fn sepolia() -> Network {
-        super::evm_network("sepolia", 11155420)
+        super::evm_network_named(&NetworkName::Sepolia, 11155420)
     }
 }
 
@@ -332,6 +573,21 @@ pub mod osmosis {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "osmosis";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Mainnet,
+        Testnet,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::blockchain(
@@ -354,6 +610,21 @@ pub mod polygon {
 
     pub const BLOCKCHAIN_ID: &str = "polygon";
 
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Amoy,
+        Mumbai,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Amoy => write!(f, "amoy"),
+                NetworkName::Mumbai => write!(f, "mumbai"),
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -361,17 +632,31 @@ pub mod polygon {
         super::evm_mainnet(137)
     }
     pub fn amoy() -> Network {
-        super::evm_network("amoy", 80002)
+        super::evm_network_named(&NetworkName::Amoy, 80002)
     }
     pub fn mumbai() -> Network {
-        super::evm_network("mumbai", 80001)
+        super::evm_network_named(&NetworkName::Mumbai, 80001)
     }
 }
+
 
 pub mod solana {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "solana";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Devnet,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Devnet => write!(f, "devnet"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::blockchain(
@@ -388,7 +673,7 @@ pub mod solana {
         super::testnet()
     }
     pub fn devnet() -> Network {
-        super::network("devnet")
+        super::network_named(&NetworkName::Devnet)
     }
 }
 
@@ -396,6 +681,21 @@ pub mod tron {
     use crate::dex::{blockchain::Blockchain, network::Network};
 
     pub const BLOCKCHAIN_ID: &str = "tron";
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum NetworkName {
+        Shasta,
+        Nile,
+    }
+
+    impl std::fmt::Display for NetworkName {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                NetworkName::Shasta => write!(f, "shasta"),
+                NetworkName::Nile => write!(f, "nile"),
+            }
+        }
+    }
 
     pub fn blockchain() -> Blockchain {
         super::blockchain(
@@ -409,10 +709,10 @@ pub mod tron {
         super::mainnet()
     }
     pub fn shasta() -> Network {
-        super::network("shasta")
+        super::network_named(&NetworkName::Shasta)
     }
     pub fn nile() -> Network {
-        super::network("nile")
+        super::network_named(&NetworkName::Nile)
     }
 }
 
@@ -451,6 +751,10 @@ fn network(network_id: &str) -> Network {
     Network::new(NetworkId::Other(network_id.to_string()), None)
 }
 
+fn network_named(network_name: &impl std::fmt::Display) -> Network {
+    Network::new(NetworkId::Other(network_name.to_string()), None)
+}
+
 fn evm_mainnet(chain_id: u64) -> Network {
     Network::new(NetworkId::Mainnet, Some(ChainId::new(chain_id)))
 }
@@ -462,6 +766,13 @@ fn evm_testnet(chain_id: u64) -> Network {
 fn evm_network(network_id: &str, chain_id: u64) -> Network {
     Network::new(
         NetworkId::Other(network_id.to_string()),
+        Some(ChainId::new(chain_id)),
+    )
+}
+
+fn evm_network_named(network_name: &impl std::fmt::Display, chain_id: u64) -> Network {
+    Network::new(
+        NetworkId::Other(network_name.to_string()),
         Some(ChainId::new(chain_id)),
     )
 }
