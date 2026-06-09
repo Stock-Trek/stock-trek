@@ -36,6 +36,16 @@ pub mod arbitrum {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 42161,
+                NetworkName::Sepolia => 421614,
+                NetworkName::Nova => 42170,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -70,6 +80,15 @@ pub mod avalanche {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 43114,
+                NetworkName::Fuji => 43113,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -97,6 +116,15 @@ pub mod base {
             match self {
                 NetworkName::Mainnet => write!(f, "mainnet"),
                 NetworkName::Sepolia => write!(f, "sepolia"),
+            }
+        }
+    }
+
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 8453,
+                NetworkName::Sepolia => 84532,
             }
         }
     }
@@ -214,6 +242,15 @@ pub mod bsc {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 56,
+                NetworkName::Testnet => 97,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -241,6 +278,15 @@ pub mod celo {
             match self {
                 NetworkName::Mainnet => write!(f, "mainnet"),
                 NetworkName::Alfajores => write!(f, "alfajores"),
+            }
+        }
+    }
+
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 42220,
+                NetworkName::Alfajores => 44787,
             }
         }
     }
@@ -308,6 +354,15 @@ pub mod cronos {
             match self {
                 NetworkName::Mainnet => write!(f, "mainnet"),
                 NetworkName::Testnet => write!(f, "testnet"),
+            }
+        }
+    }
+
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 25,
+                NetworkName::Testnet => 338,
             }
         }
     }
@@ -381,6 +436,16 @@ pub mod ethereum {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 1,
+                NetworkName::Sepolia => 11155111,
+                NetworkName::Holesky => 17000,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -415,6 +480,15 @@ pub mod fantom {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 250,
+                NetworkName::Testnet => 4002,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -442,6 +516,15 @@ pub mod gnosis {
             match self {
                 NetworkName::Mainnet => write!(f, "mainnet"),
                 NetworkName::Chiado => write!(f, "chiado"),
+            }
+        }
+    }
+
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 100,
+                NetworkName::Chiado => 10200,
             }
         }
     }
@@ -513,6 +596,15 @@ pub mod moonbeam {
         }
     }
 
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 1284,
+                NetworkName::Moonbase => 1287,
+            }
+        }
+    }
+
     pub fn blockchain() -> Blockchain {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
@@ -576,6 +668,15 @@ pub mod optimism {
             match self {
                 NetworkName::Mainnet => write!(f, "mainnet"),
                 NetworkName::Sepolia => write!(f, "sepolia"),
+            }
+        }
+    }
+
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 10,
+                NetworkName::Sepolia => 11155420,
             }
         }
     }
@@ -645,6 +746,16 @@ pub mod polygon {
                 NetworkName::Mainnet => write!(f, "mainnet"),
                 NetworkName::Amoy => write!(f, "amoy"),
                 NetworkName::Mumbai => write!(f, "mumbai"),
+            }
+        }
+    }
+
+    impl From<NetworkName> for u64 {
+        fn from(value: NetworkName) -> Self {
+            match value {
+                NetworkName::Mainnet => 137,
+                NetworkName::Amoy => 80002,
+                NetworkName::Mumbai => 80001,
             }
         }
     }
