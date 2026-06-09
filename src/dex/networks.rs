@@ -1,4 +1,6 @@
 use crate::dex::{
+    asset_kind::AssetKind,
+    asset_on_chain::AssetOnChain,
     blockchain::{Blockchain, BlockchainId, FamilyId},
     network::{ChainId, Network, NetworkId},
 };
@@ -47,9 +49,7 @@ pub mod arbitrum {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("arbitrum");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("arbitrum", network, asset_kind)
     }
 }
 
@@ -83,9 +83,7 @@ pub mod avalanche {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("avalanche");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("avalanche", network, asset_kind)
     }
 }
 
@@ -119,14 +117,12 @@ pub mod base {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("base");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("base", network, asset_kind)
     }
 }
 
 pub mod bitcoin {
-    use crate::dex::network::NetworkId;
+    use crate::dex::network::{Network, NetworkId};
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum NetworkName {
@@ -155,15 +151,15 @@ pub mod bitcoin {
             "bitcoin",
             super::FAMILY_ID_BITCOIN,
             8,
-            "^(1|3|bc1)[a-zA-HJ-NP-Z0-9]{25,59}$",
+            r"^([13][1-9A-HJ-NP-Za-km-z]{25,34}|bc1[ac-hj-np-z02-9]{39,59}|bc1p[ac-hj-np-z02-9]{58,59})$",
         );
-        let network = super::network(network.into());
+        let network = Network::new(network.into(), None);
         crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
 pub mod bitcoin_cash {
-    use crate::dex::network::NetworkId;
+    use crate::dex::network::{Network, NetworkId};
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum NetworkName {
@@ -188,9 +184,9 @@ pub mod bitcoin_cash {
             "bitcoin-cash",
             super::FAMILY_ID_BITCOIN_CASH,
             8,
-            "^(q|p|bitcoincash:)[a-zA-HJ-NP-Z0-9]{41,42}$",
+            "^(bitcoincash:)?(q|p)[a-zA-HJ-NP-Z0-9]{41,42}$",
         );
-        let network = super::network(network.into());
+        let network = Network::new(network.into(), None);
         crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
@@ -225,9 +221,7 @@ pub mod bsc {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("bsc");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("bsc", network, asset_kind)
     }
 }
 
@@ -261,14 +255,12 @@ pub mod celo {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("celo");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("celo", network, asset_kind)
     }
 }
 
 pub mod cosmos {
-    use crate::dex::network::NetworkId;
+    use crate::dex::network::{Network, NetworkId};
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum NetworkName {
@@ -295,7 +287,7 @@ pub mod cosmos {
             6,
             "^cosmos1[a-zA-HJ-NP-Z0-9]{38}$",
         );
-        let network = super::network(network.into());
+        let network = Network::new(network.into(), None);
         crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
@@ -330,14 +322,12 @@ pub mod cronos {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("cronos");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("cronos", network, asset_kind)
     }
 }
 
 pub mod dogecoin {
-    use crate::dex::network::NetworkId;
+    use crate::dex::network::{Network, NetworkId};
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum NetworkName {
@@ -362,9 +352,9 @@ pub mod dogecoin {
             "dogecoin",
             super::FAMILY_ID_DOGECOIN,
             8,
-            "^D[a-km-zA-HJ-NP-Z1-9]{25,34}$",
+            "^D[1-9A-HJ-NP-Za-km-z]{25,34}$",
         );
-        let network = super::network(network.into());
+        let network = Network::new(network.into(), None);
         crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
@@ -402,9 +392,7 @@ pub mod ethereum {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("ethereum");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("ethereum", network, asset_kind)
     }
 }
 
@@ -438,9 +426,7 @@ pub mod fantom {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("fantom");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("fantom", network, asset_kind)
     }
 }
 
@@ -474,14 +460,12 @@ pub mod gnosis {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("gnosis");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("gnosis", network, asset_kind)
     }
 }
 
 pub mod litecoin {
-    use crate::dex::network::NetworkId;
+    use crate::dex::network::{Network, NetworkId};
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum NetworkName {
@@ -506,9 +490,9 @@ pub mod litecoin {
             "litecoin",
             super::FAMILY_ID_LITECOIN,
             8,
-            "^(L|M|ltc1)[a-zA-HJ-NP-Z0-9]{26,60}$",
+            "^(L|M|ltc1|ltc1p)[a-zA-HJ-NP-Z0-9]{26,60}$",
         );
-        let network = super::network(network.into());
+        let network = Network::new(network.into(), None);
         crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
@@ -543,14 +527,12 @@ pub mod moonbeam {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("moonbeam");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("moonbeam", network, asset_kind)
     }
 }
 
 pub mod near {
-    use crate::dex::network::NetworkId;
+    use crate::dex::network::{Network, NetworkId};
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum NetworkName {
@@ -577,7 +559,7 @@ pub mod near {
             24,
             "^(([a-z0-9]+[\\-_])?[a-z0-9]+\\.)?([a-z0-9]+[\\-_])?[a-z0-9]+$",
         );
-        let network = super::network(network.into());
+        let network = Network::new(network.into(), None);
         crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
@@ -612,14 +594,12 @@ pub mod optimism {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("optimism");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("optimism", network, asset_kind)
     }
 }
 
 pub mod osmosis {
-    use crate::dex::network::NetworkId;
+    use crate::dex::network::{Network, NetworkId};
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum NetworkName {
@@ -646,7 +626,7 @@ pub mod osmosis {
             6,
             "^osmo1[a-zA-HJ-NP-Z0-9]{38}$",
         );
-        let network = super::network(network.into());
+        let network = Network::new(network.into(), None);
         crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
@@ -684,14 +664,12 @@ pub mod polygon {
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
     ) -> crate::dex::asset_on_chain::AssetOnChain {
-        let blockchain = super::evm_blockchain("polygon");
-        let network = super::evm_network(network.into(), network.into());
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        super::evm_asset_on_chain("polygon", network, asset_kind)
     }
 }
 
 pub mod solana {
-    use crate::dex::network::NetworkId;
+    use crate::dex::network::{Network, NetworkId};
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum NetworkName {
@@ -720,13 +698,13 @@ pub mod solana {
             9,
             "^[1-9A-HJ-NP-Za-km-z]{32,44}$",
         );
-        let network = super::network(network.into());
+        let network = Network::new(network.into(), None);
         crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
 pub mod tron {
-    use crate::dex::network::NetworkId;
+    use crate::dex::network::{Network, NetworkId};
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum NetworkName {
@@ -751,7 +729,7 @@ pub mod tron {
     ) -> crate::dex::asset_on_chain::AssetOnChain {
         let blockchain =
             super::blockchain("tron", super::FAMILY_ID_TRON, 6, "^T[a-zA-HJ-NP-Z0-9]{33}$");
-        let network = super::network(network.into());
+        let network = Network::new(network.into(), None);
         crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
@@ -770,19 +748,21 @@ fn blockchain(
     )
 }
 
-fn evm_blockchain(blockchain_id: &str) -> Blockchain {
+fn evm_blockchain(blockchain_name: &str) -> Blockchain {
     Blockchain::new(
-        BlockchainId::new(blockchain_id),
+        BlockchainId::new(blockchain_name),
         FamilyId::new(FAMILY_ID_EVM),
         18,
         "^0x[a-fA-F0-9]{40}$".to_string(),
     )
 }
 
-fn network(network_id: NetworkId) -> Network {
-    Network::new(network_id, None)
-}
-
-fn evm_network(network_id: NetworkId, chain_id: u64) -> Network {
-    Network::new(network_id, Some(ChainId::new(chain_id)))
+fn evm_asset_on_chain(
+    blockchain_name: &str,
+    network: impl Into<NetworkId> + Into<u64> + Copy,
+    asset_kind: AssetKind,
+) -> AssetOnChain {
+    let blockchain = evm_blockchain(blockchain_name);
+    let network = Network::new(network.into(), Some(ChainId::new(network.into())));
+    AssetOnChain::new(blockchain, network, asset_kind)
 }
