@@ -23,13 +23,13 @@ pub mod arbitrum {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 42161)
+        super::evm_mainnet(42161)
     }
     pub fn sepolia() -> Network {
-        super::evm_network(blockchain(), "sepolia", 421614)
+        super::evm_network("sepolia", 421614)
     }
     pub fn nova() -> Network {
-        super::evm_network(blockchain(), "nova", 42170)
+        super::evm_network("nova", 42170)
     }
 }
 
@@ -42,10 +42,10 @@ pub mod avalanche {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 43114)
+        super::evm_mainnet(43114)
     }
     pub fn fuji() -> Network {
-        super::evm_network(blockchain(), "fuji", 43113)
+        super::evm_network("fuji", 43113)
     }
 }
 
@@ -58,10 +58,10 @@ pub mod base {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 8453)
+        super::evm_mainnet(8453)
     }
     pub fn sepolia() -> Network {
-        super::evm_network(blockchain(), "sepolia", 84532)
+        super::evm_network("sepolia", 84532)
     }
 }
 
@@ -79,16 +79,16 @@ pub mod bitcoin {
         )
     }
     pub fn mainnet() -> Network {
-        super::mainnet(blockchain())
+        super::mainnet()
     }
     pub fn testnet() -> Network {
-        super::testnet(blockchain())
+        super::testnet()
     }
     pub fn signet() -> Network {
-        super::network(blockchain(), "signet")
+        super::network("signet")
     }
     pub fn regtest() -> Network {
-        super::network(blockchain(), "regtest")
+        super::network("regtest")
     }
 }
 
@@ -106,10 +106,10 @@ pub mod bitcoin_cash {
         )
     }
     pub fn mainnet() -> Network {
-        super::mainnet(blockchain())
+        super::mainnet()
     }
     pub fn testnet() -> Network {
-        super::testnet(blockchain())
+        super::testnet()
     }
 }
 
@@ -122,10 +122,10 @@ pub mod bsc {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 56)
+        super::evm_mainnet(56)
     }
     pub fn testnet() -> Network {
-        super::evm_testnet(blockchain(), 97)
+        super::evm_testnet(97)
     }
 }
 
@@ -138,10 +138,10 @@ pub mod celo {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 42220)
+        super::evm_mainnet(42220)
     }
     pub fn alfajores() -> Network {
-        super::evm_network(blockchain(), "alfajores", 44787)
+        super::evm_network("alfajores", 44787)
     }
 }
 
@@ -159,10 +159,10 @@ pub mod cosmos {
         )
     }
     pub fn hub() -> Network {
-        super::network(blockchain(), "hub")
+        super::network("hub")
     }
     pub fn testnet() -> Network {
-        super::testnet(blockchain())
+        super::testnet()
     }
 }
 
@@ -175,10 +175,10 @@ pub mod cronos {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 25)
+        super::evm_mainnet(25)
     }
     pub fn testnet() -> Network {
-        super::evm_testnet(blockchain(), 338)
+        super::evm_testnet(338)
     }
 }
 
@@ -196,10 +196,10 @@ pub mod dogecoin {
         )
     }
     pub fn mainnet() -> Network {
-        super::mainnet(blockchain())
+        super::mainnet()
     }
     pub fn testnet() -> Network {
-        super::testnet(blockchain())
+        super::testnet()
     }
 }
 
@@ -212,13 +212,13 @@ pub mod ethereum {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 1)
+        super::evm_mainnet(1)
     }
     pub fn sepolia() -> Network {
-        super::evm_network(blockchain(), "sepolia", 11155111)
+        super::evm_network("sepolia", 11155111)
     }
     pub fn holesky() -> Network {
-        super::evm_network(blockchain(), "holesky", 17000)
+        super::evm_network("holesky", 17000)
     }
 }
 
@@ -231,10 +231,10 @@ pub mod fantom {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 250)
+        super::evm_mainnet(250)
     }
     pub fn testnet() -> Network {
-        super::evm_testnet(blockchain(), 4002)
+        super::evm_testnet(4002)
     }
 }
 
@@ -247,10 +247,10 @@ pub mod gnosis {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 100)
+        super::evm_mainnet(100)
     }
     pub fn chiado() -> Network {
-        super::evm_network(blockchain(), "chiado", 10200)
+        super::evm_network("chiado", 10200)
     }
 }
 
@@ -268,10 +268,10 @@ pub mod litecoin {
         )
     }
     pub fn mainnet() -> Network {
-        super::mainnet(blockchain())
+        super::mainnet()
     }
     pub fn testnet() -> Network {
-        super::testnet(blockchain())
+        super::testnet()
     }
 }
 
@@ -284,10 +284,10 @@ pub mod moonbeam {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 1284)
+        super::evm_mainnet(1284)
     }
     pub fn moonbase() -> Network {
-        super::evm_network(blockchain(), "moonbase", 1287)
+        super::evm_network("moonbase", 1287)
     }
 }
 
@@ -305,10 +305,10 @@ pub mod near {
         )
     }
     pub fn mainnet() -> Network {
-        super::mainnet(blockchain())
+        super::mainnet()
     }
     pub fn testnet() -> Network {
-        super::testnet(blockchain())
+        super::testnet()
     }
 }
 
@@ -321,10 +321,10 @@ pub mod optimism {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 10)
+        super::evm_mainnet(10)
     }
     pub fn sepolia() -> Network {
-        super::evm_network(blockchain(), "sepolia", 11155420)
+        super::evm_network("sepolia", 11155420)
     }
 }
 
@@ -342,10 +342,10 @@ pub mod osmosis {
         )
     }
     pub fn mainnet() -> Network {
-        super::mainnet(blockchain())
+        super::mainnet()
     }
     pub fn testnet() -> Network {
-        super::testnet(blockchain())
+        super::testnet()
     }
 }
 
@@ -358,13 +358,13 @@ pub mod polygon {
         super::evm_blockchain(BLOCKCHAIN_ID)
     }
     pub fn mainnet() -> Network {
-        super::evm_mainnet(blockchain(), 137)
+        super::evm_mainnet(137)
     }
     pub fn amoy() -> Network {
-        super::evm_network(blockchain(), "amoy", 80002)
+        super::evm_network("amoy", 80002)
     }
     pub fn mumbai() -> Network {
-        super::evm_network(blockchain(), "mumbai", 80001)
+        super::evm_network("mumbai", 80001)
     }
 }
 
@@ -382,13 +382,13 @@ pub mod solana {
         )
     }
     pub fn mainnet() -> Network {
-        super::mainnet(blockchain())
+        super::mainnet()
     }
     pub fn testnet() -> Network {
-        super::testnet(blockchain())
+        super::testnet()
     }
     pub fn devnet() -> Network {
-        super::network(blockchain(), "devnet")
+        super::network("devnet")
     }
 }
 
@@ -406,13 +406,13 @@ pub mod tron {
         )
     }
     pub fn mainnet() -> Network {
-        super::mainnet(blockchain())
+        super::mainnet()
     }
     pub fn shasta() -> Network {
-        super::network(blockchain(), "shasta")
+        super::network("shasta")
     }
     pub fn nile() -> Network {
-        super::network(blockchain(), "nile")
+        super::network("nile")
     }
 }
 
@@ -439,29 +439,28 @@ fn evm_blockchain(blockchain_id: &str) -> Blockchain {
     )
 }
 
-fn mainnet(blockchain: Blockchain) -> Network {
-    Network::new(blockchain, NetworkId::Mainnet, None)
+fn mainnet() -> Network {
+    Network::new(NetworkId::Mainnet, None)
 }
 
-fn testnet(blockchain: Blockchain) -> Network {
-    Network::new(blockchain, NetworkId::Testnet, None)
+fn testnet() -> Network {
+    Network::new(NetworkId::Testnet, None)
 }
 
-fn network(blockchain: Blockchain, network_id: &str) -> Network {
-    Network::new(blockchain, NetworkId::Other(network_id.to_string()), None)
+fn network(network_id: &str) -> Network {
+    Network::new(NetworkId::Other(network_id.to_string()), None)
 }
 
-fn evm_mainnet(blockchain: Blockchain, chain_id: u64) -> Network {
-    Network::new(blockchain, NetworkId::Mainnet, Some(ChainId::new(chain_id)))
+fn evm_mainnet(chain_id: u64) -> Network {
+    Network::new(NetworkId::Mainnet, Some(ChainId::new(chain_id)))
 }
 
-fn evm_testnet(blockchain: Blockchain, chain_id: u64) -> Network {
-    Network::new(blockchain, NetworkId::Testnet, Some(ChainId::new(chain_id)))
+fn evm_testnet(chain_id: u64) -> Network {
+    Network::new(NetworkId::Testnet, Some(ChainId::new(chain_id)))
 }
 
-fn evm_network(blockchain: Blockchain, network_id: &str, chain_id: u64) -> Network {
+fn evm_network(network_id: &str, chain_id: u64) -> Network {
     Network::new(
-        blockchain,
         NetworkId::Other(network_id.to_string()),
         Some(ChainId::new(chain_id)),
     )
