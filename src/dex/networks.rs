@@ -21,6 +21,8 @@ pub mod arbitrum {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Sepolia,
         Nova,
     }
@@ -28,6 +30,8 @@ pub mod arbitrum {
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Sepolia => write!(f, "sepolia"),
                 NetworkName::Nova => write!(f, "nova"),
             }
@@ -55,12 +59,16 @@ pub mod avalanche {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Fuji,
     }
 
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Fuji => write!(f, "fuji"),
             }
         }
@@ -84,12 +92,16 @@ pub mod base {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Sepolia,
     }
 
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Sepolia => write!(f, "sepolia"),
             }
         }
@@ -113,6 +125,8 @@ pub mod bitcoin {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Signet,
         Regtest,
     }
@@ -120,6 +134,8 @@ pub mod bitcoin {
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Signet => write!(f, "signet"),
                 NetworkName::Regtest => write!(f, "regtest"),
             }
@@ -222,12 +238,16 @@ pub mod celo {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Alfajores,
     }
 
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Alfajores => write!(f, "alfajores"),
             }
         }
@@ -251,12 +271,16 @@ pub mod cosmos {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Hub,
     }
 
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Hub => write!(f, "hub"),
             }
         }
@@ -352,6 +376,8 @@ pub mod ethereum {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Sepolia,
         Holesky,
     }
@@ -359,6 +385,8 @@ pub mod ethereum {
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Sepolia => write!(f, "sepolia"),
                 NetworkName::Holesky => write!(f, "holesky"),
             }
@@ -417,12 +445,16 @@ pub mod gnosis {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Chiado,
     }
 
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Chiado => write!(f, "chiado"),
             }
         }
@@ -482,12 +514,16 @@ pub mod moonbeam {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Moonbase,
     }
 
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Moonbase => write!(f, "moonbase"),
             }
         }
@@ -547,12 +583,16 @@ pub mod optimism {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Sepolia,
     }
 
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Sepolia => write!(f, "sepolia"),
             }
         }
@@ -612,6 +652,8 @@ pub mod polygon {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Amoy,
         Mumbai,
     }
@@ -619,6 +661,8 @@ pub mod polygon {
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Amoy => write!(f, "amoy"),
                 NetworkName::Mumbai => write!(f, "mumbai"),
             }
@@ -647,12 +691,16 @@ pub mod solana {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Devnet,
     }
 
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Devnet => write!(f, "devnet"),
             }
         }
@@ -684,6 +732,8 @@ pub mod tron {
 
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum NetworkName {
+        Mainnet,
+        Testnet,
         Shasta,
         Nile,
     }
@@ -691,6 +741,8 @@ pub mod tron {
     impl std::fmt::Display for NetworkName {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
+                NetworkName::Mainnet => write!(f, "mainnet"),
+                NetworkName::Testnet => write!(f, "testnet"),
                 NetworkName::Shasta => write!(f, "shasta"),
                 NetworkName::Nile => write!(f, "nile"),
             }
