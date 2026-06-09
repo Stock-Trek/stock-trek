@@ -58,6 +58,15 @@ pub mod arbitrum {
     pub fn nova() -> Network {
         super::evm_network(&NetworkName::Nova, 42170)
     }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+    }
 }
 
 pub mod avalanche {
@@ -98,6 +107,15 @@ pub mod avalanche {
     pub fn fuji() -> Network {
         super::evm_network(&NetworkName::Fuji, 43113)
     }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+    }
 }
 
 pub mod base {
@@ -137,6 +155,15 @@ pub mod base {
     }
     pub fn sepolia() -> Network {
         super::evm_network(&NetworkName::Sepolia, 84532)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -260,6 +287,15 @@ pub mod bsc {
     pub fn testnet() -> Network {
         super::evm_testnet(97)
     }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+    }
 }
 
 pub mod celo {
@@ -299,6 +335,15 @@ pub mod celo {
     }
     pub fn alfajores() -> Network {
         super::evm_network(&NetworkName::Alfajores, 44787)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -375,6 +420,15 @@ pub mod cronos {
     }
     pub fn testnet() -> Network {
         super::evm_testnet(338)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -458,6 +512,15 @@ pub mod ethereum {
     pub fn holesky() -> Network {
         super::evm_network(&NetworkName::Holesky, 17000)
     }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+    }
 }
 
 pub mod fantom {
@@ -498,6 +561,15 @@ pub mod fantom {
     pub fn testnet() -> Network {
         super::evm_testnet(4002)
     }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+    }
 }
 
 pub mod gnosis {
@@ -537,6 +609,15 @@ pub mod gnosis {
     }
     pub fn chiado() -> Network {
         super::evm_network(&NetworkName::Chiado, 10200)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -614,6 +695,15 @@ pub mod moonbeam {
     pub fn moonbase() -> Network {
         super::evm_network(&NetworkName::Moonbase, 1287)
     }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+    }
 }
 
 pub mod near {
@@ -689,6 +779,15 @@ pub mod optimism {
     }
     pub fn sepolia() -> Network {
         super::evm_network(&NetworkName::Sepolia, 11155420)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
@@ -771,6 +870,15 @@ pub mod polygon {
     }
     pub fn mumbai() -> Network {
         super::evm_network(&NetworkName::Mumbai, 80001)
+    }
+
+    pub fn asset_on_chain(
+        network: NetworkName,
+        asset_kind: crate::dex::asset_kind::AssetKind,
+    ) -> crate::dex::asset_on_chain::AssetOnChain {
+        let blockchain = super::evm_blockchain(BLOCKCHAIN_ID);
+        let network = super::evm_mainnet(network.into());
+        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
     }
 }
 
