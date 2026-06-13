@@ -2,6 +2,8 @@ use crate::{
     cex::{asset_id::AssetId, cex_id::CexId},
     signal::key::SignalKey,
     values::{
+        allocation_for_asset_in_cex_value::AllocationForAssetInCexValue,
+        allocation_for_asset_total_value::AllocationForAssetTotalValue,
         asset_in_cex_value::AssetInCexValue,
         asset_total_value::AssetTotalValue,
         binary_calculation_value::{BinaryCalculationValue, BinaryOperator},
@@ -13,10 +15,24 @@ use crate::{
     },
 };
 
+pub struct AllocationValuesFactory;
 pub struct PortfolioValuesFactory;
 pub struct CalculationValuesFactory;
 pub struct LiteralValuesFactory;
 pub struct SignalValuesFactory;
+
+impl AllocationValuesFactory {
+    pub fn allocation_for_asset_in_cex(
+        &self,
+        cex_id_value: CexIdValue,
+        asset_id_value: AssetIdValue,
+    ) -> NumberValue {
+        AllocationForAssetInCexValue::new(cex_id_value, asset_id_value)
+    }
+    pub fn asset_total(&self, asset_id_value: AssetIdValue) -> NumberValue {
+        AllocationForAssetTotalValue::new(asset_id_value)
+    }
+}
 
 impl PortfolioValuesFactory {
     pub fn asset_in_cex(
