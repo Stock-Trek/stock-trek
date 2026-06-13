@@ -1,5 +1,6 @@
 pub mod actions;
 pub mod algorithm;
+pub mod allocations;
 pub mod cex;
 pub mod commands;
 pub mod conditions;
@@ -21,6 +22,7 @@ pub mod prelude {
     pub use crate::{
         actions::recoverable_action::{ErrorCause, ErrorResponse, RecoveryPolicy},
         algorithm::Algorithm,
+        allocations::allocation_factory::AllocationFactory,
         cex::{
             asset_id::AssetId,
             cex_id::CexId,
