@@ -8,7 +8,7 @@ Add to your Cargo.toml:
 
 ```rs
 [dependencies]
-stock-trek = "0.8.10"
+stock-trek = "0.8.11"
 ```
 
 ## Python Bindings (coming soon)
@@ -97,7 +97,6 @@ impl Algorithm for CostAveraging {
                     c.orders.single(
                         btc,
                         usdt.clone(),
-                        OrderIntent::Open,
                         OrderSide::Buy,
                         OrderActivation::Immediate,
                         OrderPricing::Market,
