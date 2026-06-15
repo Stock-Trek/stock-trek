@@ -26,7 +26,7 @@ pub mod prelude {
         cex::{
             asset_id::AssetId,
             cex_id::CexId,
-            cex_preferences::{CexPreferences, MultiLeg, OnDifferent, Rounding},
+            cex_preferences::{CexPreferences, OnDifferent, Rounding},
             order_activation::OrderActivation,
             order_constraint::OrderConstraint,
             order_intent::OrderIntent,

@@ -8,7 +8,7 @@ Add to your Cargo.toml:
 
 ```rs
 [dependencies]
-stock-trek = "0.8.9"
+stock-trek = "0.8.10"
 ```
 
 ## Python Bindings (coming soon)
@@ -56,10 +56,6 @@ impl Algorithm for CostAveraging {
                     price: RoundingStrategy::ToZero,
                     quantity: RoundingStrategy::ToZero,
                     callback_rate_bps: RoundingStrategy::ToZero,
-                },
-                multi_leg: MultiLeg {
-                    if_different_price_unsupported: OnDifferent::UseDataFromPrimary,
-                    if_different_symbol_unsupported: OnDifferent::UseDataFromPrimary,
                 },
             },
         }

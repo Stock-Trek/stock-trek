@@ -32,10 +32,6 @@ impl Algorithm for CostAveraging {
                     quantity: RoundingStrategy::ToZero,
                     callback_rate_bps: RoundingStrategy::ToZero,
                 },
-                multi_leg: MultiLeg {
-                    if_different_price_unsupported: OnDifferent::UseDataFromPrimary,
-                    if_different_symbol_unsupported: OnDifferent::UseDataFromPrimary,
-                },
             },
         }
     }
