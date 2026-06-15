@@ -7,7 +7,7 @@ use strum::Display;
 pub struct CexPreferences {
     pub max_network_delay_millis: u32,
     pub rounding: Rounding,
-    pub multi_leg: MultiLeg,
+    // pub multi_leg: MultiLeg,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,11 +24,11 @@ pub struct Rounding {
     pub callback_rate_bps: RoundingStrategy,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MultiLeg {
-    pub if_different_symbol_unsupported: OnDifferent,
-    pub if_different_price_unsupported: OnDifferent,
-}
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct MultiLeg {
+//     pub if_different_symbol_unsupported: OnDifferent,
+//     pub if_different_price_unsupported: OnDifferent,
+// }
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OnDifferent {

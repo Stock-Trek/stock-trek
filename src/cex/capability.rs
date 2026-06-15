@@ -4,19 +4,19 @@ use strum::Display;
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CexCapability {
-    MultiLeg(MultiLegCexCapability),
+    // MultiLeg(MultiLegCexCapability),
     QuoteQuantity(QuoteQuantityCexCapability),
 }
 
-#[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum MultiLegCexCapability {
-    AllowDifferentSymbol,
-    AllowDifferentPricing,
-    AllowDifferentTiming,
-    OneCancelsOther,
-    OneTriggersOther,
-    OneTriggersOco,
-}
+// #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// pub enum MultiLegCexCapability {
+//     AllowDifferentSymbol,
+//     AllowDifferentPricing,
+//     AllowDifferentTiming,
+//     OneCancelsOther,
+//     OneTriggersOther,
+//     OneTriggersOco,
+// }
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum QuoteQuantityCexCapability {
