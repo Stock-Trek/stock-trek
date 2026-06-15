@@ -1,8 +1,8 @@
 use crate::{
     cex::{
         order_activation::OrderActivation, order_constraint::OrderConstraint,
-        order_intent::OrderIntent, order_pricing::OrderPricing, order_quantity::OrderQuantity,
-        order_request::OrderRequest, order_side::OrderSide, orders::single::SingleOrderGeneric,
+        order_pricing::OrderPricing, order_quantity::OrderQuantity, order_request::OrderRequest,
+        order_side::OrderSide, orders::single::SingleOrderGeneric,
     },
     values::value::{AssetIdValue, NumberValue},
 };
@@ -14,7 +14,6 @@ impl OrderFactory {
         &self,
         base: AssetIdValue,
         quote: AssetIdValue,
-        intent: OrderIntent,
         side: OrderSide,
         timing: OrderActivation<NumberValue>,
         pricing: OrderPricing<NumberValue>,
@@ -24,7 +23,6 @@ impl OrderFactory {
         OrderRequest::Single(SingleOrderGeneric {
             base,
             quote,
-            intent,
             side,
             activation: timing,
             pricing,

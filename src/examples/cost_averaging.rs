@@ -72,7 +72,6 @@ impl Algorithm for CostAveraging {
                     c.orders.single(
                         btc,
                         usdt.clone(),
-                        OrderIntent::Open,
                         OrderSide::Buy,
                         OrderActivation::Immediate,
                         OrderPricing::Market,

@@ -29,7 +29,6 @@ pub mod prelude {
             cex_preferences::{CexPreferences, OnDifferent, Rounding},
             order_activation::OrderActivation,
             order_constraint::OrderConstraint,
-            order_intent::OrderIntent,
             order_price_basis::OrderPriceBasis,
             order_pricing::OrderPricing,
             order_quantity::OrderQuantity,
