@@ -2,11 +2,7 @@ use crate::{
     cex::{
         asset_id::AssetId,
         capability::{CexCapability, HasRequiredCapabilities},
-        orders::{
-            one_cancels_other::OneCancelsOtherOrderGeneric,
-            one_triggers_oco::OneTriggersOcoOrderGeneric,
-            one_triggers_other::OneTriggersOtherOrderGeneric, single::SingleOrderGeneric,
-        },
+        orders::single::SingleOrderGeneric,
     },
     error::result::StockTrekResult,
     resolveable::Resolvable,
@@ -18,11 +14,12 @@ use std::hash::Hash;
 use strum::Display;
 
 #[derive(Debug, Display, Clone, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum OrderRequest<A, N> {
     Single(SingleOrderGeneric<A, N>),
-    OneCancelsOther(OneCancelsOtherOrderGeneric<A, N>),
-    OneTriggersOther(OneTriggersOtherOrderGeneric<A, N>),
-    OneTriggersOco(OneTriggersOcoOrderGeneric<A, N>),
+    // OneCancelsOther(OneCancelsOtherOrderGeneric<A, N>),
+    // OneTriggersOther(OneTriggersOtherOrderGeneric<A, N>),
+    // OneTriggersOco(OneTriggersOcoOrderGeneric<A, N>),
 }
 
 impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, NumberValue> {
@@ -32,15 +29,15 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
     ) -> StockTrekResult<OrderRequest<AssetId, f64>> {
         match self {
             Self::Single(order) => Ok(OrderRequest::Single(order.try_resolve(context)?)),
-            Self::OneCancelsOther(order) => {
-                Ok(OrderRequest::OneCancelsOther(order.try_resolve(context)?))
-            }
-            Self::OneTriggersOther(order) => {
-                Ok(OrderRequest::OneTriggersOther(order.try_resolve(context)?))
-            }
-            Self::OneTriggersOco(order) => {
-                Ok(OrderRequest::OneTriggersOco(order.try_resolve(context)?))
-            }
+            // Self::OneCancelsOther(order) => {
+            //     Ok(OrderRequest::OneCancelsOther(order.try_resolve(context)?))
+            // }
+            // Self::OneTriggersOther(order) => {
+            //     Ok(OrderRequest::OneTriggersOther(order.try_resolve(context)?))
+            // }
+            // Self::OneTriggersOco(order) => {
+            //     Ok(OrderRequest::OneTriggersOco(order.try_resolve(context)?))
+            // }
         }
     }
 }
@@ -49,9 +46,9 @@ impl<A, N> HasRequiredCapabilities for OrderRequest<A, N> {
     fn required_capabilities(&self) -> Vec<CexCapability> {
         match self {
             Self::Single(order) => order.required_capabilities(),
-            Self::OneCancelsOther(order) => order.required_capabilities(),
-            Self::OneTriggersOther(order) => order.required_capabilities(),
-            Self::OneTriggersOco(order) => order.required_capabilities(),
+            // Self::OneCancelsOther(order) => order.required_capabilities(),
+            // Self::OneTriggersOther(order) => order.required_capabilities(),
+            // Self::OneTriggersOco(order) => order.required_capabilities(),
         }
     }
 }
