@@ -7,6 +7,7 @@ use crate::{
         order_pricing::OrderPricing,
         order_quantity::OrderQuantity,
         order_side::OrderSide,
+        order_tag::OrderTag,
     },
     error::result::StockTrekResult,
     resolveable::Resolvable,
@@ -24,21 +25,23 @@ pub struct SingleOrderGeneric<A, N> {
     pub side: OrderSide,
     pub quantity: OrderQuantity<N>,
     pub constraints: Vec<OrderConstraint>,
+    pub order_tag: OrderTag,
 }
 
 pub type SingleOrderRaw = SingleOrderGeneric<AssetIdValue, NumberValue>;
 pub type SingleOrder = SingleOrderGeneric<AssetId, f64>;
 
 impl Resolvable<SingleOrder> for SingleOrderRaw {
-    fn try_resolve(&self, context: &ResolvedContext) -> StockTrekResult<SingleOrder> {
+    fn try_resolve(&self, c: &ResolvedContext) -> StockTrekResult<SingleOrder> {
         Ok(SingleOrder {
-            base: self.base.asset_id(context)?,
-            quote: self.quote.asset_id(context)?,
-            activation: self.activation.try_resolve(context)?,
-            pricing: self.pricing.try_resolve(context)?,
+            base: self.base.asset_id(c)?,
+            quote: self.quote.asset_id(c)?,
+            activation: self.activation.try_resolve(c)?,
+            pricing: self.pricing.try_resolve(c)?,
             side: self.side,
-            quantity: self.quantity.try_resolve(context)?,
+            quantity: self.quantity.try_resolve(c)?,
             constraints: self.constraints.clone(),
+            order_tag: self.order_tag.clone(),
         })
     }
 }

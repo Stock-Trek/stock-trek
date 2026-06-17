@@ -1,9 +1,8 @@
-use crate::cex::order_id::OrderId;
+use crate::cex::{order_id::OrderId, order_tag::OrderTag};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrderResponse {
     pub id: OrderId,
-    // TODO
-    // pub client_order_id: ClientOrderId,
+    pub tag: OrderTag,
 }

@@ -1,5 +1,9 @@
 pub mod action;
 pub mod action_factory;
+pub mod cancel_all_orders_action;
+pub mod cancel_all_orders_in_cex_action;
+pub mod cancel_all_orders_in_cex_with_tag_action;
+pub mod cancel_all_orders_with_tag_action;
 pub mod recoverable_action;
 pub mod resolved_action;
 pub mod send_order_request_action;

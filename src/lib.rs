@@ -36,6 +36,7 @@ pub mod prelude {
             order_response::OrderResponse,
             order_side::OrderSide,
             order_status::OrderStatus,
+            order_tag::OrderTag,
             order_time_in_force::OrderTimeInForce,
             order_trigger_direction::OrderTriggerDirection,
             order_trigger_mode::OrderTriggerMode,

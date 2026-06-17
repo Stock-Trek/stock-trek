@@ -1,5 +1,5 @@
 use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId},
+    cex::{asset_id::AssetId, cex_id::CexId, order_tag::OrderTag},
     portfolios::portfolio::{Portfolio, PortfolioTrait},
 };
 use std::collections::HashMap;
@@ -61,27 +61,18 @@ impl PortfolioTrait for InMemoryPortfolio {
             .copied()
             .unwrap_or(0.0)
     }
-    // TODO
-    // fn order_by_order_id(
-    //     &self,
-    //     cex_id: &CexId,
-    //     order_id: &OrderId,
-    // ) -> Option<OrderResponse> {
-    //     self.cex_orders
-    //         .get(cex_id)
-    //         .and_then(|v| v.iter().find(|o| &o.id == order_id))
-    //         .cloned()
-    // }
-    // fn order_by_client_order_id(
-    //     &self,
-    //     cex_id: &CexId,
-    //     client_order_id: &ClientOrderId,
-    // ) -> Option<OrderResponse> {
-    //     self.cex_orders
-    //         .get(cex_id)
-    //         .and_then(|v| v.iter().find(|o| &o.client_order_id == client_order_id))
-    //         .cloned()
-    // }
+    fn active_orders(&self) -> f64 {
+        0.0
+    }
+    fn active_orders_with_tag(&self, _order_tag: &OrderTag) -> f64 {
+        0.0
+    }
+    fn active_orders_in_cex(&self, _cex_id: &CexId) -> f64 {
+        0.0
+    }
+    fn active_orders_in_cex_with_tag(&self, _cex_id: &CexId, _order_tag: &OrderTag) -> f64 {
+        0.0
+    }
 }
 
 #[derive(Clone, Default)]

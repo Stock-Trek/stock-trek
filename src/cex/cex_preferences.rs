@@ -32,7 +32,7 @@ pub struct Rounding {
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OnDifferent {
-    UseDataFromPrimary,
+    // UseDataFromPrimary,
     SkipThisOrder,
     CancelEntireIteration,
 }

@@ -79,6 +79,7 @@ impl Algorithm for CostAveraging {
                         vec![OrderConstraint::FillPolicy {
                             allow_partial: true,
                         }],
+                        OrderTag::new("CostAveraging"),
                     ),
                     RecoveryPolicy::with_default(ErrorResponse::Stop).on_error(
                         ErrorCause::TemporaryCexRejection,

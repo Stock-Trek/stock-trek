@@ -1,13 +1,11 @@
-use crate::market_data::timestamp::TimestampMillis;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OrderTimeInForce {
+    GoodTillCancelled,
     // TODO
-    // GoodTillCancelled,
-    GoodTillTime(TimestampMillis),
+    // GoodTillTime(TimestampMillis),
     FillOrKill,
     ImmediateOrCancel,
-    PostOnly,
 }
