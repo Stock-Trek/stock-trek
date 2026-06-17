@@ -5,7 +5,6 @@ pub mod cex_preferences;
 pub mod order_activation;
 pub mod order_constraint;
 pub mod order_factory;
-pub mod order_id;
 pub mod order_price_basis;
 pub mod order_pricing;
 pub mod order_quantity;
