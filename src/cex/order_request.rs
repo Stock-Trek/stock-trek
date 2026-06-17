@@ -14,7 +14,6 @@ use std::hash::Hash;
 use strum::Display;
 
 #[derive(Debug, Display, Clone, Hash, Serialize, Deserialize)]
-#[non_exhaustive]
 pub enum OrderRequest<A, N> {
     Single(SingleOrderGeneric<A, N>),
     // OneCancelsOther(OneCancelsOtherOrderGeneric<A, N>),
