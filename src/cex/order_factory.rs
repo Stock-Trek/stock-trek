@@ -2,7 +2,7 @@ use crate::{
     cex::{
         order_activation::OrderActivation, order_constraint::OrderConstraint,
         order_pricing::OrderPricing, order_quantity::OrderQuantity, order_request::OrderRequest,
-        order_side::OrderSide, orders::single::SingleOrderGeneric,
+        order_side::OrderSide, order_tag::OrderTag, orders::single::SingleOrderGeneric,
     },
     values::value::{AssetIdValue, NumberValue},
 };
@@ -19,6 +19,7 @@ impl OrderFactory {
         pricing: OrderPricing<NumberValue>,
         quantity: OrderQuantity<NumberValue>,
         constraints: Vec<OrderConstraint>,
+        order_tag: OrderTag,
     ) -> OrderRequest<AssetIdValue, NumberValue> {
         OrderRequest::Single(SingleOrderGeneric {
             base,
@@ -28,6 +29,7 @@ impl OrderFactory {
             pricing,
             quantity,
             constraints,
+            order_tag,
         })
     }
     // pub fn one_cancels_other(

@@ -1,22 +1,18 @@
-// TODO
-// use chrono::Utc;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
-// use std::hash::{DefaultHasher, Hash, Hasher};
-// use uuid::Uuid;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct OrderId(pub String);
 
-// #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-// pub struct ClientOrderId(pub String);
-
-// impl ClientOrderId {
-//     pub fn create<T: Hash>(order_request: &T) -> Self {
-//         let mut state = DefaultHasher::new();
-//         order_request.hash(&mut state);
-//         let high_bits = Utc::now().timestamp_millis() as u64;
-//         let low_bits = state.finish();
-//         let id = Uuid::from_u64_pair(high_bits, low_bits).to_string();
-//         Self(id)
-//     }
-// }
+impl OrderId {
+    pub fn new<T: Hash>(order_request: &T) -> Self {
+        let mut state = DefaultHasher::new();
+        order_request.hash(&mut state);
+        let high_bits = Utc::now().timestamp_millis() as u64;
+        let low_bits = state.finish();
+        let id = Uuid::from_u64_pair(high_bits, low_bits).to_string();
+        Self(id)
+    }
+}

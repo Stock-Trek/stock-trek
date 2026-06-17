@@ -13,6 +13,7 @@ pub mod order_request;
 pub mod order_response;
 pub mod order_side;
 pub mod order_status;
+pub mod order_tag;
 pub mod order_time_in_force;
 pub mod order_trigger_direction;
 pub mod order_trigger_mode;

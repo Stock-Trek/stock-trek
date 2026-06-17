@@ -1,5 +1,5 @@
 use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId},
+    cex::{asset_id::AssetId, cex_id::CexId, order_tag::OrderTag},
     portfolios::portfolio::{Portfolio, PortfolioTrait},
 };
 
@@ -34,19 +34,16 @@ impl PortfolioTrait for StubPortfolio {
     fn asset_in_cex(&self, _asset_id: &AssetId, _cex_id: &CexId) -> f64 {
         1_000_000.0
     }
-    // TODO
-    // fn order_by_order_id(
-    //     &self,
-    //     _cex_id: &CexId,
-    //     _order_id: &OrderId,
-    // ) -> Option<OrderResponse> {
-    //     None
-    // }
-    // fn order_by_client_order_id(
-    //     &self,
-    //     _cex_id: &CexId,
-    //     _client_order_id: &ClientOrderId,
-    // ) -> Option<OrderResponse> {
-    //     None
-    // }
+    fn active_orders(&self) -> f64 {
+        0.0
+    }
+    fn active_orders_in_cex(&self, _cex_id: &CexId) -> f64 {
+        0.0
+    }
+    fn active_orders_in_cex_with_tag(&self, _cex_id: &CexId, _order_tag: &OrderTag) -> f64 {
+        0.0
+    }
+    fn active_orders_with_tag(&self, _order_tag: &OrderTag) -> f64 {
+        0.0
+    }
 }
