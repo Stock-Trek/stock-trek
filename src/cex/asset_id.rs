@@ -9,107 +9,92 @@ impl std::fmt::Display for AssetId {
     }
 }
 
-impl AsRef<str> for AssetId {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
-
-impl From<String> for AssetId {
-    fn from(s: String) -> Self {
-        Self(s)
-    }
-}
-
-impl From<&str> for AssetId {
-    fn from(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
-
 impl AssetId {
+    fn new(name: &str) -> Self {
+        Self(name.to_string())
+    }
     pub fn aave() -> Self {
-        Self("AAVE".to_string())
+        Self::new("Aave")
     }
     pub fn arbitrum() -> Self {
-        Self("ARB".to_string())
+        Self::new("Arbitrum")
+    }
+    pub fn atom() -> Self {
+        Self::new("Atom")
     }
     pub fn avalanche() -> Self {
-        Self("AVAX".to_string())
+        Self::new("Avalanche")
     }
     pub fn bitcoin() -> Self {
-        Self("BTC".to_string())
+        Self::new("Bitcoin")
     }
     pub fn bitcoin_cash() -> Self {
-        Self("BCH".to_string())
+        Self::new("Bitcoin Cash")
     }
     pub fn bnb() -> Self {
-        Self("BNB".to_string())
+        Self::new("BNB")
     }
     pub fn celo() -> Self {
-        Self("CELO".to_string())
+        Self::new("Celo")
     }
-    pub fn cosmos() -> Self {
-        Self("ATOM".to_string())
+    pub fn chainlink() -> Self {
+        Self::new("Chainlink")
     }
     pub fn cronos() -> Self {
-        Self("CRO".to_string())
+        Self::new("Cronos")
     }
     pub fn dai() -> Self {
-        Self("DAI".to_string())
+        Self::new("Dai")
     }
     pub fn dogecoin() -> Self {
-        Self("DOGE".to_string())
+        Self::new("Dogecoin")
     }
     pub fn ethereum() -> Self {
-        Self("ETH".to_string())
+        Self::new("Ethereum")
     }
     pub fn fantom() -> Self {
-        Self("FTM".to_string())
+        Self::new("Fantom")
     }
     pub fn gnosis() -> Self {
-        Self("GNO".to_string())
+        Self::new("Gnosis")
     }
     pub fn litecoin() -> Self {
-        Self("LTC".to_string())
-    }
-    pub fn link() -> Self {
-        Self("LINK".to_string())
+        Self::new("Litecoin")
     }
     pub fn moonbeam() -> Self {
-        Self("GLMR".to_string())
+        Self::new("Moonbeam")
     }
     pub fn near() -> Self {
-        Self("NEAR".to_string())
+        Self::new("NEAR")
     }
     pub fn optimism() -> Self {
-        Self("OP".to_string())
+        Self::new("Optimism")
     }
     pub fn osmosis() -> Self {
-        Self("OSMO".to_string())
+        Self::new("Osmosis")
     }
     pub fn polygon() -> Self {
-        Self("POL".to_string())
+        Self::new("Polygon")
     }
     pub fn solana() -> Self {
-        Self("SOL".to_string())
+        Self::new("Solana")
+    }
+    pub fn tether_usd() -> Self {
+        Self::new("Tether USD")
     }
     pub fn tron() -> Self {
-        Self("TRX".to_string())
+        Self::new("TRON")
     }
-    pub fn uni() -> Self {
-        Self("UNI".to_string())
+    pub fn uniswap() -> Self {
+        Self::new("Uniswap")
     }
-    pub fn usdc() -> Self {
-        Self("USDC".to_string())
+    pub fn usd_coin() -> Self {
+        Self::new("USD Coin")
     }
-    pub fn usdt() -> Self {
-        Self("USDT".to_string())
+    pub fn wrapped_bitcoin() -> Self {
+        Self::new("Wrapped Bitcoin")
     }
-    pub fn wbtc() -> Self {
-        Self("WBTC".to_string())
-    }
-    pub fn weth() -> Self {
-        Self("WETH".to_string())
+    pub fn wrapped_ethereum() -> Self {
+        Self::new("Wrapped Ethereum")
     }
 }
