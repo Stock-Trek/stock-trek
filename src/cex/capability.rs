@@ -1,4 +1,3 @@
-use crate::cex::cex_id::CexId;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
@@ -22,11 +21,6 @@ pub enum CexCapability {
 pub enum QuoteQuantityCexCapability {
     AllowTriggeredTiming,
     AllowLimitPricing,
-}
-
-pub trait CexCapabilities {
-    fn cex_id(&self) -> CexId;
-    fn capabilities(&self) -> Vec<CexCapability>;
 }
 
 pub trait HasRequiredCapabilities {

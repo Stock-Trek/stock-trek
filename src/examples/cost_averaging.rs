@@ -39,7 +39,7 @@ impl Algorithm for CostAveraging {
         let mut signals = Signals::new();
         let one_millionth = 1.0 / 1_000_000.0;
         signals.write(&self.key_satoshi_quantity, one_millionth);
-        let iter = c.cex_markets_for(AssetId::bitcoin(), AssetId::usdt());
+        let iter = c.cex_markets_for(AssetId::bitcoin(), AssetId::tether_usd());
         let min_by_last_ask = iter.min_by(|(_a_exch, a_market), (_b_exch, b_market)| {
             let a_last_ask = a_market.ticks.ticks[0].ask.price;
             let b_last_ask = b_market.ticks.ticks[0].ask.price;
@@ -56,7 +56,7 @@ impl Algorithm for CostAveraging {
     fn strategy(&self, c: &StrategyContext) -> Command {
         let cex = c.signals.cex_id(&self.key_cex);
         let btc = c.literals.asset_id(AssetId::bitcoin());
-        let usdt = c.literals.asset_id(AssetId::usdt());
+        let usdt = c.literals.asset_id(AssetId::tether_usd());
         let satoshi_price = c.signals.number(&self.key_satoshi_price);
         let quantity = c.signals.number(&self.key_satoshi_quantity);
         c.commands.if_else(
