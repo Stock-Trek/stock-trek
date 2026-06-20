@@ -25,10 +25,6 @@ impl CexId {
         Self::new(COINBASE)
     }
     pub fn has_capability(&self, capability: CexCapability) -> bool {
-        match (self.0.as_str(), capability) {
-            (BINANCE, _) => true,
-            (COINBASE, _) => true,
-            _ => false,
-        }
+        matches!((self.0.as_str(), capability), (BINANCE, _) | (COINBASE, _))
     }
 }
