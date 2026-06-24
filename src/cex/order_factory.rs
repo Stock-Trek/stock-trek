@@ -1,10 +1,7 @@
-use crate::{
-    cex::{
-        order_activation::OrderActivation, order_constraint::OrderConstraint,
-        order_pricing::OrderPricing, order_quantity::OrderQuantity, order_request::OrderRequest,
-        order_side::OrderSide, order_tag::OrderTag, orders::single::SingleOrderGeneric,
-    },
-    values::value::{AssetIdValue, NumberValue},
+use crate::values::value::{AssetIdValue, NumberValue};
+use stock_trek_types::cex::{
+    activation::Activation, order_request::OrderRequest, orders::single_order::SingleOrder,
+    pricing::Pricing, quantity::Quantity, side::Side, tag::Tag,
 };
 
 pub struct OrderFactory;
@@ -14,22 +11,20 @@ impl OrderFactory {
         &self,
         base: AssetIdValue,
         quote: AssetIdValue,
-        side: OrderSide,
-        timing: OrderActivation<NumberValue>,
-        pricing: OrderPricing<NumberValue>,
-        quantity: OrderQuantity<NumberValue>,
-        constraints: Vec<OrderConstraint>,
-        order_tag: OrderTag,
+        side: Side,
+        activation: Activation<NumberValue>,
+        pricing: Pricing<NumberValue>,
+        quantity: Quantity<NumberValue>,
+        tag: Tag,
     ) -> OrderRequest<AssetIdValue, NumberValue> {
-        OrderRequest::Single(SingleOrderGeneric {
+        OrderRequest::Single(SingleOrder {
             base,
             quote,
             side,
-            activation: timing,
+            activation,
             pricing,
             quantity,
-            constraints,
-            order_tag,
+            tag,
         })
     }
     // pub fn one_cancels_other(

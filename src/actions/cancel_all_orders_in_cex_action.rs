@@ -3,13 +3,14 @@ use crate::{
         action::{Action, ActionTrait},
         resolved_action::ResolvedAction,
     },
-    cex::capability::{CexCapability, HasRequiredCapabilities},
+    cex::capability::HasRequiredCapabilities,
     error::result::StockTrekResult,
     resolveable::Resolvable,
     resolved_context::ResolvedContext,
     values::value::CexIdValue,
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::capability::CexCapability;
 
 #[derive(Serialize, Deserialize)]
 pub struct CancelAllOrdersInCexAction {

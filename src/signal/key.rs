@@ -1,11 +1,11 @@
 use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId},
     error::result::{StockTrekError, StockTrekResult},
     resolved_context::ResolvedContext,
     signal::value::SignalValue,
 };
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, marker::PhantomData};
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignalKey<T> {
@@ -53,7 +53,7 @@ where
 }
 
 mod sealed {
-    use crate::{cex::asset_id::AssetId, signal::key::CexId};
+    use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
     pub trait Sealed {
         const KEY_NAME: &str;

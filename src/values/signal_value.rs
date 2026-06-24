@@ -1,5 +1,4 @@
 use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
     signal::key::SignalKey,
@@ -8,6 +7,7 @@ use crate::{
         NumberValue, NumberValueTrait,
     },
 };
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 macro_rules! signal_value {
     ($trait_name:ident, $raw_type:ident, $getter:ident, $clone_type:ident) => {

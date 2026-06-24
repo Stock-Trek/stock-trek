@@ -1,10 +1,11 @@
 use crate::{
-    cex::capability::{CexCapability, HasRequiredCapabilities},
+    cex::capability::HasRequiredCapabilities,
     commands::command::{Command, CommandTrait},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::capability::CexCapability;
 
 #[derive(Serialize, Deserialize)]
 pub struct ListCommand {

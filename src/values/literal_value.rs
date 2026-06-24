@@ -1,5 +1,4 @@
 use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
     values::value::{
@@ -8,6 +7,7 @@ use crate::{
     },
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 macro_rules! literal_value {
     ($name:ident, $trait_name:ident, $raw_type:ident, $getter:ident, $clone_type:ident) => {

@@ -768,9 +768,9 @@ dependencies = [
 
 [[package]]
 name = "rust_decimal"
-version = "1.42.0"
+version = "1.42.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c5108e3d4d903e21aac27f12ba5377b6b34f9f44b325e4894c7924169d06995"
+checksum = "be2a24f50780bc85f09cc6ac299bdf1424302742d77221106859c9d8b102126a"
 dependencies = [
  "arrayvec",
  "borsh",
@@ -971,7 +971,7 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "stock-trek"
-version = "0.8.15"
+version = "0.9.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -981,6 +981,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
+ "stock-trek-types",
  "strum",
  "table_enum",
  "thiserror 1.0.69",
@@ -988,6 +989,17 @@ dependencies = [
  "typetag",
  "typify",
  "uuid",
+]
+
+[[package]]
+name = "stock-trek-types"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "870da3d2bedfcf84016a78b02890e981e692a461398542668f77df27e63de329"
+dependencies = [
+ "rust_decimal",
+ "serde",
+ "strum",
 ]
 
 [[package]]

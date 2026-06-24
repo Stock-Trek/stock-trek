@@ -1,19 +1,19 @@
 use crate::{
-    cex::order_tag::OrderTag,
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
     values::value::{NumberValue, NumberValueTrait},
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::tag::Tag;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ActiveOrdersWithTagValue {
-    order_tag: OrderTag,
+    tag: Tag,
 }
 
 impl ActiveOrdersWithTagValue {
-    pub fn new(order_tag: OrderTag) -> NumberValue {
-        Box::new(Self { order_tag })
+    pub fn new(tag: Tag) -> NumberValue {
+        Box::new(Self { tag })
     }
 }
 
@@ -23,6 +23,6 @@ impl NumberValueTrait for ActiveOrdersWithTagValue {
         Box::new(self.clone())
     }
     fn number(&self, c: &ResolvedContext) -> StockTrekResult<f64> {
-        Ok(c.portfolio.active_orders_with_tag(&self.order_tag))
+        Ok(c.portfolio.active_orders_with_tag(&self.tag))
     }
 }

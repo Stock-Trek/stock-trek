@@ -1,8 +1,6 @@
-use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId},
-    market_data::market::Market,
-};
+use crate::market_data::market::Market;
 use std::collections::HashMap;
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 pub struct SignalContext {
     cex_market_data: HashMap<CexId, CexMarketDataByBaseContext>,

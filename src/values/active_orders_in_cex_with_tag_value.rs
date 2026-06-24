@@ -1,23 +1,20 @@
 use crate::{
-    cex::order_tag::OrderTag,
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
     values::value::{CexIdValue, NumberValue, NumberValueTrait},
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::tag::Tag;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ActiveOrdersInCexWithTagValue {
     cex_id_value: CexIdValue,
-    order_tag: OrderTag,
+    tag: Tag,
 }
 
 impl ActiveOrdersInCexWithTagValue {
-    pub fn new(cex_id_value: CexIdValue, order_tag: OrderTag) -> NumberValue {
-        Box::new(Self {
-            cex_id_value,
-            order_tag,
-        })
+    pub fn new(cex_id_value: CexIdValue, tag: Tag) -> NumberValue {
+        Box::new(Self { cex_id_value, tag })
     }
 }
 
@@ -29,6 +26,6 @@ impl NumberValueTrait for ActiveOrdersInCexWithTagValue {
     fn number(&self, c: &ResolvedContext) -> StockTrekResult<f64> {
         let cex_id = self.cex_id_value.cex_id(c)?;
         Ok(c.portfolio
-            .active_orders_in_cex_with_tag(&cex_id, &self.order_tag))
+            .active_orders_in_cex_with_tag(&cex_id, &self.tag))
     }
 }

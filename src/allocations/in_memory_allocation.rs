@@ -1,8 +1,6 @@
-use crate::{
-    allocations::allocation::{Allocation, AllocationTrait},
-    cex::{asset_id::AssetId, cex_id::CexId},
-};
+use crate::allocations::allocation::{Allocation, AllocationTrait};
 use std::collections::HashMap;
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 #[derive(Debug, Clone, Default)]
 pub struct InMemoryAllocation {

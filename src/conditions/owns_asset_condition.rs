@@ -1,10 +1,10 @@
 use crate::{
-    cex::asset_id::AssetId,
     conditions::condition::{Condition, ConditionTrait},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::asset_id::AssetId;
 
 #[derive(Serialize, Deserialize)]
 pub struct OwnsAssetCondition {

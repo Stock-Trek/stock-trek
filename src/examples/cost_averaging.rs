@@ -25,7 +25,7 @@ impl Algorithm for CostAveraging {
         Preferences {
             cex: CexPreferences {
                 max_network_delay_millis: 5000,
-                rounding: Rounding {
+                rounding: CexRoundingPreferences {
                     activation_price_triggered_above: RoundingStrategy::AwayFromZero,
                     activation_price_triggered_below: RoundingStrategy::ToZero,
                     price: RoundingStrategy::ToZero,
@@ -39,7 +39,7 @@ impl Algorithm for CostAveraging {
         let mut signals = Signals::new();
         let one_millionth = 1.0 / 1_000_000.0;
         signals.write(&self.key_satoshi_quantity, one_millionth);
-        let iter = c.cex_markets_for(AssetId::bitcoin(), AssetId::tether_usd());
+        let iter = c.cex_markets_for(AssetId::Bitcoin, AssetId::TetherUSD);
         let min_by_last_ask = iter.min_by(|(_a_exch, a_market), (_b_exch, b_market)| {
             let a_last_ask = a_market.ticks.ticks[0].ask.price;
             let b_last_ask = b_market.ticks.ticks[0].ask.price;
@@ -55,8 +55,8 @@ impl Algorithm for CostAveraging {
     }
     fn strategy(&self, c: &StrategyContext) -> Command {
         let cex = c.signals.cex_id(&self.key_cex);
-        let btc = c.literals.asset_id(AssetId::bitcoin());
-        let usdt = c.literals.asset_id(AssetId::tether_usd());
+        let btc = c.literals.asset_id(AssetId::Bitcoin);
+        let usdt = c.literals.asset_id(AssetId::TetherUSD);
         let satoshi_price = c.signals.number(&self.key_satoshi_price);
         let quantity = c.signals.number(&self.key_satoshi_quantity);
         c.commands.if_else(
@@ -72,14 +72,11 @@ impl Algorithm for CostAveraging {
                     c.orders.single(
                         btc,
                         usdt.clone(),
-                        OrderSide::Buy,
-                        OrderActivation::Immediate,
-                        OrderPricing::Market,
-                        OrderQuantity::OfQuote(quantity),
-                        vec![OrderConstraint::FillPolicy {
-                            allow_partial: true,
-                        }],
-                        OrderTag::new("CostAveraging"),
+                        Side::Buy,
+                        Activation::Immediate,
+                        Pricing::Market,
+                        Quantity::OfQuote(quantity),
+                        Tag::new("CostAveraging"),
                     ),
                     RecoveryPolicy::with_default(ErrorResponse::Stop).on_error(
                         ErrorCause::TemporaryCexRejection,

@@ -3,9 +3,9 @@ use crate::{
         recoverable_action::{RecoverableAction, RecoveryPolicy},
         send_order_request_action::SendOrderRequestAction,
     },
-    cex::order_request::OrderRequest,
     values::value::{AssetIdValue, CexIdValue, NumberValue},
 };
+use stock_trek_types::cex::order_request::OrderRequest;
 
 pub struct ActionFactory;
 

@@ -1,11 +1,12 @@
 use crate::{
-    cex::capability::{CexCapability, HasRequiredCapabilities, combine_capabilities},
+    cex::capability::{HasRequiredCapabilities, combine_capabilities},
     commands::command::{Command, CommandTrait},
     conditions::condition::Condition,
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::capability::CexCapability;
 
 #[derive(Serialize, Deserialize)]
 pub struct IfCommand {

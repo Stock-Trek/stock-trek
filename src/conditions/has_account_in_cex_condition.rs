@@ -1,10 +1,10 @@
 use crate::{
-    cex::cex_id::CexId,
     conditions::condition::{Condition, ConditionTrait},
     error::result::StockTrekResult,
     resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::cex_id::CexId;
 
 #[derive(Serialize, Deserialize)]
 pub struct HasAccountInCexCondition {

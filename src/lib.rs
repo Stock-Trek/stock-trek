@@ -23,30 +23,6 @@ pub mod prelude {
         actions::recoverable_action::{ErrorCause, ErrorResponse, RecoveryPolicy},
         algorithm::Algorithm,
         allocations::allocation_factory::AllocationFactory,
-        cex::{
-            asset_id::AssetId,
-            cex_id::CexId,
-            cex_preferences::{CexPreferences, OnDifferent, Rounding},
-            order_activation::OrderActivation,
-            order_constraint::OrderConstraint,
-            order_price_basis::OrderPriceBasis,
-            order_pricing::OrderPricing,
-            order_quantity::OrderQuantity,
-            order_request::OrderRequest,
-            order_response::OrderResponse,
-            order_side::OrderSide,
-            order_status::OrderStatus,
-            order_tag::OrderTag,
-            order_time_in_force::OrderTimeInForce,
-            order_trigger_direction::OrderTriggerDirection,
-            order_trigger_mode::OrderTriggerMode,
-            orders::{
-                // one_cancels_other::{OneCancelsOtherOrder, OneCancelsOtherOrderRaw},
-                // one_triggers_oco::{OneTriggersOcoOrder, OneTriggersOcoOrderRaw},
-                // one_triggers_other::{OneTriggersOtherOrder, OneTriggersOtherOrderRaw},
-                single::{SingleOrder, SingleOrderRaw},
-            },
-        },
         commands::command::Command,
         portfolios::portfolio_factory::PortfolioFactory,
         preferences::Preferences,
@@ -56,6 +32,27 @@ pub mod prelude {
     };
 
     pub use rust_decimal::RoundingStrategy;
+
+    pub use stock_trek_types::cex::{
+        activation::Activation,
+        asset_id::AssetId,
+        capability::CexCapability,
+        cex_id::CexId,
+        order_request::OrderRequest,
+        order_response::OrderResponse,
+        orders::single_order::SingleOrder,
+        preferences::{CexPreferences, CexRoundingPreferences},
+        price_basis::PriceBasis,
+        pricing::Pricing,
+        quantity::Quantity,
+        side::Side,
+        status::Status,
+        tag::Tag,
+        time_in_force::TimeInForce,
+        trading_pair::TradingPair,
+        trigger_direction::TriggerDirection,
+        trigger_mode::TriggerMode,
+    };
 
     pub use traitreg;
     pub use traitreg::register as register_algorithm;
