@@ -1,4 +1,4 @@
-use crate::cex::{asset_id::AssetId, cex_id::CexId};
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 use thiserror::Error;
 
 #[derive(Error, Debug)]

@@ -1,12 +1,9 @@
-use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId},
-    error::result::StockTrekResult,
-    resolved_context::ResolvedContext,
-};
+use crate::{error::result::StockTrekResult, resolved_context::ResolvedContext};
 use std::{
     fmt::{Debug, Formatter},
     hash::{Hash, Hasher},
 };
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 macro_rules! value_type {
     ($name:ident, $trait_name:ident, $getter:ident, $value:ident) => {

@@ -1,7 +1,5 @@
-use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId, order_tag::OrderTag},
-    portfolios::portfolio::{Portfolio, PortfolioTrait},
-};
+use crate::portfolios::portfolio::{Portfolio, PortfolioTrait};
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId, tag::Tag};
 
 #[derive(Debug, Clone, Default)]
 pub struct StubPortfolio;
@@ -40,10 +38,10 @@ impl PortfolioTrait for StubPortfolio {
     fn active_orders_in_cex(&self, _cex_id: &CexId) -> f64 {
         0.0
     }
-    fn active_orders_in_cex_with_tag(&self, _cex_id: &CexId, _order_tag: &OrderTag) -> f64 {
+    fn active_orders_in_cex_with_tag(&self, _cex_id: &CexId, _tag: &Tag) -> f64 {
         0.0
     }
-    fn active_orders_with_tag(&self, _order_tag: &OrderTag) -> f64 {
+    fn active_orders_with_tag(&self, _tag: &Tag) -> f64 {
         0.0
     }
 }

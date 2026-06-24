@@ -1,43 +1,19 @@
 use crate::{
-    cex::{
-        order_price_basis::OrderPriceBasis, order_trigger_direction::OrderTriggerDirection,
-        order_trigger_mode::OrderTriggerMode,
-    },
-    error::result::StockTrekResult,
-    resolveable::Resolvable,
-    resolved_context::ResolvedContext,
+    error::result::StockTrekResult, resolveable::Resolvable, resolved_context::ResolvedContext,
     values::value::NumberValue,
 };
-use serde::{Deserialize, Serialize};
-use strum::Display;
+use stock_trek_types::cex::activation::Activation;
 
-#[derive(Debug, Display, Clone, Hash, Serialize, Deserialize)]
-pub enum OrderActivation<N> {
-    Immediate,
-    PriceTriggered {
-        activation_price: N,
-        basis: OrderPriceBasis,
-        direction: OrderTriggerDirection,
-        mode: OrderTriggerMode,
-    },
-    Trailing {
-        activation_price: N,
-        basis: OrderPriceBasis,
-        callback_rate_bps: N,
-        direction: OrderTriggerDirection,
-    },
-}
-
-impl Resolvable<OrderActivation<f64>> for OrderActivation<NumberValue> {
-    fn try_resolve(&self, context: &ResolvedContext) -> StockTrekResult<OrderActivation<f64>> {
+impl Resolvable<Activation<f64>> for Activation<NumberValue> {
+    fn try_resolve(&self, context: &ResolvedContext) -> StockTrekResult<Activation<f64>> {
         match self {
-            Self::Immediate => Ok(OrderActivation::Immediate),
+            Self::Immediate => Ok(Activation::Immediate),
             Self::PriceTriggered {
                 activation_price,
                 basis,
                 direction,
                 mode,
-            } => Ok(OrderActivation::PriceTriggered {
+            } => Ok(Activation::PriceTriggered {
                 activation_price: activation_price.number(context)?,
                 basis: *basis,
                 direction: *direction,
@@ -48,7 +24,7 @@ impl Resolvable<OrderActivation<f64>> for OrderActivation<NumberValue> {
                 basis,
                 callback_rate_bps,
                 direction,
-            } => Ok(OrderActivation::Trailing {
+            } => Ok(Activation::Trailing {
                 activation_price: activation_price.number(context)?,
                 basis: *basis,
                 callback_rate_bps: callback_rate_bps.number(context)?,

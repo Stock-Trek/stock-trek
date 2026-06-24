@@ -1,5 +1,4 @@
 use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId, order_tag::OrderTag},
     signal::key::SignalKey,
     values::{
         active_orders_in_cex_value::ActiveOrdersInCexValue,
@@ -18,6 +17,7 @@ use crate::{
         value::{AssetIdValue, CexIdValue, FlagValue, NumberValue},
     },
 };
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId, tag::Tag};
 
 pub struct AllocationValuesFactory;
 pub struct PortfolioValuesFactory;
@@ -52,18 +52,14 @@ impl PortfolioValuesFactory {
     pub fn active_orders_in_cex(&self, cex_id_value: CexIdValue) -> NumberValue {
         ActiveOrdersInCexValue::new(cex_id_value)
     }
-    pub fn active_orders_in_cex_with_tag(
-        &self,
-        cex_id_value: CexIdValue,
-        order_tag: OrderTag,
-    ) -> NumberValue {
-        ActiveOrdersInCexWithTagValue::new(cex_id_value, order_tag)
+    pub fn active_orders_in_cex_with_tag(&self, cex_id_value: CexIdValue, tag: Tag) -> NumberValue {
+        ActiveOrdersInCexWithTagValue::new(cex_id_value, tag)
     }
     pub fn active_orders(&self) -> NumberValue {
         ActiveOrdersValue::new()
     }
-    pub fn active_orders_with_tag(&self, order_tag: OrderTag) -> NumberValue {
-        ActiveOrdersWithTagValue::new(order_tag)
+    pub fn active_orders_with_tag(&self, tag: Tag) -> NumberValue {
+        ActiveOrdersWithTagValue::new(tag)
     }
 }
 

@@ -3,24 +3,22 @@ use crate::{
         action::{Action, ActionTrait},
         resolved_action::ResolvedAction,
     },
-    cex::{
-        capability::{CexCapability, HasRequiredCapabilities},
-        order_tag::OrderTag,
-    },
+    cex::capability::HasRequiredCapabilities,
     error::result::StockTrekResult,
     resolveable::Resolvable,
     resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::{capability::CexCapability, tag::Tag};
 
 #[derive(Serialize, Deserialize)]
 pub struct CancelAllOrdersWithIdAction {
-    order_tag: OrderTag,
+    tag: Tag,
 }
 
 impl CancelAllOrdersWithIdAction {
-    pub fn new(order_tag: OrderTag) -> Action {
-        Box::new(Self { order_tag })
+    pub fn new(tag: Tag) -> Action {
+        Box::new(Self { tag })
     }
 }
 
@@ -29,8 +27,8 @@ impl ActionTrait for CancelAllOrdersWithIdAction {}
 
 impl Resolvable<ResolvedAction> for CancelAllOrdersWithIdAction {
     fn try_resolve(&self, _c: &ResolvedContext) -> StockTrekResult<ResolvedAction> {
-        let order_tag = self.order_tag.clone();
-        Ok(ResolvedAction::CancelAllOrdersWithTag { order_tag })
+        let order_tag = self.tag.clone();
+        Ok(ResolvedAction::CancelAllOrdersWithTag { tag: order_tag })
     }
 }
 

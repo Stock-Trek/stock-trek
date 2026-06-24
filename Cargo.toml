@@ -1,6 +1,6 @@
 [package]
 name = "stock-trek"
-version = "0.8.15"
+version = "0.9.0"
 edition = "2024"
 description = "Stock Trek time-series analysis"
 authors = ["stock-trek.com <stock-trek@proton.me>"]
@@ -29,6 +29,7 @@ rust_decimal = "1.42.0"
 serde = "1.0.228"
 serde_json = {version = "1.0.149", features = ["float_roundtrip"] }
 serde_with = "3.21.0"
+stock-trek-types = "0.1.4"
 strum = { version = "0.28.0", features = ["derive"] }
 table_enum = "0.3.0"
 thiserror = "1.0"
@@ -40,3 +41,9 @@ uuid = { version = "1.23.0", features = ["serde", "v4"] }
 [lints.clippy]
 new_ret_no_self = "allow"
 too_many_arguments = "allow"
+
+[package.metadata.docs.rs]
+default-target = "x86_64-unknown-linux-gnu"
+features = []
+no-deps = true
+targets = ["x86_64-unknown-linux-gnu"]

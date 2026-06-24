@@ -1,11 +1,9 @@
-use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId},
-    error::{
-        result::{StockTrekError, StockTrekResult},
-        value::ValueError,
-    },
+use crate::error::{
+    result::{StockTrekError, StockTrekResult},
+    value::ValueError,
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 use strum::Display;
 
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]

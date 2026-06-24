@@ -1,5 +1,6 @@
+use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
+
 use crate::{
-    cex::{asset_id::AssetId, cex_id::CexId},
     conditions::{
         compare_condition::CompareCondition,
         condition::Condition,

@@ -1,11 +1,10 @@
 use crate::{
-    actions::action::Action,
-    cex::capability::{CexCapability, HasRequiredCapabilities},
-    error::result::StockTrekResult,
-    resolved_context::ResolvedContext,
+    actions::action::Action, cex::capability::HasRequiredCapabilities,
+    error::result::StockTrekResult, resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use stock_trek_types::cex::capability::CexCapability;
 use strum::Display;
 
 #[derive(Serialize, Deserialize)]

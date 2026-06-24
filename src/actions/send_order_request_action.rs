@@ -3,16 +3,14 @@ use crate::{
         action::{Action, ActionTrait},
         resolved_action::ResolvedAction,
     },
-    cex::{
-        capability::{CexCapability, HasRequiredCapabilities},
-        order_request::OrderRequest,
-    },
+    cex::capability::HasRequiredCapabilities,
     error::result::StockTrekResult,
     resolveable::Resolvable,
     resolved_context::ResolvedContext,
     values::value::{AssetIdValue, CexIdValue, NumberValue},
 };
 use serde::{Deserialize, Serialize};
+use stock_trek_types::cex::{capability::CexCapability, order_request::OrderRequest};
 
 #[derive(Serialize, Deserialize)]
 pub struct SendOrderRequestAction {
