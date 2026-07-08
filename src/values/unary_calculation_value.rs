@@ -62,49 +62,39 @@ impl NumberValueTrait for UnaryCalculationValue {
             UnaryOperator::Abs => value.abs(),
             UnaryOperator::Acos => {
                 if value < -1.0 {
-                    return Err(StockTrekError::Stats(StatsError::CalculationDomainError {
-                        operator: "Acos",
-                        value,
-                        domain_min: -1.0,
-                        domain_max: 1.0,
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Acos",
+                        message: format!("value {} outside [-1, 1]", value),
                     }));
                 }
                 if value > 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::CalculationDomainError {
-                        operator: "Acos",
-                        value,
-                        domain_min: -1.0,
-                        domain_max: 1.0,
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Acos",
+                        message: format!("value {} outside [-1, 1]", value),
                     }));
                 }
                 value.acos()
             }
             UnaryOperator::Acosh => {
                 if value < 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::CalculationDomainError {
-                        operator: "Acosh",
-                        value,
-                        domain_min: 1.0,
-                        domain_max: f64::INFINITY,
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Acosh",
+                        message: format!("value {} < 1", value),
                     }));
                 }
                 value.acosh()
             }
             UnaryOperator::Asin => {
                 if value < -1.0 {
-                    return Err(StockTrekError::Stats(StatsError::CalculationDomainError {
-                        operator: "Asin",
-                        value,
-                        domain_min: -1.0,
-                        domain_max: 1.0,
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Asin",
+                        message: format!("value {} outside [-1, 1]", value),
                     }));
                 }
                 if value > 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::CalculationDomainError {
-                        operator: "Asin",
-                        value,
-                        domain_min: -1.0,
-                        domain_max: 1.0,
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Asin",
+                        message: format!("value {} outside [-1, 1]", value),
                     }));
                 }
                 value.asin()
@@ -113,31 +103,27 @@ impl NumberValueTrait for UnaryCalculationValue {
             UnaryOperator::Atan => value.atan(),
             UnaryOperator::Atanh => {
                 if value == -1.0 {
-                    return Err(StockTrekError::Stats(StatsError::EdgeCase {
-                        operator: "Atanh",
-                        detail: "value = -1 would produce negative infinity".to_string(),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Atanh",
+                        message: "value = -1 produces negative infinity".to_string(),
                     }));
                 }
                 if value == 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::EdgeCase {
-                        operator: "Atanh",
-                        detail: "value = 1 would produce positive infinity".to_string(),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Atanh",
+                        message: "value = 1 produces positive infinity".to_string(),
                     }));
                 }
                 if value < -1.0 {
-                    return Err(StockTrekError::Stats(StatsError::CalculationDomainError {
-                        operator: "Atanh",
-                        value,
-                        domain_min: -1.0,
-                        domain_max: 1.0,
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Atanh",
+                        message: format!("value {} outside [-1, 1]", value),
                     }));
                 }
                 if value > 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::CalculationDomainError {
-                        operator: "Atanh",
-                        value,
-                        domain_min: -1.0,
-                        domain_max: 1.0,
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Atanh",
+                        message: format!("value {} outside [-1, 1]", value),
                     }));
                 }
                 value.atanh()
@@ -151,45 +137,45 @@ impl NumberValueTrait for UnaryCalculationValue {
             UnaryOperator::Frac => value.fract(),
             UnaryOperator::Log10 => {
                 if value == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::UndefinedLogarithm {
-                        operator: "Log10",
-                        detail: "value = 0 would produce undefined".to_string(),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Log10",
+                        message: "value = 0 is undefined".to_string(),
                     }));
                 }
                 if value < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::ComplexLogarithm {
-                        operator: "Log10",
-                        detail: format!("value {} < 0 would produce a complex number", value),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Log10",
+                        message: format!("value {} < 0 would produce a complex number", value),
                     }));
                 }
                 value.log10()
             }
             UnaryOperator::Log2 => {
                 if value == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::UndefinedLogarithm {
-                        operator: "Log2",
-                        detail: "value = 0 would produce undefined".to_string(),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Log2",
+                        message: "value = 0 is undefined".to_string(),
                     }));
                 }
                 if value < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::ComplexLogarithm {
-                        operator: "Log2",
-                        detail: format!("value {} < 0 would produce a complex number", value),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Log2",
+                        message: format!("value {} < 0 would produce a complex number", value),
                     }));
                 }
                 value.log2()
             }
             UnaryOperator::LogE => {
                 if value == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::UndefinedLogarithm {
-                        operator: "LogE",
-                        detail: "value = 0 would produce undefined".to_string(),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "LogE",
+                        message: "value = 0 is undefined".to_string(),
                     }));
                 }
                 if value < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::ComplexLogarithm {
-                        operator: "LogE",
-                        detail: format!("value {} < 0 would produce a complex number", value),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "LogE",
+                        message: format!("value {} < 0 would produce a complex number", value),
                     }));
                 }
                 value.ln()
@@ -201,10 +187,9 @@ impl NumberValueTrait for UnaryCalculationValue {
             UnaryOperator::Sinh => value.sinh(),
             UnaryOperator::Sqrt => {
                 if value < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::ComplexResult {
-                        operator: "Sqrt",
-                        value,
-                        relation: "< 0",
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Sqrt",
+                        message: format!("value {} < 0 would produce a complex number", value),
                     }));
                 }
                 value.sqrt()

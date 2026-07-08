@@ -60,46 +60,48 @@ impl NumberValueTrait for BinaryCalculationValue {
             }
             BinaryOperator::Pow => {
                 if left_value < 0.0 && right_value.fract() != 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::ComplexPowerResult {
-                        operator: "Pow",
-                        base: left_value,
-                        exponent: right_value,
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Pow",
+                        message: format!(
+                            "base {} < 0 with fractional exponent {} would produce a complex number",
+                            left_value, right_value
+                        ),
                     }));
                 }
                 left_value.powf(right_value)
             }
             BinaryOperator::Log => {
                 if left_value == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::UndefinedLogarithm {
-                        operator: "Log",
-                        detail: "argument = 0 would produce undefined".to_string(),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Log",
+                        message: "argument = 0 is undefined".to_string(),
                     }));
                 }
                 if right_value == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::UndefinedLogarithm {
-                        operator: "Log",
-                        detail: "base = 0 would produce undefined".to_string(),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Log",
+                        message: "base = 0 is undefined".to_string(),
                     }));
                 }
                 if right_value == 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::UndefinedLogarithm {
-                        operator: "Log",
-                        detail: "base = 1 would produce undefined".to_string(),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Log",
+                        message: "base = 1 is undefined".to_string(),
                     }));
                 }
                 if left_value < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::ComplexLogarithm {
-                        operator: "Log",
-                        detail: format!(
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Log",
+                        message: format!(
                             "argument {} < 0 would produce a complex number",
                             left_value
                         ),
                     }));
                 }
                 if right_value < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::ComplexLogarithm {
-                        operator: "Log",
-                        detail: format!("base {} < 0 would produce a complex number", right_value),
+                    return Err(StockTrekError::Stats(StatsError::DomainError {
+                        function: "Log",
+                        message: format!("base {} < 0 would produce a complex number", right_value),
                     }));
                 }
                 left_value.log(right_value)
