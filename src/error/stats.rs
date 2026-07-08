@@ -44,12 +44,12 @@ impl fmt::Display for StatsError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             StatsError::DivisionByZero { function, detail } => {
-                write!(f, "division by zero in '{}': {}", function, detail)
+                write!(f, "Division by zero in '{}': {}", function, detail)
             }
             StatsError::EmptyInput { function } => {
                 write!(
                     f,
-                    "empty input in '{}': expected at least one value",
+                    "Empty input in '{}': expected at least one value",
                     function
                 )
             }
@@ -60,7 +60,7 @@ impl fmt::Display for StatsError {
             } => {
                 write!(
                     f,
-                    "mismatched lengths in '{}': first has {} elements, second has {}",
+                    "Mismatched lengths in '{}': first has {} elements, second has {}",
                     function, first_len, second_len
                 )
             }
@@ -71,12 +71,12 @@ impl fmt::Display for StatsError {
             } => {
                 write!(
                     f,
-                    "insufficient degrees of freedom in '{}': got {}, need at least {}",
+                    "Insufficient degrees of freedom in '{}': got {}, need at least {}",
                     function, dof, needed
                 )
             }
             StatsError::DomainError { function, message } => {
-                write!(f, "domain error in '{}': {}", function, message)
+                write!(f, "Domain error in '{}': {}", function, message)
             }
             StatsError::InvalidLag {
                 function,
@@ -85,15 +85,15 @@ impl fmt::Display for StatsError {
             } => {
                 write!(
                     f,
-                    "invalid lag in '{}': lag={} not in [0, {})",
+                    "Invalid lag in '{}': lag={} not in [0, {})",
                     function, lag, max_lag
                 )
             }
             StatsError::ZeroVariance { function, detail } => {
-                write!(f, "zero variance in '{}': {}", function, detail)
+                write!(f, "Zero variance in '{}': {}", function, detail)
             }
             StatsError::IncomparableValues { left, right } => {
-                write!(f, "incomparable values {} and {} (NaN?)", left, right)
+                write!(f, "Incomparable values {} and {} (NaN?)", left, right)
             }
         }
     }

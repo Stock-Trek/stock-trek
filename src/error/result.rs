@@ -17,10 +17,10 @@ pub enum StockTrekError {
 impl fmt::Display for StockTrekError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            StockTrekError::Portfolio(e) => write!(f, "portfolio error: {}", e),
-            StockTrekError::Stats(e) => write!(f, "stats error: {}", e),
-            StockTrekError::Value(e) => write!(f, "value error: {}", e),
-            StockTrekError::Verification(e) => write!(f, "verification error: {}", e),
+            StockTrekError::Portfolio(e) => write!(f, "Portfolio error: {}", e),
+            StockTrekError::Stats(e) => write!(f, "Stats error: {}", e),
+            StockTrekError::Value(e) => write!(f, "Value error: {}", e),
+            StockTrekError::Verification(e) => write!(f, "Verification error: {}", e),
         }
     }
 }

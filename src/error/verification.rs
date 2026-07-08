@@ -10,7 +10,7 @@ impl fmt::Display for VerificationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Verification failed (exit code {}): ", self.exit_code)?;
         if self.errors.is_empty() {
-            write!(f, "no error details available")?;
+            write!(f, "No error details available")?;
         } else {
             for (i, err) in self.errors.iter().enumerate() {
                 if i > 0 {

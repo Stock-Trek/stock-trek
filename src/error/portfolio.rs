@@ -24,10 +24,10 @@ impl fmt::Display for PortfolioError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PortfolioError::NoAccountInCex { cex_id } => {
-                write!(f, "no account in {}", cex_id)
+                write!(f, "No account in {}", cex_id)
             }
             PortfolioError::AssetNotOwned { cex_id, asset_id } => {
-                write!(f, "portfolio does not own {} in {}", asset_id, cex_id)
+                write!(f, "Portfolio does not own {} in {}", asset_id, cex_id)
             }
             PortfolioError::NotEnoughAssetsInCex {
                 cex_id,
@@ -37,7 +37,7 @@ impl fmt::Display for PortfolioError {
             } => {
                 write!(
                     f,
-                    "portfolio has {} {} in {} and cannot sell {}",
+                    "Portfolio has {} {} in {} and cannot sell {}",
                     owned, asset_id, cex_id, quantity
                 )
             }

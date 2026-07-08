@@ -13,13 +13,13 @@ impl fmt::Display for ValueError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ValueError::NotFound { name, key } => {
-                write!(f, "{} not found for '{}'", name, key)
+                write!(f, "{} Not found for '{}'", name, key)
             }
             ValueError::IncorrectType { expected, found } => {
-                write!(f, "expected type '{}' but found '{}'", expected, found)
+                write!(f, "Expected type '{}' but found '{}'", expected, found)
             }
             ValueError::ValuesNotEqual { a, b } => {
-                write!(f, "values were '{}' and '{}' but expected equal", a, b)
+                write!(f, "Values were '{}' and '{}' but expected equal", a, b)
             }
         }
     }
