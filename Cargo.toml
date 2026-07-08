@@ -1,6 +1,6 @@
 [package]
 name = "stock-trek"
-version = "0.9.0"
+version = "0.9.1"
 edition = "2024"
 description = "Stock Trek time-series analysis"
 authors = ["stock-trek.com <stock-trek@proton.me>"]
@@ -32,7 +32,6 @@ serde_with = "3.21.0"
 stock-trek-types = "0.1.4"
 strum = { version = "0.28.0", features = ["derive"] }
 table_enum = "0.3.0"
-thiserror = "1.0"
 traitreg = "0.4.0"
 typetag = "0.2.21"
 typify = "0.6.1"
