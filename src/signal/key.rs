@@ -19,7 +19,7 @@ where
     T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "SignalKey::{}({})", T::KEY_NAME, &self.key)
+        write!(f, "SignalKey::{}({})", T::KEY_NAME, self.key)
     }
 }
 
