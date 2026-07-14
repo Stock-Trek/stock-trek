@@ -22,7 +22,7 @@ impl SignalContext {
                     .markets_by_base
                     .get(&base)
                     .and_then(|by_quote| by_quote.markets_by_quote.get(&quote))
-                    .map(|market| (cex_id.clone(), market))
+                    .map(|market| (*cex_id, market))
             })
     }
     pub fn cex_market_for(
