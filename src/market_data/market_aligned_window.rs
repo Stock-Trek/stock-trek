@@ -1,8 +1,9 @@
 use crate::market_data::{
     aligned_window::AlignedWindow, market_candle::MarketCandle, market_ohlcv::MarketOhlcv,
 };
+use hashbrown::HashMap;
 use serde::{Deserialize, Deserializer, Serialize};
-use std::{collections::HashMap, sync::OnceLock};
+use std::sync::OnceLock;
 use strum::IntoEnumIterator;
 
 #[derive(Debug, Clone, Serialize)]

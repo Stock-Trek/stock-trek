@@ -1,5 +1,5 @@
 use crate::market_data::market::Market;
-use std::collections::HashMap;
+use hashbrown::HashMap;
 use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 pub struct SignalContext {

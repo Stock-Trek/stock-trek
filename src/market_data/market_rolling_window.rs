@@ -1,6 +1,7 @@
 use crate::market_data::{market_candle::MarketCandle, rolling_window::RollingWindow};
+use hashbrown::HashMap;
 use serde::{Deserialize, Deserializer, Serialize};
-use std::{collections::HashMap, sync::OnceLock};
+use std::sync::OnceLock;
 use strum::IntoEnumIterator;
 
 pub type Ohlcv = (f64, f64, f64, f64, f64, f64, f64);

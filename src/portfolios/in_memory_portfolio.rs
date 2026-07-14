@@ -1,5 +1,5 @@
 use crate::portfolios::portfolio::{Portfolio, PortfolioTrait};
-use std::collections::HashMap;
+use hashbrown::HashMap;
 use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId, tag::Tag};
 
 #[derive(Debug, Clone, Default)]
