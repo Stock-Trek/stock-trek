@@ -1,5 +1,5 @@
 use crate::allocations::allocation::{Allocation, AllocationTrait};
-use std::collections::HashMap;
+use hashbrown::HashMap;
 use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 #[derive(Debug, Clone, Default)]

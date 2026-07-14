@@ -1,6 +1,6 @@
 [package]
 name = "stock-trek"
-version = "0.9.1"
+version = "0.9.2"
 edition = "2024"
 description = "Stock Trek time-series analysis"
 authors = ["stock-trek.com <stock-trek@proton.me>"]
@@ -23,6 +23,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 async-trait = "0.1.89"
 chrono = { version = "0.4", features = ["serde"] }
+hashbrown = { version = "0.17.1", features = ["serde"] }
 num-complex = "0.4.6"
 regex = "1.12.3"
 rust_decimal = "1.42.0"
