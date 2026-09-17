@@ -5,9 +5,8 @@ use crate::{
     },
     signal::{key::SignalKey, key::SignalKeyType, value::SignalValue},
 };
-use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
-use std::convert::TryFrom;
+use std::{collections::HashMap, convert::TryFrom};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Signals {

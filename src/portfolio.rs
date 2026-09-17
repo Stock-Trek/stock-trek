@@ -1,5 +1,5 @@
-use hashbrown::HashMap;
 use rust_decimal::Decimal;
+use std::collections::HashMap;
 use stock_trek_types::cex::{
     account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest,
     quantity::Quantity, side::Side, tag::Tag,

@@ -1,5 +1,5 @@
 use crate::market_data::market::Market;
-use hashbrown::HashMap;
+use std::collections::HashMap;
 use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 #[derive(Debug, Clone)]
