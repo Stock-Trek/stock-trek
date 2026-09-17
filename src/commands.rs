@@ -25,7 +25,7 @@ pub enum Command {
 }
 
 impl Command {
-    pub fn execute(&self, c: &ResolvedContext) -> StockTrekResult<()> {
+    pub fn execute(&self, c: &mut ResolvedContext) -> StockTrekResult<()> {
         match self {
             Command::If {
                 condition,

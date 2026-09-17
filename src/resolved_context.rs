@@ -11,4 +11,4 @@ pub struct ResolvedContext {
     pub signals: Signals,
 }
 
-pub type EnqueueActionFn = Box<dyn Fn(&ResolvedAction, &RecoveryPolicy) -> StockTrekResult<()>>;
+pub type EnqueueActionFn = Box<dyn FnMut(&ResolvedAction, &RecoveryPolicy) -> StockTrekResult<()>>;
