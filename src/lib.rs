@@ -30,12 +30,14 @@ pub use traitreg;
 pub use traitreg::register as register_algorithm;
 
 pub mod actions {
-    pub use crate::action::action::Action;
-    pub use crate::action::action_factory::ActionFactory;
-    pub use crate::action::recoverable_action::{
-        ActionErrorCause, ActionErrorResponse, RecoverableAction, RecoveryPolicy,
+    pub use crate::action::{
+        action::Action,
+        action_factory::ActionFactory,
+        recoverable_action::{
+            ActionErrorCause, ActionErrorResponse, RecoverableAction, RecoveryPolicy,
+        },
+        resolved_action::ResolvedAction,
     };
-    pub use crate::action::resolved_action::ResolvedAction;
 }
 
 pub mod capabilities {
@@ -43,33 +45,41 @@ pub mod capabilities {
 }
 
 pub mod errors {
-    pub use crate::error::portfolio::PortfolioError;
-    pub use crate::error::result::{StockTrekError, StockTrekResult};
-    pub use crate::error::stats::StatsError;
-    pub use crate::error::value::ValueError;
+    pub use crate::error::{
+        portfolio::PortfolioError,
+        result::{StockTrekError, StockTrekResult},
+        stats::StatsError,
+        value::ValueError,
+    };
 }
 
 pub mod markets {
-    pub use crate::market_data::aligned_window::AlignedWindow;
-    pub use crate::market_data::market::Market;
-    pub use crate::market_data::market::MarketBuilder;
-    pub use crate::market_data::market_aligned_window::MarketAlignedWindow;
-    pub use crate::market_data::market_candle::MarketCandle;
-    pub use crate::market_data::market_ohlcv::MarketOhlcv;
-    pub use crate::market_data::market_order_book::MarketOrderBook;
-    pub use crate::market_data::market_quote::{MarketQuote, PriceQuantity, TimedPriceQuantity};
-    pub use crate::market_data::market_rolling_window::{MarketRollingWindow, Ohlcv};
-    pub use crate::market_data::market_tick::MarketTick;
-    pub use crate::market_data::market_ticks::MarketTicks;
-    pub use crate::market_data::rolling_window::RollingWindow;
-    pub use crate::market_data::timestamp::TimestampMillis;
+    pub use crate::market_data::{
+        aligned_window::AlignedWindow,
+        market::Market,
+        market::MarketBuilder,
+        market_aligned_window::MarketAlignedWindow,
+        market_candle::MarketCandle,
+        market_ohlcv::MarketOhlcv,
+        market_order_book::MarketOrderBook,
+        market_quote::{MarketQuote, PriceQuantity, TimedPriceQuantity},
+        market_rolling_window::{MarketRollingWindow, Ohlcv},
+        market_tick::MarketTick,
+        market_ticks::MarketTicks,
+        rolling_window::RollingWindow,
+        timestamp::TimestampMillis,
+    };
 }
 
 pub mod signals {
-    pub use crate::signal::key::{SignalKey, SignalKeyType};
-    pub use crate::signal::signals::Signals;
-    pub use crate::signal::value::SignalValue;
-    pub use crate::signal_context::SignalContext;
+    pub use crate::{
+        signal::{
+            key::{SignalKey, SignalKeyType},
+            signals::Signals,
+            value::SignalValue,
+        },
+        signal_context::{CexMarketDataByBaseContext, CexMarketDataByQuoteContext, SignalContext},
+    };
 }
 
 pub mod types {
@@ -95,13 +105,14 @@ pub mod types {
 }
 
 pub mod values {
-    pub use crate::value::binary_operator::BinaryOperator;
-    pub use crate::value::unary_operator::UnaryOperator;
-    pub use crate::value::value::{
-        AccountIdValue, AssetIdValue, CexIdValue, FlagValue, NumberValue,
-    };
-    pub use crate::value::values_factory::{
-        CalculationValuesFactory, LiteralValuesFactory, PortfolioValuesFactory, SignalValuesFactory,
+    pub use crate::value::{
+        binary_operator::BinaryOperator,
+        unary_operator::UnaryOperator,
+        value::{AccountIdValue, AssetIdValue, CexIdValue, FlagValue, NumberValue},
+        values_factory::{
+            CalculationValuesFactory, LiteralValuesFactory, PortfolioValuesFactory,
+            SignalValuesFactory,
+        },
     };
 }
 
