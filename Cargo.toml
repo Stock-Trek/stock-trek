@@ -1,6 +1,6 @@
 [package]
 name = "stock-trek"
-version = "0.13.4"
+version = "0.14.0"
 edition = "2024"
 description = "Stock Trek time-series analysis"
 authors = ["stock-trek.com <stock-trek@proton.me>"]
