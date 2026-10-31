@@ -1,6 +1,6 @@
 [package]
 name = "stock-trek"
-version = "0.14.0"
+version = "0.14.1"
 edition = "2024"
 description = "Stock Trek time-series analysis"
 authors = ["stock-trek.com <stock-trek@proton.me>"]
@@ -21,15 +21,15 @@ name = "stock_trek"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-chrono = "0.4.45"
-regex = "1.12.3"
-rust_decimal = "1.42.0"
-serde = "1.0.228"
-serde_json = {version = "1.0.149", features = ["float_roundtrip"] }
-serde_with = "3.21.0"
-stock-trek-types = { version = "0.4.0", features = ["serde"] }
-strum = { version = "0.28.0", features = ["derive"] }
-traitreg = "0.4.0"
+chrono = "0.4"
+regex = "1"
+rust_decimal = "1"
+serde = "1"
+serde_json = {version = "1", features = ["float_roundtrip"] }
+serde_with = "3"
+stock-trek-types = { version = "0.4", features = ["serde"] }
+strum = { version = "0.28", features = ["derive"] }
+traitreg = "0.4"
 
 [lints.clippy]
 module_inception = "allow"
