@@ -13,9 +13,6 @@ pub trait Algorithm: Send + Sync {
     fn preferences(&self) -> Preferences;
     /// Produces the signals used by the algorithm for the given market context.
     /// This is run *every* time.
-    ///
-    /// Returns an error when the available market data is insufficient to
-    /// produce the signals.
     fn signals(&self, c: &SignalContext) -> StockTrekResult<Signals>;
     /// Produces the Command that defines the strategy to follow.
     /// Note that this function is run *exactly once*.
