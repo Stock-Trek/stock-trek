@@ -2,7 +2,7 @@ use crate::{
     errors::{StatsError, StockTrekError, StockTrekResult, ValueError},
     market_data::{millis::*, timestamp::TimestampMillis},
 };
-use chrono::{DateTime, Datelike, Duration, Months, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Months, TimeZone, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use strum::{EnumCount, EnumIter, FromRepr};
 
@@ -267,26 +267,6 @@ impl AlignedWindow {
             AlignedWindow::Months12 | AlignedWindow::Years1 => Some(12),
             AlignedWindow::Years2 => Some(24),
             _ => None,
-        }
-    }
-
-    /// Adds the window length to a UTC date and time.
-    pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        if let Some(millis) = self.millis_exact() {
-            let millis = i64::try_from(millis).ok()?;
-            date_time.checked_add_signed(Duration::milliseconds(millis))
-        } else {
-            date_time.checked_add_months(Months::new(self.months_exact()?))
-        }
-    }
-
-    /// Subtracts the window length from a UTC date and time.
-    pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        if let Some(millis) = self.millis_exact() {
-            let millis = i64::try_from(millis).ok()?;
-            date_time.checked_sub_signed(Duration::milliseconds(millis))
-        } else {
-            date_time.checked_sub_months(Months::new(self.months_exact()?))
         }
     }
 

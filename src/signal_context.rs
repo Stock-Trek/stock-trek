@@ -130,7 +130,7 @@ mod tests {
     #[test]
     fn adds_a_market_for_a_cex_base_and_quote() {
         let mut builder = SignalContextBuilder::new();
-        builder.market(
+        builder.cex_market(
             CexId::Binance,
             AssetId::Bitcoin,
             AssetId::TetherUSD,
@@ -160,7 +160,7 @@ mod tests {
                 AssetId::TetherUSD,
                 market(),
             )
-            .market(
+            .cex_market(
                 CexId::Binance,
                 AssetId::Ethereum,
                 AssetId::TetherUSD,

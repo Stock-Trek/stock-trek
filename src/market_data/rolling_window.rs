@@ -2,7 +2,6 @@ use crate::{
     errors::{StockTrekError, ValueError},
     market_data::millis::*,
 };
-use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use strum::{EnumCount, EnumIter, FromRepr};
 
@@ -153,18 +152,6 @@ impl RollingWindow {
     /// Returns the window length in milliseconds as an upper bound.
     pub fn millis_upper_bound(&self) -> Option<u64> {
         self.millis_exact()
-    }
-
-    /// Adds the window length to a UTC date and time.
-    pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        let millis = i64::try_from(self.millis_exact()?).ok()?;
-        date_time.checked_add_signed(Duration::milliseconds(millis))
-    }
-
-    /// Subtracts the window length from a UTC date and time.
-    pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        let millis = i64::try_from(self.millis_exact()?).ok()?;
-        date_time.checked_sub_signed(Duration::milliseconds(millis))
     }
 
     /// Returns the short label for the window, such as `1h` or `7d`.

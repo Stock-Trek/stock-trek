@@ -1,5 +1,5 @@
 use super::*;
-use crate::market_data::window_test_support::window_tests;
+use crate::market_data::window_test_support::{CheckedWindow, window_tests};
 
 window_tests!(
     RollingWindow,
