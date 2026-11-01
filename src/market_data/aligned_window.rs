@@ -131,22 +131,12 @@ impl AlignedWindow {
                 "timestamp {timestamp} is not representable as a UTC date"
             ))
         })?;
-        let months_since_epoch = i64::from(date_time.year()) * 12 + i64::from(date_time.month0());
-        let months_per_window_wide = i64::from(exact_months);
+        let months_since_epoch = date_time.year() * 12 + date_time.month0() as i32;
+        let months_per_window = exact_months as i32;
         let window_start_months =
-            months_since_epoch.div_euclid(months_per_window_wide) * months_per_window_wide;
-        let start_year = i32::try_from(window_start_months.div_euclid(12)).map_err(|_| {
-            Self::bounds_error(format!(
-                "calendar window year {} does not fit in an i32",
-                window_start_months.div_euclid(12)
-            ))
-        })?;
-        let start_month = u32::try_from(window_start_months.rem_euclid(12) + 1).map_err(|_| {
-            Self::bounds_error(format!(
-                "calendar window month {} does not fit in a u32",
-                window_start_months.rem_euclid(12) + 1
-            ))
-        })?;
+            months_since_epoch.div_euclid(months_per_window) * months_per_window;
+        let start_year = window_start_months.div_euclid(12);
+        let start_month = window_start_months.rem_euclid(12) as u32 + 1;
         let lower = Utc
             .with_ymd_and_hms(start_year, start_month, 1, 0, 0, 0)
             .single()
