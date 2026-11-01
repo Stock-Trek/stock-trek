@@ -1,7 +1,5 @@
-use crate::error::{
-    result::{StockTrekError, StockTrekResult},
-    stats::StatsError,
-};
+use super::operator_error::{division_by_zero, domain_check};
+use crate::error::result::StockTrekResult;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
@@ -37,64 +35,46 @@ impl BinaryOperator {
             BinaryOperator::Atan2 => left.atan2(right),
             BinaryOperator::Div => {
                 if right == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DivisionByZero {
-                        function: "Div",
-                        detail: "divisor = 0 would produce +/- infinity".to_string(),
-                    }));
+                    return Err(division_by_zero(
+                        "Div",
+                        "divisor = 0 would produce +/- infinity",
+                    ));
                 }
                 left / right
             }
             BinaryOperator::Pow => {
-                if left < 0.0 && right.fract() != 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Pow",
-                        message: format!(
-                            "base {} < 0 with fractional exponent {} would produce a complex number",
-                            left, right
-                        ),
-                    }));
-                }
+                domain_check!(
+                    left < 0.0 && right.fract() != 0.0,
+                    "Pow",
+                    format!(
+                        "base {} < 0 with fractional exponent {} would produce a complex number",
+                        left, right
+                    )
+                );
                 left.powf(right)
             }
             BinaryOperator::Log => {
-                if left == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Log",
-                        message: "argument = 0 is undefined".to_string(),
-                    }));
-                }
-                if right == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Log",
-                        message: "base = 0 is undefined".to_string(),
-                    }));
-                }
-                if right == 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Log",
-                        message: "base = 1 is undefined".to_string(),
-                    }));
-                }
-                if left < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Log",
-                        message: format!("argument {} < 0 would produce a complex number", left),
-                    }));
-                }
-                if right < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Log",
-                        message: format!("base {} < 0 would produce a complex number", right),
-                    }));
-                }
+                domain_check!(left == 0.0, "Log", "argument = 0 is undefined");
+                domain_check!(right == 0.0, "Log", "base = 0 is undefined");
+                domain_check!(right == 1.0, "Log", "base = 1 is undefined");
+                domain_check!(
+                    left < 0.0,
+                    "Log",
+                    format!("argument {} < 0 would produce a complex number", left)
+                );
+                domain_check!(
+                    right < 0.0,
+                    "Log",
+                    format!("base {} < 0 would produce a complex number", right)
+                );
                 left.log(right)
             }
             BinaryOperator::Mod => {
                 if right == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DivisionByZero {
-                        function: "Mod",
-                        detail: "divisor = 0 would produce +/- infinity".to_string(),
-                    }));
+                    return Err(division_by_zero(
+                        "Mod",
+                        "divisor = 0 would produce +/- infinity",
+                    ));
                 }
                 left % right
             }
