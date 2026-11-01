@@ -9,10 +9,10 @@ use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::Ce
 
 /// A typed key used to read and write a signal value.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
 pub struct SignalKey<T> {
     key: String,
     default: Option<T>,
+    #[serde(skip)]
     _phantom: PhantomData<T>,
 }
 
