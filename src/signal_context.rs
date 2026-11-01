@@ -43,8 +43,58 @@ impl SignalContext {
     }
 }
 
+/// Builder for constructing a [`SignalContext`].
+#[derive(Debug, Clone, Default)]
+pub struct SignalContextBuilder {
+    cex_market_data: HashMap<CexId, CexMarketDataByBaseContext>,
+}
+
+impl SignalContextBuilder {
+    /// Creates an empty signal context builder.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Adds a market for a base/quote pair on a CEX.
+    pub fn market(
+        &mut self,
+        cex_id: CexId,
+        base: AssetId,
+        quote: AssetId,
+        market: Market,
+    ) -> &mut Self {
+        self.cex_market_data
+            .entry(cex_id)
+            .or_default()
+            .markets_by_base
+            .entry(base)
+            .or_default()
+            .markets_by_quote
+            .insert(quote, market);
+        self
+    }
+
+    /// Adds a market for a base/quote pair on a CEX.
+    ///
+    /// This is an alias for [`Self::market`].
+    pub fn cex_market(
+        &mut self,
+        cex_id: CexId,
+        base: AssetId,
+        quote: AssetId,
+        market: Market,
+    ) -> &mut Self {
+        self.market(cex_id, base, quote, market)
+    }
+
+    /// Builds the [`SignalContext`] from the collected market data.
+    pub fn build(self) -> SignalContext {
+        SignalContext::new(self.cex_market_data)
+    }
+}
+
 /// Market data grouped by base asset for a single CEX.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CexMarketDataByBaseContext {
     markets_by_base: HashMap<AssetId, CexMarketDataByQuoteContext>,
 }
@@ -57,7 +107,7 @@ impl CexMarketDataByBaseContext {
 }
 
 /// Market data grouped by quote asset.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CexMarketDataByQuoteContext {
     markets_by_quote: HashMap<AssetId, Market>,
 }
@@ -66,5 +116,82 @@ impl CexMarketDataByQuoteContext {
     /// Creates quote-asset market data from markets keyed by quote asset.
     pub fn new(markets_by_quote: HashMap<AssetId, Market>) -> Self {
         Self { markets_by_quote }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::market_data::market::MarketBuilder;
+
+    fn market() -> Market {
+        MarketBuilder::new(0.000_001, 0.01, 1.0).build()
+    }
+
+    #[test]
+    fn empty_builder_builds_an_empty_context() {
+        let context = SignalContextBuilder::new().build();
+
+        assert!(
+            context
+                .cex_markets_for(AssetId::Bitcoin, AssetId::TetherUSD)
+                .next()
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn adds_a_market_for_a_cex_base_and_quote() {
+        let mut builder = SignalContextBuilder::new();
+        builder.market(
+            CexId::Binance,
+            AssetId::Bitcoin,
+            AssetId::TetherUSD,
+            market(),
+        );
+        let context = builder.build();
+
+        assert!(
+            context
+                .cex_market_for(&CexId::Binance, &AssetId::Bitcoin, &AssetId::TetherUSD)
+                .is_some()
+        );
+        assert!(
+            context
+                .cex_market_for(&CexId::Binance, &AssetId::Ethereum, &AssetId::TetherUSD)
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn adds_markets_for_multiple_pairs() {
+        let mut builder = SignalContextBuilder::new();
+        builder
+            .cex_market(
+                CexId::Binance,
+                AssetId::Bitcoin,
+                AssetId::TetherUSD,
+                market(),
+            )
+            .market(
+                CexId::Binance,
+                AssetId::Ethereum,
+                AssetId::TetherUSD,
+                market(),
+            );
+        let context = builder.build();
+
+        assert_eq!(
+            context
+                .cex_markets_for(AssetId::Bitcoin, AssetId::TetherUSD)
+                .count(),
+            1
+        );
+        assert_eq!(
+            context
+                .cex_markets_for(AssetId::Ethereum, AssetId::TetherUSD)
+                .count(),
+            1
+        );
     }
 }

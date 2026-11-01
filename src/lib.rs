@@ -94,7 +94,10 @@ pub mod signals {
             signals::Signals,
             value::SignalValue,
         },
-        signal_context::{CexMarketDataByBaseContext, CexMarketDataByQuoteContext, SignalContext},
+        signal_context::{
+            CexMarketDataByBaseContext, CexMarketDataByQuoteContext, SignalContext,
+            SignalContextBuilder,
+        },
     };
 }
 
@@ -143,7 +146,7 @@ pub mod prelude {
         pending_order::PendingOrder,
         portfolio::{CexAccountPortfolio, Portfolio},
         register_algorithm,
-        signals::{SignalContext, SignalKey, Signals},
+        signals::{SignalContext, SignalContextBuilder, SignalKey, Signals},
         traitreg,
         types::{
             AccountId, Activation, AssetId, CexId, CexPreferences, CexRoundingPreferences,
