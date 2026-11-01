@@ -7,6 +7,9 @@ use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::Ce
 use strum::Display;
 
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
+#[non_exhaustive]
 pub enum SignalValue {
     CexId(CexId),
     AccountId(AccountId),

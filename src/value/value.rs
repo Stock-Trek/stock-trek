@@ -6,9 +6,13 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId, tag::Tag};
+use strum::Display;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Display, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
+#[non_exhaustive]
 pub enum AccountIdValue {
     Literal { literal: AccountId },
     Signal { signal: SignalKey<AccountId> },
@@ -23,8 +27,11 @@ impl AccountIdValue {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Display, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
+#[non_exhaustive]
 pub enum CexIdValue {
     Literal { literal: CexId },
     Signal { signal: SignalKey<CexId> },
@@ -39,8 +46,11 @@ impl CexIdValue {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Display, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
+#[non_exhaustive]
 pub enum AssetIdValue {
     Literal { literal: AssetId },
     Signal { signal: SignalKey<AssetId> },
@@ -55,8 +65,11 @@ impl AssetIdValue {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Display, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
+#[non_exhaustive]
 pub enum FlagValue {
     Literal { literal: bool },
     Signal { signal: SignalKey<bool> },
@@ -71,8 +84,11 @@ impl FlagValue {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Display, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
+#[non_exhaustive]
 pub enum NumberValue {
     Literal {
         literal: f64,

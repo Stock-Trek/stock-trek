@@ -7,8 +7,12 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use stock_trek_types::cex::capability::CexCapability;
+use strum::Display;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Display, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
+#[non_exhaustive]
 pub enum Command {
     If {
         condition: Condition,

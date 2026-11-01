@@ -6,13 +6,16 @@ use serde::{Deserialize, Serialize};
 use strum::Display;
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
+#[non_exhaustive]
 pub enum UnaryOperator {
     Abs,
     Neg,
     Floor,
     Ceil,
-    RoundAway0,
-    RoundToEven,
+    RoundAwayFrom0,
+    RoundTiesEven,
     Trunc,
     Frac,
     Sqrt,
@@ -160,8 +163,8 @@ impl UnaryOperator {
                 value.ln()
             }
             UnaryOperator::Neg => -value,
-            UnaryOperator::RoundAway0 => value.round(),
-            UnaryOperator::RoundToEven => value.round_ties_even(),
+            UnaryOperator::RoundAwayFrom0 => value.round(),
+            UnaryOperator::RoundTiesEven => value.round_ties_even(),
             UnaryOperator::Sin => value.sin(),
             UnaryOperator::Sinh => value.sinh(),
             UnaryOperator::Sqrt => {

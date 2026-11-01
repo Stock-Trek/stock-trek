@@ -1,8 +1,23 @@
 use chrono::{DateTime, Duration, Months, Utc};
 use serde::{Deserialize, Serialize};
-use strum::{EnumIter, FromRepr};
+use strum::{Display, EnumCount, EnumIter, FromRepr};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter, FromRepr, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Display,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    EnumCount,
+    EnumIter,
+    FromRepr,
+    Serialize,
+    Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
 #[repr(u8)]
 pub enum AlignedWindow {

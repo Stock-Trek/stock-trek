@@ -14,8 +14,11 @@ use std::cmp::Ordering;
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId};
 use strum::Display;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Display, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
+#[strum(serialize_all = "snake_case")]
+#[non_exhaustive]
 pub enum Condition {
     Compare {
         left: Box<NumberValue>,
@@ -121,6 +124,8 @@ impl Condition {
 }
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 pub enum QuantityOf {
     All,
     Partial,
