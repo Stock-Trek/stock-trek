@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, convert::TryFrom};
 
 /// A collection of named signal values.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Signals {
     signal_values: HashMap<String, SignalValue>,
 }
@@ -17,19 +17,9 @@ pub struct Signals {
 impl Signals {
     /// Creates an empty signal collection.
     pub fn new() -> Self {
-        Self {
-            signal_values: HashMap::new(),
-        }
+        Self::default()
     }
-}
 
-impl Default for Signals {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Signals {
     /// Reads a typed value from the collection, falling back to the key's default.
     pub fn read<T>(&self, key: &SignalKey<T>) -> StockTrekResult<T>
     where
