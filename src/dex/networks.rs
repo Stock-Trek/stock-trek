@@ -18,6 +18,8 @@ pub const FAMILY_ID_TRON: &str = "tron";
 
 pub mod arbitrum {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -58,6 +60,8 @@ pub mod arbitrum {
 
 pub mod avalanche {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -95,6 +99,8 @@ pub mod avalanche {
 
 pub mod base {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -132,6 +138,8 @@ pub mod base {
 
 pub mod bitcoin {
     use crate::dex::network::{Network, NetworkId};
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -172,6 +180,8 @@ pub mod bitcoin {
 
 pub mod bitcoin_cash {
     use crate::dex::network::{Network, NetworkId};
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -208,6 +218,8 @@ pub mod bitcoin_cash {
 
 pub mod bsc {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -245,6 +257,8 @@ pub mod bsc {
 
 pub mod celo {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -282,6 +296,8 @@ pub mod celo {
 
 pub mod cosmos {
     use crate::dex::network::{Network, NetworkId};
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -318,6 +334,8 @@ pub mod cosmos {
 
 pub mod cronos {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -355,6 +373,8 @@ pub mod cronos {
 
 pub mod dogecoin {
     use crate::dex::network::{Network, NetworkId};
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -391,6 +411,8 @@ pub mod dogecoin {
 
 pub mod ethereum {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -431,6 +453,8 @@ pub mod ethereum {
 
 pub mod fantom {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -468,6 +492,8 @@ pub mod fantom {
 
 pub mod gnosis {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -505,6 +531,8 @@ pub mod gnosis {
 
 pub mod litecoin {
     use crate::dex::network::{Network, NetworkId};
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -541,6 +569,8 @@ pub mod litecoin {
 
 pub mod moonbeam {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -578,6 +608,8 @@ pub mod moonbeam {
 
 pub mod near {
     use crate::dex::network::{Network, NetworkId};
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -614,6 +646,8 @@ pub mod near {
 
 pub mod optimism {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -651,6 +685,8 @@ pub mod optimism {
 
 pub mod osmosis {
     use crate::dex::network::{Network, NetworkId};
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -687,6 +723,8 @@ pub mod osmosis {
 
 pub mod polygon {
     use crate::dex::network::NetworkId;
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -727,6 +765,8 @@ pub mod polygon {
 
 pub mod solana {
     use crate::dex::network::{Network, NetworkId};
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
@@ -765,6 +805,8 @@ pub mod solana {
 
 pub mod tron {
     use crate::dex::network::{Network, NetworkId};
+    use serde::{Deserialize, Serialize};
+    use strum::Display;
 
     #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     #[serde(rename_all = "snake_case")]
