@@ -71,10 +71,8 @@ impl AlignedWindow {
     /// Month and year windows follow calendar boundaries, so their lengths vary
     /// with the actual number of days in each month or year.
     pub fn bounds_for(&self, timestamp: u64) -> (u64, u64) {
-        if let Some(months_per_window) = self.calendar_months()
-            && let Some(bounds) = calendar_bounds_for(timestamp, months_per_window)
-        {
-            return bounds;
+        if let Some(months_per_window) = self.calendar_months() {
+            return calendar_bounds_for(timestamp, months_per_window);
         }
 
         let window_millis = self.millis_upper_bound();
@@ -252,25 +250,33 @@ impl AlignedWindow {
     }
 }
 
-fn calendar_bounds_for(timestamp: u64, months_per_window: u32) -> Option<(u64, u64)> {
-    let date_time = i64::try_from(timestamp)
-        .ok()
-        .and_then(DateTime::from_timestamp_millis)?;
+fn calendar_bounds_for(timestamp: u64, months_per_window: u32) -> (u64, u64) {
+    let date_time = DateTime::from_timestamp_millis(
+        i64::try_from(timestamp).expect("timestamp must be representable as milliseconds"),
+    )
+    .expect("timestamp must be representable as a UTC date");
     let months_since_epoch = i64::from(date_time.year()) * 12 + i64::from(date_time.month0());
     let months_per_window_wide = i64::from(months_per_window);
     let window_start_months =
         months_since_epoch.div_euclid(months_per_window_wide) * months_per_window_wide;
-    let start_year = i32::try_from(window_start_months.div_euclid(12)).ok()?;
-    let start_month = u32::try_from(window_start_months.rem_euclid(12) + 1).ok()?;
+    let start_year = i32::try_from(window_start_months.div_euclid(12))
+        .expect("calendar window year must fit in an i32");
+    let start_month = u32::try_from(window_start_months.rem_euclid(12) + 1)
+        .expect("calendar window month must fit in a u32");
     let lower_bound = Utc
         .with_ymd_and_hms(start_year, start_month, 1, 0, 0, 0)
-        .single()?;
-    let upper_bound = lower_bound.checked_add_months(Months::new(months_per_window))?;
+        .single()
+        .expect("calendar window start must be a valid UTC date");
+    let upper_bound = lower_bound
+        .checked_add_months(Months::new(months_per_window))
+        .expect("calendar window end must be a valid UTC date");
 
-    Some((
-        u64::try_from(lower_bound.timestamp_millis()).ok()?,
-        u64::try_from(upper_bound.timestamp_millis()).ok()?,
-    ))
+    (
+        u64::try_from(lower_bound.timestamp_millis())
+            .expect("calendar window lower bound must be non-negative"),
+        u64::try_from(upper_bound.timestamp_millis())
+            .expect("calendar window upper bound must be non-negative"),
+    )
 }
 
 impl TryFrom<&str> for AlignedWindow {
