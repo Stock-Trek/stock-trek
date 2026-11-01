@@ -175,9 +175,9 @@ impl Portfolio {
     /// `asset_id` held in a **specific** CEX account (counts available and reserved).
     pub fn asset_total_in_cex_account(
         &self,
-        asset_id: &AssetId,
         cex_id: &CexId,
         account_id: &AccountId,
+        asset_id: &AssetId,
     ) -> Decimal {
         self.portfolios
             .get(cex_id)
@@ -199,13 +199,13 @@ impl Portfolio {
     /// account holds.
     pub fn asset_available_in_cex_account(
         &self,
-        asset_id: &AssetId,
         cex_id: &CexId,
         account_id: &AccountId,
+        asset_id: &AssetId,
     ) -> Decimal {
         Self::available_quantity(
-            self.asset_total_in_cex_account(asset_id, cex_id, account_id),
-            self.asset_reserved_in_cex_account(asset_id, cex_id, account_id),
+            self.asset_total_in_cex_account(cex_id, account_id, asset_id),
+            self.asset_reserved_in_cex_account(cex_id, account_id, asset_id),
         )
     }
     /// Total amount of `asset_id` reserved (locked in unfilled pending orders) across all accounts.
@@ -225,9 +225,9 @@ impl Portfolio {
     /// Amount of `asset_id` reserved (locked in unfilled pending orders) in a specific CEX account.
     pub fn asset_reserved_in_cex_account(
         &self,
-        asset_id: &AssetId,
         cex_id: &CexId,
         account_id: &AccountId,
+        asset_id: &AssetId,
     ) -> Decimal {
         self.portfolios
             .get(cex_id)

@@ -87,9 +87,9 @@ impl Algorithm for CostAveraging {
             c.commands.if_else(
                 c.conditions.compare(
                     c.portfolio.asset_available_in_cex_account(
-                        usdt.clone(),
                         cex.clone(),
                         account.clone(),
+                        usdt.clone(),
                     ),
                     Ordering::Greater,
                     cheapest_price.clone(),

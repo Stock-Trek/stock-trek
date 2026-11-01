@@ -107,7 +107,7 @@ impl Condition {
                 asset_id,
             } => Ok(c
                 .portfolio
-                .asset_total_in_cex_account(asset_id, cex_id, account_id)
+                .asset_total_in_cex_account(cex_id, account_id, asset_id)
                 > Decimal::ZERO),
             Condition::QuantityOf {
                 quantity_of,
@@ -194,9 +194,9 @@ impl ConditionFactory {
     /// Creates a condition testing whether a CEX account owns any of an asset.
     pub fn owns_asset_in_cex_account(
         &self,
-        asset_id: AssetId,
         cex_id: CexId,
         account_id: AccountId,
+        asset_id: AssetId,
     ) -> Condition {
         Condition::OwnsAssetInCexAccount {
             cex_id,

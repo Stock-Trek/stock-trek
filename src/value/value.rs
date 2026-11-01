@@ -270,7 +270,7 @@ impl NumberValue {
                 let account_id = account_id_value.account_id(c)?;
                 let asset_id = asset_id_value.asset_id(c)?;
                 Ok(c.portfolio
-                    .asset_total_in_cex_account(&asset_id, &cex_id, &account_id)
+                    .asset_total_in_cex_account(&cex_id, &account_id, &asset_id)
                     .as_f64())
             }
             Self::AssetAvailable { asset_id_value } => {
@@ -286,7 +286,7 @@ impl NumberValue {
                 let account_id = account_id_value.account_id(c)?;
                 let asset_id = asset_id_value.asset_id(c)?;
                 Ok(c.portfolio
-                    .asset_available_in_cex_account(&asset_id, &cex_id, &account_id)
+                    .asset_available_in_cex_account(&cex_id, &account_id, &asset_id)
                     .as_f64())
             }
             Self::AssetReserved { asset_id_value } => {
@@ -302,7 +302,7 @@ impl NumberValue {
                 let account_id = account_id_value.account_id(c)?;
                 let asset_id = asset_id_value.asset_id(c)?;
                 Ok(c.portfolio
-                    .asset_reserved_in_cex_account(&asset_id, &cex_id, &account_id)
+                    .asset_reserved_in_cex_account(&cex_id, &account_id, &asset_id)
                     .as_f64())
             }
             Self::BinaryCalculation {

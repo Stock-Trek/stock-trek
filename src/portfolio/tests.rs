@@ -179,9 +179,9 @@ fn asset_available_is_clamped_when_reservations_exceed_balance() {
     assert_eq!(portfolio.asset_available(&AssetId::Bitcoin), Decimal::ZERO);
     assert_eq!(
         portfolio.asset_available_in_cex_account(
-            &AssetId::Bitcoin,
             &CexId::Binance,
             &AccountId::new("account"),
+            &AssetId::Bitcoin,
         ),
         Decimal::ZERO
     );

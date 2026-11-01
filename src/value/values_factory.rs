@@ -61,9 +61,9 @@ impl PortfolioValuesFactory {
     /// Creates a value for the total amount of an asset in a CEX account.
     pub fn asset_total_in_cex_account(
         &self,
-        asset_id_value: AssetIdValue,
         cex_id_value: CexIdValue,
         account_id_value: AccountIdValue,
+        asset_id_value: AssetIdValue,
     ) -> NumberValue {
         NumberValue::AssetTotalInCexAccount {
             asset_id_value,
@@ -78,9 +78,9 @@ impl PortfolioValuesFactory {
     /// Creates a value for the available amount of an asset in a CEX account.
     pub fn asset_available_in_cex_account(
         &self,
-        asset_id_value: AssetIdValue,
         cex_id_value: CexIdValue,
         account_id_value: AccountIdValue,
+        asset_id_value: AssetIdValue,
     ) -> NumberValue {
         NumberValue::AssetAvailableInCexAccount {
             asset_id_value,
@@ -95,9 +95,9 @@ impl PortfolioValuesFactory {
     /// Creates a value for the reserved amount of an asset in a CEX account.
     pub fn asset_reserved_in_cex_account(
         &self,
-        asset_id_value: AssetIdValue,
         cex_id_value: CexIdValue,
         account_id_value: AccountIdValue,
+        asset_id_value: AssetIdValue,
     ) -> NumberValue {
         NumberValue::AssetReservedInCexAccount {
             asset_id_value,
