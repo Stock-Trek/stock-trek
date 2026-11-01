@@ -71,51 +71,61 @@ pub enum RollingWindow {
 }
 
 impl RollingWindow {
-    pub fn millis_upper_bound(&self) -> u64 {
+    pub fn millis_exact(&self) -> Option<u64> {
+        let millis_per_second = MILLIS_PER_SECOND as u64;
+        let millis_per_minute = MILLIS_PER_MINUTE as u64;
+        let millis_per_hour = MILLIS_PER_HOUR as u64;
+        let millis_per_day = MILLIS_PER_DAY as u64;
+        let millis_per_week = MILLIS_PER_WEEK as u64;
         match self {
-            RollingWindow::Seconds1 => MILLIS_PER_SECOND,
-            RollingWindow::Seconds5 => 5 * MILLIS_PER_SECOND,
-            RollingWindow::Seconds10 => 10 * MILLIS_PER_SECOND,
-            RollingWindow::Seconds15 => 15 * MILLIS_PER_SECOND,
-            RollingWindow::Seconds30 => 30 * MILLIS_PER_SECOND,
-            RollingWindow::Seconds60 => 60 * MILLIS_PER_SECOND,
-            RollingWindow::Minutes1 => MILLIS_PER_MINUTE,
-            RollingWindow::Minutes2 => 2 * MILLIS_PER_MINUTE,
-            RollingWindow::Minutes3 => 3 * MILLIS_PER_MINUTE,
-            RollingWindow::Minutes5 => 5 * MILLIS_PER_MINUTE,
-            RollingWindow::Minutes10 => 10 * MILLIS_PER_MINUTE,
-            RollingWindow::Minutes15 => 15 * MILLIS_PER_MINUTE,
-            RollingWindow::Minutes30 => 30 * MILLIS_PER_MINUTE,
-            RollingWindow::Minutes45 => 45 * MILLIS_PER_MINUTE,
-            RollingWindow::Minutes60 => 60 * MILLIS_PER_MINUTE,
-            RollingWindow::Minutes90 => 90 * MILLIS_PER_MINUTE,
-            RollingWindow::Hours1 => MILLIS_PER_HOUR,
-            RollingWindow::Hours2 => 2 * MILLIS_PER_HOUR,
-            RollingWindow::Hours3 => 3 * MILLIS_PER_HOUR,
-            RollingWindow::Hours4 => 4 * MILLIS_PER_HOUR,
-            RollingWindow::Hours6 => 6 * MILLIS_PER_HOUR,
-            RollingWindow::Hours8 => 8 * MILLIS_PER_HOUR,
-            RollingWindow::Hours12 => 12 * MILLIS_PER_HOUR,
-            RollingWindow::Hours24 => 24 * MILLIS_PER_HOUR,
-            RollingWindow::Days1 => MILLIS_PER_DAY,
-            RollingWindow::Days2 => 2 * MILLIS_PER_DAY,
-            RollingWindow::Days3 => 3 * MILLIS_PER_DAY,
-            RollingWindow::Days7 => 7 * MILLIS_PER_DAY,
-            RollingWindow::Days14 => 14 * MILLIS_PER_DAY,
-            RollingWindow::Days30 => 30 * MILLIS_PER_DAY,
-            RollingWindow::Days45 => 45 * MILLIS_PER_DAY,
-            RollingWindow::Days60 => 60 * MILLIS_PER_DAY,
-            RollingWindow::Days90 => 90 * MILLIS_PER_DAY,
-            RollingWindow::Days180 => 180 * MILLIS_PER_DAY,
-            RollingWindow::Days360 => 360 * MILLIS_PER_DAY,
-            RollingWindow::Weeks1 => MILLIS_PER_WEEK,
-            RollingWindow::Weeks2 => 2 * MILLIS_PER_WEEK,
-            RollingWindow::Weeks4 => 4 * MILLIS_PER_WEEK,
-            RollingWindow::Weeks10 => 10 * MILLIS_PER_WEEK,
-            RollingWindow::Weeks20 => 20 * MILLIS_PER_WEEK,
-            RollingWindow::Weeks40 => 40 * MILLIS_PER_WEEK,
+            RollingWindow::Seconds1 => Some(millis_per_second),
+            RollingWindow::Seconds5 => Some(5 * millis_per_second),
+            RollingWindow::Seconds10 => Some(10 * millis_per_second),
+            RollingWindow::Seconds15 => Some(15 * millis_per_second),
+            RollingWindow::Seconds30 => Some(30 * millis_per_second),
+            RollingWindow::Seconds60 => Some(60 * millis_per_second),
+            RollingWindow::Minutes1 => Some(millis_per_minute),
+            RollingWindow::Minutes2 => Some(2 * millis_per_minute),
+            RollingWindow::Minutes3 => Some(3 * millis_per_minute),
+            RollingWindow::Minutes5 => Some(5 * millis_per_minute),
+            RollingWindow::Minutes10 => Some(10 * millis_per_minute),
+            RollingWindow::Minutes15 => Some(15 * millis_per_minute),
+            RollingWindow::Minutes30 => Some(30 * millis_per_minute),
+            RollingWindow::Minutes45 => Some(45 * millis_per_minute),
+            RollingWindow::Minutes60 => Some(60 * millis_per_minute),
+            RollingWindow::Minutes90 => Some(90 * millis_per_minute),
+            RollingWindow::Hours1 => Some(millis_per_hour),
+            RollingWindow::Hours2 => Some(2 * millis_per_hour),
+            RollingWindow::Hours3 => Some(3 * millis_per_hour),
+            RollingWindow::Hours4 => Some(4 * millis_per_hour),
+            RollingWindow::Hours6 => Some(6 * millis_per_hour),
+            RollingWindow::Hours8 => Some(8 * millis_per_hour),
+            RollingWindow::Hours12 => Some(12 * millis_per_hour),
+            RollingWindow::Hours24 => Some(24 * millis_per_hour),
+            RollingWindow::Days1 => Some(millis_per_day),
+            RollingWindow::Days2 => Some(2 * millis_per_day),
+            RollingWindow::Days3 => Some(3 * millis_per_day),
+            RollingWindow::Days7 => Some(7 * millis_per_day),
+            RollingWindow::Days14 => Some(14 * millis_per_day),
+            RollingWindow::Days30 => Some(30 * millis_per_day),
+            RollingWindow::Days45 => Some(45 * millis_per_day),
+            RollingWindow::Days60 => Some(60 * millis_per_day),
+            RollingWindow::Days90 => Some(90 * millis_per_day),
+            RollingWindow::Days180 => Some(180 * millis_per_day),
+            RollingWindow::Days360 => Some(360 * millis_per_day),
+            RollingWindow::Weeks1 => Some(millis_per_week),
+            RollingWindow::Weeks2 => Some(2 * millis_per_week),
+            RollingWindow::Weeks4 => Some(4 * millis_per_week),
+            RollingWindow::Weeks10 => Some(10 * millis_per_week),
+            RollingWindow::Weeks20 => Some(20 * millis_per_week),
+            RollingWindow::Weeks40 => Some(40 * millis_per_week),
         }
     }
+
+    pub fn millis_upper_bound(&self) -> Option<u64> {
+        self.millis_exact().map(|millis| millis as u64)
+    }
+
     pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         match self {
             RollingWindow::Seconds1 => Some(date_time + Duration::seconds(1)),
@@ -161,6 +171,7 @@ impl RollingWindow {
             RollingWindow::Weeks40 => Some(date_time + Duration::weeks(40)),
         }
     }
+
     pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         match self {
             RollingWindow::Seconds1 => Some(date_time - Duration::seconds(1)),
@@ -206,6 +217,7 @@ impl RollingWindow {
             RollingWindow::Weeks40 => Some(date_time - Duration::weeks(40)),
         }
     }
+
     pub fn label(self) -> String {
         match self {
             RollingWindow::Seconds1 => "1s".to_string(),

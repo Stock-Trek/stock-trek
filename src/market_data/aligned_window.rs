@@ -66,19 +66,16 @@ pub enum AlignedWindow {
 
 /// The bounds of an aligned window, both in milliseconds.
 ///
-/// `lower_bound` is inclusive and `upper_bound` is exclusive.
+/// `lower` is inclusive and `upper` is exclusive.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct AlignedTimestamps {
-    pub lower_bound: i64,
-    pub upper_bound: i64,
+pub struct AlignedTimestampBounds {
+    pub lower: i64,
+    pub upper: i64,
 }
 
-impl AlignedTimestamps {
-    pub fn new(lower_bound: i64, upper_bound: i64) -> Self {
-        Self {
-            lower_bound,
-            upper_bound,
-        }
+impl AlignedTimestampBounds {
+    pub fn new(lower: i64, upper: i64) -> Self {
+        Self { lower, upper }
     }
 }
 
@@ -88,28 +85,25 @@ impl AlignedWindow {
     ///
     /// Month and year windows follow calendar boundaries, so their lengths vary
     /// with the actual number of days in each month or year.
-    pub fn bounds_for(&self, timestamp: i64) -> StockTrekResult<AlignedTimestamps> {
-        match self {
-            AlignedWindow::Months1
-            | AlignedWindow::Months2
-            | AlignedWindow::Months3
-            | AlignedWindow::Months4
-            | AlignedWindow::Months6
-            | AlignedWindow::Months12
-            | AlignedWindow::Years1
-            | AlignedWindow::Years2 => self.calendar_bounds(timestamp),
-            _ => self.fixed_bounds(timestamp),
+    pub fn bounds_for(&self, timestamp: i64) -> StockTrekResult<AlignedTimestampBounds> {
+        if let Some(exact_millis) = self.millis_exact() {
+            self.fixed_bounds(timestamp, exact_millis)
+        } else if let Some(exact_months) = self.months_exact() {
+            self.calendar_bounds(timestamp, exact_months)
+        } else {
+            Err(Self::bounds_error(format!(
+                "Could not calculate bounds for {self} at timestamp {timestamp}"
+            )))
         }
     }
 
-    fn fixed_bounds(&self, timestamp: i64) -> StockTrekResult<AlignedTimestamps> {
-        let window_millis = self.millis_upper_bound();
-        let window_millis_wide = i64::try_from(window_millis).map_err(|_| {
-            Self::bounds_error(format!(
-                "window size {window_millis} does not fit in an i64"
-            ))
-        })?;
-        let lower_bound_millis = timestamp
+    fn fixed_bounds(
+        &self,
+        timestamp: i64,
+        exact_millis: u32,
+    ) -> StockTrekResult<AlignedTimestampBounds> {
+        let window_millis_wide = i64::from(exact_millis);
+        let lower_millis = timestamp
             .div_euclid(window_millis_wide)
             .checked_mul(window_millis_wide)
             .ok_or_else(|| {
@@ -117,31 +111,28 @@ impl AlignedWindow {
                     "lower bound for timestamp {timestamp} could not be represented"
                 ))
             })?;
-        let upper_bound_millis = lower_bound_millis
+        let upper_millis = lower_millis
             .checked_add(window_millis_wide)
             .ok_or_else(|| {
                 Self::bounds_error(format!(
                     "upper bound for timestamp {timestamp} could not be represented"
                 ))
             })?;
-
-        Ok(AlignedTimestamps::new(
-            lower_bound_millis,
-            upper_bound_millis,
-        ))
+        Ok(AlignedTimestampBounds::new(lower_millis, upper_millis))
     }
 
-    fn calendar_bounds(&self, timestamp: i64) -> StockTrekResult<AlignedTimestamps> {
-        let months_per_window = self
-            .calendar_months()
-            .ok_or_else(|| Self::bounds_error(format!("window {self} is not calendar based")))?;
+    fn calendar_bounds(
+        &self,
+        timestamp: i64,
+        exact_months: u32,
+    ) -> StockTrekResult<AlignedTimestampBounds> {
         let date_time = DateTime::from_timestamp_millis(timestamp).ok_or_else(|| {
             Self::bounds_error(format!(
                 "timestamp {timestamp} is not representable as a UTC date"
             ))
         })?;
         let months_since_epoch = i64::from(date_time.year()) * 12 + i64::from(date_time.month0());
-        let months_per_window_wide = i64::from(months_per_window);
+        let months_per_window_wide = i64::from(exact_months);
         let window_start_months =
             months_since_epoch.div_euclid(months_per_window_wide) * months_per_window_wide;
         let start_year = i32::try_from(window_start_months.div_euclid(12)).map_err(|_| {
@@ -156,26 +147,23 @@ impl AlignedWindow {
                 window_start_months.rem_euclid(12) + 1
             ))
         })?;
-        let lower_bound = Utc
+        let lower = Utc
             .with_ymd_and_hms(start_year, start_month, 1, 0, 0, 0)
             .single()
             .ok_or_else(|| {
                 Self::bounds_error(format!(
-                    "calendar window start {start_year}-{start_month:02} could not be represented"
+                    "calendar window lower bound for {start_year}-{start_month:02} could not be represented"
                 ))
             })?;
-        let upper_bound = lower_bound
-            .checked_add_months(Months::new(months_per_window))
-            .ok_or_else(|| {
-                Self::bounds_error(format!(
-                    "calendar window end after {start_year}-{start_month:02} could not be represented"
-                ))
-            })?;
-
-        Ok(AlignedTimestamps::new(
-            lower_bound.timestamp_millis(),
-            upper_bound.timestamp_millis(),
-        ))
+        let upper = lower.checked_add_months(Months::new(exact_months)).ok_or_else(|| {
+            Self::bounds_error(format!(
+                "calendar window upper bound for {start_year}-{start_month:02} could not be represented"
+            ))
+        })?;
+        Ok(AlignedTimestampBounds {
+            lower: lower.timestamp_millis(),
+            upper: upper.timestamp_millis(),
+        })
     }
 
     fn bounds_error(message: String) -> StockTrekError {
@@ -184,11 +172,8 @@ impl AlignedWindow {
             message,
         })
     }
-    /// Returns the exact length of the window in milliseconds.
-    ///
-    /// Calendar based windows have no fixed length, so this returns `None` for
-    /// them.
-    pub fn millis_exact(&self) -> Option<u64> {
+
+    pub fn millis_exact(&self) -> Option<u32> {
         match self {
             AlignedWindow::Seconds1 => Some(MILLIS_PER_SECOND),
             AlignedWindow::Seconds5 => Some(5 * MILLIS_PER_SECOND),
@@ -227,9 +212,10 @@ impl AlignedWindow {
             | AlignedWindow::Years2 => None,
         }
     }
+
     pub fn millis_upper_bound(&self) -> u64 {
         if let Some(millis) = self.millis_exact() {
-            return millis;
+            return millis as u64;
         }
 
         match self {
@@ -246,11 +232,8 @@ impl AlignedWindow {
             }
         }
     }
-    /// Returns the number of calendar months in the window.
-    ///
-    /// Only month and year windows are calendar based, so this returns `None`
-    /// for every other window.
-    pub fn calendar_months(&self) -> Option<u32> {
+
+    pub fn months_exact(&self) -> Option<u32> {
         match self {
             AlignedWindow::Months1 => Some(1),
             AlignedWindow::Months2 => Some(2),
@@ -262,6 +245,7 @@ impl AlignedWindow {
             _ => None,
         }
     }
+
     pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         match self {
             AlignedWindow::Seconds1 => Some(date_time + Duration::seconds(1)),
@@ -301,6 +285,7 @@ impl AlignedWindow {
             AlignedWindow::Years2 => date_time.checked_add_months(Months::new(24)),
         }
     }
+
     pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         match self {
             AlignedWindow::Seconds1 => Some(date_time - Duration::seconds(1)),
@@ -340,6 +325,7 @@ impl AlignedWindow {
             AlignedWindow::Years2 => date_time.checked_sub_months(Months::new(24)),
         }
     }
+
     pub fn label(self) -> String {
         match self {
             AlignedWindow::Seconds1 => "1s".to_string(),
@@ -440,12 +426,12 @@ mod tests {
             .timestamp_millis()
     }
 
-    fn bounds_for(window: AlignedWindow, timestamp: i64) -> AlignedTimestamps {
+    fn bounds_for(window: AlignedWindow, timestamp: i64) -> AlignedTimestampBounds {
         window.bounds_for(timestamp).unwrap()
     }
 
-    fn timestamps(lower_bound: i64, upper_bound: i64) -> AlignedTimestamps {
-        AlignedTimestamps::new(lower_bound, upper_bound)
+    fn timestamps(lower: i64, upper: i64) -> AlignedTimestampBounds {
+        AlignedTimestampBounds::new(lower, upper)
     }
 
     fn is_calendar_window(window: AlignedWindow) -> bool {
@@ -468,18 +454,15 @@ mod tests {
 
         for window in AlignedWindow::iter() {
             for timestamp in timestamps {
-                let AlignedTimestamps {
-                    lower_bound,
-                    upper_bound,
-                } = bounds_for(window, timestamp);
+                let AlignedTimestampBounds { lower, upper } = bounds_for(window, timestamp);
 
-                assert!(lower_bound <= timestamp);
-                assert!(timestamp < upper_bound);
+                assert!(lower <= timestamp);
+                assert!(timestamp < upper);
 
                 if !is_calendar_window(window) {
                     let window_millis = i64::try_from(window.millis_upper_bound()).unwrap();
-                    assert_eq!(upper_bound - lower_bound, window_millis);
-                    assert_eq!(lower_bound % window_millis, 0);
+                    assert_eq!(upper - lower, window_millis);
+                    assert_eq!(lower % window_millis, 0);
                 }
             }
         }
@@ -614,11 +597,11 @@ mod tests {
         let days_millis = i64::try_from(24 * MILLIS_PER_HOUR).unwrap();
 
         assert_eq!(
-            (february_2024.upper_bound - february_2024.lower_bound) / days_millis,
+            (february_2024.upper - february_2024.lower) / days_millis,
             29
         );
         assert_eq!(
-            (february_2023.upper_bound - february_2023.lower_bound) / days_millis,
+            (february_2023.upper - february_2023.lower) / days_millis,
             28
         );
     }
@@ -646,10 +629,10 @@ mod tests {
     }
 
     #[test]
-    fn millis_upper_bound_falls_back_for_calendar_windows() {
+    fn millis_upper_falls_back_for_calendar_windows() {
         assert_eq!(
             AlignedWindow::Seconds1.millis_upper_bound(),
-            AlignedWindow::Seconds1.millis_exact().unwrap()
+            AlignedWindow::Seconds1.millis_exact().unwrap() as u64
         );
         assert_eq!(
             AlignedWindow::Months1.millis_upper_bound(),
@@ -663,17 +646,17 @@ mod tests {
 
     #[test]
     fn calendar_months_returns_months_for_calendar_windows_only() {
-        assert_eq!(AlignedWindow::Months1.calendar_months(), Some(1));
-        assert_eq!(AlignedWindow::Months2.calendar_months(), Some(2));
-        assert_eq!(AlignedWindow::Months3.calendar_months(), Some(3));
-        assert_eq!(AlignedWindow::Months4.calendar_months(), Some(4));
-        assert_eq!(AlignedWindow::Months6.calendar_months(), Some(6));
-        assert_eq!(AlignedWindow::Months12.calendar_months(), Some(12));
-        assert_eq!(AlignedWindow::Years1.calendar_months(), Some(12));
-        assert_eq!(AlignedWindow::Years2.calendar_months(), Some(24));
+        assert_eq!(AlignedWindow::Months1.months_exact(), Some(1));
+        assert_eq!(AlignedWindow::Months2.months_exact(), Some(2));
+        assert_eq!(AlignedWindow::Months3.months_exact(), Some(3));
+        assert_eq!(AlignedWindow::Months4.months_exact(), Some(4));
+        assert_eq!(AlignedWindow::Months6.months_exact(), Some(6));
+        assert_eq!(AlignedWindow::Months12.months_exact(), Some(12));
+        assert_eq!(AlignedWindow::Years1.months_exact(), Some(12));
+        assert_eq!(AlignedWindow::Years2.months_exact(), Some(24));
 
         for window in AlignedWindow::iter().filter(|window| !is_calendar_window(*window)) {
-            assert_eq!(window.calendar_months(), None);
+            assert_eq!(window.months_exact(), None);
         }
     }
 }
