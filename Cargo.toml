@@ -1,6 +1,6 @@
 [package]
 name = "stock-trek"
-version = "0.14.1"
+version = "0.15.0"
 edition = "2024"
 description = "Stock Trek time-series analysis"
 authors = ["stock-trek.com <stock-trek@proton.me>"]
@@ -27,7 +27,7 @@ rust_decimal = "1"
 serde = "1"
 serde_json = {version = "1", features = ["float_roundtrip"] }
 serde_with = "3"
-stock-trek-types = { version = "0.4", features = ["serde"] }
+stock-trek-types = { version = "0.5", features = ["serde"] }
 strum = { version = "0.28", features = ["derive"] }
 traitreg = "0.4"
 

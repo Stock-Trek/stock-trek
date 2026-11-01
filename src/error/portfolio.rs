@@ -2,8 +2,6 @@ use std::fmt;
 use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 #[derive(Debug, Clone)]
-#[non_exhaustive]
-#[repr(u8)]
 pub enum PortfolioError {
     NoCexAccount {
         cex_id: CexId,

@@ -6,6 +6,9 @@ use serde::{Deserialize, Serialize};
 use strum::Display;
 
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
+#[non_exhaustive]
 pub enum BinaryOperator {
     Add,
     Sub,
