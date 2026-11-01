@@ -65,6 +65,12 @@ pub enum AlignedWindow {
 }
 
 impl AlignedWindow {
+    pub fn bounds_for(&self, timestamp: u64) -> (u64, u64) {
+        let window_millis = self.millis_upper_bound();
+        let lower_bound_millis = timestamp / window_millis * window_millis;
+        let upper_bound_millis = lower_bound_millis.saturating_add(window_millis);
+        (lower_bound_millis, upper_bound_millis)
+    }
     pub fn millis_upper_bound(&self) -> u64 {
         match self {
             AlignedWindow::Seconds1 => MILLIS_PER_SECOND,
@@ -268,5 +274,41 @@ impl TryFrom<&str> for AlignedWindow {
                 key: value.into(),
             })),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use strum::IntoEnumIterator;
+
+    #[test]
+    fn bounds_for_returns_containing_bounds() {
+        let timestamps = [0, 1, 999, 1_000, 1_700_000_000_123];
+
+        for window in AlignedWindow::iter() {
+            for timestamp in timestamps {
+                let (lower_bound, upper_bound) = window.bounds_for(timestamp);
+
+                assert!(lower_bound <= timestamp);
+                assert!(timestamp < upper_bound);
+                assert_eq!(upper_bound - lower_bound, window.millis_upper_bound());
+                assert_eq!(lower_bound % window.millis_upper_bound(), 0);
+            }
+        }
+    }
+
+    #[test]
+    fn bounds_for_aligns_seconds_and_minutes() {
+        assert_eq!(AlignedWindow::Seconds1.bounds_for(1_500), (1_000, 2_000));
+        assert_eq!(AlignedWindow::Seconds5.bounds_for(12_345), (10_000, 15_000));
+        assert_eq!(
+            AlignedWindow::Minutes1.bounds_for(61_234),
+            (60_000, 120_000)
+        );
+        assert_eq!(
+            AlignedWindow::Minutes5.bounds_for(360_123),
+            (300_000, 600_000)
+        );
     }
 }
