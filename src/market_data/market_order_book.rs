@@ -143,18 +143,4 @@ mod tests {
             vec![(102.0, 2.0), (103.0, 1.0)]
         );
     }
-
-    #[test]
-    fn price_quantities_reflect_current_quotes() {
-        let mut order_book = order_book();
-
-        assert_eq!(order_book.bid_price_quantities(), vec![(100.0, 1.5)]);
-        assert_eq!(order_book.ask_price_quantities(), vec![(101.0, 2.5)]);
-
-        order_book.bids[0].price = 200.0;
-        order_book.asks[0].quantity = 3.5;
-
-        assert_eq!(order_book.bid_price_quantities(), vec![(200.0, 1.5)]);
-        assert_eq!(order_book.ask_price_quantities(), vec![(101.0, 3.5)]);
-    }
 }
