@@ -10,8 +10,10 @@ use strum::Display;
 /// An action paired with the policy used to recover from errors.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoverableAction {
-    action: Action,
-    recovery_policy: RecoveryPolicy,
+    /// The action to perform.
+    pub action: Action,
+    /// The policy used to recover from errors.
+    pub recovery_policy: RecoveryPolicy,
 }
 
 impl RecoverableAction {
@@ -39,8 +41,10 @@ impl HasRequiredCapabilities for RecoverableAction {
 /// Defines how an action should respond to different error causes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoveryPolicy {
-    default_response: ActionErrorResponse,
-    on_error: HashMap<ActionErrorCause, ActionErrorResponse>,
+    /// The response used for error causes that are not listed in `on_error`.
+    pub default_response: ActionErrorResponse,
+    /// The response to use for each specific error cause.
+    pub on_error: HashMap<ActionErrorCause, ActionErrorResponse>,
 }
 
 impl RecoveryPolicy {
