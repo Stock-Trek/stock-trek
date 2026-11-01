@@ -1,3 +1,4 @@
+use crate::pending_order::PendingOrder;
 use rust_decimal::Decimal;
 use std::collections::HashMap;
 use stock_trek_types::cex::{
@@ -16,14 +17,6 @@ pub struct Portfolio {
 pub struct CexAccountPortfolio {
     asset_counts: HashMap<AssetId, Decimal>,
     pending_orders: HashMap<Tag, Vec<PendingOrder>>,
-}
-
-/// An order with the quantities that have already been filled.
-#[derive(Debug, Clone)]
-pub struct PendingOrder {
-    order_request: OrderRequest<AssetId, Decimal>,
-    filled_base_quantity: Decimal,
-    filled_quote_quantity: Decimal,
 }
 
 impl Portfolio {
@@ -252,15 +245,15 @@ impl Portfolio {
         pending_order: &PendingOrder,
         asset_id: &AssetId,
     ) -> Decimal {
-        match &pending_order.order_request {
+        match pending_order.order_request() {
             OrderRequest::Limit {
                 base,
                 quote,
-                side,
+                side: Side::Sell,
                 limit_price,
                 quantity,
                 ..
-            } if asset_id == base && Side::Sell == *side => {
+            } if asset_id == base => {
                 let base_quantity = match quantity {
                     Quantity::OfBase(base_quantity) => *base_quantity,
                     Quantity::OfQuote(quote_quantity) => {
@@ -271,35 +264,35 @@ impl Portfolio {
                         }
                     }
                 };
-                remaining_quantity(base_quantity, pending_order.filled_base_quantity)
+                remaining_quantity(base_quantity, pending_order.filled_base_quantity())
             }
             OrderRequest::Limit {
                 base,
                 quote,
-                side,
+                side: Side::Buy,
                 limit_price,
                 quantity,
                 ..
-            } if asset_id == quote && Side::Buy == *side => {
+            } if asset_id == quote => {
                 let quote_quantity = match quantity {
                     Quantity::OfBase(base_quantity) => base_quantity * limit_price,
                     Quantity::OfQuote(quote_quantity) => *quote_quantity,
                 };
-                remaining_quantity(quote_quantity, pending_order.filled_quote_quantity)
+                remaining_quantity(quote_quantity, pending_order.filled_quote_quantity())
             }
             OrderRequest::MarketBuy {
                 quote,
                 quote_quantity,
                 ..
             } if asset_id == quote => {
-                remaining_quantity(*quote_quantity, pending_order.filled_quote_quantity)
+                remaining_quantity(*quote_quantity, pending_order.filled_quote_quantity())
             }
             OrderRequest::MarketSell {
                 base,
                 base_quantity,
                 ..
             } if asset_id == base => {
-                remaining_quantity(*base_quantity, pending_order.filled_base_quantity)
+                remaining_quantity(*base_quantity, pending_order.filled_base_quantity())
             }
             _ => Decimal::ZERO,
         }
@@ -357,36 +350,6 @@ impl CexAccountPortfolio {
         self.pending_orders
             .iter()
             .flat_map(|(tag, orders)| orders.iter().map(move |order| (tag, order)))
-    }
-}
-
-impl PendingOrder {
-    /// Creates a pending order with its filled base and quote quantities.
-    pub fn new(
-        order_request: OrderRequest<AssetId, Decimal>,
-        filled_base_quantity: Decimal,
-        filled_quote_quantity: Decimal,
-    ) -> Self {
-        Self {
-            order_request,
-            filled_base_quantity,
-            filled_quote_quantity,
-        }
-    }
-
-    /// Returns the order request that created this pending order.
-    pub fn order_request(&self) -> &OrderRequest<AssetId, Decimal> {
-        &self.order_request
-    }
-
-    /// Returns the quantity of the base asset that has been filled.
-    pub fn filled_base_quantity(&self) -> Decimal {
-        self.filled_base_quantity
-    }
-
-    /// Returns the quantity of the quote asset that has been filled.
-    pub fn filled_quote_quantity(&self) -> Decimal {
-        self.filled_quote_quantity
     }
 }
 
@@ -454,11 +417,11 @@ impl PortfolioBuilder {
             .pending_orders
             .entry(tag)
             .or_default()
-            .push(PendingOrder {
+            .push(PendingOrder::new(
                 order_request,
                 filled_base_quantity,
                 filled_quote_quantity,
-            });
+            ));
         self
     }
 

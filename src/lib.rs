@@ -16,6 +16,7 @@ mod conditions;
 // mod dex;
 mod error;
 mod market_data;
+mod pending_order;
 mod portfolio;
 mod preferences;
 mod resolvable;
@@ -30,7 +31,8 @@ pub use algorithm::Algorithm;
 pub use cex::order_factory::OrderFactory;
 pub use commands::{Command, CommandFactory};
 pub use conditions::{Condition, ConditionFactory, QuantityOf};
-pub use portfolio::{CexAccountPortfolio, PendingOrder, Portfolio, PortfolioBuilder};
+pub use pending_order::PendingOrder;
+pub use portfolio::{CexAccountPortfolio, Portfolio, PortfolioBuilder};
 pub use preferences::Preferences;
 pub use resolved_context::{EnqueueActionFn, ResolvedContext};
 pub use rust_decimal::RoundingStrategy;
@@ -138,7 +140,8 @@ pub mod prelude {
         Algorithm, Command, Preferences, RoundingStrategy, StrategyContext,
         actions::{ActionErrorCause, ActionErrorResponse, RecoveryPolicy},
         errors::{PortfolioError, StatsError, StockTrekError, StockTrekResult, ValueError},
-        portfolio::{CexAccountPortfolio, PendingOrder, Portfolio},
+        pending_order::PendingOrder,
+        portfolio::{CexAccountPortfolio, Portfolio},
         register_algorithm,
         signals::{SignalContext, SignalKey, Signals},
         traitreg,
