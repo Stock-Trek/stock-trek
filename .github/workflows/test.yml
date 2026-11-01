@@ -19,3 +19,4 @@ jobs:
           cargo fmt --check
           cargo clippy --all-targets --all-features -- -D warnings
           cargo test
+          RUSTUP_TOOLCHAIN=1.85.0 cargo check --workspace
