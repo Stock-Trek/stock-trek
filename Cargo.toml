@@ -16,6 +16,11 @@ keywords = [
   "quant",
   "trading",
 ]
+exclude = [
+  ".github/**",
+  "examples/**",
+  "src/dex/**",
+]
 
 [lib]
 name = "stock_trek"
