@@ -69,13 +69,6 @@ impl Portfolio {
             .and_then(|accounts| accounts.get(account_id))
     }
 
-    /// Returns the portfolio for a specific CEX account, if it exists.
-    ///
-    /// This is an alias for [`Portfolio::cex_account`].
-    pub fn account(&self, cex_id: &CexId, account_id: &AccountId) -> Option<&CexAccountPortfolio> {
-        self.cex_account(cex_id, account_id)
-    }
-
     /// Iterates over every pending order with its CEX, account, and tag.
     ///
     /// Each item is `(cex_id, account_id, tag, pending_order)`.
