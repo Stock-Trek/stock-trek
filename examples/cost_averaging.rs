@@ -1,6 +1,13 @@
 use std::cmp::Ordering;
 use stock_trek::prelude::*;
 
+/// One satoshi, the smallest bitcoin unit (1e-6 BTC).
+const SATOSHI_QUANTITY: f64 = 1.0 / 1_000_000.0;
+/// CEX market data stores prices as fixed-point values in millionths of the quote asset.
+const CEX_PRICE_SCALE: f64 = 1_000_000.0;
+/// The CEX account that should place orders. Replace with your account id.
+const CEX_ACCOUNT_ID: &str = "main";
+
 pub struct CostAveraging {
     key_cex: SignalKey<CexId>,
     key_account: SignalKey<AccountId>,
@@ -45,19 +52,25 @@ impl Algorithm for CostAveraging {
     }
     fn signals(&self, c: &SignalContext) -> Signals {
         let mut signals = Signals::new();
-        let one_millionth = 1.0 / 1_000_000.0;
-        signals.write(&self.key_satoshi_quantity, one_millionth);
-        let iter = c.cex_markets_for(AssetId::Bitcoin, AssetId::TetherUSD);
-        let min_by_last_ask = iter.min_by(|(_a_exch, a_market), (_b_exch, b_market)| {
-            let a_last_ask = a_market.ticks.ticks[0].ask.price;
-            let b_last_ask = b_market.ticks.ticks[0].ask.price;
-            a_last_ask.partial_cmp(&b_last_ask).unwrap()
-        });
-        if let Some((cheapest_cex_name, cheapest_market)) = min_by_last_ask {
-            signals.write(&self.key_cex, cheapest_cex_name);
+        signals.write(&self.key_satoshi_quantity, SATOSHI_QUANTITY);
+        signals.write(&self.key_account, AccountId::new(CEX_ACCOUNT_ID));
+
+        let cheapest_market = c
+            .cex_markets_for(AssetId::Bitcoin, AssetId::TetherUSD)
+            .filter_map(|(cex, market)| {
+                let ask_price = market.ticks.ticks.last()?.ask.price;
+                (ask_price.is_finite() && ask_price > 0.0).then_some((cex, ask_price))
+            })
+            .min_by(|(a_cex, a_price), (b_cex, b_price)| {
+                a_price
+                    .total_cmp(b_price)
+                    .then_with(|| a_cex.to_string().cmp(&b_cex.to_string()))
+            });
+
+        if let Some((cheapest_cex, cheapest_ask)) = cheapest_market {
+            signals.write(&self.key_cex, cheapest_cex);
             signals.write(&self.key_market_exists, true);
-            let cheapest_price = cheapest_market.ticks.ticks[0].ask.price / 1_000_000.0;
-            signals.write(&self.key_cheapest_price, cheapest_price);
+            signals.write(&self.key_cheapest_price, cheapest_ask / CEX_PRICE_SCALE);
         }
         signals
     }
@@ -109,4 +122,69 @@ impl Algorithm for CostAveraging {
 fn main() {
     let algorithm = CostAveraging::default();
     println!("{}: {}", algorithm.name(), algorithm.description());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+    use stock_trek::markets::{Market, MarketBuilder};
+    use stock_trek::signals::{CexMarketDataByBaseContext, CexMarketDataByQuoteContext};
+
+    fn market(asks: &[f64]) -> Market {
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0);
+        for (index, ask) in asks.iter().enumerate() {
+            builder.tick(index as u64, (ask - 1.0, 1.0), (*ask, 1.0), (*ask, 1.0));
+        }
+        builder.build()
+    }
+
+    fn context(markets: Vec<(CexId, Market)>) -> SignalContext {
+        let mut by_cex = HashMap::new();
+        for (cex, market) in markets {
+            let mut markets_by_quote = HashMap::new();
+            markets_by_quote.insert(AssetId::TetherUSD, market);
+            let mut markets_by_base = HashMap::new();
+            markets_by_base.insert(
+                AssetId::Bitcoin,
+                CexMarketDataByQuoteContext::new(markets_by_quote),
+            );
+            by_cex.insert(cex, CexMarketDataByBaseContext::new(markets_by_base));
+        }
+        SignalContext::new(by_cex)
+    }
+
+    #[test]
+    fn writes_the_account_even_without_markets() {
+        let algorithm = CostAveraging::default();
+        let signals = algorithm.signals(&context(vec![]));
+
+        assert_eq!(
+            signals.read(&algorithm.key_account).unwrap(),
+            AccountId::new(CEX_ACCOUNT_ID)
+        );
+        assert!(!signals.read(&algorithm.key_market_exists).unwrap());
+    }
+
+    #[test]
+    fn uses_the_latest_ask_and_handles_empty_markets() {
+        let algorithm = CostAveraging::default();
+        let latest = algorithm.signals(&context(vec![(CexId::Binance, market(&[300.0, 200.0]))]));
+        let empty = algorithm.signals(&context(vec![(CexId::Binance, market(&[]))]));
+
+        assert!(latest.read(&algorithm.key_market_exists).unwrap());
+        assert_eq!(
+            latest.read(&algorithm.key_cheapest_price).unwrap(),
+            200.0 / CEX_PRICE_SCALE
+        );
+        assert!(!empty.read(&algorithm.key_market_exists).unwrap());
+    }
+
+    #[test]
+    fn skips_non_finite_asks() {
+        let algorithm = CostAveraging::default();
+        let signals = algorithm.signals(&context(vec![(CexId::Binance, market(&[f64::NAN]))]));
+
+        assert!(!signals.read(&algorithm.key_market_exists).unwrap());
+    }
 }
