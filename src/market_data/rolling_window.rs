@@ -123,7 +123,7 @@ impl RollingWindow {
     }
 
     pub fn millis_upper_bound(&self) -> Option<u64> {
-        self.millis_exact().map(|millis| millis as u64)
+        self.millis_exact()
     }
 
     pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {

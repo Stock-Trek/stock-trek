@@ -584,7 +584,7 @@ mod tests {
     fn bounds_for_month_windows_handle_leap_years() {
         let february_2024 = bounds_for(AlignedWindow::Months1, millis_at(2024, 2, 15, 0, 0, 0));
         let february_2023 = bounds_for(AlignedWindow::Months1, millis_at(2023, 2, 15, 0, 0, 0));
-        let days_millis = i64::try_from(24 * MILLIS_PER_HOUR).unwrap();
+        let days_millis = i64::from(24 * MILLIS_PER_HOUR);
 
         assert_eq!(
             (february_2024.upper - february_2024.lower) / days_millis,
