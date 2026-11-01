@@ -3,26 +3,13 @@ use crate::{
     market_data::millis::*,
 };
 use chrono::{DateTime, Duration, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use strum::{EnumCount, EnumIter, FromRepr};
 
 /// A fixed-length rolling time window.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialOrd,
-    Ord,
-    PartialEq,
-    Eq,
-    Hash,
-    EnumCount,
-    EnumIter,
-    FromRepr,
-    Serialize,
-    Deserialize,
+    Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash, EnumCount, EnumIter, FromRepr,
 )]
-#[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 #[repr(u8)]
 pub enum RollingWindow {
@@ -234,6 +221,25 @@ impl std::fmt::Display for RollingWindow {
     }
 }
 
+impl Serialize for RollingWindow {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.label())
+    }
+}
+
+impl<'de> Deserialize<'de> for RollingWindow {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let label = String::deserialize(deserializer)?;
+        Self::try_from(label.as_str()).map_err(serde::de::Error::custom)
+    }
+}
+
 impl TryFrom<&str> for RollingWindow {
     type Error = StockTrekError;
 
@@ -309,6 +315,24 @@ mod tests {
                 window
             );
         }
+    }
+
+    #[test]
+    fn serde_round_trips_short_labels() {
+        for window in RollingWindow::iter() {
+            let json = serde_json::to_string(&window).unwrap();
+
+            assert_eq!(json, format!("\"{}\"", window.label()));
+            assert_eq!(
+                serde_json::from_str::<RollingWindow>(&json).unwrap(),
+                window
+            );
+        }
+    }
+
+    #[test]
+    fn serde_rejects_names() {
+        assert!(serde_json::from_str::<RollingWindow>("\"seconds1\"").is_err());
     }
 
     #[test]
