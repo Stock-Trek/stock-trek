@@ -2,7 +2,7 @@ use crate::market_data::market::Market;
 use std::collections::HashMap;
 use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
-/// The market data and portfolio context available while computing signals.
+/// The market data available while computing signals, grouped by CEX.
 #[derive(Debug, Clone)]
 pub struct SignalContext {
     cex_market_data: HashMap<CexId, CexMarketDataByBaseContext>,
