@@ -204,7 +204,7 @@ fn pending_orders_are_grouped_by_the_order_request_tag() {
     let portfolio = builder.build();
 
     assert_eq!(
-        portfolio.pending_orders_in_cex_account_with_tag(
+        portfolio.pending_orders_in_cex_account_with_tag_count(
             &CexId::Binance,
             &AccountId::new("account"),
             &Tag::new("tag"),
@@ -212,7 +212,7 @@ fn pending_orders_are_grouped_by_the_order_request_tag() {
         1.0
     );
     assert_eq!(
-        portfolio.pending_orders_in_cex_account_with_tag(
+        portfolio.pending_orders_in_cex_account_with_tag_count(
             &CexId::Binance,
             &AccountId::new("account"),
             &Tag::new("other"),

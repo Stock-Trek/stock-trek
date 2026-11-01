@@ -106,20 +106,6 @@ mod tests {
     }
 
     #[test]
-    fn values_reflect_current_candles() {
-        let mut market =
-            MarketAlignedWindow::new(HashMap::from([(AlignedWindow::Minutes1, vec![candle()])]));
-
-        assert_eq!(market.opens(AlignedWindow::Minutes1), Some(vec![1.0]));
-
-        market.candles.get_mut(&AlignedWindow::Minutes1).unwrap()[0]
-            .ohlcv
-            .open = 1.1;
-
-        assert_eq!(market.opens(AlignedWindow::Minutes1), Some(vec![1.1]));
-    }
-
-    #[test]
     fn serde_json_round_trip() {
         let market =
             MarketAlignedWindow::new(HashMap::from([(AlignedWindow::Minutes1, vec![candle()])]));

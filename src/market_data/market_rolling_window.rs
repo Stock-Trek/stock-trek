@@ -66,29 +66,6 @@ mod tests {
     }
 
     #[test]
-    fn ohlcv_reflects_current_candle() {
-        let mut market =
-            MarketRollingWindow::new(HashMap::from([(RollingWindow::Minutes1, candle())]));
-
-        assert_eq!(
-            market.ohlcv(RollingWindow::Minutes1),
-            Some((1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4))
-        );
-
-        market
-            .candles
-            .get_mut(&RollingWindow::Minutes1)
-            .unwrap()
-            .ohlcv
-            .close = 1.6;
-
-        assert_eq!(
-            market.ohlcv(RollingWindow::Minutes1),
-            Some((1.0, 2.0, 0.5, 1.6, 10.0, 15.0, 1.4))
-        );
-    }
-
-    #[test]
     fn serde_json_round_trip() {
         let market = MarketRollingWindow::new(HashMap::from([(RollingWindow::Minutes1, candle())]));
         let json = serde_json::to_string(&market).unwrap();

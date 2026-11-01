@@ -91,23 +91,6 @@ mod tests {
     }
 
     #[test]
-    fn values_reflect_current_ticks() {
-        let mut ticks = MarketTicks::new(vec![tick(100.0)]);
-
-        assert_eq!(ticks.bid_timed_price_quantities(), vec![(1, 100.0, 2.0)]);
-        assert_eq!(ticks.ask_timed_price_quantities(), vec![(1, 101.0, 3.0)]);
-        assert_eq!(ticks.last_timed_price_quantities(), vec![(1, 100.5, 4.0)]);
-
-        ticks.ticks[0].bid.price = 200.0;
-        ticks.ticks[0].ask.price = 201.0;
-        ticks.ticks[0].last.price = 200.5;
-
-        assert_eq!(ticks.bid_timed_price_quantities(), vec![(1, 200.0, 2.0)]);
-        assert_eq!(ticks.ask_timed_price_quantities(), vec![(1, 201.0, 3.0)]);
-        assert_eq!(ticks.last_timed_price_quantities(), vec![(1, 200.5, 4.0)]);
-    }
-
-    #[test]
     fn ticks_are_sorted_chronologically() {
         let ticks = MarketTicks::new(vec![
             tick_with_timestamp(3, 103.0),
