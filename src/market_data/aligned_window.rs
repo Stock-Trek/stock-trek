@@ -235,82 +235,18 @@ impl AlignedWindow {
     }
 
     pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        match self {
-            AlignedWindow::Seconds1 => Some(date_time + Duration::seconds(1)),
-            AlignedWindow::Seconds5 => Some(date_time + Duration::seconds(5)),
-            AlignedWindow::Seconds10 => Some(date_time + Duration::seconds(10)),
-            AlignedWindow::Seconds15 => Some(date_time + Duration::seconds(15)),
-            AlignedWindow::Seconds30 => Some(date_time + Duration::seconds(30)),
-            AlignedWindow::Seconds60 => Some(date_time + Duration::seconds(60)),
-            AlignedWindow::Minutes1 => Some(date_time + Duration::minutes(1)),
-            AlignedWindow::Minutes2 => Some(date_time + Duration::minutes(2)),
-            AlignedWindow::Minutes3 => Some(date_time + Duration::minutes(3)),
-            AlignedWindow::Minutes5 => Some(date_time + Duration::minutes(5)),
-            AlignedWindow::Minutes10 => Some(date_time + Duration::minutes(10)),
-            AlignedWindow::Minutes15 => Some(date_time + Duration::minutes(15)),
-            AlignedWindow::Minutes30 => Some(date_time + Duration::minutes(30)),
-            AlignedWindow::Minutes60 => Some(date_time + Duration::minutes(60)),
-            AlignedWindow::Hours1 => Some(date_time + Duration::hours(1)),
-            AlignedWindow::Hours2 => Some(date_time + Duration::hours(2)),
-            AlignedWindow::Hours3 => Some(date_time + Duration::hours(3)),
-            AlignedWindow::Hours4 => Some(date_time + Duration::hours(4)),
-            AlignedWindow::Hours6 => Some(date_time + Duration::hours(6)),
-            AlignedWindow::Hours8 => Some(date_time + Duration::hours(8)),
-            AlignedWindow::Hours12 => Some(date_time + Duration::hours(12)),
-            AlignedWindow::Hours24 => Some(date_time + Duration::hours(24)),
-            AlignedWindow::Days1 => Some(date_time + Duration::days(1)),
-            AlignedWindow::Days7 => Some(date_time + Duration::days(7)),
-            AlignedWindow::Weeks1 => Some(date_time + Duration::weeks(1)),
-            AlignedWindow::Weeks2 => Some(date_time + Duration::weeks(2)),
-            AlignedWindow::Weeks4 => Some(date_time + Duration::weeks(4)),
-            AlignedWindow::Months1 => date_time.checked_add_months(Months::new(1)),
-            AlignedWindow::Months2 => date_time.checked_add_months(Months::new(2)),
-            AlignedWindow::Months3 => date_time.checked_add_months(Months::new(3)),
-            AlignedWindow::Months4 => date_time.checked_add_months(Months::new(4)),
-            AlignedWindow::Months6 => date_time.checked_add_months(Months::new(6)),
-            AlignedWindow::Months12 => date_time.checked_add_months(Months::new(12)),
-            AlignedWindow::Years1 => date_time.checked_add_months(Months::new(12)),
-            AlignedWindow::Years2 => date_time.checked_add_months(Months::new(24)),
+        if let Some(millis) = self.millis_exact() {
+            date_time.checked_add_signed(Duration::milliseconds(i64::from(millis)))
+        } else {
+            date_time.checked_add_months(Months::new(self.months_exact()?))
         }
     }
 
     pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        match self {
-            AlignedWindow::Seconds1 => Some(date_time - Duration::seconds(1)),
-            AlignedWindow::Seconds5 => Some(date_time - Duration::seconds(5)),
-            AlignedWindow::Seconds10 => Some(date_time - Duration::seconds(10)),
-            AlignedWindow::Seconds15 => Some(date_time - Duration::seconds(15)),
-            AlignedWindow::Seconds30 => Some(date_time - Duration::seconds(30)),
-            AlignedWindow::Seconds60 => Some(date_time - Duration::seconds(60)),
-            AlignedWindow::Minutes1 => Some(date_time - Duration::minutes(1)),
-            AlignedWindow::Minutes2 => Some(date_time - Duration::minutes(2)),
-            AlignedWindow::Minutes3 => Some(date_time - Duration::minutes(3)),
-            AlignedWindow::Minutes5 => Some(date_time - Duration::minutes(5)),
-            AlignedWindow::Minutes10 => Some(date_time - Duration::minutes(10)),
-            AlignedWindow::Minutes15 => Some(date_time - Duration::minutes(15)),
-            AlignedWindow::Minutes30 => Some(date_time - Duration::minutes(30)),
-            AlignedWindow::Minutes60 => Some(date_time - Duration::minutes(60)),
-            AlignedWindow::Hours1 => Some(date_time - Duration::hours(1)),
-            AlignedWindow::Hours2 => Some(date_time - Duration::hours(2)),
-            AlignedWindow::Hours3 => Some(date_time - Duration::hours(3)),
-            AlignedWindow::Hours4 => Some(date_time - Duration::hours(4)),
-            AlignedWindow::Hours6 => Some(date_time - Duration::hours(6)),
-            AlignedWindow::Hours8 => Some(date_time - Duration::hours(8)),
-            AlignedWindow::Hours12 => Some(date_time - Duration::hours(12)),
-            AlignedWindow::Hours24 => Some(date_time - Duration::hours(24)),
-            AlignedWindow::Days1 => Some(date_time - Duration::days(1)),
-            AlignedWindow::Days7 => Some(date_time - Duration::days(7)),
-            AlignedWindow::Weeks1 => Some(date_time - Duration::weeks(1)),
-            AlignedWindow::Weeks2 => Some(date_time - Duration::weeks(2)),
-            AlignedWindow::Weeks4 => Some(date_time - Duration::weeks(4)),
-            AlignedWindow::Months1 => date_time.checked_sub_months(Months::new(1)),
-            AlignedWindow::Months2 => date_time.checked_sub_months(Months::new(2)),
-            AlignedWindow::Months3 => date_time.checked_sub_months(Months::new(3)),
-            AlignedWindow::Months4 => date_time.checked_sub_months(Months::new(4)),
-            AlignedWindow::Months6 => date_time.checked_sub_months(Months::new(6)),
-            AlignedWindow::Months12 => date_time.checked_sub_months(Months::new(12)),
-            AlignedWindow::Years1 => date_time.checked_sub_months(Months::new(12)),
-            AlignedWindow::Years2 => date_time.checked_sub_months(Months::new(24)),
+        if let Some(millis) = self.millis_exact() {
+            date_time.checked_sub_signed(Duration::milliseconds(i64::from(millis)))
+        } else {
+            date_time.checked_sub_months(Months::new(self.months_exact()?))
         }
     }
 
@@ -616,6 +552,22 @@ mod tests {
                 i64::try_from(window.millis_upper_bound()).unwrap(),
                 forward,
                 "{window} does not advance by its own length"
+            );
+        }
+    }
+
+    #[test]
+    fn checked_add_and_sub_return_none_when_out_of_range() {
+        for window in AlignedWindow::iter() {
+            assert_eq!(
+                window.checked_add(DateTime::<Utc>::MAX_UTC),
+                None,
+                "{window} should not add past the maximum date"
+            );
+            assert_eq!(
+                window.checked_sub(DateTime::<Utc>::MIN_UTC),
+                None,
+                "{window} should not subtract past the minimum date"
             );
         }
     }
