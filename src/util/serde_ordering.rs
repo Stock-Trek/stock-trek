@@ -4,20 +4,25 @@ use serde::{
 };
 use std::{cmp::Ordering, fmt};
 
-pub fn serialize<S: Serializer>(ordering: &Ordering, serializer: S) -> Result<S::Ok, S::Error> {
-    let value = match *ordering {
-        Ordering::Less => "less",
-        Ordering::Equal => "equal",
-        Ordering::Greater => "greater",
-    };
-    serializer.serialize_str(value)
-}
+/// Serializes an [`Ordering`] as a snake_case string.
+pub struct OrderingSerde;
 
-pub fn deserialize<'de, D>(deserializer: D) -> Result<Ordering, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserializer.deserialize_str(OrderingVisitor)
+impl OrderingSerde {
+    pub fn serialize<S: Serializer>(ordering: &Ordering, serializer: S) -> Result<S::Ok, S::Error> {
+        let value = match *ordering {
+            Ordering::Less => "less",
+            Ordering::Equal => "equal",
+            Ordering::Greater => "greater",
+        };
+        serializer.serialize_str(value)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Ordering, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_str(OrderingVisitor)
+    }
 }
 
 struct OrderingVisitor;
@@ -42,12 +47,12 @@ impl Visitor<'_> for OrderingVisitor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::serde_ordering;
+    use crate::util::serde_ordering::OrderingSerde;
     use serde::{Deserialize, Serialize};
 
     #[derive(Debug, PartialEq, Serialize, Deserialize)]
     struct Wrapper {
-        #[serde(with = "serde_ordering")]
+        #[serde(with = "OrderingSerde")]
         ordering: Ordering,
     }
 

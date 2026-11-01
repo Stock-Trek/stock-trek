@@ -197,7 +197,7 @@ fn pending_orders_are_grouped_by_the_order_request_tag() {
         portfolio.pending_orders_in_cex_account_with_tag(
             &CexId::Binance,
             &AccountId::new("account"),
-            &Tag::new("grouping-tag"),
+            &Tag::new("other"),
         ),
         0.0
     );

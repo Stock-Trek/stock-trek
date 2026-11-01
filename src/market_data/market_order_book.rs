@@ -22,16 +22,16 @@ impl MarketOrderBook {
     }
     /// Returns the bids as price/quantity pairs.
     pub fn bid_price_quantities(&self) -> Vec<PriceQuantity> {
-        to_price_quantities(&self.bids)
+        Self::to_price_quantities(&self.bids)
     }
     /// Returns the asks as price/quantity pairs.
     pub fn ask_price_quantities(&self) -> Vec<PriceQuantity> {
-        to_price_quantities(&self.asks)
+        Self::to_price_quantities(&self.asks)
     }
-}
 
-fn to_price_quantities(vec: &[MarketQuote]) -> Vec<PriceQuantity> {
-    vec.iter().map(|quote| quote.to_price_quantity()).collect()
+    fn to_price_quantities(vec: &[MarketQuote]) -> Vec<PriceQuantity> {
+        vec.iter().map(|quote| quote.to_price_quantity()).collect()
+    }
 }
 
 impl<'de> Deserialize<'de> for MarketOrderBook {

@@ -5,7 +5,7 @@ use crate::{
     },
     resolved_context::ResolvedContext,
     signal::key::SignalKey,
-    util::serde_ordering,
+    util::serde_ordering::OrderingSerde,
     value::value::NumberValue,
 };
 use rust_decimal::Decimal;
@@ -26,7 +26,7 @@ pub enum Condition {
         /// The left-hand value.
         left: Box<NumberValue>,
         /// The ordering to test for.
-        #[serde(with = "serde_ordering")]
+        #[serde(with = "OrderingSerde")]
         comparison: Ordering,
         /// The right-hand value.
         right: Box<NumberValue>,

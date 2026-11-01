@@ -35,18 +35,18 @@ impl MarketTicks {
     fn values(&self, to_quote: impl Fn(&MarketTick) -> &MarketQuote) -> Vec<TimedPriceQuantity> {
         self.ticks
             .iter()
-            .map(|tick| to_tick_tuple(tick, &to_quote))
+            .map(|tick| Self::to_tick_tuple(tick, &to_quote))
             .collect()
     }
-}
 
-fn to_tick_tuple(
-    tick: &MarketTick,
-    to_quote: impl Fn(&MarketTick) -> &MarketQuote,
-) -> TimedPriceQuantity {
-    let timestamp = tick.timestamp_millis;
-    let quote = to_quote(tick);
-    quote.to_timed_price_quantity(timestamp)
+    fn to_tick_tuple(
+        tick: &MarketTick,
+        to_quote: impl Fn(&MarketTick) -> &MarketQuote,
+    ) -> TimedPriceQuantity {
+        let timestamp = tick.timestamp_millis;
+        let quote = to_quote(tick);
+        quote.to_timed_price_quantity(timestamp)
+    }
 }
 
 impl<'de> Deserialize<'de> for MarketTicks {
