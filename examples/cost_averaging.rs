@@ -1,10 +1,11 @@
 use std::cmp::Ordering;
 use stock_trek::prelude::*;
 
-/// One satoshi, the smallest bitcoin unit (1e-6 BTC).
-const SATOSHI_QUANTITY: f64 = 1.0 / 1_000_000.0;
-/// CEX market data stores prices as fixed-point values in millionths of the quote asset.
-const CEX_PRICE_SCALE: f64 = 1_000_000.0;
+/// The satoshi multiplier used to express the example's limit price in satoshis.
+/// Market data prices are not scaled.
+const SATOSHI_SCALE: f64 = 1_000_000.0;
+/// The base-asset quantity for the example's one-satoshi order.
+const SATOSHI_QUANTITY: f64 = 1.0 / SATOSHI_SCALE;
 /// The CEX account that should place orders. Replace with your account id.
 const CEX_ACCOUNT_ID: &str = "main";
 
@@ -70,7 +71,7 @@ impl Algorithm for CostAveraging {
         if let Some((cheapest_cex, cheapest_ask)) = cheapest_market {
             signals.write(&self.key_cex, cheapest_cex);
             signals.write(&self.key_market_exists, true);
-            signals.write(&self.key_cheapest_price, cheapest_ask / CEX_PRICE_SCALE);
+            signals.write(&self.key_cheapest_price, cheapest_ask / SATOSHI_SCALE);
         }
         signals
     }
@@ -175,7 +176,7 @@ mod tests {
         assert!(latest.read(&algorithm.key_market_exists).unwrap());
         assert_eq!(
             latest.read(&algorithm.key_cheapest_price).unwrap(),
-            200.0 / CEX_PRICE_SCALE
+            200.0 / SATOSHI_SCALE
         );
         assert!(!empty.read(&algorithm.key_market_exists).unwrap());
     }
