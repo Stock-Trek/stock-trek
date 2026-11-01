@@ -140,7 +140,7 @@ mod tests {
     fn context(markets: Vec<(CexId, Market)>) -> SignalContext {
         let mut builder = SignalContextBuilder::new();
         for (cex, market) in markets {
-            builder.market(cex, AssetId::Bitcoin, AssetId::TetherUSD, market);
+            builder.cex_market(cex, AssetId::Bitcoin, AssetId::TetherUSD, market);
         }
         builder.build()
     }

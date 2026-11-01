@@ -1,3 +1,47 @@
+use super::{aligned_window::AlignedWindow, rolling_window::RollingWindow};
+use chrono::{DateTime, Duration, Months, Utc};
+
+/// Test-only arithmetic helpers for the window enums.
+pub(crate) trait CheckedWindow {
+    /// Adds the window length to a UTC date and time.
+    fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>>;
+
+    /// Subtracts the window length from a UTC date and time.
+    fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>>;
+}
+
+impl CheckedWindow for RollingWindow {
+    fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
+        let millis = i64::try_from(self.millis_exact()?).ok()?;
+        date_time.checked_add_signed(Duration::milliseconds(millis))
+    }
+
+    fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
+        let millis = i64::try_from(self.millis_exact()?).ok()?;
+        date_time.checked_sub_signed(Duration::milliseconds(millis))
+    }
+}
+
+impl CheckedWindow for AlignedWindow {
+    fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
+        if let Some(millis) = self.millis_exact() {
+            let millis = i64::try_from(millis).ok()?;
+            date_time.checked_add_signed(Duration::milliseconds(millis))
+        } else {
+            date_time.checked_add_months(Months::new(self.months_exact()?))
+        }
+    }
+
+    fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
+        if let Some(millis) = self.millis_exact() {
+            let millis = i64::try_from(millis).ok()?;
+            date_time.checked_sub_signed(Duration::milliseconds(millis))
+        } else {
+            date_time.checked_sub_months(Months::new(self.months_exact()?))
+        }
+    }
+}
+
 /// Defines the behaviour shared by the window enums.
 ///
 /// Calendar windows are excluded from the fixed-length assertions because their
