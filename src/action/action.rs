@@ -2,7 +2,7 @@ use crate::{
     action::resolved_action::ResolvedAction,
     cex::capability::HasRequiredCapabilities,
     error::result::StockTrekResult,
-    resolveable::Resolvable,
+    resolvable::Resolvable,
     resolved_context::ResolvedContext,
     value::value::{AccountIdValue, AssetIdValue, CexIdValue, NumberValue},
 };

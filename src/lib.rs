@@ -9,7 +9,7 @@ mod examples;
 mod market_data;
 mod portfolio;
 mod preferences;
-mod resolveable;
+mod resolvable;
 mod resolved_context;
 mod signal;
 mod signal_context;
