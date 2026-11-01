@@ -6,15 +6,21 @@ use serde::{Deserialize, Serialize};
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId};
 use strum::Display;
 
+/// A dynamically typed signal value.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
 pub enum SignalValue {
+    /// A CEX identifier.
     CexId(CexId),
+    /// A CEX account identifier.
     AccountId(AccountId),
+    /// An asset identifier.
     AssetId(AssetId),
+    /// A boolean flag.
     Flag(bool),
+    /// A numeric value.
     Number(f64),
 }
 

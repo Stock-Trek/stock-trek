@@ -5,22 +5,32 @@ use crate::error::{
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
+/// Binary operations that can be applied to two numeric values.
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
 pub enum BinaryOperator {
+    /// Addition.
     Add,
+    /// Subtraction.
     Sub,
+    /// Multiplication.
     Mul,
+    /// Division.
     Div,
+    /// Remainder after division.
     Mod,
+    /// Exponentiation.
     Pow,
+    /// Logarithm of the left value in the base given by the right value.
     Log,
+    /// Two-argument arctangent.
     Atan2,
 }
 
 impl BinaryOperator {
+    /// Applies the operator to `left` and `right`.
     pub fn calculate(self, left: f64, right: f64) -> StockTrekResult<f64> {
         let calculation_result = match self {
             BinaryOperator::Add => left + right,

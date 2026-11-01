@@ -6,6 +6,7 @@ use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use strum::{EnumCount, EnumIter, FromRepr};
 
+/// A fixed-length rolling time window.
 #[derive(
     Debug,
     Clone,
@@ -25,50 +26,92 @@ use strum::{EnumCount, EnumIter, FromRepr};
 #[non_exhaustive]
 #[repr(u8)]
 pub enum RollingWindow {
+    /// A one-second window.
     Seconds1,
+    /// A five-second window.
     Seconds5,
+    /// A ten-second window.
     Seconds10,
+    /// A fifteen-second window.
     Seconds15,
+    /// A thirty-second window.
     Seconds30,
+    /// A sixty-second window.
     Seconds60,
+    /// A one-minute window.
     Minutes1,
+    /// A two-minute window.
     Minutes2,
+    /// A three-minute window.
     Minutes3,
+    /// A five-minute window.
     Minutes5,
+    /// A ten-minute window.
     Minutes10,
+    /// A fifteen-minute window.
     Minutes15,
+    /// A thirty-minute window.
     Minutes30,
+    /// A forty-five-minute window.
     Minutes45,
+    /// A sixty-minute window.
     Minutes60,
+    /// A ninety-minute window.
     Minutes90,
+    /// A one-hour window.
     Hours1,
+    /// A two-hour window.
     Hours2,
+    /// A three-hour window.
     Hours3,
+    /// A four-hour window.
     Hours4,
+    /// A six-hour window.
     Hours6,
+    /// An eight-hour window.
     Hours8,
+    /// A twelve-hour window.
     Hours12,
+    /// A twenty-four-hour window.
     Hours24,
+    /// A one-day window.
     Days1,
+    /// A two-day window.
     Days2,
+    /// A three-day window.
     Days3,
+    /// A seven-day window.
     Days7,
+    /// A fourteen-day window.
     Days14,
+    /// A thirty-day window.
     Days30,
+    /// A forty-five-day window.
     Days45,
+    /// A sixty-day window.
     Days60,
+    /// A ninety-day window.
     Days90,
+    /// A one-hundred-eighty-day window.
     Days180,
+    /// A three-hundred-sixty-day window.
     Days360,
+    /// A one-week window.
     Weeks1,
+    /// A two-week window.
     Weeks2,
+    /// A four-week window.
     Weeks4,
+    /// A ten-week window.
     Weeks10,
+    /// A twenty-week window.
     Weeks20,
+    /// A forty-week window.
     Weeks40,
 }
 
 impl RollingWindow {
+    /// Returns the exact window length in milliseconds.
     pub fn millis_exact(&self) -> Option<u64> {
         let millis_per_second = MILLIS_PER_SECOND as u64;
         let millis_per_minute = MILLIS_PER_MINUTE as u64;
@@ -120,20 +163,24 @@ impl RollingWindow {
         }
     }
 
+    /// Returns the window length in milliseconds as an upper bound.
     pub fn millis_upper_bound(&self) -> Option<u64> {
         self.millis_exact()
     }
 
+    /// Adds the window length to a UTC date and time.
     pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         let millis = i64::try_from(self.millis_exact()?).ok()?;
         date_time.checked_add_signed(Duration::milliseconds(millis))
     }
 
+    /// Subtracts the window length from a UTC date and time.
     pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         let millis = i64::try_from(self.millis_exact()?).ok()?;
         date_time.checked_sub_signed(Duration::milliseconds(millis))
     }
 
+    /// Returns the short label for the window, such as `1h` or `7d`.
     pub fn label(self) -> String {
         match self {
             RollingWindow::Seconds1 => "1s".to_string(),

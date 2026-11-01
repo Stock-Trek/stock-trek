@@ -8,12 +8,14 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, convert::TryFrom};
 
+/// A collection of named signal values.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Signals {
     signal_values: HashMap<String, SignalValue>,
 }
 
 impl Signals {
+    /// Creates an empty signal collection.
     pub fn new() -> Self {
         Self {
             signal_values: HashMap::new(),
@@ -28,6 +30,7 @@ impl Default for Signals {
 }
 
 impl Signals {
+    /// Reads a typed value from the collection, falling back to the key's default.
     pub fn read<T>(&self, key: &SignalKey<T>) -> StockTrekResult<T>
     where
         T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
@@ -48,6 +51,7 @@ impl Signals {
             }
         }
     }
+    /// Writes a typed value to the collection under the given key.
     pub fn write<T>(&mut self, key: &SignalKey<T>, value: T)
     where
         T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,

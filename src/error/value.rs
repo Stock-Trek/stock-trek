@@ -1,11 +1,30 @@
 use std::fmt;
 
+/// Errors produced while resolving values.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum ValueError {
-    NotFound { name: String, key: String },
-    IncorrectType { expected: String, found: String },
-    ValuesNotEqual { a: String, b: String },
+    /// A requested value was not found.
+    NotFound {
+        /// The kind of value that was requested.
+        name: String,
+        /// The key that was used to look up the value.
+        key: String,
+    },
+    /// A value had an unexpected type.
+    IncorrectType {
+        /// The expected type.
+        expected: String,
+        /// The type that was found.
+        found: String,
+    },
+    /// Two values that were expected to be equal were not.
+    ValuesNotEqual {
+        /// The first value.
+        a: String,
+        /// The second value.
+        b: String,
+    },
 }
 
 impl fmt::Display for ValueError {

@@ -1,3 +1,13 @@
+//! Stock Trek time-series analysis.
+//!
+//! This crate provides the core types and building blocks for writing trading
+//! algorithms that run on [stock-trek.com](https://stock-trek.com).
+
+#![deny(missing_docs)]
+#![deny(missing_debug_implementations)]
+#![deny(unsafe_code)]
+#![deny(rustdoc::broken_intra_doc_links)]
+
 mod action;
 mod algorithm;
 mod cex;
@@ -29,6 +39,7 @@ pub use strategy_context::StrategyContext;
 pub use traitreg;
 pub use traitreg::register as register_algorithm;
 
+/// Types for actions that can be enqueued by an algorithm.
 pub mod actions {
     pub use crate::action::{
         action::Action,
@@ -40,10 +51,12 @@ pub mod actions {
     };
 }
 
+/// Traits and helpers for CEX capabilities.
 pub mod capabilities {
     pub use crate::cex::capability::{HasRequiredCapabilities, combine_capabilities};
 }
 
+/// Error types returned by stock-trek operations.
 pub mod errors {
     pub use crate::error::{
         portfolio::PortfolioError,
@@ -53,6 +66,7 @@ pub mod errors {
     };
 }
 
+/// Market data types and time window helpers.
 pub mod markets {
     pub use crate::market_data::{
         aligned_window::{AlignedTimestampBounds, AlignedWindow},
@@ -71,6 +85,7 @@ pub mod markets {
     };
 }
 
+/// Signal keys, values, and contexts.
 pub mod signals {
     pub use crate::{
         signal::{
@@ -82,6 +97,7 @@ pub mod signals {
     };
 }
 
+/// Shared CEX and asset types.
 pub mod types {
     pub use stock_trek_types::cex::{
         account_id::AccountId,
@@ -104,6 +120,7 @@ pub mod types {
     };
 }
 
+/// Value types and factories used to build calculations.
 pub mod values {
     pub use crate::value::{
         binary_operator::BinaryOperator,
@@ -116,6 +133,7 @@ pub mod values {
     };
 }
 
+/// Commonly used imports for writing algorithms.
 pub mod prelude {
     pub use super::{
         Algorithm, Command, Preferences, RoundingStrategy, StrategyContext,

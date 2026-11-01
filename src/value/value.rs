@@ -8,17 +8,27 @@ use serde::{Deserialize, Serialize};
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId, tag::Tag};
 use strum::Display;
 
+/// A value that resolves to a CEX account identifier.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
 #[non_exhaustive]
 pub enum AccountIdValue {
-    Literal { literal: AccountId },
-    Signal { signal: SignalKey<AccountId> },
+    /// A literal account identifier.
+    Literal {
+        /// The account identifier.
+        literal: AccountId,
+    },
+    /// An account identifier read from a signal.
+    Signal {
+        /// The signal key containing the account identifier.
+        signal: SignalKey<AccountId>,
+    },
 }
 
 impl AccountIdValue {
+    /// Resolves the account identifier against the resolved context.
     pub fn account_id(&self, c: &ResolvedContext) -> StockTrekResult<AccountId> {
         match self {
             Self::Literal { literal } => Ok(literal.clone()),
@@ -27,17 +37,27 @@ impl AccountIdValue {
     }
 }
 
+/// A value that resolves to a CEX identifier.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
 #[non_exhaustive]
 pub enum CexIdValue {
-    Literal { literal: CexId },
-    Signal { signal: SignalKey<CexId> },
+    /// A literal CEX identifier.
+    Literal {
+        /// The CEX identifier.
+        literal: CexId,
+    },
+    /// A CEX identifier read from a signal.
+    Signal {
+        /// The signal key containing the CEX identifier.
+        signal: SignalKey<CexId>,
+    },
 }
 
 impl CexIdValue {
+    /// Resolves the CEX identifier against the resolved context.
     pub fn cex_id(&self, c: &ResolvedContext) -> StockTrekResult<CexId> {
         match self {
             Self::Literal { literal } => Ok(*literal),
@@ -46,17 +66,27 @@ impl CexIdValue {
     }
 }
 
+/// A value that resolves to an asset identifier.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
 #[non_exhaustive]
 pub enum AssetIdValue {
-    Literal { literal: AssetId },
-    Signal { signal: SignalKey<AssetId> },
+    /// A literal asset identifier.
+    Literal {
+        /// The asset identifier.
+        literal: AssetId,
+    },
+    /// An asset identifier read from a signal.
+    Signal {
+        /// The signal key containing the asset identifier.
+        signal: SignalKey<AssetId>,
+    },
 }
 
 impl AssetIdValue {
+    /// Resolves the asset identifier against the resolved context.
     pub fn asset_id(&self, c: &ResolvedContext) -> StockTrekResult<AssetId> {
         match self {
             Self::Literal { literal } => Ok(*literal),
@@ -65,17 +95,27 @@ impl AssetIdValue {
     }
 }
 
+/// A value that resolves to a boolean flag.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
 #[non_exhaustive]
 pub enum FlagValue {
-    Literal { literal: bool },
-    Signal { signal: SignalKey<bool> },
+    /// A literal boolean flag.
+    Literal {
+        /// The boolean value.
+        literal: bool,
+    },
+    /// A boolean flag read from a signal.
+    Signal {
+        /// The signal key containing the flag.
+        signal: SignalKey<bool>,
+    },
 }
 
 impl FlagValue {
+    /// Resolves the flag against the resolved context.
     pub fn flag(&self, c: &ResolvedContext) -> StockTrekResult<bool> {
         match self {
             Self::Literal { literal } => Ok(*literal),
@@ -84,67 +124,108 @@ impl FlagValue {
     }
 }
 
+/// A value that resolves to a number.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
 #[non_exhaustive]
 pub enum NumberValue {
+    /// A literal number.
     Literal {
+        /// The numeric value.
         literal: f64,
     },
+    /// A number read from a signal.
     Signal {
+        /// The signal key containing the number.
         signal: SignalKey<f64>,
     },
+    /// The total number of pending orders.
     PendingOrders,
+    /// The number of pending orders with a specific tag.
     PendingOrdersWithTag {
+        /// The tag to count.
         tag: Tag,
     },
+    /// The number of pending orders in a CEX account.
     PendingOrdersInCexAccount {
+        /// The CEX containing the account.
         cex_id_value: CexIdValue,
+        /// The account to inspect.
         account_id_value: AccountIdValue,
     },
+    /// The number of pending orders with a specific tag in a CEX account.
     PendingOrdersInCexAccountWithTag {
+        /// The CEX containing the account.
         cex_id_value: CexIdValue,
+        /// The account to inspect.
         account_id_value: AccountIdValue,
+        /// The tag to count.
         tag: Tag,
     },
+    /// The total amount of an asset.
     AssetTotal {
+        /// The asset to sum.
         asset_id_value: AssetIdValue,
     },
+    /// The total amount of an asset in a CEX account.
     AssetTotalInCexAccount {
+        /// The asset to sum.
         asset_id_value: AssetIdValue,
+        /// The CEX containing the account.
         cex_id_value: CexIdValue,
+        /// The account to inspect.
         account_id_value: AccountIdValue,
     },
+    /// The available amount of an asset.
     AssetAvailable {
+        /// The asset to inspect.
         asset_id_value: AssetIdValue,
     },
+    /// The available amount of an asset in a CEX account.
     AssetAvailableInCexAccount {
+        /// The asset to inspect.
         asset_id_value: AssetIdValue,
+        /// The CEX containing the account.
         cex_id_value: CexIdValue,
+        /// The account to inspect.
         account_id_value: AccountIdValue,
     },
+    /// The reserved amount of an asset.
     AssetReserved {
+        /// The asset to inspect.
         asset_id_value: AssetIdValue,
     },
+    /// The reserved amount of an asset in a CEX account.
     AssetReservedInCexAccount {
+        /// The asset to inspect.
         asset_id_value: AssetIdValue,
+        /// The CEX containing the account.
         cex_id_value: CexIdValue,
+        /// The account to inspect.
         account_id_value: AccountIdValue,
     },
+    /// A binary calculation.
     BinaryCalculation {
+        /// The left-hand value.
         left: Box<NumberValue>,
+        /// The operator to apply.
         operator: BinaryOperator,
+        /// The right-hand value.
         right: Box<NumberValue>,
     },
+    /// A unary calculation.
     UnaryCalculation {
+        /// The operator to apply.
         operator: UnaryOperator,
+        /// The value to operate on.
         number: Box<NumberValue>,
     },
 }
 
 impl NumberValue {
+    /// Resolves the number against the resolved context.
     pub fn number(&self, c: &ResolvedContext) -> StockTrekResult<f64> {
         match self {
             Self::Literal { literal } => Ok(*literal),

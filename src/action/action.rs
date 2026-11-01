@@ -14,10 +14,15 @@ use strum::Display;
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
+/// An action that an algorithm may request during strategy evaluation.
 pub enum Action {
+    /// Sends an order request to a CEX account.
     SendOrderRequest {
+        /// The CEX on which the order should be placed.
         cex_id_value: CexIdValue,
+        /// The account that should place the order.
         account_id_value: AccountIdValue,
+        /// The unresolved order request to send.
         order_request: Box<OrderRequest<AssetIdValue, NumberValue>>,
     },
     // TODO

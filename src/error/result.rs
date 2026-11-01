@@ -1,12 +1,17 @@
 use crate::error::{portfolio::PortfolioError, stats::StatsError, value::ValueError};
 use std::fmt;
 
+/// Result type used by stock-trek operations.
 pub type StockTrekResult<T> = Result<T, StockTrekError>;
 
+/// Errors returned by stock-trek operations.
 #[derive(Debug, Clone)]
 pub enum StockTrekError {
+    /// A portfolio error.
     Portfolio(PortfolioError),
+    /// A statistics or numeric error.
     Stats(StatsError),
+    /// A value resolution error.
     Value(ValueError),
 }
 

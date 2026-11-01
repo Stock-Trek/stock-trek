@@ -5,8 +5,10 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::{collections::HashMap, sync::OnceLock};
 use strum::IntoEnumIterator;
 
+/// Candles grouped by calendar-aligned windows.
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketAlignedWindow {
+    /// Candles for each aligned window.
     pub candles: HashMap<AlignedWindow, Vec<MarketCandle>>,
     #[serde(skip)]
     opens: OnceLock<HashMap<AlignedWindow, OnceLock<Vec<f64>>>>,
@@ -39,6 +41,7 @@ impl<'de> Deserialize<'de> for MarketAlignedWindow {
 }
 
 impl MarketAlignedWindow {
+    /// Creates an aligned-window collection from candles grouped by window.
     pub fn new(candles: HashMap<AlignedWindow, Vec<MarketCandle>>) -> Self {
         Self {
             candles,
@@ -51,24 +54,31 @@ impl MarketAlignedWindow {
             vwaps: OnceLock::new(),
         }
     }
+    /// Returns the open prices for an aligned window, if present.
     pub fn opens(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
         self.values(&self.opens, window, |ohlcv| ohlcv.open)
     }
+    /// Returns the high prices for an aligned window, if present.
     pub fn highs(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
         self.values(&self.highs, window, |ohlcv| ohlcv.high)
     }
+    /// Returns the low prices for an aligned window, if present.
     pub fn lows(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
         self.values(&self.lows, window, |ohlcv| ohlcv.low)
     }
+    /// Returns the close prices for an aligned window, if present.
     pub fn closes(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
         self.values(&self.closes, window, |ohlcv| ohlcv.close)
     }
+    /// Returns the base volumes for an aligned window, if present.
     pub fn volumes(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
         self.values(&self.volumes, window, |ohlcv| ohlcv.volume)
     }
+    /// Returns the quote volumes for an aligned window, if present.
     pub fn quote_volumes(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
         self.values(&self.quote_volumes, window, |ohlcv| ohlcv.quote_volume)
     }
+    /// Returns the volume-weighted average prices for an aligned window, if present.
     pub fn vwaps(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
         self.values(&self.vwaps, window, |ohlcv| ohlcv.vwap)
     }
