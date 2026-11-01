@@ -245,6 +245,21 @@ mod tests {
     }
 
     #[test]
+    fn compare_serializes_ordering_as_snake_case() {
+        let condition = ConditionFactory.compare(
+            NumberValue::Literal { literal: 1.0 },
+            Ordering::Less,
+            NumberValue::Literal { literal: 2.0 },
+        );
+
+        let value = serde_json::to_value(&condition).unwrap();
+        assert_eq!(value["comparison"], "less");
+
+        let deserialized: Condition = serde_json::from_value(value).unwrap();
+        assert!(deserialized.test(&context()).unwrap());
+    }
+
+    #[test]
     fn compare_matches_the_actual_ordering() {
         assert!(compare(1.0, Ordering::Less, 2.0));
         assert!(!compare(2.0, Ordering::Less, 1.0));
