@@ -7,10 +7,12 @@ use crate::{
 };
 use stock_trek_types::cex::order_request::OrderRequest;
 
+/// Factory for constructing actions.
 #[derive(Debug, Clone)]
 pub struct ActionFactory;
 
 impl ActionFactory {
+    /// Creates an action that sends an order request using the given recovery policy.
     pub fn send_order_request(
         &self,
         cex_id_value: CexIdValue,

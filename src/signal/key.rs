@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::{fmt::Display, marker::PhantomData};
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId};
 
+/// A typed key used to read and write a signal value.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct SignalKey<T> {
@@ -28,6 +29,7 @@ impl<T> SignalKey<T>
 where
     T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
 {
+    /// Creates a required signal key that has no default value.
     pub fn new_required(key: impl AsRef<str>) -> Self {
         Self {
             key: key.as_ref().to_string(),
@@ -35,6 +37,7 @@ where
             _phantom: PhantomData,
         }
     }
+    /// Creates an optional signal key with a default value.
     pub fn new_optional(key: impl AsRef<str>, default: T) -> Self {
         Self {
             key: key.as_ref().to_string(),
@@ -42,12 +45,15 @@ where
             _phantom: PhantomData,
         }
     }
+    /// Returns the string key used to store the signal.
     pub fn key(&self) -> &str {
         &self.key
     }
+    /// Returns the key's default value, if one was provided.
     pub fn default(&self) -> Option<T> {
         self.default.clone()
     }
+    /// Reads the signal value from the resolved context.
     pub fn read(&self, c: &ResolvedContext) -> StockTrekResult<T> {
         c.signals.read(self)
     }
@@ -76,6 +82,7 @@ mod sealed {
     }
 }
 
+/// Types that can be used as the value of a [`SignalKey`].
 pub trait SignalKeyType: sealed::Sealed {}
 
 impl SignalKeyType for CexId {}

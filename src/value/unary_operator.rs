@@ -5,40 +5,68 @@ use crate::error::{
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
+/// Unary operations that can be applied to a numeric value.
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
 pub enum UnaryOperator {
+    /// Absolute value.
     Abs,
+    /// Negation.
     Neg,
+    /// Round down to the nearest integer.
     Floor,
+    /// Round up to the nearest integer.
     Ceil,
+    /// Round away from zero.
     RoundAwayFrom0,
+    /// Round to the nearest integer with ties to even.
     RoundTiesEven,
+    /// Truncate toward zero.
     Trunc,
+    /// Fractional part.
     Frac,
+    /// Square root.
     Sqrt,
+    /// Natural exponential.
     Exp,
+    /// Base-2 exponential.
     Exp2,
+    /// Base-2 logarithm.
     Log2,
+    /// Natural logarithm.
     LogE,
+    /// Base-10 logarithm.
     Log10,
+    /// Sine.
     Sin,
+    /// Cosine.
     Cos,
+    /// Tangent.
     Tan,
+    /// Arcsine.
     Asin,
+    /// Arccosine.
     Acos,
+    /// Arctangent.
     Atan,
+    /// Hyperbolic sine.
     Sinh,
+    /// Hyperbolic cosine.
     Cosh,
+    /// Hyperbolic tangent.
     Tanh,
+    /// Inverse hyperbolic sine.
     Asinh,
+    /// Inverse hyperbolic cosine.
     Acosh,
+    /// Inverse hyperbolic tangent.
     Atanh,
 }
 
 impl UnaryOperator {
+    /// Applies the operator to `value`.
     pub fn calculate(self, value: f64) -> StockTrekResult<f64> {
         let calculation_result = match self {
             UnaryOperator::Abs => value.abs(),

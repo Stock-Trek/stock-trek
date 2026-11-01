@@ -5,17 +5,20 @@ use stock_trek_types::cex::{
     quantity::Quantity, side::Side, tag::Tag,
 };
 
+/// A snapshot of asset balances and pending orders across CEX accounts.
 #[derive(Debug, Clone)]
 pub struct Portfolio {
     portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>,
 }
 
+/// Asset balances and pending orders for a single CEX account.
 #[derive(Debug, Clone)]
 pub struct CexAccountPortfolio {
     asset_counts: HashMap<AssetId, Decimal>,
     pending_orders: HashMap<Tag, Vec<PendingOrder>>,
 }
 
+/// An order with the quantities that have already been filled.
 #[derive(Debug, Clone)]
 pub struct PendingOrder {
     order_request: OrderRequest<AssetId, Decimal>,
@@ -24,6 +27,7 @@ pub struct PendingOrder {
 }
 
 impl Portfolio {
+    /// Creates a portfolio from CEX and account portfolios.
     pub fn new(portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>) -> Self {
         Self { portfolios }
     }
@@ -212,6 +216,7 @@ impl Portfolio {
 }
 
 impl CexAccountPortfolio {
+    /// Creates an account portfolio from asset balances and pending orders.
     pub fn new(
         asset_counts: HashMap<AssetId, Decimal>,
         pending_orders: HashMap<Tag, Vec<PendingOrder>>,
@@ -224,6 +229,7 @@ impl CexAccountPortfolio {
 }
 
 impl PendingOrder {
+    /// Creates a pending order with its filled base and quote quantities.
     pub fn new(
         order_request: OrderRequest<AssetId, Decimal>,
         filled_base_quantity: Decimal,
@@ -237,12 +243,14 @@ impl PendingOrder {
     }
 }
 
+/// Builder for constructing a [`Portfolio`].
 #[derive(Debug, Clone)]
 pub struct PortfolioBuilder {
     portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>,
 }
 
 impl PortfolioBuilder {
+    /// Creates an empty portfolio builder.
     pub fn new() -> Self {
         Self {
             portfolios: HashMap::new(),
@@ -257,6 +265,7 @@ impl Default for PortfolioBuilder {
 }
 
 impl PortfolioBuilder {
+    /// Sets the balance of an asset in a CEX account.
     pub fn asset_count(
         &mut self,
         cex_id: CexId,
@@ -277,6 +286,7 @@ impl PortfolioBuilder {
         self
     }
 
+    /// Adds a pending order to a CEX account.
     pub fn pending_order(
         &mut self,
         cex_id: CexId,
@@ -305,6 +315,7 @@ impl PortfolioBuilder {
         self
     }
 
+    /// Builds the [`Portfolio`] from the collected data.
     pub fn build(self) -> Portfolio {
         Portfolio {
             portfolios: self.portfolios,

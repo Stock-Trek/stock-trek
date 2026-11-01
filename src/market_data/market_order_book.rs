@@ -2,9 +2,12 @@ use crate::market_data::market_quote::{MarketQuote, PriceQuantity};
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 
+/// The current bids and asks for a market.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketOrderBook {
+    /// The bid quotes, ordered from highest to lowest price.
     pub bids: Vec<MarketQuote>,
+    /// The ask quotes, ordered from lowest to highest price.
     pub asks: Vec<MarketQuote>,
     #[serde(skip)]
     bid_price_quantities: OnceLock<Vec<PriceQuantity>>,
@@ -13,6 +16,7 @@ pub struct MarketOrderBook {
 }
 
 impl MarketOrderBook {
+    /// Creates an order book from bid and ask quotes.
     pub fn new(bids: Vec<MarketQuote>, asks: Vec<MarketQuote>) -> Self {
         Self {
             bids,
@@ -21,10 +25,12 @@ impl MarketOrderBook {
             ask_price_quantities: OnceLock::new(),
         }
     }
+    /// Returns the bids as price/quantity pairs.
     pub fn bid_price_quantities(&self) -> &Vec<PriceQuantity> {
         self.bid_price_quantities
             .get_or_init(|| to_price_quantities(&self.bids))
     }
+    /// Returns the asks as price/quantity pairs.
     pub fn ask_price_quantities(&self) -> &Vec<PriceQuantity> {
         self.ask_price_quantities
             .get_or_init(|| to_price_quantities(&self.asks))

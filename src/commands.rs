@@ -9,26 +9,37 @@ use serde::{Deserialize, Serialize};
 use stock_trek_types::cex::capability::CexCapability;
 use strum::Display;
 
+/// A command produced by a strategy and executed against a resolved context.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
 pub enum Command {
+    /// Executes one of two commands based on a condition.
     If {
+        /// The condition to evaluate.
         condition: Condition,
+        /// The command to execute when the condition is true.
         if_true: Box<Command>,
+        /// The command to execute when the condition is false.
         if_false: Box<Command>,
     },
+    /// Executes a list of commands in order.
     List {
+        /// The commands to execute.
         commands: Vec<Command>,
     },
+    /// Does nothing.
     NoOp,
+    /// Enqueues a list of actions.
     Plan {
+        /// The actions to enqueue.
         actions: Vec<RecoverableAction>,
     },
 }
 
 impl Command {
+    /// Executes the command against the resolved context.
     pub fn execute(&self, c: &mut ResolvedContext) -> StockTrekResult<()> {
         match self {
             Command::If {
@@ -85,10 +96,12 @@ impl HasRequiredCapabilities for Command {
     }
 }
 
+/// Factory for constructing commands.
 #[derive(Debug, Clone)]
 pub struct CommandFactory;
 
 impl CommandFactory {
+    /// Creates a command that conditionally executes one of two commands.
     pub fn if_else(&self, condition: Condition, if_true: Command, if_false: Command) -> Command {
         Command::If {
             condition,
@@ -96,12 +109,15 @@ impl CommandFactory {
             if_false: Box::new(if_false),
         }
     }
+    /// Creates a command that executes a list of commands in order.
     pub fn list(&self, commands: Vec<Command>) -> Command {
         Command::List { commands }
     }
+    /// Creates a command that does nothing.
     pub fn no_op(&self) -> Command {
         Command::NoOp
     }
+    /// Creates a command that enqueues a list of actions.
     pub fn plan(&self, actions: Vec<RecoverableAction>) -> Command {
         Command::Plan { actions }
     }

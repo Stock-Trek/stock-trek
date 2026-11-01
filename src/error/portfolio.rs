@@ -1,19 +1,30 @@
 use std::fmt;
 use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
+/// Errors related to portfolio state.
 #[derive(Debug, Clone)]
 pub enum PortfolioError {
+    /// The requested CEX account does not exist.
     NoCexAccount {
+        /// The CEX containing the missing account.
         cex_id: CexId,
     },
+    /// The portfolio does not own the requested asset.
     AssetNotOwned {
+        /// The CEX containing the account.
         cex_id: CexId,
+        /// The asset that is not owned.
         asset_id: AssetId,
     },
+    /// The CEX account does not hold enough of an asset.
     NotEnoughAssetsInCex {
+        /// The CEX containing the account.
         cex_id: CexId,
+        /// The asset that is in short supply.
         asset_id: AssetId,
+        /// The amount currently owned.
         owned: f64,
+        /// The amount required.
         quantity: f64,
     },
 }

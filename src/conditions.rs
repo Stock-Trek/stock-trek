@@ -14,43 +14,65 @@ use std::cmp::Ordering;
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId};
 use strum::Display;
 
+/// A condition that can be evaluated against a resolved context.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
 pub enum Condition {
+    /// Compares two numeric values.
     Compare {
+        /// The left-hand value.
         left: Box<NumberValue>,
+        /// The ordering to test for.
         #[serde(with = "serde_ordering")]
         comparison: Ordering,
+        /// The right-hand value.
         right: Box<NumberValue>,
     },
+    /// Tests whether a CEX account exists.
     HasCexAccount {
+        /// The CEX containing the account.
         cex_id: CexId,
+        /// The account to look for.
         account_id: AccountId,
     },
+    /// Negates another condition.
     Not {
+        /// The condition to negate.
         condition: Box<Condition>,
     },
+    /// Tests whether the portfolio owns any of an asset.
     OwnsAsset {
+        /// The asset to look for.
         asset_id: AssetId,
     },
+    /// Tests whether a CEX account owns any of an asset.
     OwnsAssetInCexAccount {
+        /// The CEX containing the account.
         cex_id: CexId,
+        /// The account to inspect.
         account_id: AccountId,
+        /// The asset to look for.
         asset_id: AssetId,
     },
+    /// Applies a quantity requirement to a list of conditions.
     QuantityOf {
+        /// The quantity requirement to apply.
         quantity_of: QuantityOf,
+        /// The conditions to evaluate.
         conditions: Vec<Condition>,
     },
+    /// Tests the value of a boolean signal.
     Signal {
+        /// The signal key to read.
         signal: SignalKey<bool>,
     },
 }
 
 impl Condition {
+    /// Evaluates the condition against the resolved context.
     pub fn test(&self, c: &ResolvedContext) -> StockTrekResult<bool> {
         match self {
             Condition::Compare {
@@ -122,20 +144,27 @@ impl Condition {
     }
 }
 
+/// Specifies how many of a set of conditions must be true.
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum QuantityOf {
+    /// All conditions must be true.
     All,
+    /// At least one and not all conditions must be true.
     Partial,
+    /// No conditions may be true.
     None,
+    /// The condition list must be empty.
     Empty,
 }
 
+/// Factory for constructing conditions.
 #[derive(Debug, Clone)]
 pub struct ConditionFactory;
 
 impl ConditionFactory {
+    /// Creates a condition comparing two numeric values.
     pub fn compare(
         &self,
         left: NumberValue,
@@ -148,17 +177,21 @@ impl ConditionFactory {
             right: Box::new(right),
         }
     }
+    /// Creates a condition testing whether a CEX account exists.
     pub fn has_cex_account(&self, cex_id: CexId, account_id: AccountId) -> Condition {
         Condition::HasCexAccount { cex_id, account_id }
     }
+    /// Creates a condition that negates another condition.
     pub fn not(&self, condition: Condition) -> Condition {
         Condition::Not {
             condition: Box::new(condition),
         }
     }
+    /// Creates a condition testing whether the portfolio owns any of an asset.
     pub fn owns_asset(&self, asset_id: AssetId) -> Condition {
         Condition::OwnsAsset { asset_id }
     }
+    /// Creates a condition testing whether a CEX account owns any of an asset.
     pub fn owns_asset_in_cex_account(
         &self,
         asset_id: AssetId,
@@ -171,12 +204,14 @@ impl ConditionFactory {
             asset_id,
         }
     }
+    /// Creates a condition applying a quantity requirement to a list of conditions.
     pub fn quantity_of(&self, quantity_of: QuantityOf, conditions: Vec<Condition>) -> Condition {
         Condition::QuantityOf {
             quantity_of,
             conditions,
         }
     }
+    /// Creates a condition testing a boolean signal.
     pub fn signal(&self, flag: &SignalKey<bool>) -> Condition {
         Condition::Signal {
             signal: flag.clone(),

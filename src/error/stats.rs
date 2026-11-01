@@ -1,40 +1,67 @@
 use std::fmt;
 
+/// Errors produced by numeric and statistical operations.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum StatsError {
+    /// A division by zero was attempted.
     DivisionByZero {
+        /// The function that produced the error.
         function: &'static str,
+        /// Details about the failed operation.
         detail: String,
     },
+    /// An operation received empty input.
     EmptyInput {
+        /// The function that produced the error.
         function: &'static str,
     },
+    /// Two inputs had different lengths.
     MismatchedLengths {
+        /// The function that produced the error.
         function: &'static str,
+        /// The length of the first input.
         first_len: usize,
+        /// The length of the second input.
         second_len: usize,
     },
+    /// An operation did not have enough degrees of freedom.
     InsufficientDegreesOfFreedom {
+        /// The function that produced the error.
         function: &'static str,
+        /// The available degrees of freedom.
         dof: usize,
+        /// The minimum required degrees of freedom.
         needed: usize,
     },
+    /// An input was outside the domain of the operation.
     DomainError {
+        /// The function that produced the error.
         function: &'static str,
+        /// Details about the failed operation.
         message: String,
     },
+    /// A lag was outside the supported range.
     InvalidLag {
+        /// The function that produced the error.
         function: &'static str,
+        /// The supplied lag.
         lag: usize,
+        /// The maximum supported lag.
         max_lag: usize,
     },
+    /// An operation encountered zero variance.
     ZeroVariance {
+        /// The function that produced the error.
         function: &'static str,
+        /// Details about the failed operation.
         detail: String,
     },
+    /// Two values could not be compared.
     IncomparableValues {
+        /// The left-hand value.
         left: f64,
+        /// The right-hand value.
         right: f64,
     },
 }

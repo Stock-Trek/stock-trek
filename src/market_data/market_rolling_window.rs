@@ -3,10 +3,13 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::{collections::HashMap, sync::OnceLock};
 use strum::IntoEnumIterator;
 
+/// An OHLCV tuple: open, high, low, close, volume, quote volume, and VWAP.
 pub type Ohlcv = (f64, f64, f64, f64, f64, f64, f64);
 
+/// Candles for fixed-length rolling windows.
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketRollingWindow {
+    /// The candle for each rolling window.
     pub candles: HashMap<RollingWindow, MarketCandle>,
     #[serde(skip)]
     ohlcv: OnceLock<HashMap<RollingWindow, OnceLock<Ohlcv>>>,
@@ -27,12 +30,14 @@ impl<'de> Deserialize<'de> for MarketRollingWindow {
 }
 
 impl MarketRollingWindow {
+    /// Creates a rolling-window collection from candles grouped by window.
     pub fn new(candles: HashMap<RollingWindow, MarketCandle>) -> Self {
         Self {
             candles,
             ohlcv: OnceLock::new(),
         }
     }
+    /// Returns the OHLCV values for a rolling window, if present.
     pub fn ohlcv(&self, window: RollingWindow) -> Option<&Ohlcv> {
         let candle = self.candles.get(&window)?;
         let ohlcv = self

@@ -6,6 +6,7 @@ use chrono::{DateTime, Datelike, Duration, Months, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 use strum::{EnumCount, EnumIter, FromRepr};
 
+/// A window aligned to fixed or calendar boundaries.
 #[derive(
     Debug,
     Clone,
@@ -25,40 +26,75 @@ use strum::{EnumCount, EnumIter, FromRepr};
 #[non_exhaustive]
 #[repr(u8)]
 pub enum AlignedWindow {
+    /// A one-second window.
     Seconds1,
+    /// A five-second window.
     Seconds5,
+    /// A ten-second window.
     Seconds10,
+    /// A fifteen-second window.
     Seconds15,
+    /// A thirty-second window.
     Seconds30,
+    /// A sixty-second window.
     Seconds60,
+    /// A one-minute window.
     Minutes1,
+    /// A two-minute window.
     Minutes2,
+    /// A three-minute window.
     Minutes3,
+    /// A five-minute window.
     Minutes5,
+    /// A ten-minute window.
     Minutes10,
+    /// A fifteen-minute window.
     Minutes15,
+    /// A thirty-minute window.
     Minutes30,
+    /// A sixty-minute window.
     Minutes60,
+    /// A one-hour window.
     Hours1,
+    /// A two-hour window.
     Hours2,
+    /// A three-hour window.
     Hours3,
+    /// A four-hour window.
     Hours4,
+    /// A six-hour window.
     Hours6,
+    /// An eight-hour window.
     Hours8,
+    /// A twelve-hour window.
     Hours12,
+    /// A twenty-four-hour window.
     Hours24,
+    /// A one-day window.
     Days1,
+    /// A seven-day window.
     Days7,
+    /// A one-week window.
     Weeks1,
+    /// A two-week window.
     Weeks2,
+    /// A four-week window.
     Weeks4,
+    /// A one-month window.
     Months1,
+    /// A two-month window.
     Months2,
+    /// A three-month window.
     Months3,
+    /// A four-month window.
     Months4,
+    /// A six-month window.
     Months6,
+    /// A twelve-month window.
     Months12,
+    /// A one-year window.
     Years1,
+    /// A two-year window.
     Years2,
 }
 
@@ -67,11 +103,14 @@ pub enum AlignedWindow {
 /// `lower` is inclusive and `upper` is exclusive.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct AlignedTimestampBounds {
+    /// The inclusive lower bound in milliseconds.
     pub lower: i64,
+    /// The exclusive upper bound in milliseconds.
     pub upper: i64,
 }
 
 impl AlignedTimestampBounds {
+    /// Creates bounds from an inclusive lower and exclusive upper timestamp.
     pub fn new(lower: i64, upper: i64) -> Self {
         Self { lower, upper }
     }
@@ -161,6 +200,7 @@ impl AlignedWindow {
         })
     }
 
+    /// Returns the exact window length in milliseconds for fixed-length windows.
     pub fn millis_exact(&self) -> Option<u32> {
         match self {
             AlignedWindow::Seconds1 => Some(MILLIS_PER_SECOND),
@@ -201,6 +241,7 @@ impl AlignedWindow {
         }
     }
 
+    /// Returns an upper bound on the window length in milliseconds.
     pub fn millis_upper_bound(&self) -> u64 {
         if let Some(millis) = self.millis_exact() {
             return millis as u64;
@@ -221,6 +262,7 @@ impl AlignedWindow {
         }
     }
 
+    /// Returns the exact number of months for calendar-based windows.
     pub fn months_exact(&self) -> Option<u32> {
         match self {
             AlignedWindow::Months1 => Some(1),
@@ -234,6 +276,7 @@ impl AlignedWindow {
         }
     }
 
+    /// Adds the window length to a UTC date and time.
     pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         if let Some(millis) = self.millis_exact() {
             date_time.checked_add_signed(Duration::milliseconds(i64::from(millis)))
@@ -242,6 +285,7 @@ impl AlignedWindow {
         }
     }
 
+    /// Subtracts the window length from a UTC date and time.
     pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         if let Some(millis) = self.millis_exact() {
             date_time.checked_sub_signed(Duration::milliseconds(i64::from(millis)))
@@ -250,6 +294,7 @@ impl AlignedWindow {
         }
     }
 
+    /// Returns the short label for the window, such as `1h` or `7d`.
     pub fn label(self) -> String {
         match self {
             AlignedWindow::Seconds1 => "1s".to_string(),

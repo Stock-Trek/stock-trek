@@ -5,8 +5,10 @@ use crate::market_data::{
 use serde::{Deserialize, Deserializer, Serialize};
 use std::sync::OnceLock;
 
+/// A collection of recent market ticks.
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketTicks {
+    /// The ticks in chronological order.
     pub ticks: Vec<MarketTick>,
     #[serde(skip)]
     bids: OnceLock<Vec<TimedPriceQuantity>>,
@@ -31,6 +33,7 @@ impl<'de> Deserialize<'de> for MarketTicks {
 }
 
 impl MarketTicks {
+    /// Creates a tick collection from a list of ticks.
     pub fn new(ticks: Vec<MarketTick>) -> Self {
         Self {
             ticks,
@@ -39,12 +42,15 @@ impl MarketTicks {
             lasts: OnceLock::new(),
         }
     }
+    /// Returns the bid quotes as timestamped price/quantity tuples.
     pub fn bid_timed_price_quantities(&self) -> &Vec<TimedPriceQuantity> {
         self.bids.get_or_init(|| self.values(|tick| &tick.bid))
     }
+    /// Returns the ask quotes as timestamped price/quantity tuples.
     pub fn ask_timed_price_quantities(&self) -> &Vec<TimedPriceQuantity> {
         self.asks.get_or_init(|| self.values(|tick| &tick.ask))
     }
+    /// Returns the last-trade quotes as timestamped price/quantity tuples.
     pub fn last_timed_price_quantities(&self) -> &Vec<TimedPriceQuantity> {
         self.lasts.get_or_init(|| self.values(|tick| &tick.last))
     }
