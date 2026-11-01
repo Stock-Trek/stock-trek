@@ -2,17 +2,27 @@ use super::*;
 use crate::market_data::window_test_support::window_tests;
 use strum::IntoEnumIterator;
 
-fn millis_at(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> i64 {
-    Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
-        .unwrap()
-        .timestamp_millis()
+fn millis_at(
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+    second: u32,
+) -> TimestampMillis {
+    TimestampMillis::try_from(
+        Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
+            .unwrap()
+            .timestamp_millis(),
+    )
+    .unwrap()
 }
 
-fn bounds_for(window: AlignedWindow, timestamp: i64) -> AlignedTimestampBounds {
+fn bounds_for(window: AlignedWindow, timestamp: TimestampMillis) -> AlignedTimestampBounds {
     window.bounds_for(timestamp).unwrap()
 }
 
-fn timestamps(lower: i64, upper: i64) -> AlignedTimestampBounds {
+fn timestamps(lower: TimestampMillis, upper: TimestampMillis) -> AlignedTimestampBounds {
     AlignedTimestampBounds::new(lower, upper)
 }
 
@@ -32,7 +42,7 @@ fn is_calendar_window(window: AlignedWindow) -> bool {
 
 #[test]
 fn bounds_for_returns_containing_bounds() {
-    let timestamps: [i64; 7] = [-1_700_000_000_123, -1, 0, 1, 999, 1_000, 1_700_000_000_123];
+    let timestamps: [TimestampMillis; 5] = [0, 1, 999, 1_000, 1_700_000_000_123];
 
     for window in AlignedWindow::iter() {
         for timestamp in timestamps {
@@ -42,27 +52,12 @@ fn bounds_for_returns_containing_bounds() {
             assert!(timestamp < upper);
 
             if !is_calendar_window(window) {
-                let window_millis = i64::try_from(window.millis_upper_bound().unwrap()).unwrap();
+                let window_millis = window.millis_upper_bound().unwrap();
                 assert_eq!(upper - lower, window_millis);
                 assert_eq!(lower % window_millis, 0);
             }
         }
     }
-}
-
-#[test]
-fn bounds_for_handles_pre_epoch_timestamps() {
-    assert_eq!(
-        bounds_for(AlignedWindow::Seconds1, -1),
-        timestamps(-1_000, 0)
-    );
-    assert_eq!(
-        bounds_for(AlignedWindow::Months1, millis_at(1969, 12, 15, 12, 0, 0)),
-        timestamps(
-            millis_at(1969, 12, 1, 0, 0, 0),
-            millis_at(1970, 1, 1, 0, 0, 0)
-        )
-    );
 }
 
 #[test]
@@ -176,7 +171,7 @@ fn bounds_for_month_windows_include_window_boundaries() {
 fn bounds_for_month_windows_handle_leap_years() {
     let february_2024 = bounds_for(AlignedWindow::Months1, millis_at(2024, 2, 15, 0, 0, 0));
     let february_2023 = bounds_for(AlignedWindow::Months1, millis_at(2023, 2, 15, 0, 0, 0));
-    let days_millis = i64::from(24 * MILLIS_PER_HOUR);
+    let days_millis = TimestampMillis::from(24 * MILLIS_PER_HOUR);
 
     assert_eq!(
         (february_2024.upper - february_2024.lower) / days_millis,
