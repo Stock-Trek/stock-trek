@@ -1,3 +1,4 @@
+use crate::pending_order::PendingOrder;
 use rust_decimal::Decimal;
 use std::collections::HashMap;
 use stock_trek_types::cex::{
@@ -18,14 +19,6 @@ pub struct CexAccountPortfolio {
     pending_orders: HashMap<Tag, Vec<PendingOrder>>,
 }
 
-/// An order with the quantities that have already been filled.
-#[derive(Debug, Clone)]
-pub struct PendingOrder {
-    order_request: OrderRequest<AssetId, Decimal>,
-    filled_base_quantity: Decimal,
-    filled_quote_quantity: Decimal,
-}
-
 impl Portfolio {
     /// Creates a portfolio from CEX and account portfolios.
     pub fn new(portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>) -> Self {
@@ -37,6 +30,93 @@ impl Portfolio {
             .get(cex_id)
             .map(|map| map.contains_key(account_id))
             .unwrap_or_default()
+    }
+
+    /// Iterates over every CEX account and its portfolio.
+    ///
+    /// Each item is `(cex_id, account_id, account_portfolio)`. This is the
+    /// primary way for an algorithm to discover which accounts it can use.
+    pub fn cex_accounts(&self) -> impl Iterator<Item = (&CexId, &AccountId, &CexAccountPortfolio)> {
+        self.portfolios.iter().flat_map(|(cex_id, accounts)| {
+            accounts
+                .iter()
+                .map(move |(account_id, portfolio)| (cex_id, account_id, portfolio))
+        })
+    }
+
+    /// Iterates over every `(cex_id, account_id)` pair in the portfolio.
+    pub fn accounts(&self) -> impl Iterator<Item = (&CexId, &AccountId)> {
+        self.cex_accounts()
+            .map(|(cex_id, account_id, _)| (cex_id, account_id))
+    }
+
+    /// Iterates over the account identifiers in a specific CEX.
+    pub fn accounts_in_cex(&self, cex_id: &CexId) -> impl Iterator<Item = &AccountId> {
+        self.portfolios
+            .get(cex_id)
+            .into_iter()
+            .flat_map(|accounts| accounts.keys())
+    }
+
+    /// Returns the portfolio for a specific CEX account, if it exists.
+    pub fn cex_account(
+        &self,
+        cex_id: &CexId,
+        account_id: &AccountId,
+    ) -> Option<&CexAccountPortfolio> {
+        self.portfolios
+            .get(cex_id)
+            .and_then(|accounts| accounts.get(account_id))
+    }
+
+    /// Returns the portfolio for a specific CEX account, if it exists.
+    ///
+    /// This is an alias for [`Portfolio::cex_account`].
+    pub fn account(&self, cex_id: &CexId, account_id: &AccountId) -> Option<&CexAccountPortfolio> {
+        self.cex_account(cex_id, account_id)
+    }
+
+    /// Iterates over every pending order with its CEX, account, and tag.
+    ///
+    /// Each item is `(cex_id, account_id, tag, pending_order)`.
+    pub fn pending_orders_iter(
+        &self,
+    ) -> impl Iterator<Item = (&CexId, &AccountId, &Tag, &PendingOrder)> {
+        self.cex_accounts()
+            .flat_map(|(cex_id, account_id, portfolio)| {
+                portfolio
+                    .pending_orders
+                    .iter()
+                    .flat_map(move |(tag, orders)| {
+                        orders
+                            .iter()
+                            .map(move |order| (cex_id, account_id, tag, order))
+                    })
+            })
+    }
+
+    /// Iterates over the pending orders in a specific CEX account.
+    pub fn pending_orders_in_cex_account_iter(
+        &self,
+        cex_id: &CexId,
+        account_id: &AccountId,
+    ) -> impl Iterator<Item = (&Tag, &PendingOrder)> {
+        self.cex_account(cex_id, account_id)
+            .into_iter()
+            .flat_map(|portfolio| portfolio.pending_orders_iter())
+    }
+
+    /// Iterates over the pending orders with `tag` in a specific CEX account.
+    pub fn pending_orders_in_cex_account_with_tag_iter<'a>(
+        &'a self,
+        cex_id: &CexId,
+        account_id: &AccountId,
+        tag: &'a Tag,
+    ) -> impl Iterator<Item = &'a PendingOrder> {
+        self.cex_account(cex_id, account_id)
+            .and_then(|portfolio| portfolio.pending_orders_with_tag(tag))
+            .into_iter()
+            .flatten()
     }
 
     /// Total number of pending orders across all CEXes and accounts.
@@ -165,15 +245,14 @@ impl Portfolio {
         pending_order: &PendingOrder,
         asset_id: &AssetId,
     ) -> Decimal {
-        match &pending_order.order_request {
+        match pending_order.order_request() {
             OrderRequest::Limit {
                 base,
-                quote,
-                side,
+                side: Side::Sell,
                 limit_price,
                 quantity,
                 ..
-            } if asset_id == base && Side::Sell == *side => {
+            } if asset_id == base => {
                 let base_quantity = match quantity {
                     Quantity::OfBase(base_quantity) => *base_quantity,
                     Quantity::OfQuote(quote_quantity) => {
@@ -184,35 +263,34 @@ impl Portfolio {
                         }
                     }
                 };
-                remaining_quantity(base_quantity, pending_order.filled_base_quantity)
+                remaining_quantity(base_quantity, pending_order.filled_base_quantity())
             }
             OrderRequest::Limit {
-                base,
                 quote,
-                side,
+                side: Side::Buy,
                 limit_price,
                 quantity,
                 ..
-            } if asset_id == quote && Side::Buy == *side => {
+            } if asset_id == quote => {
                 let quote_quantity = match quantity {
                     Quantity::OfBase(base_quantity) => base_quantity * limit_price,
                     Quantity::OfQuote(quote_quantity) => *quote_quantity,
                 };
-                remaining_quantity(quote_quantity, pending_order.filled_quote_quantity)
+                remaining_quantity(quote_quantity, pending_order.filled_quote_quantity())
             }
             OrderRequest::MarketBuy {
                 quote,
                 quote_quantity,
                 ..
             } if asset_id == quote => {
-                remaining_quantity(*quote_quantity, pending_order.filled_quote_quantity)
+                remaining_quantity(*quote_quantity, pending_order.filled_quote_quantity())
             }
             OrderRequest::MarketSell {
                 base,
                 base_quantity,
                 ..
             } if asset_id == base => {
-                remaining_quantity(*base_quantity, pending_order.filled_base_quantity)
+                remaining_quantity(*base_quantity, pending_order.filled_base_quantity())
             }
             _ => Decimal::ZERO,
         }
@@ -234,20 +312,42 @@ impl CexAccountPortfolio {
             pending_orders,
         }
     }
-}
 
-impl PendingOrder {
-    /// Creates a pending order with its filled base and quote quantities.
-    pub fn new(
-        order_request: OrderRequest<AssetId, Decimal>,
-        filled_base_quantity: Decimal,
-        filled_quote_quantity: Decimal,
-    ) -> Self {
-        Self {
-            order_request,
-            filled_base_quantity,
-            filled_quote_quantity,
-        }
+    /// Returns all asset balances (available and reserved) keyed by asset.
+    pub fn asset_counts(&self) -> &HashMap<AssetId, Decimal> {
+        &self.asset_counts
+    }
+
+    /// Iterates over all asset balances keyed by asset.
+    pub fn assets(&self) -> impl Iterator<Item = (&AssetId, &Decimal)> {
+        self.asset_counts.iter()
+    }
+
+    /// Returns the total balance (available and reserved) of an asset.
+    ///
+    /// Returns zero when the account does not hold the asset.
+    pub fn asset_count(&self, asset_id: &AssetId) -> Decimal {
+        self.asset_counts
+            .get(asset_id)
+            .copied()
+            .unwrap_or(Decimal::ZERO)
+    }
+
+    /// Returns all pending orders grouped by tag.
+    pub fn pending_orders(&self) -> &HashMap<Tag, Vec<PendingOrder>> {
+        &self.pending_orders
+    }
+
+    /// Returns the pending orders with the given tag, if any.
+    pub fn pending_orders_with_tag(&self, tag: &Tag) -> Option<&[PendingOrder]> {
+        self.pending_orders.get(tag).map(Vec::as_slice)
+    }
+
+    /// Iterates over every pending order together with its tag.
+    pub fn pending_orders_iter(&self) -> impl Iterator<Item = (&Tag, &PendingOrder)> {
+        self.pending_orders
+            .iter()
+            .flat_map(|(tag, orders)| orders.iter().map(move |order| (tag, order)))
     }
 }
 
@@ -315,11 +415,11 @@ impl PortfolioBuilder {
             .pending_orders
             .entry(tag)
             .or_default()
-            .push(PendingOrder {
+            .push(PendingOrder::new(
                 order_request,
                 filled_base_quantity,
                 filled_quote_quantity,
-            });
+            ));
         self
     }
 
@@ -437,5 +537,55 @@ mod tests {
         };
         let portfolio = portfolio_with(market_sell, Decimal::from(15), Decimal::ZERO);
         assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), Decimal::ZERO);
+    }
+
+    #[test]
+    fn accounts_can_be_discovered_with_their_details() {
+        let portfolio = portfolio_with(
+            limit_sell(Quantity::OfBase(Decimal::from(10)), Decimal::from(100)),
+            Decimal::from(4),
+            Decimal::ZERO,
+        );
+
+        let accounts = portfolio.accounts().collect::<Vec<_>>();
+        assert_eq!(accounts.len(), 1);
+        assert_eq!(accounts[0].0, &CexId::Binance);
+        assert_eq!(accounts[0].1, &AccountId::new("account"));
+
+        let account = portfolio
+            .cex_account(&CexId::Binance, &AccountId::new("account"))
+            .unwrap();
+        assert_eq!(
+            account.asset_counts().get(&AssetId::Bitcoin),
+            Some(&Decimal::from(100))
+        );
+        assert_eq!(account.asset_count(&AssetId::Bitcoin), Decimal::from(100));
+
+        let pending_orders = account.pending_orders_with_tag(&Tag::new("tag")).unwrap();
+        assert_eq!(pending_orders.len(), 1);
+        assert_eq!(pending_orders[0].filled_base_quantity(), Decimal::from(4));
+        assert_eq!(pending_orders[0].filled_quote_quantity(), Decimal::ZERO);
+        assert!(matches!(
+            pending_orders[0].order_request(),
+            OrderRequest::Limit { .. }
+        ));
+
+        assert_eq!(portfolio.pending_orders_iter().count(), 1);
+        assert_eq!(
+            portfolio
+                .pending_orders_in_cex_account_iter(&CexId::Binance, &AccountId::new("account"))
+                .count(),
+            1
+        );
+        assert_eq!(
+            portfolio
+                .pending_orders_in_cex_account_with_tag_iter(
+                    &CexId::Binance,
+                    &AccountId::new("account"),
+                    &Tag::new("tag"),
+                )
+                .count(),
+            1
+        );
     }
 }
