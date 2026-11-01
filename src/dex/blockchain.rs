@@ -1,5 +1,9 @@
 //! Blockchain definitions and address validation.
 
+use crate::error::{
+    dex::DexError,
+    result::{StockTrekError, StockTrekResult},
+};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as};
@@ -40,21 +44,27 @@ impl FamilyId {
 impl Blockchain {
     /// Creates a blockchain definition.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Panics if `address_format` is not a valid regular expression.
+    /// Returns an error if `address_format` is not a valid regular expression.
     pub fn new(
         blockchain_id: BlockchainId,
         family_id: FamilyId,
         native_decimals: u8,
         address_format: String,
-    ) -> Self {
-        Self {
+    ) -> StockTrekResult<Self> {
+        let address_regex = Regex::new(&address_format).map_err(|error| {
+            StockTrekError::Dex(DexError::InvalidAddressFormat {
+                blockchain_id: blockchain_id.to_string(),
+                message: error.to_string(),
+            })
+        })?;
+        Ok(Self {
             blockchain_id,
             family_id,
             native_decimals,
-            address_regex: Regex::new(&address_format).expect("Invalid blockchain regex"),
-        }
+            address_regex,
+        })
     }
     /// Returns whether `contract_address` matches the blockchain's address format.
     pub fn is_valid_address(&self, contract_address: &str) -> bool {
@@ -77,5 +87,32 @@ impl std::fmt::Display for BlockchainId {
 impl std::fmt::Display for FamilyId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn blockchain(address_format: &str) -> StockTrekResult<Blockchain> {
+        Blockchain::new(
+            BlockchainId::new("test"),
+            FamilyId::new("test"),
+            18,
+            address_format.to_string(),
+        )
+    }
+
+    #[test]
+    fn creates_a_blockchain_with_a_valid_address_format() {
+        let blockchain = blockchain("^0x[a-fA-F0-9]{40}$").unwrap();
+
+        assert!(blockchain.is_valid_address("0x0000000000000000000000000000000000000000"));
+        assert!(!blockchain.is_valid_address("not-an-address"));
+    }
+
+    #[test]
+    fn returns_an_error_for_an_invalid_address_format() {
+        assert!(blockchain("(").is_err());
     }
 }

@@ -4,6 +4,7 @@ use crate::dex::{
     blockchain::{Blockchain, BlockchainId, FamilyId},
     network::{ChainId, Network, NetworkId},
 };
+use crate::error::result::StockTrekResult;
 
 pub const FAMILY_ID_BITCOIN: &str = "bitcoin";
 pub const FAMILY_ID_BITCOIN_CASH: &str = "bitcoin-cash";
@@ -18,6 +19,7 @@ pub const FAMILY_ID_TRON: &str = "tron";
 
 pub mod arbitrum {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -53,13 +55,14 @@ pub mod arbitrum {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("arbitrum", network, asset_kind)
     }
 }
 
 pub mod avalanche {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -92,13 +95,14 @@ pub mod avalanche {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("avalanche", network, asset_kind)
     }
 }
 
 pub mod base {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -131,13 +135,14 @@ pub mod base {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("base", network, asset_kind)
     }
 }
 
 pub mod bitcoin {
     use crate::dex::network::{Network, NetworkId};
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -166,20 +171,23 @@ pub mod bitcoin {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         let blockchain = super::blockchain(
             "bitcoin",
             super::FAMILY_ID_BITCOIN,
             8,
             r"^([13][1-9A-HJ-NP-Za-km-z]{25,34}|bc1[ac-hj-np-z02-9]{39,59}|bc1p[ac-hj-np-z02-9]{58,59})$",
-        );
+        )?;
         let network = Network::new(network.into(), None);
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+            blockchain, network, asset_kind,
+        ))
     }
 }
 
 pub mod bitcoin_cash {
     use crate::dex::network::{Network, NetworkId};
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -204,20 +212,23 @@ pub mod bitcoin_cash {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         let blockchain = super::blockchain(
             "bitcoin-cash",
             super::FAMILY_ID_BITCOIN_CASH,
             8,
             "^(bitcoincash:)?(q|p)[a-zA-HJ-NP-Z0-9]{41,42}$",
-        );
+        )?;
         let network = Network::new(network.into(), None);
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+            blockchain, network, asset_kind,
+        ))
     }
 }
 
 pub mod bsc {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -250,13 +261,14 @@ pub mod bsc {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("bsc", network, asset_kind)
     }
 }
 
 pub mod celo {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -289,13 +301,14 @@ pub mod celo {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("celo", network, asset_kind)
     }
 }
 
 pub mod cosmos {
     use crate::dex::network::{Network, NetworkId};
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -320,20 +333,23 @@ pub mod cosmos {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         let blockchain = super::blockchain(
             "cosmos",
             super::FAMILY_ID_COSMOS,
             6,
             "^cosmos1[a-zA-HJ-NP-Z0-9]{38}$",
-        );
+        )?;
         let network = Network::new(network.into(), None);
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+            blockchain, network, asset_kind,
+        ))
     }
 }
 
 pub mod cronos {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -366,13 +382,14 @@ pub mod cronos {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("cronos", network, asset_kind)
     }
 }
 
 pub mod dogecoin {
     use crate::dex::network::{Network, NetworkId};
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -397,20 +414,23 @@ pub mod dogecoin {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         let blockchain = super::blockchain(
             "dogecoin",
             super::FAMILY_ID_DOGECOIN,
             8,
             "^D[1-9A-HJ-NP-Za-km-z]{25,34}$",
-        );
+        )?;
         let network = Network::new(network.into(), None);
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+            blockchain, network, asset_kind,
+        ))
     }
 }
 
 pub mod ethereum {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -446,13 +466,14 @@ pub mod ethereum {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("ethereum", network, asset_kind)
     }
 }
 
 pub mod fantom {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -485,13 +506,14 @@ pub mod fantom {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("fantom", network, asset_kind)
     }
 }
 
 pub mod gnosis {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -524,13 +546,14 @@ pub mod gnosis {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("gnosis", network, asset_kind)
     }
 }
 
 pub mod litecoin {
     use crate::dex::network::{Network, NetworkId};
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -555,20 +578,23 @@ pub mod litecoin {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         let blockchain = super::blockchain(
             "litecoin",
             super::FAMILY_ID_LITECOIN,
             8,
             "^(L|M|ltc1|ltc1p)[a-zA-HJ-NP-Z0-9]{26,60}$",
-        );
+        )?;
         let network = Network::new(network.into(), None);
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+            blockchain, network, asset_kind,
+        ))
     }
 }
 
 pub mod moonbeam {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -601,13 +627,14 @@ pub mod moonbeam {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("moonbeam", network, asset_kind)
     }
 }
 
 pub mod near {
     use crate::dex::network::{Network, NetworkId};
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -632,20 +659,23 @@ pub mod near {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         let blockchain = super::blockchain(
             "near",
             super::FAMILY_ID_NEAR,
             24,
             "^(([a-z0-9]+[\\-_])?[a-z0-9]+\\.)?([a-z0-9]+[\\-_])?[a-z0-9]+$",
-        );
+        )?;
         let network = Network::new(network.into(), None);
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+            blockchain, network, asset_kind,
+        ))
     }
 }
 
 pub mod optimism {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -678,13 +708,14 @@ pub mod optimism {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("optimism", network, asset_kind)
     }
 }
 
 pub mod osmosis {
     use crate::dex::network::{Network, NetworkId};
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -709,20 +740,23 @@ pub mod osmosis {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         let blockchain = super::blockchain(
             "osmosis",
             super::FAMILY_ID_OSMOSIS,
             6,
             "^osmo1[a-zA-HJ-NP-Z0-9]{38}$",
-        );
+        )?;
         let network = Network::new(network.into(), None);
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+            blockchain, network, asset_kind,
+        ))
     }
 }
 
 pub mod polygon {
     use crate::dex::network::NetworkId;
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -758,13 +792,14 @@ pub mod polygon {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         super::evm_asset_on_chain("polygon", network, asset_kind)
     }
 }
 
 pub mod solana {
     use crate::dex::network::{Network, NetworkId};
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -791,20 +826,23 @@ pub mod solana {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         let blockchain = super::blockchain(
             "solana",
             super::FAMILY_ID_SOLANA,
             9,
             "^[1-9A-HJ-NP-Za-km-z]{32,44}$",
-        );
+        )?;
         let network = Network::new(network.into(), None);
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+            blockchain, network, asset_kind,
+        ))
     }
 }
 
 pub mod tron {
     use crate::dex::network::{Network, NetworkId};
+    use crate::error::result::StockTrekResult;
     use serde::{Deserialize, Serialize};
     use strum::Display;
 
@@ -831,11 +869,13 @@ pub mod tron {
     pub fn asset_on_chain(
         network: NetworkName,
         asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> crate::dex::asset_on_chain::AssetOnChain {
+    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
         let blockchain =
-            super::blockchain("tron", super::FAMILY_ID_TRON, 6, "^T[a-zA-HJ-NP-Z0-9]{33}$");
+            super::blockchain("tron", super::FAMILY_ID_TRON, 6, "^T[a-zA-HJ-NP-Z0-9]{33}$")?;
         let network = Network::new(network.into(), None);
-        crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
+        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+            blockchain, network, asset_kind,
+        ))
     }
 }
 
@@ -844,7 +884,7 @@ fn blockchain(
     family_id: &str,
     native_decimals: u8,
     address_format: &str,
-) -> Blockchain {
+) -> StockTrekResult<Blockchain> {
     Blockchain::new(
         BlockchainId::new(blockchain_id),
         FamilyId::new(family_id),
@@ -853,7 +893,7 @@ fn blockchain(
     )
 }
 
-fn evm_blockchain(blockchain_name: &str) -> Blockchain {
+fn evm_blockchain(blockchain_name: &str) -> StockTrekResult<Blockchain> {
     Blockchain::new(
         BlockchainId::new(blockchain_name),
         FamilyId::new(FAMILY_ID_EVM),
@@ -866,8 +906,8 @@ fn evm_asset_on_chain(
     blockchain_name: &str,
     network: impl Into<NetworkId> + Into<u64> + Copy,
     asset_kind: AssetKind,
-) -> AssetOnChain {
-    let blockchain = evm_blockchain(blockchain_name);
+) -> StockTrekResult<AssetOnChain> {
+    let blockchain = evm_blockchain(blockchain_name)?;
     let network = Network::new(network.into(), Some(ChainId::new(network.into())));
-    AssetOnChain::new(blockchain, network, asset_kind)
+    Ok(AssetOnChain::new(blockchain, network, asset_kind))
 }
