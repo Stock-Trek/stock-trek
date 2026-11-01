@@ -1,7 +1,5 @@
-use crate::error::{
-    result::{StockTrekError, StockTrekResult},
-    stats::StatsError,
-};
+use super::operator_error::domain_check;
+use crate::error::result::StockTrekResult;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
@@ -71,71 +69,43 @@ impl UnaryOperator {
         let calculation_result = match self {
             UnaryOperator::Abs => value.abs(),
             UnaryOperator::Acos => {
-                if value < -1.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Acos",
-                        message: format!("value {} outside [-1, 1]", value),
-                    }));
-                }
-                if value > 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Acos",
-                        message: format!("value {} outside [-1, 1]", value),
-                    }));
-                }
+                domain_check!(
+                    value < -1.0 || value > 1.0,
+                    "Acos",
+                    format!("value {} outside [-1, 1]", value)
+                );
                 value.acos()
             }
             UnaryOperator::Acosh => {
-                if value < 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Acosh",
-                        message: format!("value {} < 1", value),
-                    }));
-                }
+                domain_check!(value < 1.0, "Acosh", format!("value {} < 1", value));
                 value.acosh()
             }
             UnaryOperator::Asin => {
-                if value < -1.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Asin",
-                        message: format!("value {} outside [-1, 1]", value),
-                    }));
-                }
-                if value > 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Asin",
-                        message: format!("value {} outside [-1, 1]", value),
-                    }));
-                }
+                domain_check!(
+                    value < -1.0 || value > 1.0,
+                    "Asin",
+                    format!("value {} outside [-1, 1]", value)
+                );
                 value.asin()
             }
             UnaryOperator::Asinh => value.asinh(),
             UnaryOperator::Atan => value.atan(),
             UnaryOperator::Atanh => {
-                if value == -1.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Atanh",
-                        message: "value = -1 produces negative infinity".to_string(),
-                    }));
-                }
-                if value == 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Atanh",
-                        message: "value = 1 produces positive infinity".to_string(),
-                    }));
-                }
-                if value < -1.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Atanh",
-                        message: format!("value {} outside [-1, 1]", value),
-                    }));
-                }
-                if value > 1.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Atanh",
-                        message: format!("value {} outside [-1, 1]", value),
-                    }));
-                }
+                domain_check!(
+                    value == -1.0,
+                    "Atanh",
+                    "value = -1 produces negative infinity"
+                );
+                domain_check!(
+                    value == 1.0,
+                    "Atanh",
+                    "value = 1 produces positive infinity"
+                );
+                domain_check!(
+                    value < -1.0 || value > 1.0,
+                    "Atanh",
+                    format!("value {} outside [-1, 1]", value)
+                );
                 value.atanh()
             }
             UnaryOperator::Ceil => value.ceil(),
@@ -146,48 +116,30 @@ impl UnaryOperator {
             UnaryOperator::Floor => value.floor(),
             UnaryOperator::Frac => value.fract(),
             UnaryOperator::Log10 => {
-                if value == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Log10",
-                        message: "value = 0 is undefined".to_string(),
-                    }));
-                }
-                if value < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Log10",
-                        message: format!("value {} < 0 would produce a complex number", value),
-                    }));
-                }
+                domain_check!(value == 0.0, "Log10", "value = 0 is undefined");
+                domain_check!(
+                    value < 0.0,
+                    "Log10",
+                    format!("value {} < 0 would produce a complex number", value)
+                );
                 value.log10()
             }
             UnaryOperator::Log2 => {
-                if value == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Log2",
-                        message: "value = 0 is undefined".to_string(),
-                    }));
-                }
-                if value < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Log2",
-                        message: format!("value {} < 0 would produce a complex number", value),
-                    }));
-                }
+                domain_check!(value == 0.0, "Log2", "value = 0 is undefined");
+                domain_check!(
+                    value < 0.0,
+                    "Log2",
+                    format!("value {} < 0 would produce a complex number", value)
+                );
                 value.log2()
             }
             UnaryOperator::LogE => {
-                if value == 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "LogE",
-                        message: "value = 0 is undefined".to_string(),
-                    }));
-                }
-                if value < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "LogE",
-                        message: format!("value {} < 0 would produce a complex number", value),
-                    }));
-                }
+                domain_check!(value == 0.0, "LogE", "value = 0 is undefined");
+                domain_check!(
+                    value < 0.0,
+                    "LogE",
+                    format!("value {} < 0 would produce a complex number", value)
+                );
                 value.ln()
             }
             UnaryOperator::Neg => -value,
@@ -196,12 +148,11 @@ impl UnaryOperator {
             UnaryOperator::Sin => value.sin(),
             UnaryOperator::Sinh => value.sinh(),
             UnaryOperator::Sqrt => {
-                if value < 0.0 {
-                    return Err(StockTrekError::Stats(StatsError::DomainError {
-                        function: "Sqrt",
-                        message: format!("value {} < 0 would produce a complex number", value),
-                    }));
-                }
+                domain_check!(
+                    value < 0.0,
+                    "Sqrt",
+                    format!("value {} < 0 would produce a complex number", value)
+                );
                 value.sqrt()
             }
             UnaryOperator::Tan => value.tan(),
