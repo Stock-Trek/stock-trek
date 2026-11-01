@@ -4,11 +4,10 @@ use crate::{
 };
 use chrono::{DateTime, Datelike, Duration, Months, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
-use strum::{Display, EnumCount, EnumIter, FromRepr};
+use strum::{EnumCount, EnumIter, FromRepr};
 
 #[derive(
     Debug,
-    Display,
     Clone,
     Copy,
     PartialOrd,
@@ -23,7 +22,6 @@ use strum::{Display, EnumCount, EnumIter, FromRepr};
     Deserialize,
 )]
 #[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
 #[repr(u8)]
 pub enum AlignedWindow {
@@ -357,6 +355,12 @@ impl AlignedWindow {
     }
 }
 
+impl std::fmt::Display for AlignedWindow {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.label())
+    }
+}
+
 impl TryFrom<&str> for AlignedWindow {
     type Error = StockTrekError;
 
@@ -667,6 +671,25 @@ mod tests {
 
         for window in AlignedWindow::iter().filter(|window| !is_calendar_window(*window)) {
             assert_eq!(window.months_exact(), None);
+        }
+    }
+
+    #[test]
+    fn display_uses_short_labels() {
+        assert_eq!(AlignedWindow::Seconds1.to_string(), "1s");
+        assert_eq!(AlignedWindow::Hours24.to_string(), "24h");
+        assert_eq!(AlignedWindow::Months1.to_string(), "1mo");
+        assert_eq!(AlignedWindow::Years2.to_string(), "2y");
+    }
+
+    #[test]
+    fn display_round_trips_through_try_from() {
+        for window in AlignedWindow::iter() {
+            assert_eq!(window.label(), window.to_string());
+            assert_eq!(
+                AlignedWindow::try_from(window.to_string().as_str()).unwrap(),
+                window
+            );
         }
     }
 }
