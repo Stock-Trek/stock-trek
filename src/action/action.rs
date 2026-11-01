@@ -30,14 +30,14 @@ pub enum Action {
         /// The optional tag of the orders to cancel.
         tag: Option<Tag>,
     },
-    /// Cancels all orders across all CEX accounts.
+    /// Cancels all orders in a CEX.
     CancelAllOrdersInCex {
         /// The CEX containing the account.
         cex_id_value: CexIdValue,
         /// The optional tag of the orders to cancel.
         tag: Option<Tag>,
     },
-    /// Cancels all orders across all CEX accounts.
+    /// Cancels all orders in a CEX account.
     CancelAllOrdersInCexAccount {
         /// The CEX containing the account.
         cex_id_value: CexIdValue,
