@@ -126,9 +126,6 @@ mod tests {
         let json = serde_json::to_string(&market).unwrap();
         let deserialized: MarketAlignedWindow = serde_json::from_str(&json).unwrap();
 
-        assert_eq!(
-            deserialized.opens(AlignedWindow::Minutes1),
-            Some(vec![1.0])
-        );
+        assert_eq!(deserialized.opens(AlignedWindow::Minutes1), Some(vec![1.0]));
     }
 }

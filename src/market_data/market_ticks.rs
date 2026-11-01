@@ -74,10 +74,7 @@ mod tests {
 
         assert_eq!(ticks.bid_timed_price_quantities(), vec![(1, 100.0, 2.0)]);
         assert_eq!(ticks.ask_timed_price_quantities(), vec![(1, 101.0, 3.0)]);
-        assert_eq!(
-            ticks.last_timed_price_quantities(),
-            vec![(1, 100.5, 4.0)]
-        );
+        assert_eq!(ticks.last_timed_price_quantities(), vec![(1, 100.5, 4.0)]);
 
         ticks.ticks[0].bid.price = 200.0;
         ticks.ticks[0].ask.price = 201.0;
@@ -85,10 +82,7 @@ mod tests {
 
         assert_eq!(ticks.bid_timed_price_quantities(), vec![(1, 200.0, 2.0)]);
         assert_eq!(ticks.ask_timed_price_quantities(), vec![(1, 201.0, 3.0)]);
-        assert_eq!(
-            ticks.last_timed_price_quantities(),
-            vec![(1, 200.5, 4.0)]
-        );
+        assert_eq!(ticks.last_timed_price_quantities(), vec![(1, 200.5, 4.0)]);
     }
 
     #[test]
@@ -97,6 +91,9 @@ mod tests {
         let json = serde_json::to_string(&ticks).unwrap();
         let deserialized: MarketTicks = serde_json::from_str(&json).unwrap();
 
-        assert_eq!(deserialized.bid_timed_price_quantities(), vec![(1, 100.0, 2.0)]);
+        assert_eq!(
+            deserialized.bid_timed_price_quantities(),
+            vec![(1, 100.0, 2.0)]
+        );
     }
 }
