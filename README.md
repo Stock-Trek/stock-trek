@@ -26,7 +26,6 @@ An example implementing a cost averaging algorithm follows:
 
 ```rs
 use stock_trek::prelude::*;
-use crate::prelude::*;
 use std::cmp::Ordering;
 
 pub struct CostAveraging {
