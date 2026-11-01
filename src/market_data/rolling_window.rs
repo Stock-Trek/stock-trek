@@ -1,3 +1,7 @@
+use crate::{
+    errors::{StockTrekError, ValueError},
+    market_data::millis::*,
+};
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumCount, EnumIter, FromRepr};
@@ -23,6 +27,7 @@ use strum::{Display, EnumCount, EnumIter, FromRepr};
 #[non_exhaustive]
 #[repr(u8)]
 pub enum RollingWindow {
+    Seconds1,
     Seconds5,
     Seconds10,
     Seconds15,
@@ -66,8 +71,54 @@ pub enum RollingWindow {
 }
 
 impl RollingWindow {
+    pub fn millis_upper_bound(&self) -> u64 {
+        match self {
+            RollingWindow::Seconds1 => MILLIS_PER_SECOND,
+            RollingWindow::Seconds5 => 5 * MILLIS_PER_SECOND,
+            RollingWindow::Seconds10 => 10 * MILLIS_PER_SECOND,
+            RollingWindow::Seconds15 => 15 * MILLIS_PER_SECOND,
+            RollingWindow::Seconds30 => 30 * MILLIS_PER_SECOND,
+            RollingWindow::Seconds60 => 60 * MILLIS_PER_SECOND,
+            RollingWindow::Minutes1 => MILLIS_PER_MINUTE,
+            RollingWindow::Minutes2 => 2 * MILLIS_PER_MINUTE,
+            RollingWindow::Minutes3 => 3 * MILLIS_PER_MINUTE,
+            RollingWindow::Minutes5 => 5 * MILLIS_PER_MINUTE,
+            RollingWindow::Minutes10 => 10 * MILLIS_PER_MINUTE,
+            RollingWindow::Minutes15 => 15 * MILLIS_PER_MINUTE,
+            RollingWindow::Minutes30 => 30 * MILLIS_PER_MINUTE,
+            RollingWindow::Minutes45 => 45 * MILLIS_PER_MINUTE,
+            RollingWindow::Minutes60 => 60 * MILLIS_PER_MINUTE,
+            RollingWindow::Minutes90 => 90 * MILLIS_PER_MINUTE,
+            RollingWindow::Hours1 => MILLIS_PER_HOUR,
+            RollingWindow::Hours2 => 2 * MILLIS_PER_HOUR,
+            RollingWindow::Hours3 => 3 * MILLIS_PER_HOUR,
+            RollingWindow::Hours4 => 4 * MILLIS_PER_HOUR,
+            RollingWindow::Hours6 => 6 * MILLIS_PER_HOUR,
+            RollingWindow::Hours8 => 8 * MILLIS_PER_HOUR,
+            RollingWindow::Hours12 => 12 * MILLIS_PER_HOUR,
+            RollingWindow::Hours24 => 24 * MILLIS_PER_HOUR,
+            RollingWindow::Days1 => MILLIS_PER_DAY,
+            RollingWindow::Days2 => 2 * MILLIS_PER_DAY,
+            RollingWindow::Days3 => 3 * MILLIS_PER_DAY,
+            RollingWindow::Days7 => 7 * MILLIS_PER_DAY,
+            RollingWindow::Days14 => 14 * MILLIS_PER_DAY,
+            RollingWindow::Days30 => 30 * MILLIS_PER_DAY,
+            RollingWindow::Days45 => 45 * MILLIS_PER_DAY,
+            RollingWindow::Days60 => 60 * MILLIS_PER_DAY,
+            RollingWindow::Days90 => 90 * MILLIS_PER_DAY,
+            RollingWindow::Days180 => 180 * MILLIS_PER_DAY,
+            RollingWindow::Days360 => 360 * MILLIS_PER_DAY,
+            RollingWindow::Weeks1 => MILLIS_PER_WEEK,
+            RollingWindow::Weeks2 => 2 * MILLIS_PER_WEEK,
+            RollingWindow::Weeks4 => 4 * MILLIS_PER_WEEK,
+            RollingWindow::Weeks10 => 10 * MILLIS_PER_WEEK,
+            RollingWindow::Weeks20 => 20 * MILLIS_PER_WEEK,
+            RollingWindow::Weeks40 => 40 * MILLIS_PER_WEEK,
+        }
+    }
     pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         match self {
+            RollingWindow::Seconds1 => Some(date_time + Duration::seconds(1)),
             RollingWindow::Seconds5 => Some(date_time + Duration::seconds(5)),
             RollingWindow::Seconds10 => Some(date_time + Duration::seconds(10)),
             RollingWindow::Seconds15 => Some(date_time + Duration::seconds(15)),
@@ -112,6 +163,7 @@ impl RollingWindow {
     }
     pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         match self {
+            RollingWindow::Seconds1 => Some(date_time - Duration::seconds(1)),
             RollingWindow::Seconds5 => Some(date_time - Duration::seconds(5)),
             RollingWindow::Seconds10 => Some(date_time - Duration::seconds(10)),
             RollingWindow::Seconds15 => Some(date_time - Duration::seconds(15)),
@@ -152,6 +204,105 @@ impl RollingWindow {
             RollingWindow::Weeks10 => Some(date_time - Duration::weeks(10)),
             RollingWindow::Weeks20 => Some(date_time - Duration::weeks(20)),
             RollingWindow::Weeks40 => Some(date_time - Duration::weeks(40)),
+        }
+    }
+    pub fn label(self) -> String {
+        match self {
+            RollingWindow::Seconds1 => "1s".to_string(),
+            RollingWindow::Seconds5 => "5s".to_string(),
+            RollingWindow::Seconds10 => "10s".to_string(),
+            RollingWindow::Seconds15 => "15s".to_string(),
+            RollingWindow::Seconds30 => "30s".to_string(),
+            RollingWindow::Seconds60 => "60s".to_string(),
+            RollingWindow::Minutes1 => "1m".to_string(),
+            RollingWindow::Minutes2 => "2m".to_string(),
+            RollingWindow::Minutes3 => "3m".to_string(),
+            RollingWindow::Minutes5 => "5m".to_string(),
+            RollingWindow::Minutes10 => "10m".to_string(),
+            RollingWindow::Minutes15 => "15m".to_string(),
+            RollingWindow::Minutes30 => "30m".to_string(),
+            RollingWindow::Minutes45 => "45m".to_string(),
+            RollingWindow::Minutes60 => "60m".to_string(),
+            RollingWindow::Minutes90 => "90m".to_string(),
+            RollingWindow::Hours1 => "1h".to_string(),
+            RollingWindow::Hours2 => "2h".to_string(),
+            RollingWindow::Hours3 => "3h".to_string(),
+            RollingWindow::Hours4 => "4h".to_string(),
+            RollingWindow::Hours6 => "6h".to_string(),
+            RollingWindow::Hours8 => "8h".to_string(),
+            RollingWindow::Hours12 => "12h".to_string(),
+            RollingWindow::Hours24 => "24h".to_string(),
+            RollingWindow::Days1 => "1d".to_string(),
+            RollingWindow::Days2 => "2d".to_string(),
+            RollingWindow::Days3 => "3d".to_string(),
+            RollingWindow::Days7 => "7d".to_string(),
+            RollingWindow::Days14 => "14d".to_string(),
+            RollingWindow::Days30 => "30d".to_string(),
+            RollingWindow::Days45 => "45d".to_string(),
+            RollingWindow::Days60 => "60d".to_string(),
+            RollingWindow::Days90 => "90d".to_string(),
+            RollingWindow::Days180 => "180d".to_string(),
+            RollingWindow::Days360 => "360d".to_string(),
+            RollingWindow::Weeks1 => "1w".to_string(),
+            RollingWindow::Weeks2 => "2w".to_string(),
+            RollingWindow::Weeks4 => "4w".to_string(),
+            RollingWindow::Weeks10 => "10w".to_string(),
+            RollingWindow::Weeks20 => "20w".to_string(),
+            RollingWindow::Weeks40 => "40w".to_string(),
+        }
+    }
+}
+
+impl TryFrom<&str> for RollingWindow {
+    type Error = StockTrekError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "1s" => Ok(RollingWindow::Seconds1),
+            "5s" => Ok(RollingWindow::Seconds5),
+            "10s" => Ok(RollingWindow::Seconds10),
+            "15s" => Ok(RollingWindow::Seconds15),
+            "30s" => Ok(RollingWindow::Seconds30),
+            "60s" => Ok(RollingWindow::Seconds60),
+            "1m" => Ok(RollingWindow::Minutes1),
+            "2m" => Ok(RollingWindow::Minutes2),
+            "3m" => Ok(RollingWindow::Minutes3),
+            "5m" => Ok(RollingWindow::Minutes5),
+            "10m" => Ok(RollingWindow::Minutes10),
+            "15m" => Ok(RollingWindow::Minutes15),
+            "30m" => Ok(RollingWindow::Minutes30),
+            "45m" => Ok(RollingWindow::Minutes45),
+            "60m" => Ok(RollingWindow::Minutes60),
+            "90m" => Ok(RollingWindow::Minutes90),
+            "1h" => Ok(RollingWindow::Hours1),
+            "2h" => Ok(RollingWindow::Hours2),
+            "3h" => Ok(RollingWindow::Hours3),
+            "4h" => Ok(RollingWindow::Hours4),
+            "6h" => Ok(RollingWindow::Hours6),
+            "8h" => Ok(RollingWindow::Hours8),
+            "12h" => Ok(RollingWindow::Hours12),
+            "24h" => Ok(RollingWindow::Hours24),
+            "1d" => Ok(RollingWindow::Days1),
+            "2d" => Ok(RollingWindow::Days2),
+            "3d" => Ok(RollingWindow::Days3),
+            "7d" => Ok(RollingWindow::Days7),
+            "14d" => Ok(RollingWindow::Days14),
+            "30d" => Ok(RollingWindow::Days30),
+            "45d" => Ok(RollingWindow::Days45),
+            "60d" => Ok(RollingWindow::Days60),
+            "90d" => Ok(RollingWindow::Days90),
+            "180d" => Ok(RollingWindow::Days180),
+            "360d" => Ok(RollingWindow::Days360),
+            "1w" => Ok(RollingWindow::Weeks1),
+            "2w" => Ok(RollingWindow::Weeks2),
+            "4w" => Ok(RollingWindow::Weeks4),
+            "10w" => Ok(RollingWindow::Weeks10),
+            "20w" => Ok(RollingWindow::Weeks20),
+            "40w" => Ok(RollingWindow::Weeks40),
+            _ => Err(StockTrekError::Value(ValueError::NotFound {
+                name: "RollingWindow".into(),
+                key: value.into(),
+            })),
         }
     }
 }

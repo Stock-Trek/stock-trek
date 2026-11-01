@@ -1,3 +1,7 @@
+use crate::{
+    errors::{StockTrekError, ValueError},
+    market_data::millis::*,
+};
 use chrono::{DateTime, Duration, Months, Utc};
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumCount, EnumIter, FromRepr};
@@ -23,6 +27,7 @@ use strum::{Display, EnumCount, EnumIter, FromRepr};
 #[non_exhaustive]
 #[repr(u8)]
 pub enum AlignedWindow {
+    Seconds1,
     Seconds5,
     Seconds10,
     Seconds15,
@@ -60,8 +65,48 @@ pub enum AlignedWindow {
 }
 
 impl AlignedWindow {
+    pub fn millis_upper_bound(&self) -> u64 {
+        match self {
+            AlignedWindow::Seconds1 => MILLIS_PER_SECOND,
+            AlignedWindow::Seconds5 => 5 * MILLIS_PER_SECOND,
+            AlignedWindow::Seconds10 => 10 * MILLIS_PER_SECOND,
+            AlignedWindow::Seconds15 => 15 * MILLIS_PER_SECOND,
+            AlignedWindow::Seconds30 => 30 * MILLIS_PER_SECOND,
+            AlignedWindow::Seconds60 => 60 * MILLIS_PER_SECOND,
+            AlignedWindow::Minutes1 => MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes2 => 2 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes3 => 3 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes5 => 5 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes10 => 10 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes15 => 15 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes30 => 30 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes60 => 60 * MILLIS_PER_MINUTE,
+            AlignedWindow::Hours1 => MILLIS_PER_HOUR,
+            AlignedWindow::Hours2 => 2 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours3 => 3 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours4 => 4 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours6 => 6 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours8 => 8 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours12 => 12 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours24 => 24 * MILLIS_PER_HOUR,
+            AlignedWindow::Days1 => MILLIS_PER_DAY,
+            AlignedWindow::Days7 => 7 * MILLIS_PER_DAY,
+            AlignedWindow::Weeks1 => MILLIS_PER_WEEK,
+            AlignedWindow::Weeks2 => 2 * MILLIS_PER_WEEK,
+            AlignedWindow::Weeks4 => 4 * MILLIS_PER_WEEK,
+            AlignedWindow::Months1 => MILLIS_PER_MONTH_UPPER_BOUND,
+            AlignedWindow::Months2 => 2 * MILLIS_PER_MONTH_UPPER_BOUND,
+            AlignedWindow::Months3 => 3 * MILLIS_PER_MONTH_UPPER_BOUND,
+            AlignedWindow::Months4 => 4 * MILLIS_PER_MONTH_UPPER_BOUND,
+            AlignedWindow::Months6 => 6 * MILLIS_PER_MONTH_UPPER_BOUND,
+            AlignedWindow::Months12 => 12 * MILLIS_PER_MONTH_UPPER_BOUND,
+            AlignedWindow::Years1 => MILLIS_PER_YEAR_UPPER_BOUND,
+            AlignedWindow::Years2 => 2 * MILLIS_PER_YEAR_UPPER_BOUND,
+        }
+    }
     pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         match self {
+            AlignedWindow::Seconds1 => Some(date_time + Duration::seconds(1)),
             AlignedWindow::Seconds5 => Some(date_time + Duration::seconds(5)),
             AlignedWindow::Seconds10 => Some(date_time + Duration::seconds(10)),
             AlignedWindow::Seconds15 => Some(date_time + Duration::seconds(15)),
@@ -100,6 +145,7 @@ impl AlignedWindow {
     }
     pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         match self {
+            AlignedWindow::Seconds1 => Some(date_time - Duration::seconds(1)),
             AlignedWindow::Seconds5 => Some(date_time - Duration::seconds(5)),
             AlignedWindow::Seconds10 => Some(date_time - Duration::seconds(10)),
             AlignedWindow::Seconds15 => Some(date_time - Duration::seconds(15)),
@@ -134,6 +180,93 @@ impl AlignedWindow {
             AlignedWindow::Months12 => date_time.checked_sub_months(Months::new(12)),
             AlignedWindow::Years1 => date_time.checked_sub_months(Months::new(12)),
             AlignedWindow::Years2 => date_time.checked_sub_months(Months::new(24)),
+        }
+    }
+    pub fn label(self) -> String {
+        match self {
+            AlignedWindow::Seconds1 => "1s".to_string(),
+            AlignedWindow::Seconds5 => "5s".to_string(),
+            AlignedWindow::Seconds10 => "10s".to_string(),
+            AlignedWindow::Seconds15 => "15s".to_string(),
+            AlignedWindow::Seconds30 => "30s".to_string(),
+            AlignedWindow::Seconds60 => "60s".to_string(),
+            AlignedWindow::Minutes1 => "1m".to_string(),
+            AlignedWindow::Minutes2 => "2m".to_string(),
+            AlignedWindow::Minutes3 => "3m".to_string(),
+            AlignedWindow::Minutes5 => "5m".to_string(),
+            AlignedWindow::Minutes10 => "10m".to_string(),
+            AlignedWindow::Minutes15 => "15m".to_string(),
+            AlignedWindow::Minutes30 => "30m".to_string(),
+            AlignedWindow::Minutes60 => "60m".to_string(),
+            AlignedWindow::Hours1 => "1h".to_string(),
+            AlignedWindow::Hours2 => "2h".to_string(),
+            AlignedWindow::Hours3 => "3h".to_string(),
+            AlignedWindow::Hours4 => "4h".to_string(),
+            AlignedWindow::Hours6 => "6h".to_string(),
+            AlignedWindow::Hours8 => "8h".to_string(),
+            AlignedWindow::Hours12 => "12h".to_string(),
+            AlignedWindow::Hours24 => "24h".to_string(),
+            AlignedWindow::Days1 => "1d".to_string(),
+            AlignedWindow::Days7 => "7d".to_string(),
+            AlignedWindow::Weeks1 => "1w".to_string(),
+            AlignedWindow::Weeks2 => "2w".to_string(),
+            AlignedWindow::Weeks4 => "4w".to_string(),
+            AlignedWindow::Months1 => "1mo".to_string(),
+            AlignedWindow::Months2 => "2mo".to_string(),
+            AlignedWindow::Months3 => "3mo".to_string(),
+            AlignedWindow::Months4 => "4mo".to_string(),
+            AlignedWindow::Months6 => "6mo".to_string(),
+            AlignedWindow::Months12 => "12mo".to_string(),
+            AlignedWindow::Years1 => "1y".to_string(),
+            AlignedWindow::Years2 => "2y".to_string(),
+        }
+    }
+}
+
+impl TryFrom<&str> for AlignedWindow {
+    type Error = StockTrekError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "1s" => Ok(AlignedWindow::Seconds1),
+            "5s" => Ok(AlignedWindow::Seconds5),
+            "10s" => Ok(AlignedWindow::Seconds10),
+            "15s" => Ok(AlignedWindow::Seconds15),
+            "30s" => Ok(AlignedWindow::Seconds30),
+            "60s" => Ok(AlignedWindow::Seconds60),
+            "1m" => Ok(AlignedWindow::Minutes1),
+            "2m" => Ok(AlignedWindow::Minutes2),
+            "3m" => Ok(AlignedWindow::Minutes3),
+            "5m" => Ok(AlignedWindow::Minutes5),
+            "10m" => Ok(AlignedWindow::Minutes10),
+            "15m" => Ok(AlignedWindow::Minutes15),
+            "30m" => Ok(AlignedWindow::Minutes30),
+            "60m" => Ok(AlignedWindow::Minutes60),
+            "1h" => Ok(AlignedWindow::Hours1),
+            "2h" => Ok(AlignedWindow::Hours2),
+            "3h" => Ok(AlignedWindow::Hours3),
+            "4h" => Ok(AlignedWindow::Hours4),
+            "6h" => Ok(AlignedWindow::Hours6),
+            "8h" => Ok(AlignedWindow::Hours8),
+            "12h" => Ok(AlignedWindow::Hours12),
+            "24h" => Ok(AlignedWindow::Hours24),
+            "1d" => Ok(AlignedWindow::Days1),
+            "7d" => Ok(AlignedWindow::Days7),
+            "1w" => Ok(AlignedWindow::Weeks1),
+            "2w" => Ok(AlignedWindow::Weeks2),
+            "4w" => Ok(AlignedWindow::Weeks4),
+            "1mo" => Ok(AlignedWindow::Months1),
+            "2mo" => Ok(AlignedWindow::Months2),
+            "3mo" => Ok(AlignedWindow::Months3),
+            "4mo" => Ok(AlignedWindow::Months4),
+            "6mo" => Ok(AlignedWindow::Months6),
+            "12mo" => Ok(AlignedWindow::Months12),
+            "1y" => Ok(AlignedWindow::Years1),
+            "2y" => Ok(AlignedWindow::Years2),
+            _ => Err(StockTrekError::Value(ValueError::NotFound {
+                name: "AlignedWindow".into(),
+                key: value.into(),
+            })),
         }
     }
 }
