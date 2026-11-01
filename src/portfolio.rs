@@ -13,7 +13,7 @@ pub struct Portfolio {
 }
 
 /// Asset balances and pending orders for a single CEX account.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CexAccountPortfolio {
     asset_counts: HashMap<AssetId, Decimal>,
     pending_orders: HashMap<Tag, Vec<PendingOrder>>,
@@ -352,7 +352,7 @@ impl CexAccountPortfolio {
 }
 
 /// Builder for constructing a [`Portfolio`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PortfolioBuilder {
     portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>,
 }
@@ -360,19 +360,9 @@ pub struct PortfolioBuilder {
 impl PortfolioBuilder {
     /// Creates an empty portfolio builder.
     pub fn new() -> Self {
-        Self {
-            portfolios: HashMap::new(),
-        }
+        Self::default()
     }
-}
 
-impl Default for PortfolioBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PortfolioBuilder {
     /// Sets the balance of an asset in a CEX account.
     pub fn asset_count(
         &mut self,
@@ -385,10 +375,7 @@ impl PortfolioBuilder {
             .entry(cex_id)
             .or_default()
             .entry(account_id)
-            .or_insert_with(|| CexAccountPortfolio {
-                asset_counts: HashMap::new(),
-                pending_orders: HashMap::new(),
-            })
+            .or_default()
             .asset_counts
             .insert(asset_id, count);
         self
@@ -408,10 +395,7 @@ impl PortfolioBuilder {
             .entry(cex_id)
             .or_default()
             .entry(account_id)
-            .or_insert_with(|| CexAccountPortfolio {
-                asset_counts: HashMap::new(),
-                pending_orders: HashMap::new(),
-            })
+            .or_default()
             .pending_orders
             .entry(tag)
             .or_default()
@@ -425,9 +409,7 @@ impl PortfolioBuilder {
 
     /// Builds the [`Portfolio`] from the collected data.
     pub fn build(self) -> Portfolio {
-        Portfolio {
-            portfolios: self.portfolios,
-        }
+        Portfolio::new(self.portfolios)
     }
 }
 
