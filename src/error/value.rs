@@ -2,7 +2,6 @@ use std::fmt;
 
 /// Errors produced while resolving values.
 #[derive(Debug, Clone)]
-#[non_exhaustive]
 pub enum ValueError {
     /// A requested value was not found.
     NotFound {

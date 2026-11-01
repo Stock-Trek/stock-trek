@@ -66,7 +66,6 @@ impl RecoveryPolicy {
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
-#[non_exhaustive]
 pub enum ActionErrorCause {
     /// The CEX permanently rejected the action.
     PermanentCexRejection,
@@ -82,7 +81,6 @@ pub enum ActionErrorCause {
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
-#[non_exhaustive]
 pub enum ActionErrorResponse {
     /// Stops processing the current plan.
     Stop,
