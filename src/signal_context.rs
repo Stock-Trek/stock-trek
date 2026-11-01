@@ -56,7 +56,7 @@ impl SignalContextBuilder {
     }
 
     /// Adds a market for a base/quote pair on a CEX.
-    pub fn market(
+    pub fn cex_market(
         &mut self,
         cex_id: CexId,
         base: AssetId,
@@ -72,19 +72,6 @@ impl SignalContextBuilder {
             .markets_by_quote
             .insert(quote, market);
         self
-    }
-
-    /// Adds a market for a base/quote pair on a CEX.
-    ///
-    /// This is an alias for [`Self::market`].
-    pub fn cex_market(
-        &mut self,
-        cex_id: CexId,
-        base: AssetId,
-        quote: AssetId,
-        market: Market,
-    ) -> &mut Self {
-        self.market(cex_id, base, quote, market)
     }
 
     /// Builds the [`SignalContext`] from the collected market data.
