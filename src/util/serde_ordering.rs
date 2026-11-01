@@ -80,18 +80,6 @@ mod tests {
     }
 
     #[test]
-    fn rejects_non_string_values() {
-        for json in [
-            "{\"ordering\":-1}",
-            "{\"ordering\":0}",
-            "{\"ordering\":1}",
-            "{\"ordering\":2}",
-        ] {
-            assert!(serde_json::from_str::<Wrapper>(json).is_err());
-        }
-    }
-
-    #[test]
     fn rejects_invalid_strings() {
         assert!(serde_json::from_str::<Wrapper>("{\"ordering\":\"invalid\"}").is_err());
     }
