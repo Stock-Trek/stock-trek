@@ -55,7 +55,7 @@ pub mod errors {
 
 pub mod markets {
     pub use crate::market_data::{
-        aligned_window::AlignedWindow,
+        aligned_window::{AlignedTimestampBounds, AlignedWindow},
         market::Market,
         market::MarketBuilder,
         market_aligned_window::MarketAlignedWindow,
