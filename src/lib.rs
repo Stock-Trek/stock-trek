@@ -3,7 +3,7 @@ mod algorithm;
 mod cex;
 mod commands;
 mod conditions;
-pub mod dex;
+// mod dex;
 mod error;
 mod examples;
 mod market_data;
