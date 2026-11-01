@@ -2,6 +2,7 @@
 name = "stock-trek"
 version = "0.15.3"
 edition = "2024"
+rust-version = "1.85"
 description = "Stock Trek time-series analysis"
 authors = ["stock-trek.com <stock-trek@proton.me>"]
 license = "MIT"
