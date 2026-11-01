@@ -124,9 +124,13 @@ impl AlignedWindow {
     fn fixed_bounds(
         &self,
         timestamp: i64,
-        exact_millis: u32,
+        exact_millis: u64,
     ) -> StockTrekResult<AlignedTimestampBounds> {
-        let window_millis_wide = i64::from(exact_millis);
+        let window_millis_wide = i64::try_from(exact_millis).map_err(|_| {
+            Self::bounds_error(format!(
+                "window length {exact_millis} could not be represented"
+            ))
+        })?;
         let lower_millis = timestamp
             .div_euclid(window_millis_wide)
             .checked_mul(window_millis_wide)
@@ -188,35 +192,37 @@ impl AlignedWindow {
     }
 
     /// Returns the exact window length in milliseconds for fixed-length windows.
-    pub fn millis_exact(&self) -> Option<u32> {
-        match self {
-            AlignedWindow::Seconds1 => Some(MILLIS_PER_SECOND),
-            AlignedWindow::Seconds5 => Some(5 * MILLIS_PER_SECOND),
-            AlignedWindow::Seconds10 => Some(10 * MILLIS_PER_SECOND),
-            AlignedWindow::Seconds15 => Some(15 * MILLIS_PER_SECOND),
-            AlignedWindow::Seconds30 => Some(30 * MILLIS_PER_SECOND),
-            AlignedWindow::Seconds60 => Some(60 * MILLIS_PER_SECOND),
-            AlignedWindow::Minutes1 => Some(MILLIS_PER_MINUTE),
-            AlignedWindow::Minutes2 => Some(2 * MILLIS_PER_MINUTE),
-            AlignedWindow::Minutes3 => Some(3 * MILLIS_PER_MINUTE),
-            AlignedWindow::Minutes5 => Some(5 * MILLIS_PER_MINUTE),
-            AlignedWindow::Minutes10 => Some(10 * MILLIS_PER_MINUTE),
-            AlignedWindow::Minutes15 => Some(15 * MILLIS_PER_MINUTE),
-            AlignedWindow::Minutes30 => Some(30 * MILLIS_PER_MINUTE),
-            AlignedWindow::Minutes60 => Some(60 * MILLIS_PER_MINUTE),
-            AlignedWindow::Hours1 => Some(MILLIS_PER_HOUR),
-            AlignedWindow::Hours2 => Some(2 * MILLIS_PER_HOUR),
-            AlignedWindow::Hours3 => Some(3 * MILLIS_PER_HOUR),
-            AlignedWindow::Hours4 => Some(4 * MILLIS_PER_HOUR),
-            AlignedWindow::Hours6 => Some(6 * MILLIS_PER_HOUR),
-            AlignedWindow::Hours8 => Some(8 * MILLIS_PER_HOUR),
-            AlignedWindow::Hours12 => Some(12 * MILLIS_PER_HOUR),
-            AlignedWindow::Hours24 => Some(24 * MILLIS_PER_HOUR),
-            AlignedWindow::Days1 => Some(MILLIS_PER_DAY),
-            AlignedWindow::Days7 => Some(7 * MILLIS_PER_DAY),
-            AlignedWindow::Weeks1 => Some(MILLIS_PER_WEEK),
-            AlignedWindow::Weeks2 => Some(2 * MILLIS_PER_WEEK),
-            AlignedWindow::Weeks4 => Some(4 * MILLIS_PER_WEEK),
+    ///
+    /// Calendar windows have no fixed length, so this returns `None` for them.
+    pub fn millis_exact(&self) -> Option<u64> {
+        let millis = match self {
+            AlignedWindow::Seconds1 => MILLIS_PER_SECOND,
+            AlignedWindow::Seconds5 => 5 * MILLIS_PER_SECOND,
+            AlignedWindow::Seconds10 => 10 * MILLIS_PER_SECOND,
+            AlignedWindow::Seconds15 => 15 * MILLIS_PER_SECOND,
+            AlignedWindow::Seconds30 => 30 * MILLIS_PER_SECOND,
+            AlignedWindow::Seconds60 => 60 * MILLIS_PER_SECOND,
+            AlignedWindow::Minutes1 => MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes2 => 2 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes3 => 3 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes5 => 5 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes10 => 10 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes15 => 15 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes30 => 30 * MILLIS_PER_MINUTE,
+            AlignedWindow::Minutes60 => 60 * MILLIS_PER_MINUTE,
+            AlignedWindow::Hours1 => MILLIS_PER_HOUR,
+            AlignedWindow::Hours2 => 2 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours3 => 3 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours4 => 4 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours6 => 6 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours8 => 8 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours12 => 12 * MILLIS_PER_HOUR,
+            AlignedWindow::Hours24 => 24 * MILLIS_PER_HOUR,
+            AlignedWindow::Days1 => MILLIS_PER_DAY,
+            AlignedWindow::Days7 => 7 * MILLIS_PER_DAY,
+            AlignedWindow::Weeks1 => MILLIS_PER_WEEK,
+            AlignedWindow::Weeks2 => 2 * MILLIS_PER_WEEK,
+            AlignedWindow::Weeks4 => 4 * MILLIS_PER_WEEK,
             AlignedWindow::Months1
             | AlignedWindow::Months2
             | AlignedWindow::Months3
@@ -224,25 +230,25 @@ impl AlignedWindow {
             | AlignedWindow::Months6
             | AlignedWindow::Months12
             | AlignedWindow::Years1
-            | AlignedWindow::Years2 => None,
-        }
+            | AlignedWindow::Years2 => return None,
+        };
+        Some(u64::from(millis))
     }
 
     /// Returns an upper bound on the window length in milliseconds.
-    pub fn millis_upper_bound(&self) -> u64 {
+    pub fn millis_upper_bound(&self) -> Option<u64> {
         if let Some(millis) = self.millis_exact() {
-            return millis as u64;
+            return Some(millis);
         }
 
         match self {
-            AlignedWindow::Months1 => MILLIS_PER_MONTH_UPPER_BOUND,
-            AlignedWindow::Months2 => 2 * MILLIS_PER_MONTH_UPPER_BOUND,
-            AlignedWindow::Months3 => 3 * MILLIS_PER_MONTH_UPPER_BOUND,
-            AlignedWindow::Months4 => 4 * MILLIS_PER_MONTH_UPPER_BOUND,
-            AlignedWindow::Months6 => 6 * MILLIS_PER_MONTH_UPPER_BOUND,
-            AlignedWindow::Months12 => 12 * MILLIS_PER_MONTH_UPPER_BOUND,
-            AlignedWindow::Years1 => MILLIS_PER_YEAR_UPPER_BOUND,
-            AlignedWindow::Years2 => 2 * MILLIS_PER_YEAR_UPPER_BOUND,
+            AlignedWindow::Months1 => Some(MILLIS_PER_MONTH_UPPER_BOUND),
+            AlignedWindow::Months2 => Some(2 * MILLIS_PER_MONTH_UPPER_BOUND),
+            AlignedWindow::Months3 => Some(3 * MILLIS_PER_MONTH_UPPER_BOUND),
+            AlignedWindow::Months4 => Some(4 * MILLIS_PER_MONTH_UPPER_BOUND),
+            AlignedWindow::Months6 => Some(6 * MILLIS_PER_MONTH_UPPER_BOUND),
+            AlignedWindow::Months12 | AlignedWindow::Years1 => Some(MILLIS_PER_YEAR_UPPER_BOUND),
+            AlignedWindow::Years2 => Some(2 * MILLIS_PER_YEAR_UPPER_BOUND),
             _ => {
                 unreachable!("only calendar based windows lack an exact millisecond length")
             }
@@ -266,7 +272,8 @@ impl AlignedWindow {
     /// Adds the window length to a UTC date and time.
     pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         if let Some(millis) = self.millis_exact() {
-            date_time.checked_add_signed(Duration::milliseconds(i64::from(millis)))
+            let millis = i64::try_from(millis).ok()?;
+            date_time.checked_add_signed(Duration::milliseconds(millis))
         } else {
             date_time.checked_add_months(Months::new(self.months_exact()?))
         }
@@ -275,7 +282,8 @@ impl AlignedWindow {
     /// Subtracts the window length from a UTC date and time.
     pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         if let Some(millis) = self.millis_exact() {
-            date_time.checked_sub_signed(Duration::milliseconds(i64::from(millis)))
+            let millis = i64::try_from(millis).ok()?;
+            date_time.checked_sub_signed(Duration::milliseconds(millis))
         } else {
             date_time.checked_sub_months(Months::new(self.months_exact()?))
         }
@@ -441,7 +449,8 @@ mod tests {
                 assert!(timestamp < upper);
 
                 if !is_calendar_window(window) {
-                    let window_millis = i64::try_from(window.millis_upper_bound()).unwrap();
+                    let window_millis =
+                        i64::try_from(window.millis_upper_bound().unwrap()).unwrap();
                     assert_eq!(upper - lower, window_millis);
                     assert_eq!(lower % window_millis, 0);
                 }
@@ -600,7 +609,7 @@ mod tests {
 
             assert_eq!(forward, backward, "{window} is not symmetric");
             assert_eq!(
-                i64::try_from(window.millis_upper_bound()).unwrap(),
+                i64::try_from(window.millis_upper_bound().unwrap()).unwrap(),
                 forward,
                 "{window} does not advance by its own length"
             );
@@ -629,15 +638,15 @@ mod tests {
         assert_eq!(AlignedWindow::Minutes5.millis_exact(), Some(300_000));
         assert_eq!(
             AlignedWindow::Hours24.millis_exact(),
-            Some(24 * MILLIS_PER_HOUR)
+            Some(u64::from(24 * MILLIS_PER_HOUR))
         );
         assert_eq!(
             AlignedWindow::Days7.millis_exact(),
-            Some(7 * MILLIS_PER_DAY)
+            Some(u64::from(7 * MILLIS_PER_DAY))
         );
         assert_eq!(
             AlignedWindow::Weeks4.millis_exact(),
-            Some(4 * MILLIS_PER_WEEK)
+            Some(u64::from(4 * MILLIS_PER_WEEK))
         );
 
         for window in AlignedWindow::iter().filter(|window| is_calendar_window(*window)) {
@@ -649,15 +658,23 @@ mod tests {
     fn millis_upper_falls_back_for_calendar_windows() {
         assert_eq!(
             AlignedWindow::Seconds1.millis_upper_bound(),
-            AlignedWindow::Seconds1.millis_exact().unwrap() as u64
+            AlignedWindow::Seconds1.millis_exact()
         );
         assert_eq!(
             AlignedWindow::Months1.millis_upper_bound(),
-            MILLIS_PER_MONTH_UPPER_BOUND
+            Some(MILLIS_PER_MONTH_UPPER_BOUND)
         );
         assert_eq!(
             AlignedWindow::Years2.millis_upper_bound(),
-            2 * MILLIS_PER_YEAR_UPPER_BOUND
+            Some(2 * MILLIS_PER_YEAR_UPPER_BOUND)
+        );
+        assert_eq!(
+            AlignedWindow::Months12.millis_upper_bound(),
+            AlignedWindow::Years1.millis_upper_bound()
+        );
+        assert_eq!(
+            AlignedWindow::Months12.millis_upper_bound(),
+            Some(MILLIS_PER_YEAR_UPPER_BOUND)
         );
     }
 
