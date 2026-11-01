@@ -51,67 +51,42 @@ impl MarketAlignedWindow {
             vwaps: OnceLock::new(),
         }
     }
-    pub fn opens(&self, window: AlignedWindow) -> &Vec<f64> {
-        self.opens
-            .get_or_init(windows_map)
-            .get(&window)
-            .unwrap()
-            .get_or_init(|| self.aligned_values(window, |ohlcv| ohlcv.open))
+    pub fn opens(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
+        self.values(&self.opens, window, |ohlcv| ohlcv.open)
     }
-    pub fn highs(&self, window: AlignedWindow) -> &Vec<f64> {
-        self.highs
-            .get_or_init(windows_map)
-            .get(&window)
-            .unwrap()
-            .get_or_init(|| self.aligned_values(window, |ohlcv| ohlcv.high))
+    pub fn highs(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
+        self.values(&self.highs, window, |ohlcv| ohlcv.high)
     }
-    pub fn lows(&self, window: AlignedWindow) -> &Vec<f64> {
-        self.lows
-            .get_or_init(windows_map)
-            .get(&window)
-            .unwrap()
-            .get_or_init(|| self.aligned_values(window, |ohlcv| ohlcv.low))
+    pub fn lows(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
+        self.values(&self.lows, window, |ohlcv| ohlcv.low)
     }
-    pub fn closes(&self, window: AlignedWindow) -> &Vec<f64> {
-        self.closes
-            .get_or_init(windows_map)
-            .get(&window)
-            .unwrap()
-            .get_or_init(|| self.aligned_values(window, |ohlcv| ohlcv.close))
+    pub fn closes(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
+        self.values(&self.closes, window, |ohlcv| ohlcv.close)
     }
-    pub fn volumes(&self, window: AlignedWindow) -> &Vec<f64> {
-        self.volumes
-            .get_or_init(windows_map)
-            .get(&window)
-            .unwrap()
-            .get_or_init(|| self.aligned_values(window, |ohlcv| ohlcv.volume))
+    pub fn volumes(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
+        self.values(&self.volumes, window, |ohlcv| ohlcv.volume)
     }
-    pub fn quote_volumes(&self, window: AlignedWindow) -> &Vec<f64> {
-        self.quote_volumes
-            .get_or_init(windows_map)
-            .get(&window)
-            .unwrap()
-            .get_or_init(|| self.aligned_values(window, |ohlcv| ohlcv.quote_volume))
+    pub fn quote_volumes(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
+        self.values(&self.quote_volumes, window, |ohlcv| ohlcv.quote_volume)
     }
-    pub fn vwaps(&self, window: AlignedWindow) -> &Vec<f64> {
-        self.vwaps
-            .get_or_init(windows_map)
-            .get(&window)
-            .unwrap()
-            .get_or_init(|| self.aligned_values(window, |ohlcv| ohlcv.vwap))
+    pub fn vwaps(&self, window: AlignedWindow) -> Option<&Vec<f64>> {
+        self.values(&self.vwaps, window, |ohlcv| ohlcv.vwap)
     }
 
-    fn aligned_values(
+    fn values<'a>(
         &self,
+        values: &'a OnceLock<HashMap<AlignedWindow, OnceLock<Vec<f64>>>>,
         window: AlignedWindow,
         to_value: impl Fn(&MarketOhlcv) -> f64,
-    ) -> Vec<f64> {
-        self.candles
-            .get(&window)
-            .unwrap()
-            .iter()
-            .map(|candle| to_value(&candle.ohlcv))
-            .collect()
+    ) -> Option<&'a Vec<f64>> {
+        let candles = self.candles.get(&window)?;
+        let values = values.get_or_init(windows_map).get(&window)?;
+        Some(values.get_or_init(|| {
+            candles
+                .iter()
+                .map(|candle| to_value(&candle.ohlcv))
+                .collect()
+        }))
     }
 }
 
@@ -119,4 +94,50 @@ fn windows_map() -> HashMap<AlignedWindow, OnceLock<Vec<f64>>> {
     AlignedWindow::iter()
         .map(|window| (window, OnceLock::new()))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn candle() -> MarketCandle {
+        MarketCandle::new(
+            0,
+            1,
+            1,
+            true,
+            MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4),
+            3,
+        )
+    }
+
+    #[test]
+    fn values_return_none_when_window_is_absent() {
+        let market = MarketAlignedWindow::new(HashMap::new());
+
+        assert!(market.opens(AlignedWindow::Minutes1).is_none());
+        assert!(market.highs(AlignedWindow::Minutes1).is_none());
+        assert!(market.lows(AlignedWindow::Minutes1).is_none());
+        assert!(market.closes(AlignedWindow::Minutes1).is_none());
+        assert!(market.volumes(AlignedWindow::Minutes1).is_none());
+        assert!(market.quote_volumes(AlignedWindow::Minutes1).is_none());
+        assert!(market.vwaps(AlignedWindow::Minutes1).is_none());
+    }
+
+    #[test]
+    fn values_return_data_when_window_is_present() {
+        let market =
+            MarketAlignedWindow::new(HashMap::from([(AlignedWindow::Minutes1, vec![candle()])]));
+
+        assert_eq!(market.opens(AlignedWindow::Minutes1), Some(&vec![1.0]));
+        assert_eq!(market.highs(AlignedWindow::Minutes1), Some(&vec![2.0]));
+        assert_eq!(market.lows(AlignedWindow::Minutes1), Some(&vec![0.5]));
+        assert_eq!(market.closes(AlignedWindow::Minutes1), Some(&vec![1.5]));
+        assert_eq!(market.volumes(AlignedWindow::Minutes1), Some(&vec![10.0]));
+        assert_eq!(
+            market.quote_volumes(AlignedWindow::Minutes1),
+            Some(&vec![15.0])
+        );
+        assert_eq!(market.vwaps(AlignedWindow::Minutes1), Some(&vec![1.4]));
+    }
 }
