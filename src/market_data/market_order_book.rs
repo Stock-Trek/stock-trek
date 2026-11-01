@@ -1,8 +1,8 @@
 use crate::market_data::market_quote::{MarketQuote, PriceQuantity};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 /// The current bids and asks for a market.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MarketOrderBook {
     /// The bid quotes, ordered from highest to lowest price.
     pub bids: Vec<MarketQuote>,
@@ -32,6 +32,22 @@ impl MarketOrderBook {
 
 fn to_price_quantities(vec: &[MarketQuote]) -> Vec<PriceQuantity> {
     vec.iter().map(|quote| quote.to_price_quantity()).collect()
+}
+
+impl<'de> Deserialize<'de> for MarketOrderBook {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct MarketOrderBookData {
+            bids: Vec<MarketQuote>,
+            asks: Vec<MarketQuote>,
+        }
+
+        let data = MarketOrderBookData::deserialize(deserializer)?;
+        Ok(Self::new(data.bids, data.asks))
+    }
 }
 
 #[cfg(test)]
@@ -108,6 +124,24 @@ mod tests {
         assert_eq!(deserialized.asks[0].quantity, 2.5);
         assert_eq!(deserialized.bid_price_quantities(), vec![(100.0, 1.5)]);
         assert_eq!(deserialized.ask_price_quantities(), vec![(101.0, 2.5)]);
+    }
+
+    #[test]
+    fn deserialization_sorts_bids_and_asks() {
+        let json = r#"{
+            "bids": [{"price": 99.0, "quantity": 1.0}, {"price": 101.0, "quantity": 2.0}],
+            "asks": [{"price": 103.0, "quantity": 1.0}, {"price": 102.0, "quantity": 2.0}]
+        }"#;
+        let deserialized: MarketOrderBook = serde_json::from_str(json).unwrap();
+
+        assert_eq!(
+            deserialized.bid_price_quantities(),
+            vec![(101.0, 2.0), (99.0, 1.0)]
+        );
+        assert_eq!(
+            deserialized.ask_price_quantities(),
+            vec![(102.0, 2.0), (103.0, 1.0)]
+        );
     }
 
     #[test]

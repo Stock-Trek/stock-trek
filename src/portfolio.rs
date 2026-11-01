@@ -403,14 +403,11 @@ impl PortfolioBuilder {
 
     /// Adds a pending order to a CEX account.
     ///
-    /// The order is grouped under the tag embedded in `order_request`. The
-    /// `grouping_tag` argument is ignored and is retained for backwards
-    /// compatibility; callers should pass the order request's tag.
+    /// The order is grouped under the tag embedded in `order_request`.
     pub fn pending_order(
         &mut self,
         cex_id: CexId,
         account_id: AccountId,
-        _grouping_tag: Tag,
         order_request: OrderRequest<AssetId, Decimal>,
         filled_base_quantity: Decimal,
         filled_quote_quantity: Decimal,

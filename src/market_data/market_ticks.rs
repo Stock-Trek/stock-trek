@@ -2,10 +2,10 @@ use crate::market_data::{
     market_quote::{MarketQuote, TimedPriceQuantity},
     market_tick::MarketTick,
 };
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 /// A collection of recent market ticks.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MarketTicks {
     /// The ticks in chronological order.
     pub ticks: Vec<MarketTick>,
@@ -47,6 +47,21 @@ fn to_tick_tuple(
     let timestamp = tick.timestamp_millis;
     let quote = to_quote(tick);
     quote.to_timed_price_quantity(timestamp)
+}
+
+impl<'de> Deserialize<'de> for MarketTicks {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct MarketTicksData {
+            ticks: Vec<MarketTick>,
+        }
+
+        let data = MarketTicksData::deserialize(deserializer)?;
+        Ok(Self::new(data.ticks))
+    }
 }
 
 #[cfg(test)]
@@ -115,6 +130,32 @@ mod tests {
         assert_eq!(
             deserialized.bid_timed_price_quantities(),
             vec![(1, 100.0, 2.0)]
+        );
+    }
+
+    #[test]
+    fn deserialization_sorts_ticks_chronologically() {
+        let json = r#"{
+            "ticks": [
+                {
+                    "timestamp_millis": 3,
+                    "bid": {"price": 103.0, "quantity": 2.0},
+                    "ask": {"price": 104.0, "quantity": 3.0},
+                    "last": {"price": 103.5, "quantity": 4.0}
+                },
+                {
+                    "timestamp_millis": 1,
+                    "bid": {"price": 100.0, "quantity": 2.0},
+                    "ask": {"price": 101.0, "quantity": 3.0},
+                    "last": {"price": 100.5, "quantity": 4.0}
+                }
+            ]
+        }"#;
+        let deserialized: MarketTicks = serde_json::from_str(json).unwrap();
+
+        assert_eq!(
+            deserialized.bid_timed_price_quantities(),
+            vec![(1, 100.0, 2.0), (3, 103.0, 2.0)]
         );
     }
 }

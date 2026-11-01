@@ -17,7 +17,7 @@ pub fn deserialize<'de, D>(deserializer: D) -> Result<Ordering, D::Error>
 where
     D: Deserializer<'de>,
 {
-    deserializer.deserialize_any(OrderingVisitor)
+    deserializer.deserialize_str(OrderingVisitor)
 }
 
 struct OrderingVisitor;
@@ -26,7 +26,7 @@ impl Visitor<'_> for OrderingVisitor {
     type Value = Ordering;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("`less`, `equal`, or `greater` (or -1, 0, 1)")
+        formatter.write_str("`less`, `equal`, or `greater`")
     }
 
     fn visit_str<E: Error>(self, value: &str) -> Result<Self::Value, E> {
@@ -36,24 +36,6 @@ impl Visitor<'_> for OrderingVisitor {
             "greater" => Ok(Ordering::Greater),
             _ => Err(E::invalid_value(Unexpected::Str(value), &self)),
         }
-    }
-
-    fn visit_i64<E: Error>(self, value: i64) -> Result<Self::Value, E> {
-        match value {
-            -1 => Ok(Ordering::Less),
-            0 => Ok(Ordering::Equal),
-            1 => Ok(Ordering::Greater),
-            _ => Err(E::invalid_value(Unexpected::Signed(value), &self)),
-        }
-    }
-
-    fn visit_u64<E: Error>(self, value: u64) -> Result<Self::Value, E> {
-        self.visit_i64(i64::try_from(value).map_err(|_| {
-            E::invalid_value(
-                Unexpected::Unsigned(value),
-                &"an integer in the range of -1i8..=1i8",
-            )
-        })?)
     }
 }
 
@@ -98,20 +80,19 @@ mod tests {
     }
 
     #[test]
-    fn deserializes_legacy_integers() {
-        for (json, expected) in [
-            ("{\"ordering\":-1}", Ordering::Less),
-            ("{\"ordering\":0}", Ordering::Equal),
-            ("{\"ordering\":1}", Ordering::Greater),
+    fn rejects_non_string_values() {
+        for json in [
+            "{\"ordering\":-1}",
+            "{\"ordering\":0}",
+            "{\"ordering\":1}",
+            "{\"ordering\":2}",
         ] {
-            let wrapper: Wrapper = serde_json::from_str(json).unwrap();
-            assert_eq!(wrapper.ordering, expected);
+            assert!(serde_json::from_str::<Wrapper>(json).is_err());
         }
     }
 
     #[test]
-    fn rejects_invalid_values() {
-        assert!(serde_json::from_str::<Wrapper>("{\"ordering\":2}").is_err());
+    fn rejects_invalid_strings() {
         assert!(serde_json::from_str::<Wrapper>("{\"ordering\":\"invalid\"}").is_err());
     }
 }

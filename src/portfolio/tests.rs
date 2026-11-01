@@ -17,7 +17,6 @@ fn portfolio_with(
         .pending_order(
             CexId::Binance,
             AccountId::new("account"),
-            Tag::new("tag"),
             order_request,
             filled_base_quantity,
             filled_quote_quantity,
@@ -180,7 +179,6 @@ fn pending_orders_are_grouped_by_the_order_request_tag() {
     builder.pending_order(
         CexId::Binance,
         AccountId::new("account"),
-        Tag::new("grouping-tag"),
         limit_sell(Quantity::OfBase(Decimal::from(10)), Decimal::from(100)),
         Decimal::ZERO,
         Decimal::ZERO,
