@@ -70,7 +70,7 @@ impl AlignedWindow {
     ///
     /// Month and year windows follow calendar boundaries, so their lengths vary
     /// with the actual number of days in each month or year.
-    pub fn bounds_for(&self, timestamp: i64) -> StockTrekResult<(u64, u64)> {
+    pub fn bounds_for(&self, timestamp: i64) -> StockTrekResult<(i64, i64)> {
         if let Some(months_per_window) = self.calendar_months() {
             return calendar_bounds_for(timestamp, months_per_window);
         }
@@ -81,21 +81,23 @@ impl AlignedWindow {
                 "window size {window_millis} does not fit in an i64"
             ))
         })?;
-        let lower_bound_millis = timestamp.div_euclid(window_millis_wide) * window_millis_wide;
-        let upper_bound_millis = lower_bound_millis.saturating_add(window_millis_wide);
+        let lower_bound_millis = timestamp
+            .div_euclid(window_millis_wide)
+            .checked_mul(window_millis_wide)
+            .ok_or_else(|| {
+                bounds_error(format!(
+                    "lower bound for timestamp {timestamp} could not be represented"
+                ))
+            })?;
+        let upper_bound_millis = lower_bound_millis
+            .checked_add(window_millis_wide)
+            .ok_or_else(|| {
+                bounds_error(format!(
+                    "upper bound for timestamp {timestamp} could not be represented"
+                ))
+            })?;
 
-        Ok((
-            u64::try_from(lower_bound_millis).map_err(|_| {
-                bounds_error(format!(
-                    "lower bound {lower_bound_millis} is before the Unix epoch"
-                ))
-            })?,
-            u64::try_from(upper_bound_millis).map_err(|_| {
-                bounds_error(format!(
-                    "upper bound {upper_bound_millis} is before the Unix epoch"
-                ))
-            })?,
-        ))
+        Ok((lower_bound_millis, upper_bound_millis))
     }
     fn calendar_months(&self) -> Option<u32> {
         match self {
@@ -274,7 +276,7 @@ fn bounds_error(message: String) -> StockTrekError {
     })
 }
 
-fn calendar_bounds_for(timestamp: i64, months_per_window: u32) -> StockTrekResult<(u64, u64)> {
+fn calendar_bounds_for(timestamp: i64, months_per_window: u32) -> StockTrekResult<(i64, i64)> {
     let date_time = DateTime::from_timestamp_millis(timestamp).ok_or_else(|| {
         bounds_error(format!(
             "timestamp {timestamp} is not representable as a UTC date"
@@ -313,18 +315,8 @@ fn calendar_bounds_for(timestamp: i64, months_per_window: u32) -> StockTrekResul
         })?;
 
     Ok((
-        u64::try_from(lower_bound.timestamp_millis()).map_err(|_| {
-            bounds_error(format!(
-                "calendar window lower bound {} is before the Unix epoch",
-                lower_bound.timestamp_millis()
-            ))
-        })?,
-        u64::try_from(upper_bound.timestamp_millis()).map_err(|_| {
-            bounds_error(format!(
-                "calendar window upper bound {} is before the Unix epoch",
-                upper_bound.timestamp_millis()
-            ))
-        })?,
+        lower_bound.timestamp_millis(),
+        upper_bound.timestamp_millis(),
     ))
 }
 
@@ -381,24 +373,19 @@ mod tests {
     use super::*;
     use strum::IntoEnumIterator;
 
-    fn millis_at(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> u64 {
-        u64::try_from(
-            Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
-                .unwrap()
-                .timestamp_millis(),
-        )
-        .unwrap()
+    fn millis_at(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> i64 {
+        Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
+            .unwrap()
+            .timestamp_millis()
     }
 
-    fn bounds_for(window: AlignedWindow, timestamp: u64) -> (u64, u64) {
-        window
-            .bounds_for(i64::try_from(timestamp).unwrap())
-            .unwrap()
+    fn bounds_for(window: AlignedWindow, timestamp: i64) -> (i64, i64) {
+        window.bounds_for(timestamp).unwrap()
     }
 
     #[test]
     fn bounds_for_returns_containing_bounds() {
-        let timestamps: [u64; 5] = [0, 1, 999, 1_000, 1_700_000_000_123];
+        let timestamps: [i64; 7] = [-1_700_000_000_123, -1, 0, 1, 999, 1_000, 1_700_000_000_123];
 
         for window in AlignedWindow::iter() {
             for timestamp in timestamps {
@@ -408,11 +395,24 @@ mod tests {
                 assert!(timestamp < upper_bound);
 
                 if window.calendar_months().is_none() {
-                    assert_eq!(upper_bound - lower_bound, window.millis_upper_bound());
-                    assert_eq!(lower_bound % window.millis_upper_bound(), 0);
+                    let window_millis = i64::try_from(window.millis_upper_bound()).unwrap();
+                    assert_eq!(upper_bound - lower_bound, window_millis);
+                    assert_eq!(lower_bound % window_millis, 0);
                 }
             }
         }
+    }
+
+    #[test]
+    fn bounds_for_handles_pre_epoch_timestamps() {
+        assert_eq!(bounds_for(AlignedWindow::Seconds1, -1), (-1_000, 0));
+        assert_eq!(
+            bounds_for(AlignedWindow::Months1, millis_at(1969, 12, 15, 12, 0, 0)),
+            (
+                millis_at(1969, 12, 1, 0, 0, 0),
+                millis_at(1970, 1, 1, 0, 0, 0)
+            )
+        );
     }
 
     #[test]
@@ -523,7 +523,7 @@ mod tests {
     fn bounds_for_month_windows_handle_leap_years() {
         let february_2024 = bounds_for(AlignedWindow::Months1, millis_at(2024, 2, 15, 0, 0, 0));
         let february_2023 = bounds_for(AlignedWindow::Months1, millis_at(2023, 2, 15, 0, 0, 0));
-        let days_millis = 24 * MILLIS_PER_HOUR;
+        let days_millis = i64::try_from(24 * MILLIS_PER_HOUR).unwrap();
 
         assert_eq!((february_2024.1 - february_2024.0) / days_millis, 29);
         assert_eq!((february_2023.1 - february_2023.0) / days_millis, 28);
