@@ -131,14 +131,11 @@ fn accounts_can_be_discovered_with_their_details() {
         OrderRequest::Limit { .. }
     ));
 
-    assert_eq!(portfolio.pending_orders_count(), 1.0);
-    assert_eq!(
-        portfolio.pending_orders_with_tag_count(&Tag::new("tag")),
-        1.0
-    );
+    assert_eq!(portfolio.pending_orders_count(), 1);
+    assert_eq!(portfolio.pending_orders_with_tag_count(&Tag::new("tag")), 1);
     assert_eq!(
         portfolio.pending_orders_in_cex_account_count(&CexId::Binance, &AccountId::new("account")),
-        1.0
+        1
     );
     assert_eq!(
         portfolio.pending_orders_in_cex_account_with_tag_count(
@@ -146,9 +143,8 @@ fn accounts_can_be_discovered_with_their_details() {
             &AccountId::new("account"),
             &Tag::new("tag"),
         ),
-        1.0
+        1
     );
-
     assert_eq!(portfolio.pending_orders_iter().count(), 1);
     assert_eq!(
         portfolio
@@ -204,19 +200,19 @@ fn pending_orders_are_grouped_by_the_order_request_tag() {
     let portfolio = builder.build();
 
     assert_eq!(
-        portfolio.pending_orders_in_cex_account_with_tag(
+        portfolio.pending_orders_in_cex_account_with_tag_count(
             &CexId::Binance,
             &AccountId::new("account"),
             &Tag::new("tag"),
         ),
-        1.0
+        1
     );
     assert_eq!(
-        portfolio.pending_orders_in_cex_account_with_tag(
+        portfolio.pending_orders_in_cex_account_with_tag_count(
             &CexId::Binance,
             &AccountId::new("account"),
             &Tag::new("other"),
         ),
-        0.0
+        0
     );
 }

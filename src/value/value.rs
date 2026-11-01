@@ -230,9 +230,9 @@ impl NumberValue {
         match self {
             Self::Literal { literal } => Ok(*literal),
             Self::Signal { signal } => signal.read(c),
-            Self::PendingOrders => Ok(c.portfolio.pending_orders_count()),
+            Self::PendingOrders => Ok(c.portfolio.pending_orders_count() as f64),
             Self::PendingOrdersWithTag { tag } => {
-                Ok(c.portfolio.pending_orders_with_tag_count(tag))
+                Ok(c.portfolio.pending_orders_with_tag_count(tag) as f64)
             }
             Self::PendingOrdersInCexAccount {
                 cex_id_value,
@@ -241,7 +241,8 @@ impl NumberValue {
                 let cex_id = cex_id_value.cex_id(c)?;
                 let account_id = account_id_value.account_id(c)?;
                 Ok(c.portfolio
-                    .pending_orders_in_cex_account_count(&cex_id, &account_id))
+                    .pending_orders_in_cex_account_count(&cex_id, &account_id)
+                    as f64)
             }
             Self::PendingOrdersInCexAccountWithTag {
                 cex_id_value,
@@ -254,7 +255,7 @@ impl NumberValue {
                     &cex_id,
                     &account_id,
                     tag,
-                ))
+                ) as f64)
             }
             Self::AssetTotal { asset_id_value } => {
                 let asset_id = asset_id_value.asset_id(c)?;
