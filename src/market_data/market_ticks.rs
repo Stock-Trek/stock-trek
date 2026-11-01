@@ -13,7 +13,10 @@ pub struct MarketTicks {
 
 impl MarketTicks {
     /// Creates a tick collection from a list of ticks.
-    pub fn new(ticks: Vec<MarketTick>) -> Self {
+    ///
+    /// Ticks are sorted into chronological order.
+    pub fn new(mut ticks: Vec<MarketTick>) -> Self {
+        ticks.sort_by_key(|tick| tick.timestamp_millis);
         Self { ticks }
     }
     /// Returns the bid quotes as timestamped price/quantity tuples.
@@ -51,8 +54,12 @@ mod tests {
     use super::*;
 
     fn tick(price: f64) -> MarketTick {
+        tick_with_timestamp(1, price)
+    }
+
+    fn tick_with_timestamp(timestamp_millis: u64, price: f64) -> MarketTick {
         MarketTick {
-            timestamp_millis: 1,
+            timestamp_millis,
             bid: MarketQuote {
                 price,
                 quantity: 2.0,
@@ -83,6 +90,20 @@ mod tests {
         assert_eq!(ticks.bid_timed_price_quantities(), vec![(1, 200.0, 2.0)]);
         assert_eq!(ticks.ask_timed_price_quantities(), vec![(1, 201.0, 3.0)]);
         assert_eq!(ticks.last_timed_price_quantities(), vec![(1, 200.5, 4.0)]);
+    }
+
+    #[test]
+    fn ticks_are_sorted_chronologically() {
+        let ticks = MarketTicks::new(vec![
+            tick_with_timestamp(3, 103.0),
+            tick_with_timestamp(1, 100.0),
+            tick_with_timestamp(2, 101.0),
+        ]);
+
+        assert_eq!(
+            ticks.bid_timed_price_quantities(),
+            vec![(1, 100.0, 2.0), (2, 101.0, 2.0), (3, 103.0, 2.0)]
+        );
     }
 
     #[test]

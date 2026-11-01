@@ -12,7 +12,12 @@ pub struct MarketOrderBook {
 
 impl MarketOrderBook {
     /// Creates an order book from bid and ask quotes.
-    pub fn new(bids: Vec<MarketQuote>, asks: Vec<MarketQuote>) -> Self {
+    ///
+    /// Bids are sorted from highest to lowest price and asks from lowest to
+    /// highest price.
+    pub fn new(mut bids: Vec<MarketQuote>, mut asks: Vec<MarketQuote>) -> Self {
+        bids.sort_by(|a, b| b.price.total_cmp(&a.price));
+        asks.sort_by(|a, b| a.price.total_cmp(&b.price));
         Self { bids, asks }
     }
     /// Returns the bids as price/quantity pairs.
@@ -44,6 +49,49 @@ mod tests {
                 quantity: 2.5,
             }],
         )
+    }
+
+    #[test]
+    fn bids_and_asks_are_sorted_by_price() {
+        let order_book = MarketOrderBook::new(
+            vec![
+                MarketQuote {
+                    price: 99.0,
+                    quantity: 1.0,
+                },
+                MarketQuote {
+                    price: 101.0,
+                    quantity: 2.0,
+                },
+                MarketQuote {
+                    price: 100.0,
+                    quantity: 3.0,
+                },
+            ],
+            vec![
+                MarketQuote {
+                    price: 103.0,
+                    quantity: 1.0,
+                },
+                MarketQuote {
+                    price: 102.0,
+                    quantity: 2.0,
+                },
+                MarketQuote {
+                    price: 104.0,
+                    quantity: 3.0,
+                },
+            ],
+        );
+
+        assert_eq!(
+            order_book.bid_price_quantities(),
+            vec![(101.0, 2.0), (100.0, 3.0), (99.0, 1.0)]
+        );
+        assert_eq!(
+            order_book.ask_price_quantities(),
+            vec![(102.0, 2.0), (103.0, 1.0), (104.0, 3.0)]
+        );
     }
 
     #[test]
