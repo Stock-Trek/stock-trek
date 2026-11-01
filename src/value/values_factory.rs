@@ -31,7 +31,7 @@ impl PortfolioValuesFactory {
         NumberValue::PendingOrdersWithTag { tag }
     }
     /// Creates a value for the number of pending orders in a CEX account.
-    pub fn pending_orders_inc_cex_account(
+    pub fn pending_orders_in_cex_account(
         &self,
         cex_id_value: CexIdValue,
         account_id_value: AccountIdValue,
@@ -42,7 +42,7 @@ impl PortfolioValuesFactory {
         }
     }
     /// Creates a value for the number of pending orders with a tag in a CEX account.
-    pub fn pending_orders_inc_cex_account_with_tag(
+    pub fn pending_orders_in_cex_account_with_tag(
         &self,
         cex_id_value: CexIdValue,
         account_id_value: AccountIdValue,
