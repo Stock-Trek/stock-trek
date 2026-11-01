@@ -4,11 +4,10 @@ use crate::{
 };
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
-use strum::{Display, EnumCount, EnumIter, FromRepr};
+use strum::{EnumCount, EnumIter, FromRepr};
 
 #[derive(
     Debug,
-    Display,
     Clone,
     Copy,
     PartialOrd,
@@ -23,7 +22,6 @@ use strum::{Display, EnumCount, EnumIter, FromRepr};
     Deserialize,
 )]
 #[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
 #[repr(u8)]
 pub enum RollingWindow {
@@ -265,6 +263,12 @@ impl RollingWindow {
     }
 }
 
+impl std::fmt::Display for RollingWindow {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.label())
+    }
+}
+
 impl TryFrom<&str> for RollingWindow {
     type Error = StockTrekError;
 
@@ -315,6 +319,30 @@ impl TryFrom<&str> for RollingWindow {
                 name: "RollingWindow".into(),
                 key: value.into(),
             })),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use strum::IntoEnumIterator;
+
+    #[test]
+    fn display_uses_short_labels() {
+        assert_eq!(RollingWindow::Seconds1.to_string(), "1s");
+        assert_eq!(RollingWindow::Hours24.to_string(), "24h");
+        assert_eq!(RollingWindow::Days7.to_string(), "7d");
+    }
+
+    #[test]
+    fn display_round_trips_through_try_from() {
+        for window in RollingWindow::iter() {
+            assert_eq!(window.label(), window.to_string());
+            assert_eq!(
+                RollingWindow::try_from(window.to_string().as_str()).unwrap(),
+                window
+            );
         }
     }
 }
