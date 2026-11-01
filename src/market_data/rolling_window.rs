@@ -125,95 +125,13 @@ impl RollingWindow {
     }
 
     pub fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        match self {
-            RollingWindow::Seconds1 => Some(date_time + Duration::seconds(1)),
-            RollingWindow::Seconds5 => Some(date_time + Duration::seconds(5)),
-            RollingWindow::Seconds10 => Some(date_time + Duration::seconds(10)),
-            RollingWindow::Seconds15 => Some(date_time + Duration::seconds(15)),
-            RollingWindow::Seconds30 => Some(date_time + Duration::seconds(30)),
-            RollingWindow::Seconds60 => Some(date_time + Duration::seconds(60)),
-            RollingWindow::Minutes1 => Some(date_time + Duration::minutes(1)),
-            RollingWindow::Minutes2 => Some(date_time + Duration::minutes(2)),
-            RollingWindow::Minutes3 => Some(date_time + Duration::minutes(3)),
-            RollingWindow::Minutes5 => Some(date_time + Duration::minutes(5)),
-            RollingWindow::Minutes10 => Some(date_time + Duration::minutes(10)),
-            RollingWindow::Minutes15 => Some(date_time + Duration::minutes(15)),
-            RollingWindow::Minutes30 => Some(date_time + Duration::minutes(30)),
-            RollingWindow::Minutes45 => Some(date_time + Duration::minutes(45)),
-            RollingWindow::Minutes60 => Some(date_time + Duration::minutes(60)),
-            RollingWindow::Minutes90 => Some(date_time + Duration::minutes(90)),
-            RollingWindow::Hours1 => Some(date_time + Duration::hours(1)),
-            RollingWindow::Hours2 => Some(date_time + Duration::hours(2)),
-            RollingWindow::Hours3 => Some(date_time + Duration::hours(3)),
-            RollingWindow::Hours4 => Some(date_time + Duration::hours(4)),
-            RollingWindow::Hours6 => Some(date_time + Duration::hours(6)),
-            RollingWindow::Hours8 => Some(date_time + Duration::hours(8)),
-            RollingWindow::Hours12 => Some(date_time + Duration::hours(12)),
-            RollingWindow::Hours24 => Some(date_time + Duration::hours(24)),
-            RollingWindow::Days1 => Some(date_time + Duration::days(1)),
-            RollingWindow::Days2 => Some(date_time + Duration::days(2)),
-            RollingWindow::Days3 => Some(date_time + Duration::days(3)),
-            RollingWindow::Days7 => Some(date_time + Duration::days(7)),
-            RollingWindow::Days14 => Some(date_time + Duration::days(14)),
-            RollingWindow::Days30 => Some(date_time + Duration::days(30)),
-            RollingWindow::Days45 => Some(date_time + Duration::days(45)),
-            RollingWindow::Days60 => Some(date_time + Duration::days(60)),
-            RollingWindow::Days90 => Some(date_time + Duration::days(90)),
-            RollingWindow::Days180 => Some(date_time + Duration::days(180)),
-            RollingWindow::Days360 => Some(date_time + Duration::days(360)),
-            RollingWindow::Weeks1 => Some(date_time + Duration::weeks(1)),
-            RollingWindow::Weeks2 => Some(date_time + Duration::weeks(2)),
-            RollingWindow::Weeks4 => Some(date_time + Duration::weeks(4)),
-            RollingWindow::Weeks10 => Some(date_time + Duration::weeks(10)),
-            RollingWindow::Weeks20 => Some(date_time + Duration::weeks(20)),
-            RollingWindow::Weeks40 => Some(date_time + Duration::weeks(40)),
-        }
+        let millis = i64::try_from(self.millis_exact()?).ok()?;
+        date_time.checked_add_signed(Duration::milliseconds(millis))
     }
 
     pub fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        match self {
-            RollingWindow::Seconds1 => Some(date_time - Duration::seconds(1)),
-            RollingWindow::Seconds5 => Some(date_time - Duration::seconds(5)),
-            RollingWindow::Seconds10 => Some(date_time - Duration::seconds(10)),
-            RollingWindow::Seconds15 => Some(date_time - Duration::seconds(15)),
-            RollingWindow::Seconds30 => Some(date_time - Duration::seconds(30)),
-            RollingWindow::Seconds60 => Some(date_time - Duration::seconds(60)),
-            RollingWindow::Minutes1 => Some(date_time - Duration::minutes(1)),
-            RollingWindow::Minutes2 => Some(date_time - Duration::minutes(2)),
-            RollingWindow::Minutes3 => Some(date_time - Duration::minutes(3)),
-            RollingWindow::Minutes5 => Some(date_time - Duration::minutes(5)),
-            RollingWindow::Minutes10 => Some(date_time - Duration::minutes(10)),
-            RollingWindow::Minutes15 => Some(date_time - Duration::minutes(15)),
-            RollingWindow::Minutes30 => Some(date_time - Duration::minutes(30)),
-            RollingWindow::Minutes45 => Some(date_time - Duration::minutes(45)),
-            RollingWindow::Minutes60 => Some(date_time - Duration::minutes(60)),
-            RollingWindow::Minutes90 => Some(date_time - Duration::minutes(90)),
-            RollingWindow::Hours1 => Some(date_time - Duration::hours(1)),
-            RollingWindow::Hours2 => Some(date_time - Duration::hours(2)),
-            RollingWindow::Hours3 => Some(date_time - Duration::hours(3)),
-            RollingWindow::Hours4 => Some(date_time - Duration::hours(4)),
-            RollingWindow::Hours6 => Some(date_time - Duration::hours(6)),
-            RollingWindow::Hours8 => Some(date_time - Duration::hours(8)),
-            RollingWindow::Hours12 => Some(date_time - Duration::hours(12)),
-            RollingWindow::Hours24 => Some(date_time - Duration::hours(24)),
-            RollingWindow::Days1 => Some(date_time - Duration::days(1)),
-            RollingWindow::Days2 => Some(date_time - Duration::days(2)),
-            RollingWindow::Days3 => Some(date_time - Duration::days(3)),
-            RollingWindow::Days7 => Some(date_time - Duration::days(7)),
-            RollingWindow::Days14 => Some(date_time - Duration::days(14)),
-            RollingWindow::Days30 => Some(date_time - Duration::days(30)),
-            RollingWindow::Days45 => Some(date_time - Duration::days(45)),
-            RollingWindow::Days60 => Some(date_time - Duration::days(60)),
-            RollingWindow::Days90 => Some(date_time - Duration::days(90)),
-            RollingWindow::Days180 => Some(date_time - Duration::days(180)),
-            RollingWindow::Days360 => Some(date_time - Duration::days(360)),
-            RollingWindow::Weeks1 => Some(date_time - Duration::weeks(1)),
-            RollingWindow::Weeks2 => Some(date_time - Duration::weeks(2)),
-            RollingWindow::Weeks4 => Some(date_time - Duration::weeks(4)),
-            RollingWindow::Weeks10 => Some(date_time - Duration::weeks(10)),
-            RollingWindow::Weeks20 => Some(date_time - Duration::weeks(20)),
-            RollingWindow::Weeks40 => Some(date_time - Duration::weeks(40)),
-        }
+        let millis = i64::try_from(self.millis_exact()?).ok()?;
+        date_time.checked_sub_signed(Duration::milliseconds(millis))
     }
 
     pub fn label(self) -> String {
@@ -342,6 +260,41 @@ mod tests {
             assert_eq!(
                 RollingWindow::try_from(window.to_string().as_str()).unwrap(),
                 window
+            );
+        }
+    }
+
+    #[test]
+    fn checked_add_and_sub_use_the_window_length() {
+        let date_time = DateTime::from_timestamp_millis(1_700_000_000_123).unwrap();
+
+        for window in RollingWindow::iter() {
+            let added = window.checked_add(date_time).unwrap();
+            let subtracted = window.checked_sub(date_time).unwrap();
+            let forward = added.timestamp_millis() - date_time.timestamp_millis();
+            let backward = date_time.timestamp_millis() - subtracted.timestamp_millis();
+
+            assert_eq!(forward, backward, "{window} is not symmetric");
+            assert_eq!(
+                i64::try_from(window.millis_upper_bound().unwrap()).unwrap(),
+                forward,
+                "{window} does not advance by its own length"
+            );
+        }
+    }
+
+    #[test]
+    fn checked_add_and_sub_return_none_when_out_of_range() {
+        for window in RollingWindow::iter() {
+            assert_eq!(
+                window.checked_add(DateTime::<Utc>::MAX_UTC),
+                None,
+                "{window} should not add past the maximum date"
+            );
+            assert_eq!(
+                window.checked_sub(DateTime::<Utc>::MIN_UTC),
+                None,
+                "{window} should not subtract past the minimum date"
             );
         }
     }
