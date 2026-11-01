@@ -137,6 +137,7 @@ pub mod prelude {
     pub use super::{
         Algorithm, Command, Preferences, RoundingStrategy, StrategyContext,
         actions::{ActionErrorCause, ActionErrorResponse, RecoveryPolicy},
+        errors::{PortfolioError, StatsError, StockTrekError, StockTrekResult, ValueError},
         portfolio::Portfolio,
         register_algorithm,
         signals::{SignalContext, SignalKey, Signals},
