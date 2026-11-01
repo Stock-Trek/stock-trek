@@ -5,7 +5,7 @@ use crate::{
     },
     resolved_context::ResolvedContext,
     signal::key::SignalKey,
-    util::serde_ordering,
+    util::serde_ordering::OrderingSerde,
     value::value::NumberValue,
 };
 use rust_decimal::Decimal;
@@ -26,7 +26,7 @@ pub enum Condition {
         /// The left-hand value.
         left: Box<NumberValue>,
         /// The ordering to test for.
-        #[serde(with = "serde_ordering")]
+        #[serde(with = "OrderingSerde")]
         comparison: Ordering,
         /// The right-hand value.
         right: Box<NumberValue>,
@@ -242,6 +242,21 @@ mod tests {
             )
             .test(&context())
             .unwrap()
+    }
+
+    #[test]
+    fn compare_serializes_ordering_as_snake_case() {
+        let condition = ConditionFactory.compare(
+            NumberValue::Literal { literal: 1.0 },
+            Ordering::Less,
+            NumberValue::Literal { literal: 2.0 },
+        );
+
+        let value = serde_json::to_value(&condition).unwrap();
+        assert_eq!(value["comparison"], "less");
+
+        let deserialized: Condition = serde_json::from_value(value).unwrap();
+        assert!(deserialized.test(&context()).unwrap());
     }
 
     #[test]

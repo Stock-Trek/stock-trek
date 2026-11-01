@@ -190,18 +190,26 @@ impl Portfolio {
             .unwrap_or(Decimal::ZERO)
     }
     /// Total available (free) amount of `asset_id` across all accounts (total - reserved).
+    ///
+    /// The result is clamped to zero when pending orders reserve more than the
+    /// portfolio holds.
     pub fn asset_available(&self, asset_id: &AssetId) -> Decimal {
-        self.asset_total(asset_id) - self.asset_reserved(asset_id)
+        Self::available_quantity(self.asset_total(asset_id), self.asset_reserved(asset_id))
     }
     /// Available (free) amount of `asset_id` in a specific CEX account (total - reserved).
+    ///
+    /// The result is clamped to zero when pending orders reserve more than the
+    /// account holds.
     pub fn asset_available_in_cex_account(
         &self,
         asset_id: &AssetId,
         cex_id: &CexId,
         account_id: &AccountId,
     ) -> Decimal {
-        self.asset_total_in_cex_account(asset_id, cex_id, account_id)
-            - self.asset_reserved_in_cex_account(asset_id, cex_id, account_id)
+        Self::available_quantity(
+            self.asset_total_in_cex_account(asset_id, cex_id, account_id),
+            self.asset_reserved_in_cex_account(asset_id, cex_id, account_id),
+        )
     }
     /// Total amount of `asset_id` reserved (locked in unfilled pending orders) across all accounts.
     pub fn asset_reserved(&self, asset_id: &AssetId) -> Decimal {
@@ -263,7 +271,7 @@ impl Portfolio {
                         }
                     }
                 };
-                remaining_quantity(base_quantity, pending_order.filled_base_quantity())
+                Self::remaining_quantity(base_quantity, pending_order.filled_base_quantity())
             }
             OrderRequest::Limit {
                 quote,
@@ -276,29 +284,33 @@ impl Portfolio {
                     Quantity::OfBase(base_quantity) => base_quantity * limit_price,
                     Quantity::OfQuote(quote_quantity) => *quote_quantity,
                 };
-                remaining_quantity(quote_quantity, pending_order.filled_quote_quantity())
+                Self::remaining_quantity(quote_quantity, pending_order.filled_quote_quantity())
             }
             OrderRequest::MarketBuy {
                 quote,
                 quote_quantity,
                 ..
             } if asset_id == quote => {
-                remaining_quantity(*quote_quantity, pending_order.filled_quote_quantity())
+                Self::remaining_quantity(*quote_quantity, pending_order.filled_quote_quantity())
             }
             OrderRequest::MarketSell {
                 base,
                 base_quantity,
                 ..
             } if asset_id == base => {
-                remaining_quantity(*base_quantity, pending_order.filled_base_quantity())
+                Self::remaining_quantity(*base_quantity, pending_order.filled_base_quantity())
             }
             _ => Decimal::ZERO,
         }
     }
-}
 
-fn remaining_quantity(ordered: Decimal, filled: Decimal) -> Decimal {
-    (ordered - filled).max(Decimal::ZERO)
+    fn remaining_quantity(ordered: Decimal, filled: Decimal) -> Decimal {
+        (ordered - filled).max(Decimal::ZERO)
+    }
+
+    fn available_quantity(total: Decimal, reserved: Decimal) -> Decimal {
+        (total - reserved).max(Decimal::ZERO)
+    }
 }
 
 impl CexAccountPortfolio {
@@ -382,15 +394,17 @@ impl PortfolioBuilder {
     }
 
     /// Adds a pending order to a CEX account.
+    ///
+    /// The order is grouped under the tag embedded in `order_request`.
     pub fn pending_order(
         &mut self,
         cex_id: CexId,
         account_id: AccountId,
-        tag: Tag,
         order_request: OrderRequest<AssetId, Decimal>,
         filled_base_quantity: Decimal,
         filled_quote_quantity: Decimal,
     ) -> &mut Self {
+        let tag = Self::order_request_tag(&order_request).clone();
         self.portfolios
             .entry(cex_id)
             .or_default()
@@ -410,6 +424,14 @@ impl PortfolioBuilder {
     /// Builds the [`Portfolio`] from the collected data.
     pub fn build(self) -> Portfolio {
         Portfolio::new(self.portfolios)
+    }
+
+    fn order_request_tag(order_request: &OrderRequest<AssetId, Decimal>) -> &Tag {
+        match order_request {
+            OrderRequest::Limit { tag, .. }
+            | OrderRequest::MarketBuy { tag, .. }
+            | OrderRequest::MarketSell { tag, .. } => tag,
+        }
     }
 }
 

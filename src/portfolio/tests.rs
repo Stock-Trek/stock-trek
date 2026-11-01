@@ -17,7 +17,6 @@ fn portfolio_with(
         .pending_order(
             CexId::Binance,
             AccountId::new("account"),
-            Tag::new("tag"),
             order_request,
             filled_base_quantity,
             filled_quote_quantity,
@@ -148,5 +147,58 @@ fn accounts_can_be_discovered_with_their_details() {
             )
             .count(),
         1
+    );
+}
+
+#[test]
+fn asset_available_is_clamped_when_reservations_exceed_balance() {
+    let portfolio = portfolio_with(
+        limit_sell(Quantity::OfBase(Decimal::from(150)), Decimal::from(100)),
+        Decimal::ZERO,
+        Decimal::ZERO,
+    );
+
+    assert_eq!(
+        portfolio.asset_reserved(&AssetId::Bitcoin),
+        Decimal::from(150)
+    );
+    assert_eq!(portfolio.asset_available(&AssetId::Bitcoin), Decimal::ZERO);
+    assert_eq!(
+        portfolio.asset_available_in_cex_account(
+            &AssetId::Bitcoin,
+            &CexId::Binance,
+            &AccountId::new("account"),
+        ),
+        Decimal::ZERO
+    );
+}
+
+#[test]
+fn pending_orders_are_grouped_by_the_order_request_tag() {
+    let mut builder = PortfolioBuilder::new();
+    builder.pending_order(
+        CexId::Binance,
+        AccountId::new("account"),
+        limit_sell(Quantity::OfBase(Decimal::from(10)), Decimal::from(100)),
+        Decimal::ZERO,
+        Decimal::ZERO,
+    );
+    let portfolio = builder.build();
+
+    assert_eq!(
+        portfolio.pending_orders_in_cex_account_with_tag(
+            &CexId::Binance,
+            &AccountId::new("account"),
+            &Tag::new("tag"),
+        ),
+        1.0
+    );
+    assert_eq!(
+        portfolio.pending_orders_in_cex_account_with_tag(
+            &CexId::Binance,
+            &AccountId::new("account"),
+            &Tag::new("other"),
+        ),
+        0.0
     );
 }
