@@ -1,7 +1,7 @@
 use crate::{
     cex::capability::HasRequiredCapabilities,
     error::result::StockTrekResult,
-    resolveable::Resolvable,
+    resolvable::Resolvable,
     resolved_context::ResolvedContext,
     value::value::{AssetIdValue, NumberValue},
 };

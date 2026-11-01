@@ -1,6 +1,6 @@
 use crate::{
     action::action::Action, cex::capability::HasRequiredCapabilities,
-    error::result::StockTrekResult, resolveable::Resolvable, resolved_context::ResolvedContext,
+    error::result::StockTrekResult, resolvable::Resolvable, resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Debug};
