@@ -1,4 +1,5 @@
 use super::*;
+use crate::market_data::window_test_support::window_tests;
 use strum::IntoEnumIterator;
 
 fn millis_at(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> i64 {
@@ -188,42 +189,6 @@ fn bounds_for_month_windows_handle_leap_years() {
 }
 
 #[test]
-fn checked_add_and_sub_use_the_window_length() {
-    let timestamp = millis_at(2024, 2, 15, 12, 0, 0);
-    let date_time = DateTime::from_timestamp_millis(timestamp).unwrap();
-
-    for window in AlignedWindow::iter().filter(|window| !is_calendar_window(*window)) {
-        let added = window.checked_add(date_time).unwrap();
-        let subtracted = window.checked_sub(date_time).unwrap();
-        let forward = added.timestamp_millis() - timestamp;
-        let backward = timestamp - subtracted.timestamp_millis();
-
-        assert_eq!(forward, backward, "{window} is not symmetric");
-        assert_eq!(
-            i64::try_from(window.millis_upper_bound().unwrap()).unwrap(),
-            forward,
-            "{window} does not advance by its own length"
-        );
-    }
-}
-
-#[test]
-fn checked_add_and_sub_return_none_when_out_of_range() {
-    for window in AlignedWindow::iter() {
-        assert_eq!(
-            window.checked_add(DateTime::<Utc>::MAX_UTC),
-            None,
-            "{window} should not add past the maximum date"
-        );
-        assert_eq!(
-            window.checked_sub(DateTime::<Utc>::MIN_UTC),
-            None,
-            "{window} should not subtract past the minimum date"
-        );
-    }
-}
-
-#[test]
 fn millis_exact_returns_lengths_for_fixed_windows_only() {
     assert_eq!(AlignedWindow::Seconds1.millis_exact(), Some(1_000));
     assert_eq!(AlignedWindow::Minutes5.millis_exact(), Some(300_000));
@@ -285,39 +250,10 @@ fn calendar_months_returns_months_for_calendar_windows_only() {
     }
 }
 
-#[test]
-fn display_uses_short_labels() {
-    assert_eq!(AlignedWindow::Seconds1.to_string(), "1s");
-    assert_eq!(AlignedWindow::Hours24.to_string(), "24h");
-    assert_eq!(AlignedWindow::Months1.to_string(), "1mo");
-    assert_eq!(AlignedWindow::Years2.to_string(), "2y");
-}
-
-#[test]
-fn display_round_trips_through_try_from() {
-    for window in AlignedWindow::iter() {
-        assert_eq!(window.label(), window.to_string());
-        assert_eq!(
-            AlignedWindow::try_from(window.to_string().as_str()).unwrap(),
-            window
-        );
-    }
-}
-
-#[test]
-fn serde_round_trips_short_labels() {
-    for window in AlignedWindow::iter() {
-        let json = serde_json::to_string(&window).unwrap();
-
-        assert_eq!(json, format!("\"{}\"", window.label()));
-        assert_eq!(
-            serde_json::from_str::<AlignedWindow>(&json).unwrap(),
-            window
-        );
-    }
-}
-
-#[test]
-fn serde_rejects_names() {
-    assert!(serde_json::from_str::<AlignedWindow>("\"seconds1\"").is_err());
-}
+window_tests!(
+    AlignedWindow,
+    AlignedWindow::Seconds1 => "1s",
+    AlignedWindow::Hours24 => "24h",
+    AlignedWindow::Months1 => "1mo",
+    AlignedWindow::Years2 => "2y",
+);
