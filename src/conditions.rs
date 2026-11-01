@@ -162,8 +162,8 @@ impl ConditionFactory {
     pub fn owns_asset_in_cex_account(
         &self,
         asset_id: AssetId,
-        account_id: AccountId,
         cex_id: CexId,
+        account_id: AccountId,
     ) -> Condition {
         Condition::OwnsAssetInCexAccount {
             cex_id,
