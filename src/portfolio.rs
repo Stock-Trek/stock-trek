@@ -248,7 +248,6 @@ impl Portfolio {
         match pending_order.order_request() {
             OrderRequest::Limit {
                 base,
-                quote,
                 side: Side::Sell,
                 limit_price,
                 quantity,
@@ -267,7 +266,6 @@ impl Portfolio {
                 remaining_quantity(base_quantity, pending_order.filled_base_quantity())
             }
             OrderRequest::Limit {
-                base,
                 quote,
                 side: Side::Buy,
                 limit_price,
