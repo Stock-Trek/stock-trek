@@ -26,27 +26,25 @@ pub enum Action {
         order_request: Box<OrderRequest<AssetIdValue, NumberValue>>,
     },
     /// Cancels all orders across all CEX accounts.
-    CancelAllOrders,
-    /// Cancels all orders with a specific tag across all CEX accounts.
-    CancelAllOrdersWithTag {
-        /// The tag of the orders to cancel.
-        tag: Tag,
+    CancelAllOrders {
+        /// The optional tag of the orders to cancel.
+        tag: Option<Tag>,
     },
-    /// Cancels all orders in a CEX account.
+    /// Cancels all orders across all CEX accounts.
+    CancelAllOrdersInCex {
+        /// The CEX containing the account.
+        cex_id_value: CexIdValue,
+        /// The optional tag of the orders to cancel.
+        tag: Option<Tag>,
+    },
+    /// Cancels all orders across all CEX accounts.
     CancelAllOrdersInCexAccount {
         /// The CEX containing the account.
         cex_id_value: CexIdValue,
         /// The account whose orders should be cancelled.
         account_id_value: AccountIdValue,
-    },
-    /// Cancels all orders with a specific tag in a CEX account.
-    CancelAllOrdersInCexAccountWithTag {
-        /// The CEX containing the account.
-        cex_id_value: CexIdValue,
-        /// The account whose orders should be cancelled.
-        account_id_value: AccountIdValue,
-        /// The tag of the orders to cancel.
-        tag: Tag,
+        /// The optional tag of the orders to cancel.
+        tag: Option<Tag>,
     },
 }
 
@@ -62,22 +60,20 @@ impl Resolvable<ResolvedAction> for Action {
                 account_id: account_id_value.account_id(c)?,
                 order_request: order_request.try_resolve(c)?,
             }),
-            Action::CancelAllOrders => Ok(ResolvedAction::CancelAllOrders),
-            Action::CancelAllOrdersWithTag { tag } => {
-                Ok(ResolvedAction::CancelAllOrdersWithTag { tag: tag.clone() })
+            Action::CancelAllOrders { tag } => {
+                Ok(ResolvedAction::CancelAllOrders { tag: tag.clone() })
+            }
+            Action::CancelAllOrdersInCex { cex_id_value, tag } => {
+                Ok(ResolvedAction::CancelAllOrdersInCex {
+                    cex_id: cex_id_value.cex_id(c)?,
+                    tag: tag.clone(),
+                })
             }
             Action::CancelAllOrdersInCexAccount {
                 cex_id_value,
                 account_id_value,
-            } => Ok(ResolvedAction::CancelAllOrdersInCexAccount {
-                cex_id: cex_id_value.cex_id(c)?,
-                account_id: account_id_value.account_id(c)?,
-            }),
-            Action::CancelAllOrdersInCexAccountWithTag {
-                cex_id_value,
-                account_id_value,
                 tag,
-            } => Ok(ResolvedAction::CancelAllOrdersInCexAccountWithTag {
+            } => Ok(ResolvedAction::CancelAllOrdersInCexAccount {
                 cex_id: cex_id_value.cex_id(c)?,
                 account_id: account_id_value.account_id(c)?,
                 tag: tag.clone(),
@@ -90,10 +86,9 @@ impl HasRequiredCapabilities for Action {
     fn required_capabilities(&self) -> Vec<CexCapability> {
         match self {
             Action::SendOrderRequest { order_request, .. } => order_request.required_capabilities(),
-            Action::CancelAllOrders
-            | Action::CancelAllOrdersWithTag { .. }
-            | Action::CancelAllOrdersInCexAccount { .. }
-            | Action::CancelAllOrdersInCexAccountWithTag { .. } => vec![],
+            Action::CancelAllOrders { .. }
+            | Action::CancelAllOrdersInCex { .. }
+            | Action::CancelAllOrdersInCexAccount { .. } => vec![],
         }
     }
 }
@@ -127,19 +122,26 @@ mod tests {
 
     #[test]
     fn cancel_all_orders_resolves() {
-        let resolved = Action::CancelAllOrders.try_resolve(&context()).unwrap();
-        assert!(matches!(resolved, ResolvedAction::CancelAllOrders));
+        let resolved = Action::CancelAllOrders { tag: None }
+            .try_resolve(&context())
+            .unwrap();
+        assert!(matches!(
+            resolved,
+            ResolvedAction::CancelAllOrders { tag: None }
+        ));
     }
 
     #[test]
     fn cancel_all_orders_with_tag_resolves() {
         let tag = Tag::new("tag");
-        let resolved = Action::CancelAllOrdersWithTag { tag: tag.clone() }
-            .try_resolve(&context())
-            .unwrap();
+        let resolved = Action::CancelAllOrders {
+            tag: Some(tag.clone()),
+        }
+        .try_resolve(&context())
+        .unwrap();
         match resolved {
-            ResolvedAction::CancelAllOrdersWithTag { tag: resolved_tag } => {
-                assert_eq!(resolved_tag, tag);
+            ResolvedAction::CancelAllOrders { tag: resolved_tag } => {
+                assert_eq!(resolved_tag, Some(tag));
             }
             _ => panic!("unexpected resolved action"),
         }
@@ -150,11 +152,16 @@ mod tests {
         let resolved = Action::CancelAllOrdersInCexAccount {
             cex_id_value: cex_id_value(),
             account_id_value: account_id_value(),
+            tag: None,
         }
         .try_resolve(&context())
         .unwrap();
         match resolved {
-            ResolvedAction::CancelAllOrdersInCexAccount { cex_id, account_id } => {
+            ResolvedAction::CancelAllOrdersInCexAccount {
+                cex_id,
+                account_id,
+                tag: None,
+            } => {
                 assert_eq!(cex_id, CexId::Binance);
                 assert_eq!(account_id, AccountId::new("account"));
             }
@@ -165,22 +172,22 @@ mod tests {
     #[test]
     fn cancel_all_orders_in_cex_account_with_tag_resolves() {
         let tag = Tag::new("tag");
-        let resolved = Action::CancelAllOrdersInCexAccountWithTag {
+        let resolved = Action::CancelAllOrdersInCexAccount {
             cex_id_value: cex_id_value(),
             account_id_value: account_id_value(),
-            tag: tag.clone(),
+            tag: Some(tag.clone()),
         }
         .try_resolve(&context())
         .unwrap();
         match resolved {
-            ResolvedAction::CancelAllOrdersInCexAccountWithTag {
+            ResolvedAction::CancelAllOrdersInCexAccount {
                 cex_id,
                 account_id,
                 tag: resolved_tag,
             } => {
                 assert_eq!(cex_id, CexId::Binance);
                 assert_eq!(account_id, AccountId::new("account"));
-                assert_eq!(resolved_tag, tag);
+                assert_eq!(resolved_tag, Some(tag));
             }
             _ => panic!("unexpected resolved action"),
         }
@@ -188,10 +195,14 @@ mod tests {
 
     #[test]
     fn cancel_actions_require_no_capabilities() {
-        assert!(Action::CancelAllOrders.required_capabilities().is_empty());
         assert!(
-            Action::CancelAllOrdersWithTag {
-                tag: Tag::new("tag")
+            Action::CancelAllOrders { tag: None }
+                .required_capabilities()
+                .is_empty()
+        );
+        assert!(
+            Action::CancelAllOrders {
+                tag: Some(Tag::new("tag"))
             }
             .required_capabilities()
             .is_empty()
@@ -200,15 +211,16 @@ mod tests {
             Action::CancelAllOrdersInCexAccount {
                 cex_id_value: cex_id_value(),
                 account_id_value: account_id_value(),
+                tag: None
             }
             .required_capabilities()
             .is_empty()
         );
         assert!(
-            Action::CancelAllOrdersInCexAccountWithTag {
+            Action::CancelAllOrdersInCexAccount {
                 cex_id_value: cex_id_value(),
                 account_id_value: account_id_value(),
-                tag: Tag::new("tag"),
+                tag: Some(Tag::new("tag")),
             }
             .required_capabilities()
             .is_empty()

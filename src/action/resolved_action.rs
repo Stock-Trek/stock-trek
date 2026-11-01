@@ -11,11 +11,16 @@ use strum::Display;
 /// An action with all signal and portfolio values resolved.
 pub enum ResolvedAction {
     /// Cancels all orders across all CEX accounts.
-    CancelAllOrders,
-    /// Cancels all orders with a specific tag across all CEX accounts.
-    CancelAllOrdersWithTag {
-        /// The tag of the orders to cancel.
-        tag: Tag,
+    CancelAllOrders {
+        /// The optional tag of the orders to cancel.
+        tag: Option<Tag>,
+    },
+    /// Cancels all orders in a CEX account.
+    CancelAllOrdersInCex {
+        /// The CEX containing the account.
+        cex_id: CexId,
+        /// The optional tag of the orders to cancel.
+        tag: Option<Tag>,
     },
     /// Cancels all orders in a CEX account.
     CancelAllOrdersInCexAccount {
@@ -23,15 +28,8 @@ pub enum ResolvedAction {
         cex_id: CexId,
         /// The account whose orders should be cancelled.
         account_id: AccountId,
-    },
-    /// Cancels all orders with a specific tag in a CEX account.
-    CancelAllOrdersInCexAccountWithTag {
-        /// The CEX containing the account.
-        cex_id: CexId,
-        /// The account whose orders should be cancelled.
-        account_id: AccountId,
-        /// The tag of the orders to cancel.
-        tag: Tag,
+        /// The optional tag of the orders to cancel.
+        tag: Option<Tag>,
     },
     /// Places an order in a CEX account.
     PlaceOrder {

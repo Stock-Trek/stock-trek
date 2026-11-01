@@ -31,15 +31,44 @@ impl ActionFactory {
     }
     /// Creates an action that cancels all orders across all CEX accounts.
     pub fn cancel_all_orders(&self, recovery_policy: RecoveryPolicy) -> RecoverableAction {
-        RecoverableAction::new(Action::CancelAllOrders, recovery_policy)
+        RecoverableAction::new(Action::CancelAllOrders { tag: None }, recovery_policy)
     }
-    /// Creates an action that cancels all orders with `tag` across all CEX accounts.
+    /// Creates an action that cancels all orders across all CEX accounts with `tag`.
     pub fn cancel_all_orders_with_tag(
         &self,
         tag: Tag,
         recovery_policy: RecoveryPolicy,
     ) -> RecoverableAction {
-        RecoverableAction::new(Action::CancelAllOrdersWithTag { tag }, recovery_policy)
+        RecoverableAction::new(Action::CancelAllOrders { tag: Some(tag) }, recovery_policy)
+    }
+    /// Creates an action that cancels all orders in a CEX.
+    pub fn cancel_all_orders_in_cex(
+        &self,
+        cex_id_value: CexIdValue,
+        recovery_policy: RecoveryPolicy,
+    ) -> RecoverableAction {
+        RecoverableAction::new(
+            Action::CancelAllOrdersInCex {
+                cex_id_value,
+                tag: None,
+            },
+            recovery_policy,
+        )
+    }
+    /// Creates an action that cancels all orders in a CEX with `tag`.
+    pub fn cancel_all_orders_in_cex_with_tag(
+        &self,
+        cex_id_value: CexIdValue,
+        tag: Tag,
+        recovery_policy: RecoveryPolicy,
+    ) -> RecoverableAction {
+        RecoverableAction::new(
+            Action::CancelAllOrdersInCex {
+                cex_id_value,
+                tag: Some(tag),
+            },
+            recovery_policy,
+        )
     }
     /// Creates an action that cancels all orders in a CEX account.
     pub fn cancel_all_orders_in_cex_account(
@@ -52,11 +81,12 @@ impl ActionFactory {
             Action::CancelAllOrdersInCexAccount {
                 cex_id_value,
                 account_id_value,
+                tag: None,
             },
             recovery_policy,
         )
     }
-    /// Creates an action that cancels all orders with `tag` in a CEX account.
+    /// Creates an action that cancels all orders in a CEX account with `tag`.
     pub fn cancel_all_orders_in_cex_account_with_tag(
         &self,
         cex_id_value: CexIdValue,
@@ -65,10 +95,10 @@ impl ActionFactory {
         recovery_policy: RecoveryPolicy,
     ) -> RecoverableAction {
         RecoverableAction::new(
-            Action::CancelAllOrdersInCexAccountWithTag {
+            Action::CancelAllOrdersInCexAccount {
                 cex_id_value,
                 account_id_value,
-                tag,
+                tag: Some(tag),
             },
             recovery_policy,
         )
