@@ -4,9 +4,7 @@ use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketOrderBook {
-    #[serde(alias = "exact_bids")]
     pub bids: Vec<MarketQuote>,
-    #[serde(alias = "exact_asks")]
     pub asks: Vec<MarketQuote>,
     #[serde(skip)]
     bid_price_quantities: OnceLock<Vec<PriceQuantity>>,
@@ -68,17 +66,5 @@ mod tests {
         assert_eq!(deserialized.asks[0].quantity, 2.5);
         assert_eq!(deserialized.bid_price_quantities(), &vec![(100.0, 1.5)]);
         assert_eq!(deserialized.ask_price_quantities(), &vec![(101.0, 2.5)]);
-    }
-
-    #[test]
-    fn deserializes_legacy_exact_field_names() {
-        let json = r#"{
-            "exact_bids": [{"price": 100.0, "quantity": 1.5}],
-            "exact_asks": [{"price": 101.0, "quantity": 2.5}]
-        }"#;
-        let deserialized: MarketOrderBook = serde_json::from_str(json).unwrap();
-
-        assert_eq!(deserialized.bids[0].price, 100.0);
-        assert_eq!(deserialized.asks[0].price, 101.0);
     }
 }
