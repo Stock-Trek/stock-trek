@@ -19,3 +19,4 @@ jobs:
           cargo fmt --check
           cargo clippy --all-targets --all-features -- -D warnings
           cargo test
+          RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
