@@ -1,4 +1,7 @@
-use crate::market_data::{market_candle::MarketCandle, rolling_window::RollingWindow};
+use crate::{
+    errors::{StockTrekError, StockTrekResult, ValueError},
+    market_data::{market_candle::MarketCandle, rolling_window::RollingWindow},
+};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::{collections::HashMap, sync::OnceLock};
 use strum::IntoEnumIterator;
@@ -33,17 +36,27 @@ impl MarketRollingWindow {
             ohlcv: OnceLock::new(),
         }
     }
-    pub fn ohlcv(&self, window: RollingWindow) -> &Ohlcv {
-        self.ohlcv
+    pub fn ohlcv(&self, window: RollingWindow) -> StockTrekResult<&Ohlcv> {
+        let cached = self
+            .ohlcv
             .get_or_init(|| self.new_ohlcv_map())
             .get(&window)
-            .unwrap()
-            .get_or_init(|| self.ohlcv_values(window))
+            .ok_or_else(|| Self::not_found(window))?;
+        if let Some(values) = cached.get() {
+            return Ok(values);
+        }
+        let values = self.ohlcv_values(window)?;
+        let _ = cached.set(values);
+        cached.get().ok_or_else(|| Self::not_found(window))
     }
 
-    fn ohlcv_values(&self, window: RollingWindow) -> Ohlcv {
-        let ohlcv = &self.candles.get(&window).unwrap().ohlcv;
-        (
+    fn ohlcv_values(&self, window: RollingWindow) -> StockTrekResult<Ohlcv> {
+        let ohlcv = &self
+            .candles
+            .get(&window)
+            .ok_or_else(|| Self::not_found(window))?
+            .ohlcv;
+        Ok((
             ohlcv.open,
             ohlcv.high,
             ohlcv.low,
@@ -51,11 +64,53 @@ impl MarketRollingWindow {
             ohlcv.volume,
             ohlcv.quote_volume,
             ohlcv.vwap,
-        )
+        ))
     }
     fn new_ohlcv_map(&self) -> HashMap<RollingWindow, OnceLock<Ohlcv>> {
         RollingWindow::iter()
             .map(|window| (window, OnceLock::new()))
             .collect()
+    }
+    fn not_found(window: RollingWindow) -> StockTrekError {
+        StockTrekError::Value(ValueError::NotFound {
+            name: "RollingWindow".into(),
+            key: window.to_string(),
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::market_data::{market_ohlcv::MarketOhlcv, timestamp::TimestampMillis};
+
+    fn candle() -> MarketCandle {
+        MarketCandle::new(
+            0 as TimestampMillis,
+            1_000 as TimestampMillis,
+            1_000 as TimestampMillis,
+            true,
+            MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.25),
+            1,
+        )
+    }
+
+    #[test]
+    fn ohlcv_returns_values_for_present_window() {
+        let window = RollingWindow::Minutes1;
+        let candles = HashMap::from([(window, candle())]);
+        let market = MarketRollingWindow::new(candles);
+
+        assert_eq!(
+            market.ohlcv(window).unwrap(),
+            &(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.25)
+        );
+    }
+
+    #[test]
+    fn ohlcv_returns_error_for_absent_window() {
+        let market = MarketRollingWindow::new(HashMap::from([(RollingWindow::Minutes1, candle())]));
+
+        assert!(market.ohlcv(RollingWindow::Minutes5).is_err());
     }
 }
