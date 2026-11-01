@@ -305,9 +305,9 @@ impl PortfolioBuilder {
         self
     }
 
-    pub fn build(&self) -> Portfolio {
+    pub fn build(self) -> Portfolio {
         Portfolio {
-            portfolios: self.portfolios.clone(),
+            portfolios: self.portfolios,
         }
     }
 }
