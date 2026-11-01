@@ -15,9 +15,9 @@ pub enum ResolvedAction {
         /// The optional tag of the orders to cancel.
         tag: Option<Tag>,
     },
-    /// Cancels all orders in a CEX account.
+    /// Cancels all orders in a CEX.
     CancelAllOrdersInCex {
-        /// The CEX containing the account.
+        /// The CEX whose orders should be cancelled.
         cex_id: CexId,
         /// The optional tag of the orders to cancel.
         tag: Option<Tag>,
