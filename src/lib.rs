@@ -138,7 +138,7 @@ pub mod prelude {
         Algorithm, Command, Preferences, RoundingStrategy, StrategyContext,
         actions::{ActionErrorCause, ActionErrorResponse, RecoveryPolicy},
         errors::{PortfolioError, StatsError, StockTrekError, StockTrekResult, ValueError},
-        portfolio::Portfolio,
+        portfolio::{CexAccountPortfolio, PendingOrder, Portfolio},
         register_algorithm,
         signals::{SignalContext, SignalKey, Signals},
         traitreg,

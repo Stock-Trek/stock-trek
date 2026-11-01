@@ -39,6 +39,93 @@ impl Portfolio {
             .unwrap_or_default()
     }
 
+    /// Iterates over every CEX account and its portfolio.
+    ///
+    /// Each item is `(cex_id, account_id, account_portfolio)`. This is the
+    /// primary way for an algorithm to discover which accounts it can use.
+    pub fn cex_accounts(&self) -> impl Iterator<Item = (&CexId, &AccountId, &CexAccountPortfolio)> {
+        self.portfolios.iter().flat_map(|(cex_id, accounts)| {
+            accounts
+                .iter()
+                .map(move |(account_id, portfolio)| (cex_id, account_id, portfolio))
+        })
+    }
+
+    /// Iterates over every `(cex_id, account_id)` pair in the portfolio.
+    pub fn accounts(&self) -> impl Iterator<Item = (&CexId, &AccountId)> {
+        self.cex_accounts()
+            .map(|(cex_id, account_id, _)| (cex_id, account_id))
+    }
+
+    /// Iterates over the account identifiers in a specific CEX.
+    pub fn accounts_in_cex(&self, cex_id: &CexId) -> impl Iterator<Item = &AccountId> {
+        self.portfolios
+            .get(cex_id)
+            .into_iter()
+            .flat_map(|accounts| accounts.keys())
+    }
+
+    /// Returns the portfolio for a specific CEX account, if it exists.
+    pub fn cex_account(
+        &self,
+        cex_id: &CexId,
+        account_id: &AccountId,
+    ) -> Option<&CexAccountPortfolio> {
+        self.portfolios
+            .get(cex_id)
+            .and_then(|accounts| accounts.get(account_id))
+    }
+
+    /// Returns the portfolio for a specific CEX account, if it exists.
+    ///
+    /// This is an alias for [`Portfolio::cex_account`].
+    pub fn account(&self, cex_id: &CexId, account_id: &AccountId) -> Option<&CexAccountPortfolio> {
+        self.cex_account(cex_id, account_id)
+    }
+
+    /// Iterates over every pending order with its CEX, account, and tag.
+    ///
+    /// Each item is `(cex_id, account_id, tag, pending_order)`.
+    pub fn pending_orders_iter(
+        &self,
+    ) -> impl Iterator<Item = (&CexId, &AccountId, &Tag, &PendingOrder)> {
+        self.cex_accounts()
+            .flat_map(|(cex_id, account_id, portfolio)| {
+                portfolio
+                    .pending_orders
+                    .iter()
+                    .flat_map(move |(tag, orders)| {
+                        orders
+                            .iter()
+                            .map(move |order| (cex_id, account_id, tag, order))
+                    })
+            })
+    }
+
+    /// Iterates over the pending orders in a specific CEX account.
+    pub fn pending_orders_in_cex_account_iter(
+        &self,
+        cex_id: &CexId,
+        account_id: &AccountId,
+    ) -> impl Iterator<Item = (&Tag, &PendingOrder)> {
+        self.cex_account(cex_id, account_id)
+            .into_iter()
+            .flat_map(|portfolio| portfolio.pending_orders_iter())
+    }
+
+    /// Iterates over the pending orders with `tag` in a specific CEX account.
+    pub fn pending_orders_in_cex_account_with_tag_iter<'a>(
+        &'a self,
+        cex_id: &CexId,
+        account_id: &AccountId,
+        tag: &'a Tag,
+    ) -> impl Iterator<Item = &'a PendingOrder> {
+        self.cex_account(cex_id, account_id)
+            .and_then(|portfolio| portfolio.pending_orders_with_tag(tag))
+            .into_iter()
+            .flatten()
+    }
+
     /// Total number of pending orders across all CEXes and accounts.
     pub fn pending_orders(&self) -> f64 {
         self.portfolios
@@ -234,6 +321,43 @@ impl CexAccountPortfolio {
             pending_orders,
         }
     }
+
+    /// Returns all asset balances (available and reserved) keyed by asset.
+    pub fn asset_counts(&self) -> &HashMap<AssetId, Decimal> {
+        &self.asset_counts
+    }
+
+    /// Iterates over all asset balances keyed by asset.
+    pub fn assets(&self) -> impl Iterator<Item = (&AssetId, &Decimal)> {
+        self.asset_counts.iter()
+    }
+
+    /// Returns the total balance (available and reserved) of an asset.
+    ///
+    /// Returns zero when the account does not hold the asset.
+    pub fn asset_count(&self, asset_id: &AssetId) -> Decimal {
+        self.asset_counts
+            .get(asset_id)
+            .copied()
+            .unwrap_or(Decimal::ZERO)
+    }
+
+    /// Returns all pending orders grouped by tag.
+    pub fn pending_orders(&self) -> &HashMap<Tag, Vec<PendingOrder>> {
+        &self.pending_orders
+    }
+
+    /// Returns the pending orders with the given tag, if any.
+    pub fn pending_orders_with_tag(&self, tag: &Tag) -> Option<&[PendingOrder]> {
+        self.pending_orders.get(tag).map(Vec::as_slice)
+    }
+
+    /// Iterates over every pending order together with its tag.
+    pub fn pending_orders_iter(&self) -> impl Iterator<Item = (&Tag, &PendingOrder)> {
+        self.pending_orders
+            .iter()
+            .flat_map(|(tag, orders)| orders.iter().map(move |order| (tag, order)))
+    }
 }
 
 impl PendingOrder {
@@ -248,6 +372,21 @@ impl PendingOrder {
             filled_base_quantity,
             filled_quote_quantity,
         }
+    }
+
+    /// Returns the order request that created this pending order.
+    pub fn order_request(&self) -> &OrderRequest<AssetId, Decimal> {
+        &self.order_request
+    }
+
+    /// Returns the quantity of the base asset that has been filled.
+    pub fn filled_base_quantity(&self) -> Decimal {
+        self.filled_base_quantity
+    }
+
+    /// Returns the quantity of the quote asset that has been filled.
+    pub fn filled_quote_quantity(&self) -> Decimal {
+        self.filled_quote_quantity
     }
 }
 
@@ -437,5 +576,55 @@ mod tests {
         };
         let portfolio = portfolio_with(market_sell, Decimal::from(15), Decimal::ZERO);
         assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), Decimal::ZERO);
+    }
+
+    #[test]
+    fn accounts_can_be_discovered_with_their_details() {
+        let portfolio = portfolio_with(
+            limit_sell(Quantity::OfBase(Decimal::from(10)), Decimal::from(100)),
+            Decimal::from(4),
+            Decimal::ZERO,
+        );
+
+        let accounts = portfolio.accounts().collect::<Vec<_>>();
+        assert_eq!(accounts.len(), 1);
+        assert_eq!(accounts[0].0, &CexId::Binance);
+        assert_eq!(accounts[0].1, &AccountId::new("account"));
+
+        let account = portfolio
+            .cex_account(&CexId::Binance, &AccountId::new("account"))
+            .unwrap();
+        assert_eq!(
+            account.asset_counts().get(&AssetId::Bitcoin),
+            Some(&Decimal::from(100))
+        );
+        assert_eq!(account.asset_count(&AssetId::Bitcoin), Decimal::from(100));
+
+        let pending_orders = account.pending_orders_with_tag(&Tag::new("tag")).unwrap();
+        assert_eq!(pending_orders.len(), 1);
+        assert_eq!(pending_orders[0].filled_base_quantity(), Decimal::from(4));
+        assert_eq!(pending_orders[0].filled_quote_quantity(), Decimal::ZERO);
+        assert!(matches!(
+            pending_orders[0].order_request(),
+            OrderRequest::Limit { .. }
+        ));
+
+        assert_eq!(portfolio.pending_orders_iter().count(), 1);
+        assert_eq!(
+            portfolio
+                .pending_orders_in_cex_account_iter(&CexId::Binance, &AccountId::new("account"))
+                .count(),
+            1
+        );
+        assert_eq!(
+            portfolio
+                .pending_orders_in_cex_account_with_tag_iter(
+                    &CexId::Binance,
+                    &AccountId::new("account"),
+                    &Tag::new("tag"),
+                )
+                .count(),
+            1
+        );
     }
 }

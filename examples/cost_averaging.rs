@@ -151,7 +151,7 @@ mod tests {
             );
             by_cex.insert(cex, CexMarketDataByBaseContext::new(markets_by_base));
         }
-        SignalContext::new(by_cex)
+        SignalContext::from_market_data(by_cex)
     }
 
     #[test]
