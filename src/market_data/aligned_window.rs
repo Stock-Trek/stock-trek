@@ -1,6 +1,6 @@
 use crate::{
     errors::{StatsError, StockTrekError, StockTrekResult, ValueError},
-    market_data::millis::*,
+    market_data::{millis::*, timestamp::TimestampMillis},
 };
 use chrono::{DateTime, Datelike, Duration, Months, TimeZone, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -85,31 +85,34 @@ pub enum AlignedWindow {
     Years2,
 }
 
-/// The bounds of an aligned window, both in milliseconds.
+/// The bounds of an aligned window, both as [`TimestampMillis`].
 ///
 /// `lower` is inclusive and `upper` is exclusive.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct AlignedTimestampBounds {
-    /// The inclusive lower bound in milliseconds.
-    pub lower: i64,
-    /// The exclusive upper bound in milliseconds.
-    pub upper: i64,
+    /// The inclusive lower bound.
+    pub lower: TimestampMillis,
+    /// The exclusive upper bound.
+    pub upper: TimestampMillis,
 }
 
 impl AlignedTimestampBounds {
     /// Creates bounds from an inclusive lower and exclusive upper timestamp.
-    pub fn new(lower: i64, upper: i64) -> Self {
+    pub fn new(lower: TimestampMillis, upper: TimestampMillis) -> Self {
         Self { lower, upper }
     }
 }
 
 impl AlignedWindow {
     /// Returns the inclusive lower bound and exclusive upper bound of the
-    /// aligned window containing `timestamp`, both in milliseconds.
+    /// aligned window containing `timestamp`.
     ///
     /// Month and year windows follow calendar boundaries, so their lengths vary
     /// with the actual number of days in each month or year.
-    pub fn bounds_for(&self, timestamp: i64) -> StockTrekResult<AlignedTimestampBounds> {
+    pub fn bounds_for(
+        &self,
+        timestamp: TimestampMillis,
+    ) -> StockTrekResult<AlignedTimestampBounds> {
         if let Some(exact_millis) = self.millis_exact() {
             self.fixed_bounds(timestamp, exact_millis)
         } else if let Some(exact_months) = self.months_exact() {
@@ -123,38 +126,29 @@ impl AlignedWindow {
 
     fn fixed_bounds(
         &self,
-        timestamp: i64,
+        timestamp: TimestampMillis,
         exact_millis: u64,
     ) -> StockTrekResult<AlignedTimestampBounds> {
-        let window_millis_wide = i64::try_from(exact_millis).map_err(|_| {
+        let lower_millis = timestamp.div_euclid(exact_millis) * exact_millis;
+        let upper_millis = lower_millis.checked_add(exact_millis).ok_or_else(|| {
             Self::bounds_error(format!(
-                "window length {exact_millis} could not be represented"
+                "upper bound for timestamp {timestamp} could not be represented"
             ))
         })?;
-        let lower_millis = timestamp
-            .div_euclid(window_millis_wide)
-            .checked_mul(window_millis_wide)
-            .ok_or_else(|| {
-                Self::bounds_error(format!(
-                    "lower bound for timestamp {timestamp} could not be represented"
-                ))
-            })?;
-        let upper_millis = lower_millis
-            .checked_add(window_millis_wide)
-            .ok_or_else(|| {
-                Self::bounds_error(format!(
-                    "upper bound for timestamp {timestamp} could not be represented"
-                ))
-            })?;
         Ok(AlignedTimestampBounds::new(lower_millis, upper_millis))
     }
 
     fn calendar_bounds(
         &self,
-        timestamp: i64,
+        timestamp: TimestampMillis,
         exact_months: u32,
     ) -> StockTrekResult<AlignedTimestampBounds> {
-        let date_time = DateTime::from_timestamp_millis(timestamp).ok_or_else(|| {
+        let timestamp_i64 = i64::try_from(timestamp).map_err(|_| {
+            Self::bounds_error(format!(
+                "timestamp {timestamp} is not representable as a UTC date"
+            ))
+        })?;
+        let date_time = DateTime::from_timestamp_millis(timestamp_i64).ok_or_else(|| {
             Self::bounds_error(format!(
                 "timestamp {timestamp} is not representable as a UTC date"
             ))
@@ -178,10 +172,17 @@ impl AlignedWindow {
                 "calendar window upper bound for {start_year}-{start_month:02} could not be represented"
             ))
         })?;
-        Ok(AlignedTimestampBounds {
-            lower: lower.timestamp_millis(),
-            upper: upper.timestamp_millis(),
-        })
+        let lower = TimestampMillis::try_from(lower.timestamp_millis()).map_err(|_| {
+            Self::bounds_error(format!(
+                "calendar window lower bound for {start_year}-{start_month:02} could not be represented as a timestamp"
+            ))
+        })?;
+        let upper = TimestampMillis::try_from(upper.timestamp_millis()).map_err(|_| {
+            Self::bounds_error(format!(
+                "calendar window upper bound for {start_year}-{start_month:02} could not be represented as a timestamp"
+            ))
+        })?;
+        Ok(AlignedTimestampBounds { lower, upper })
     }
 
     fn bounds_error(message: String) -> StockTrekError {
