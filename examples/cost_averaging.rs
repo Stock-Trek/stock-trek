@@ -127,9 +127,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
     use stock_trek::markets::{Market, MarketBuilder};
-    use stock_trek::signals::{CexMarketDataByBaseContext, CexMarketDataByQuoteContext};
 
     fn market(asks: &[f64]) -> Market {
         let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0);
@@ -140,18 +138,11 @@ mod tests {
     }
 
     fn context(markets: Vec<(CexId, Market)>) -> SignalContext {
-        let mut by_cex = HashMap::new();
+        let mut builder = SignalContextBuilder::new();
         for (cex, market) in markets {
-            let mut markets_by_quote = HashMap::new();
-            markets_by_quote.insert(AssetId::TetherUSD, market);
-            let mut markets_by_base = HashMap::new();
-            markets_by_base.insert(
-                AssetId::Bitcoin,
-                CexMarketDataByQuoteContext::new(markets_by_quote),
-            );
-            by_cex.insert(cex, CexMarketDataByBaseContext::new(markets_by_base));
+            builder.market(cex, AssetId::Bitcoin, AssetId::TetherUSD, market);
         }
-        SignalContext::new(by_cex)
+        builder.build()
     }
 
     #[test]
