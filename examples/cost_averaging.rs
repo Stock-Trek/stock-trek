@@ -1,12 +1,11 @@
 use std::cmp::Ordering;
 use stock_trek::prelude::*;
 
-/// The satoshi multiplier used to express the example's limit price in satoshis.
-/// Market data prices are not scaled.
+/// The satoshi multiplier
 const SATOSHI_SCALE: f64 = 1_000_000.0;
-/// The base-asset quantity for the example's one-satoshi order.
+/// The base-asset quantity for one satoshi.
 const SATOSHI_QUANTITY: f64 = 1.0 / SATOSHI_SCALE;
-/// The CEX account that should place orders. Replace with your account id.
+/// The CEX account that should place orders. TODO make this injectable and mapped by CexId
 const CEX_ACCOUNT_ID: &str = "main";
 
 pub struct CostAveraging {
