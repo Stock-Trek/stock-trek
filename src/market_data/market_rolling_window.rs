@@ -33,29 +33,62 @@ impl MarketRollingWindow {
             ohlcv: OnceLock::new(),
         }
     }
-    pub fn ohlcv(&self, window: RollingWindow) -> &Ohlcv {
-        self.ohlcv
+    pub fn ohlcv(&self, window: RollingWindow) -> Option<&Ohlcv> {
+        let candle = self.candles.get(&window)?;
+        let ohlcv = self
+            .ohlcv
             .get_or_init(|| self.new_ohlcv_map())
-            .get(&window)
-            .unwrap()
-            .get_or_init(|| self.ohlcv_values(window))
-    }
-
-    fn ohlcv_values(&self, window: RollingWindow) -> Ohlcv {
-        let ohlcv = &self.candles.get(&window).unwrap().ohlcv;
-        (
-            ohlcv.open,
-            ohlcv.high,
-            ohlcv.low,
-            ohlcv.close,
-            ohlcv.volume,
-            ohlcv.quote_volume,
-            ohlcv.vwap,
-        )
+            .get(&window)?;
+        Some(ohlcv.get_or_init(|| {
+            let ohlcv = &candle.ohlcv;
+            (
+                ohlcv.open,
+                ohlcv.high,
+                ohlcv.low,
+                ohlcv.close,
+                ohlcv.volume,
+                ohlcv.quote_volume,
+                ohlcv.vwap,
+            )
+        }))
     }
     fn new_ohlcv_map(&self) -> HashMap<RollingWindow, OnceLock<Ohlcv>> {
         RollingWindow::iter()
             .map(|window| (window, OnceLock::new()))
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::market_data::market_ohlcv::MarketOhlcv;
+
+    fn candle() -> MarketCandle {
+        MarketCandle::new(
+            0,
+            1,
+            1,
+            true,
+            MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4),
+            3,
+        )
+    }
+
+    #[test]
+    fn ohlcv_returns_none_when_window_is_absent() {
+        let market = MarketRollingWindow::new(HashMap::new());
+
+        assert!(market.ohlcv(RollingWindow::Minutes1).is_none());
+    }
+
+    #[test]
+    fn ohlcv_returns_values_when_window_is_present() {
+        let market = MarketRollingWindow::new(HashMap::from([(RollingWindow::Minutes1, candle())]));
+
+        assert_eq!(
+            market.ohlcv(RollingWindow::Minutes1),
+            Some(&(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4))
+        );
     }
 }
