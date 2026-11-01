@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use std::cmp::Ordering;
+use stock_trek::prelude::*;
 
 pub struct CostAveraging {
     key_cex: SignalKey<CexId>,
@@ -21,7 +21,6 @@ impl Default for CostAveraging {
     }
 }
 
-#[register_algorithm(default)]
 impl Algorithm for CostAveraging {
     fn name(&self) -> &str {
         "CostAveraging"
@@ -104,4 +103,9 @@ impl Algorithm for CostAveraging {
             c.commands.no_op(),
         )
     }
+}
+
+fn main() {
+    let algorithm = CostAveraging::default();
+    println!("{}: {}", algorithm.name(), algorithm.description());
 }
