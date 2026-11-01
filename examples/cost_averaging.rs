@@ -50,7 +50,7 @@ impl Algorithm for CostAveraging {
             },
         }
     }
-    fn signals(&self, c: &SignalContext) -> Signals {
+    fn signals(&self, c: &SignalContext) -> StockTrekResult<Signals> {
         let mut signals = Signals::new();
         signals.write(&self.key_satoshi_quantity, SATOSHI_QUANTITY);
         signals.write(&self.key_account, AccountId::new(CEX_ACCOUNT_ID));
@@ -72,7 +72,7 @@ impl Algorithm for CostAveraging {
             signals.write(&self.key_market_exists, true);
             signals.write(&self.key_cheapest_price, cheapest_ask / SATOSHI_SCALE);
         }
-        signals
+        Ok(signals)
     }
     fn strategy(&self, c: &StrategyContext) -> Command {
         let cex = c.signals.cex_id(&self.key_cex);
@@ -157,7 +157,7 @@ mod tests {
     #[test]
     fn writes_the_account_even_without_markets() {
         let algorithm = CostAveraging::default();
-        let signals = algorithm.signals(&context(vec![]));
+        let signals = algorithm.signals(&context(vec![])).unwrap();
 
         assert_eq!(
             signals.read(&algorithm.key_account).unwrap(),
@@ -169,8 +169,12 @@ mod tests {
     #[test]
     fn uses_the_latest_ask_and_handles_empty_markets() {
         let algorithm = CostAveraging::default();
-        let latest = algorithm.signals(&context(vec![(CexId::Binance, market(&[300.0, 200.0]))]));
-        let empty = algorithm.signals(&context(vec![(CexId::Binance, market(&[]))]));
+        let latest = algorithm
+            .signals(&context(vec![(CexId::Binance, market(&[300.0, 200.0]))]))
+            .unwrap();
+        let empty = algorithm
+            .signals(&context(vec![(CexId::Binance, market(&[]))]))
+            .unwrap();
 
         assert!(latest.read(&algorithm.key_market_exists).unwrap());
         assert_eq!(
@@ -183,7 +187,9 @@ mod tests {
     #[test]
     fn skips_non_finite_asks() {
         let algorithm = CostAveraging::default();
-        let signals = algorithm.signals(&context(vec![(CexId::Binance, market(&[f64::NAN]))]));
+        let signals = algorithm
+            .signals(&context(vec![(CexId::Binance, market(&[f64::NAN]))]))
+            .unwrap();
 
         assert!(!signals.read(&algorithm.key_market_exists).unwrap());
     }
