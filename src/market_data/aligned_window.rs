@@ -71,13 +71,23 @@ impl AlignedWindow {
     /// Month and year windows follow calendar boundaries, so their lengths vary
     /// with the actual number of days in each month or year.
     pub fn bounds_for(&self, timestamp: i64) -> StockTrekResult<(i64, i64)> {
-        if let Some(months_per_window) = self.calendar_months() {
-            return calendar_bounds_for(timestamp, months_per_window);
+        match self {
+            AlignedWindow::Months1
+            | AlignedWindow::Months2
+            | AlignedWindow::Months3
+            | AlignedWindow::Months4
+            | AlignedWindow::Months6
+            | AlignedWindow::Months12
+            | AlignedWindow::Years1
+            | AlignedWindow::Years2 => self.calendar_bounds(timestamp),
+            _ => self.fixed_bounds(timestamp),
         }
+    }
 
+    fn fixed_bounds(&self, timestamp: i64) -> StockTrekResult<(i64, i64)> {
         let window_millis = self.millis_upper_bound();
         let window_millis_wide = i64::try_from(window_millis).map_err(|_| {
-            bounds_error(format!(
+            Self::bounds_error(format!(
                 "window size {window_millis} does not fit in an i64"
             ))
         })?;
@@ -85,31 +95,84 @@ impl AlignedWindow {
             .div_euclid(window_millis_wide)
             .checked_mul(window_millis_wide)
             .ok_or_else(|| {
-                bounds_error(format!(
+                Self::bounds_error(format!(
                     "lower bound for timestamp {timestamp} could not be represented"
                 ))
             })?;
         let upper_bound_millis = lower_bound_millis
             .checked_add(window_millis_wide)
             .ok_or_else(|| {
-                bounds_error(format!(
+                Self::bounds_error(format!(
                     "upper bound for timestamp {timestamp} could not be represented"
                 ))
             })?;
 
         Ok((lower_bound_millis, upper_bound_millis))
     }
-    fn calendar_months(&self) -> Option<u32> {
-        match self {
-            AlignedWindow::Months1 => Some(1),
-            AlignedWindow::Months2 => Some(2),
-            AlignedWindow::Months3 => Some(3),
-            AlignedWindow::Months4 => Some(4),
-            AlignedWindow::Months6 => Some(6),
-            AlignedWindow::Months12 | AlignedWindow::Years1 => Some(12),
-            AlignedWindow::Years2 => Some(24),
-            _ => None,
-        }
+
+    fn calendar_bounds(&self, timestamp: i64) -> StockTrekResult<(i64, i64)> {
+        let months_per_window = match self {
+            AlignedWindow::Months1 => 1,
+            AlignedWindow::Months2 => 2,
+            AlignedWindow::Months3 => 3,
+            AlignedWindow::Months4 => 4,
+            AlignedWindow::Months6 => 6,
+            AlignedWindow::Months12 | AlignedWindow::Years1 => 12,
+            AlignedWindow::Years2 => 24,
+            _ => {
+                return Err(Self::bounds_error(format!(
+                    "window {self} is not calendar based"
+                )));
+            }
+        };
+        let date_time = DateTime::from_timestamp_millis(timestamp).ok_or_else(|| {
+            Self::bounds_error(format!(
+                "timestamp {timestamp} is not representable as a UTC date"
+            ))
+        })?;
+        let months_since_epoch = i64::from(date_time.year()) * 12 + i64::from(date_time.month0());
+        let months_per_window_wide = i64::from(months_per_window);
+        let window_start_months =
+            months_since_epoch.div_euclid(months_per_window_wide) * months_per_window_wide;
+        let start_year = i32::try_from(window_start_months.div_euclid(12)).map_err(|_| {
+            Self::bounds_error(format!(
+                "calendar window year {} does not fit in an i32",
+                window_start_months.div_euclid(12)
+            ))
+        })?;
+        let start_month = u32::try_from(window_start_months.rem_euclid(12) + 1).map_err(|_| {
+            Self::bounds_error(format!(
+                "calendar window month {} does not fit in a u32",
+                window_start_months.rem_euclid(12) + 1
+            ))
+        })?;
+        let lower_bound = Utc
+            .with_ymd_and_hms(start_year, start_month, 1, 0, 0, 0)
+            .single()
+            .ok_or_else(|| {
+                Self::bounds_error(format!(
+                    "calendar window start {start_year}-{start_month:02} could not be represented"
+                ))
+            })?;
+        let upper_bound = lower_bound
+            .checked_add_months(Months::new(months_per_window))
+            .ok_or_else(|| {
+                Self::bounds_error(format!(
+                    "calendar window end after {start_year}-{start_month:02} could not be represented"
+                ))
+            })?;
+
+        Ok((
+            lower_bound.timestamp_millis(),
+            upper_bound.timestamp_millis(),
+        ))
+    }
+
+    fn bounds_error(message: String) -> StockTrekError {
+        StockTrekError::Stats(StatsError::DomainError {
+            function: "AlignedWindow::bounds_for",
+            message,
+        })
     }
     pub fn millis_upper_bound(&self) -> u64 {
         match self {
@@ -269,57 +332,6 @@ impl AlignedWindow {
     }
 }
 
-fn bounds_error(message: String) -> StockTrekError {
-    StockTrekError::Stats(StatsError::DomainError {
-        function: "AlignedWindow::bounds_for",
-        message,
-    })
-}
-
-fn calendar_bounds_for(timestamp: i64, months_per_window: u32) -> StockTrekResult<(i64, i64)> {
-    let date_time = DateTime::from_timestamp_millis(timestamp).ok_or_else(|| {
-        bounds_error(format!(
-            "timestamp {timestamp} is not representable as a UTC date"
-        ))
-    })?;
-    let months_since_epoch = i64::from(date_time.year()) * 12 + i64::from(date_time.month0());
-    let months_per_window_wide = i64::from(months_per_window);
-    let window_start_months =
-        months_since_epoch.div_euclid(months_per_window_wide) * months_per_window_wide;
-    let start_year = i32::try_from(window_start_months.div_euclid(12)).map_err(|_| {
-        bounds_error(format!(
-            "calendar window year {} does not fit in an i32",
-            window_start_months.div_euclid(12)
-        ))
-    })?;
-    let start_month = u32::try_from(window_start_months.rem_euclid(12) + 1).map_err(|_| {
-        bounds_error(format!(
-            "calendar window month {} does not fit in a u32",
-            window_start_months.rem_euclid(12) + 1
-        ))
-    })?;
-    let lower_bound = Utc
-        .with_ymd_and_hms(start_year, start_month, 1, 0, 0, 0)
-        .single()
-        .ok_or_else(|| {
-            bounds_error(format!(
-                "calendar window start {start_year}-{start_month:02} could not be represented"
-            ))
-        })?;
-    let upper_bound = lower_bound
-        .checked_add_months(Months::new(months_per_window))
-        .ok_or_else(|| {
-            bounds_error(format!(
-                "calendar window end after {start_year}-{start_month:02} could not be represented"
-            ))
-        })?;
-
-    Ok((
-        lower_bound.timestamp_millis(),
-        upper_bound.timestamp_millis(),
-    ))
-}
-
 impl TryFrom<&str> for AlignedWindow {
     type Error = StockTrekError;
 
@@ -383,6 +395,20 @@ mod tests {
         window.bounds_for(timestamp).unwrap()
     }
 
+    fn is_calendar_window(window: AlignedWindow) -> bool {
+        matches!(
+            window,
+            AlignedWindow::Months1
+                | AlignedWindow::Months2
+                | AlignedWindow::Months3
+                | AlignedWindow::Months4
+                | AlignedWindow::Months6
+                | AlignedWindow::Months12
+                | AlignedWindow::Years1
+                | AlignedWindow::Years2
+        )
+    }
+
     #[test]
     fn bounds_for_returns_containing_bounds() {
         let timestamps: [i64; 7] = [-1_700_000_000_123, -1, 0, 1, 999, 1_000, 1_700_000_000_123];
@@ -394,7 +420,7 @@ mod tests {
                 assert!(lower_bound <= timestamp);
                 assert!(timestamp < upper_bound);
 
-                if window.calendar_months().is_none() {
+                if !is_calendar_window(window) {
                     let window_millis = i64::try_from(window.millis_upper_bound()).unwrap();
                     assert_eq!(upper_bound - lower_bound, window_millis);
                     assert_eq!(lower_bound % window_millis, 0);
