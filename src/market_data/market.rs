@@ -118,18 +118,15 @@ impl MarketBuilder {
         self
     }
     /// Builds the [`Market`] from the collected data.
-    pub fn build(&self) -> Market {
+    pub fn build(self) -> Market {
         Market {
             base_increment: self.base_increment,
             quote_increment: self.quote_increment,
             minimum_notional: self.minimum_notional,
-            ticks: MarketTicks::new(self.ticks.clone()),
-            rolling: MarketRollingWindow::new(self.rolling.clone()),
-            aligned: MarketAlignedWindow::new(self.aligned.clone()),
-            order_book: MarketOrderBook::new(
-                self.order_book_bids.clone(),
-                self.order_book_asks.clone(),
-            ),
+            ticks: MarketTicks::new(self.ticks),
+            rolling: MarketRollingWindow::new(self.rolling),
+            aligned: MarketAlignedWindow::new(self.aligned),
+            order_book: MarketOrderBook::new(self.order_book_bids, self.order_book_asks),
         }
     }
 }
