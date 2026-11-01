@@ -252,7 +252,7 @@ impl AlignedWindow {
             AlignedWindow::Minutes15 => Some(date_time + Duration::minutes(15)),
             AlignedWindow::Minutes30 => Some(date_time + Duration::minutes(30)),
             AlignedWindow::Minutes60 => Some(date_time + Duration::minutes(60)),
-            AlignedWindow::Hours1 => Some(date_time + Duration::hours(5)),
+            AlignedWindow::Hours1 => Some(date_time + Duration::hours(1)),
             AlignedWindow::Hours2 => Some(date_time + Duration::hours(2)),
             AlignedWindow::Hours3 => Some(date_time + Duration::hours(3)),
             AlignedWindow::Hours4 => Some(date_time + Duration::hours(4)),
@@ -292,7 +292,7 @@ impl AlignedWindow {
             AlignedWindow::Minutes15 => Some(date_time - Duration::minutes(15)),
             AlignedWindow::Minutes30 => Some(date_time - Duration::minutes(30)),
             AlignedWindow::Minutes60 => Some(date_time - Duration::minutes(60)),
-            AlignedWindow::Hours1 => Some(date_time - Duration::hours(5)),
+            AlignedWindow::Hours1 => Some(date_time - Duration::hours(1)),
             AlignedWindow::Hours2 => Some(date_time - Duration::hours(2)),
             AlignedWindow::Hours3 => Some(date_time - Duration::hours(3)),
             AlignedWindow::Hours4 => Some(date_time - Duration::hours(4)),
@@ -594,6 +594,26 @@ mod tests {
             (february_2023.upper - february_2023.lower) / days_millis,
             28
         );
+    }
+
+    #[test]
+    fn checked_add_and_sub_use_the_window_length() {
+        let timestamp = millis_at(2024, 2, 15, 12, 0, 0);
+        let date_time = DateTime::from_timestamp_millis(timestamp).unwrap();
+
+        for window in AlignedWindow::iter().filter(|window| !is_calendar_window(*window)) {
+            let added = window.checked_add(date_time).unwrap();
+            let subtracted = window.checked_sub(date_time).unwrap();
+            let forward = added.timestamp_millis() - timestamp;
+            let backward = timestamp - subtracted.timestamp_millis();
+
+            assert_eq!(forward, backward, "{window} is not symmetric");
+            assert_eq!(
+                i64::try_from(window.millis_upper_bound()).unwrap(),
+                forward,
+                "{window} does not advance by its own length"
+            );
+        }
     }
 
     #[test]
