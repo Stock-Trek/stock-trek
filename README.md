@@ -1,6 +1,6 @@
 # stock-trek
 
-A tool for running crypto bots on [stock-trek.com](https://stock-trek.com). Rust-native core with optional Python bindings (coming soon)
+A tool for running crypto bots on [stock-trek.com](https://stock-trek.com). Rust-native core.
 
 [![crates.io](https://img.shields.io/crates/v/stock-trek)](https://crates.io/crates/stock-trek)
 [![docs.rs](https://img.shields.io/docsrs/stock-trek)](https://docs.rs/stock-trek)
@@ -12,12 +12,6 @@ Add the dependency
 ```sh
 cargo add stock-trek
 ```
-
-## Python Bindings (coming soon)
-
-stock-trek will also provide Python bindings in the future, available for installation via
-
-`pip install stock-trek`
 
 ## Usage
 
