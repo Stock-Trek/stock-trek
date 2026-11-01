@@ -131,6 +131,24 @@ fn accounts_can_be_discovered_with_their_details() {
         OrderRequest::Limit { .. }
     ));
 
+    assert_eq!(portfolio.pending_orders_count(), 1.0);
+    assert_eq!(
+        portfolio.pending_orders_with_tag_count(&Tag::new("tag")),
+        1.0
+    );
+    assert_eq!(
+        portfolio.pending_orders_in_cex_account_count(&CexId::Binance, &AccountId::new("account")),
+        1.0
+    );
+    assert_eq!(
+        portfolio.pending_orders_in_cex_account_with_tag_count(
+            &CexId::Binance,
+            &AccountId::new("account"),
+            &Tag::new("tag"),
+        ),
+        1.0
+    );
+
     assert_eq!(portfolio.pending_orders_iter().count(), 1);
     assert_eq!(
         portfolio

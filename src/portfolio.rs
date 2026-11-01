@@ -120,7 +120,7 @@ impl Portfolio {
     }
 
     /// Total number of pending orders across all CEXes and accounts.
-    pub fn pending_orders(&self) -> f64 {
+    pub fn pending_orders_count(&self) -> f64 {
         self.portfolios
             .values()
             .flat_map(|account_map| account_map.values())
@@ -129,7 +129,7 @@ impl Portfolio {
             .sum::<usize>() as f64
     }
     /// Number of pending orders with the given `tag` across all accounts.
-    pub fn pending_orders_with_tag(&self, tag: &Tag) -> f64 {
+    pub fn pending_orders_with_tag_count(&self, tag: &Tag) -> f64 {
         self.portfolios
             .values()
             .flat_map(|account_map| account_map.values())
@@ -138,7 +138,11 @@ impl Portfolio {
             .sum::<usize>() as f64
     }
     /// Number of pending orders in a specific CEX account.
-    pub fn pending_orders_in_cex_account(&self, cex_id: &CexId, account_id: &AccountId) -> f64 {
+    pub fn pending_orders_in_cex_account_count(
+        &self,
+        cex_id: &CexId,
+        account_id: &AccountId,
+    ) -> f64 {
         self.portfolios
             .get(cex_id)
             .and_then(|accounts| accounts.get(account_id))
@@ -152,7 +156,7 @@ impl Portfolio {
             .unwrap_or(0) as f64
     }
     /// Number of pending orders with the given `tag` in a specific CEX account.
-    pub fn pending_orders_in_cex_account_with_tag(
+    pub fn pending_orders_in_cex_account_with_tag_count(
         &self,
         cex_id: &CexId,
         account_id: &AccountId,
