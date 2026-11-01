@@ -60,10 +60,9 @@ impl Condition {
             } => {
                 let left_value = left.number(c)?;
                 let right_value = right.number(c)?;
-                match left_value.partial_cmp(&right_value) {
-                    Some(Ordering::Less) => Ok(comparison.is_le()),
-                    Some(Ordering::Equal) => Ok(comparison.is_eq()),
-                    Some(Ordering::Greater) => Ok(comparison.is_ge()),
+                let ordering = left_value.partial_cmp(&right_value);
+                match ordering {
+                    Some(ordering) => Ok(ordering == *comparison),
                     None => Err(StockTrekError::Stats(StatsError::IncomparableValues {
                         left: left_value,
                         right: right_value,
@@ -182,5 +181,46 @@ impl ConditionFactory {
         Condition::Signal {
             signal: flag.clone(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{portfolio::Portfolio, signal::signals::Signals};
+    use std::collections::HashMap;
+
+    fn context() -> ResolvedContext {
+        ResolvedContext {
+            enqueue_action: Box::new(|_, _| Ok(())),
+            portfolio: Portfolio::new(HashMap::new()),
+            signals: Signals::new(),
+        }
+    }
+
+    fn compare(left: f64, comparison: Ordering, right: f64) -> bool {
+        ConditionFactory
+            .compare(
+                NumberValue::Literal { literal: left },
+                comparison,
+                NumberValue::Literal { literal: right },
+            )
+            .test(&context())
+            .unwrap()
+    }
+
+    #[test]
+    fn compare_matches_the_actual_ordering() {
+        assert!(compare(1.0, Ordering::Less, 2.0));
+        assert!(!compare(2.0, Ordering::Less, 1.0));
+        assert!(!compare(1.0, Ordering::Less, 1.0));
+
+        assert!(compare(2.0, Ordering::Equal, 2.0));
+        assert!(!compare(2.0, Ordering::Equal, 1.0));
+        assert!(!compare(1.0, Ordering::Equal, 2.0));
+
+        assert!(compare(2.0, Ordering::Greater, 1.0));
+        assert!(!compare(1.0, Ordering::Greater, 2.0));
+        assert!(!compare(1.0, Ordering::Greater, 1.0));
     }
 }
