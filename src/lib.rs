@@ -15,7 +15,6 @@ mod commands;
 mod conditions;
 // mod dex;
 mod error;
-mod examples;
 mod market_data;
 mod portfolio;
 mod preferences;
