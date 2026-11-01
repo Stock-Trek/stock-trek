@@ -7,6 +7,8 @@ use strum::{Display, EnumCount, EnumIter, FromRepr};
     Display,
     Clone,
     Copy,
+    PartialOrd,
+    Ord,
     PartialEq,
     Eq,
     Hash,
