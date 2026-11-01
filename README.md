@@ -16,9 +16,7 @@ cargo add stock-trek
 ## Usage
 
 Implement the `Algorithm` and `Default` traits for your algorithm and register it with the annotation `#[register_algorithm(default)]`.
-A complete cost-averaging algorithm is maintained in [`examples/cost_averaging.rs`](examples/cost_averaging.rs). It selects the CEX with the lowest latest BTC/USDT ask, buys one satoshi, and places a limit order at that ask.
-
-CEX market data prices are not scaled. The example divides the selected ask by `SATOSHI_SCALE`, the satoshi multiplier, so the limit price is expressed in the same satoshi units as the one-satoshi order quantity. Replace `CEX_ACCOUNT_ID` with the identifier of the CEX account that should place orders.
+A complete cost-averaging algorithm is maintained in [`examples/cost_averaging.rs`](examples/cost_averaging.rs). It selects the CEX with the lowest latest BTC/USDT ask, and places a limit order for one satoshi at that ask.
 
 Stock-Trek verifies code before running it and disallows certain syntax elements. To verify code locally, install the verifier [stock-trek-check](https://crates.io/crates/stock-trek-check) with
 
