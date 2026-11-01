@@ -13,7 +13,9 @@ mod algorithm;
 mod cex;
 mod commands;
 mod conditions;
-// mod dex;
+/// Decentralised exchange (DEX) types.
+#[cfg(feature = "dex")]
+pub mod dex;
 mod error;
 mod market_data;
 mod pending_order;
