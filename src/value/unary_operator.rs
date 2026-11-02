@@ -1,4 +1,4 @@
-use super::operator_error::{check_finite, domain_check};
+use super::operator_error::{OperatorError, domain_check};
 use crate::error::result::StockTrekResult;
 use serde::{Deserialize, Serialize};
 use strum::Display;
@@ -98,7 +98,7 @@ impl UnaryOperator {
     /// Applies the operator to `value`.
     pub fn calculate(self, value: f64) -> StockTrekResult<f64> {
         let function = self.name();
-        check_finite(function, "value", value)?;
+        OperatorError::check_finite(function, "value", value)?;
 
         let calculation_result = match self {
             UnaryOperator::Abs => value.abs(),
@@ -193,7 +193,7 @@ impl UnaryOperator {
             UnaryOperator::Tanh => value.tanh(),
             UnaryOperator::Trunc => value.trunc(),
         };
-        check_finite(function, "result", calculation_result)?;
+        OperatorError::check_finite(function, "result", calculation_result)?;
         Ok(calculation_result)
     }
 }

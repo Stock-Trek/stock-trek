@@ -1,4 +1,4 @@
-use super::operator_error::{check_finite, division_by_zero, domain_check};
+use super::operator_error::{OperatorError, domain_check};
 use crate::error::result::StockTrekResult;
 use serde::{Deserialize, Serialize};
 use strum::Display;
@@ -44,15 +44,15 @@ impl BinaryOperator {
     /// Applies the operator to `left` and `right`.
     pub fn calculate(self, left: f64, right: f64) -> StockTrekResult<f64> {
         let function = self.name();
-        check_finite(function, "left operand", left)?;
-        check_finite(function, "right operand", right)?;
+        OperatorError::check_finite(function, "left operand", left)?;
+        OperatorError::check_finite(function, "right operand", right)?;
 
         let calculation_result = match self {
             BinaryOperator::Add => left + right,
             BinaryOperator::Atan2 => left.atan2(right),
             BinaryOperator::Div => {
                 if right == 0.0 {
-                    return Err(division_by_zero(
+                    return Err(OperatorError::division_by_zero(
                         "Div",
                         "divisor = 0 would produce +/- infinity",
                     ));
@@ -88,7 +88,7 @@ impl BinaryOperator {
             }
             BinaryOperator::Mod => {
                 if right == 0.0 {
-                    return Err(division_by_zero(
+                    return Err(OperatorError::division_by_zero(
                         "Mod",
                         "divisor = 0 would produce +/- infinity",
                     ));
@@ -98,7 +98,7 @@ impl BinaryOperator {
             BinaryOperator::Mul => left * right,
             BinaryOperator::Sub => left - right,
         };
-        check_finite(function, "result", calculation_result)?;
+        OperatorError::check_finite(function, "result", calculation_result)?;
         Ok(calculation_result)
     }
 }
