@@ -215,7 +215,7 @@ impl PortfolioSortKey for Tag {
     }
 }
 
-fn sorted_entries<'a, K, V>(map: &'a HashMap<K, V>) -> impl Iterator<Item = (&'a K, &'a V)>
+fn sorted_entries<K, V>(map: &HashMap<K, V>) -> impl Iterator<Item = (&K, &V)>
 where
     K: PortfolioSortKey,
 {
