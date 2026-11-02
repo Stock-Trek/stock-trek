@@ -180,8 +180,7 @@ fn reserved_quantity_is_clamped_when_filled_exceeds_ordered() {
 
 #[test]
 fn portfolio_builder_rejects_zero_price_quote_limited_sell() {
-    let mut builder = PortfolioBuilder::new();
-    builder.pending_order(
+    let builder = PortfolioBuilder::new().pending_order(
         CexId::Binance,
         AccountId::new("account"),
         limit_sell(Quantity::OfQuote(1_000.0), 0.0),
