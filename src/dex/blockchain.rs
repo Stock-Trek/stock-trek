@@ -3,11 +3,13 @@
 use crate::error::{
     dex::DexError,
     result::{StockTrekError, StockTrekResult},
+    value::ValueError,
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as};
 use std::ops::Deref;
+use std::str::FromStr;
 
 /// A blockchain, its family, and its address format.
 #[serde_as]
@@ -59,6 +61,58 @@ impl FamilyId {
     /// Consumes the identifier and returns its string value.
     pub fn into_inner(self) -> String {
         self.0
+    }
+}
+
+impl From<&str> for BlockchainId {
+    fn from(value: &str) -> Self {
+        Self::new(value)
+    }
+}
+
+impl From<String> for BlockchainId {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
+impl FromStr for BlockchainId {
+    type Err = StockTrekError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        if value.is_empty() {
+            return Err(StockTrekError::Value(ValueError::NotFound {
+                name: "BlockchainId".into(),
+                key: value.into(),
+            }));
+        }
+        Ok(Self::new(value))
+    }
+}
+
+impl From<&str> for FamilyId {
+    fn from(value: &str) -> Self {
+        Self::new(value)
+    }
+}
+
+impl From<String> for FamilyId {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
+impl FromStr for FamilyId {
+    type Err = StockTrekError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        if value.is_empty() {
+            return Err(StockTrekError::Value(ValueError::NotFound {
+                name: "FamilyId".into(),
+                key: value.into(),
+            }));
+        }
+        Ok(Self::new(value))
     }
 }
 
@@ -235,5 +289,38 @@ mod tests {
     #[test]
     fn returns_an_error_for_an_invalid_address_format() {
         assert!(blockchain("(").is_err());
+    }
+
+    #[test]
+    fn blockchain_id_round_trips_through_strings() {
+        let blockchain_id = BlockchainId::new("ethereum");
+
+        assert_eq!(blockchain_id.to_string(), "ethereum");
+        assert_eq!(
+            blockchain_id.as_str().parse::<BlockchainId>().unwrap(),
+            blockchain_id
+        );
+        assert_eq!(BlockchainId::from("ethereum"), blockchain_id);
+        assert_eq!(BlockchainId::from("ethereum".to_string()), blockchain_id);
+        assert_eq!(String::from(blockchain_id.clone()), "ethereum");
+        assert_eq!(blockchain_id.clone().into_inner(), "ethereum");
+    }
+
+    #[test]
+    fn family_id_round_trips_through_strings() {
+        let family_id = FamilyId::new("evm");
+
+        assert_eq!(family_id.to_string(), "evm");
+        assert_eq!(family_id.as_str().parse::<FamilyId>().unwrap(), family_id);
+        assert_eq!(FamilyId::from("evm"), family_id);
+        assert_eq!(FamilyId::from("evm".to_string()), family_id);
+        assert_eq!(String::from(family_id.clone()), "evm");
+        assert_eq!(family_id.clone().into_inner(), "evm");
+    }
+
+    #[test]
+    fn empty_blockchain_ids_are_rejected_when_parsed() {
+        assert!("".parse::<BlockchainId>().is_err());
+        assert!("".parse::<FamilyId>().is_err());
     }
 }
