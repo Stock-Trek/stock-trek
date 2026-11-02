@@ -1,6 +1,9 @@
-use crate::error::{
-    result::{StockTrekError, StockTrekResult},
-    value::ValueError,
+use crate::{
+    error::{
+        result::{StockTrekError, StockTrekResult},
+        value::ValueError,
+    },
+    validation::Validation,
 };
 use serde::{Deserialize, Serialize};
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId};
@@ -65,6 +68,16 @@ signal_value_conversions! {
     AssetId(AssetId),
     Flag(bool),
     Number(f64),
+}
+
+impl SignalValue {
+    /// Returns an error when the value is a non-finite number.
+    pub(crate) fn validate(&self) -> StockTrekResult<()> {
+        if let SignalValue::Number(number) = self {
+            Validation::finite("SignalValue", "number", *number)?;
+        }
+        Ok(())
+    }
 }
 
 fn err<T>(expected: impl AsRef<str>, found: impl AsRef<str>) -> StockTrekResult<T> {
