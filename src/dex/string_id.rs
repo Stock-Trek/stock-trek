@@ -3,9 +3,7 @@
 /// Implements the shared behaviour for a validated, string-backed identifier.
 ///
 /// This macro only defines implementations; the identifier type must be declared
-/// separately. By default the type is expected to be a tuple struct backed by
-/// `Cow<'static, str>`. Pass `custom` for a type with a different representation
-/// that provides its own `from_string`, `as_str`, and `into_inner` methods.
+/// separately as a tuple struct backed by `Cow<'static, str>`.
 ///
 /// Identifiers are trimmed of leading and trailing whitespace when constructed.
 macro_rules! string_id_funcs {
@@ -24,15 +22,7 @@ macro_rules! string_id_funcs {
             pub fn into_inner(self) -> String {
                 self.0.into_owned()
             }
-        }
 
-        string_id_funcs!(@shared $name);
-    };
-    ($name:ident, custom) => {
-        string_id_funcs!(@shared $name);
-    };
-    (@shared $name:ident) => {
-        impl $name {
             fn validate(value: &str) -> crate::error::result::StockTrekResult<()> {
                 if value.trim().is_empty() {
                     return Err(crate::error::result::StockTrekError::Dex(
