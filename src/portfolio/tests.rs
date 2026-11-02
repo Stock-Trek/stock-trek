@@ -179,10 +179,16 @@ fn reserved_quantity_is_clamped_when_filled_exceeds_ordered() {
 }
 
 #[test]
-fn zero_price_quote_limited_sell_reserves_nothing() {
-    let portfolio = portfolio_with(limit_sell(Quantity::OfQuote(1_000.0), 0.0), 0.0, 0.0);
+fn portfolio_builder_rejects_zero_price_quote_limited_sell() {
+    let builder = PortfolioBuilder::new().pending_order(
+        CexId::Binance,
+        AccountId::new("account"),
+        limit_sell(Quantity::OfQuote(1_000.0), 0.0),
+        0.0,
+        0.0,
+    );
 
-    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 0.0);
+    assert!(builder.build().is_err());
 }
 
 #[test]
