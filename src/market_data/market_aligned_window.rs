@@ -4,7 +4,7 @@ use crate::market_data::{
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
-/// Candles grouped by calendar-aligned windows.
+/// Candles grouped by aligned windows.
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketAlignedWindow {
     /// Candles for each aligned window in chronological order.

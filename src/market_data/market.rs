@@ -26,7 +26,7 @@ pub struct Market {
     pub ticks: MarketTicks,
     /// Candles for fixed-length rolling windows.
     pub rolling: MarketRollingWindow,
-    /// Candles for calendar-aligned windows.
+    /// Candles for aligned windows.
     pub aligned: MarketAlignedWindow,
     /// The current order book.
     pub order_book: MarketOrderBook,
@@ -98,7 +98,7 @@ impl MarketBuilder {
         self.rolling.insert(window, candle);
         self
     }
-    /// Appends a candle to a calendar-aligned window.
+    /// Appends a candle to an aligned window.
     pub fn aligned_push_candle(
         &mut self,
         window: AlignedWindow,
