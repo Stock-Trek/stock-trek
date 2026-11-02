@@ -26,7 +26,7 @@ pub struct Market {
     pub ticks: MarketTicks,
     /// Candles for fixed-length rolling windows.
     pub rolling: MarketRollingWindow,
-    /// Candles for fixed or calendar-aligned windows.
+    /// Candles for aligned windows.
     pub aligned: MarketAlignedWindow,
     /// The current order book.
     pub order_book: MarketOrderBook,
