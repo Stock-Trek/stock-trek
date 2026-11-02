@@ -1,5 +1,5 @@
-use super::{aligned_window::AlignedWindow, rolling_window::RollingWindow};
 use chrono::{DateTime, Duration, Months, Utc};
+use stock_trek::markets::{AlignedWindow, RollingWindow};
 
 /// Test-only arithmetic helpers for the window enums.
 pub(crate) trait CheckedWindow {

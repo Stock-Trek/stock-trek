@@ -18,7 +18,6 @@ keywords = [
 ]
 exclude = [
   ".github/**",
-  "src/market_data/window_test_support.rs",
 ]
 
 [lib]

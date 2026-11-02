@@ -1,7 +1,18 @@
-use super::*;
-use crate::market_data::window_test_support::{CheckedWindow, window_tests};
+mod common;
+
 use chrono::{TimeZone, Utc};
+use common::{CheckedWindow, window_tests};
+use stock_trek::{
+    errors::StockTrekError,
+    markets::{AlignedTimestampBounds, AlignedWindow, TimestampMillis},
+};
 use strum::IntoEnumIterator;
+
+const MILLIS_PER_HOUR: u32 = 60 * 60 * 1_000;
+const MILLIS_PER_DAY: u32 = 24 * MILLIS_PER_HOUR;
+const MILLIS_PER_WEEK: u32 = 7 * MILLIS_PER_DAY;
+const MILLIS_PER_MONTH_UPPER_BOUND: u64 = 31 * MILLIS_PER_DAY as u64;
+const MILLIS_PER_YEAR_UPPER_BOUND: u64 = 366 * MILLIS_PER_DAY as u64;
 
 fn millis_at(
     year: i32,

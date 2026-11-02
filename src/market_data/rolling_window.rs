@@ -139,6 +139,3 @@ impl RollingWindow {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

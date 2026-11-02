@@ -242,6 +242,3 @@ impl AlignedWindow {
 }
 
 mod calendar;
-
-#[cfg(test)]
-mod tests;
