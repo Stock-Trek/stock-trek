@@ -11,3 +11,5 @@ pub mod network;
 /// Well-known blockchain and network definitions.
 #[allow(missing_docs)]
 pub mod networks;
+/// Shared implementation for string-backed identifiers.
+mod string_id;

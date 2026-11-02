@@ -1,13 +1,10 @@
 //! Networks within a blockchain.
 
-use crate::error::{
-    result::{StockTrekError, StockTrekResult},
-    value::ValueError,
-};
+use crate::error::{result::StockTrekError, value::ValueError};
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
-use std::ops::Deref;
 use std::str::FromStr;
+
+use super::string_id::define_string_id;
 
 /// A network on a blockchain.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,111 +13,38 @@ pub struct Network {
     chain_id: Option<ChainId>,
 }
 
-/// Identifier for a network on a blockchain.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(try_from = "String", into = "String")]
-pub struct NetworkId(Cow<'static, str>);
-
-impl TryFrom<&str> for NetworkId {
-    type Error = StockTrekError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::validate(value)?;
-        Ok(Self(Cow::Owned(value.to_string())))
-    }
-}
-
-impl TryFrom<String> for NetworkId {
-    type Error = StockTrekError;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::validate(&value)?;
-        Ok(Self(Cow::Owned(value)))
-    }
-}
-
-impl FromStr for NetworkId {
-    type Err = StockTrekError;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        Self::try_from(value)
-    }
+define_string_id! {
+    /// Identifier for a network on a blockchain.
+    NetworkId
 }
 
 #[allow(missing_docs, non_upper_case_globals)]
 impl NetworkId {
-    pub const Mainnet: Self = Self(Cow::Borrowed("mainnet"));
-    pub const Testnet: Self = Self(Cow::Borrowed("testnet"));
+    /// The main network of a blockchain.
+    pub const Mainnet: Self = Self::from_static("mainnet");
 
-    fn validate(value: &str) -> Result<(), StockTrekError> {
-        if value.trim().is_empty() {
-            return Err(StockTrekError::Value(ValueError::IncorrectType {
-                expected: "NetworkId".into(),
-                found: value.into(),
-            }));
-        }
-        Ok(())
-    }
+    /// A test network of a blockchain.
+    pub const Testnet: Self = Self::from_static("testnet");
 
-    pub fn new(id: &str) -> StockTrekResult<Self> {
-        Self::try_from(id)
-    }
-
+    /// Creates a network identifier from a static string.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `id` is empty.
     pub const fn from_static(id: &'static str) -> Self {
         assert!(!id.is_empty(), "network id must not be empty");
-        Self(Cow::Borrowed(id))
+        Self(std::borrow::Cow::Borrowed(id))
     }
 
+    /// Creates a network identifier for an arbitrary network name.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `name` is empty or whitespace-only.
     #[allow(non_snake_case)]
     pub fn Other(name: impl Into<String>) -> Self {
         let name = name.into();
         Self::try_from(name).expect("network id must not be empty or whitespace-only")
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    pub fn into_inner(self) -> String {
-        self.0.into_owned()
-    }
-}
-
-impl std::fmt::Display for NetworkId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-impl AsRef<str> for NetworkId {
-    fn as_ref(&self) -> &str {
-        self.as_str()
-    }
-}
-
-impl Deref for NetworkId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        self.as_str()
-    }
-}
-
-impl From<NetworkId> for String {
-    fn from(value: NetworkId) -> Self {
-        value.into_inner()
-    }
-}
-
-impl PartialEq<str> for NetworkId {
-    fn eq(&self, other: &str) -> bool {
-        self.as_str() == other
-    }
-}
-
-impl PartialEq<&str> for NetworkId {
-    fn eq(&self, other: &&str) -> bool {
-        self.as_str() == *other
     }
 }
 
