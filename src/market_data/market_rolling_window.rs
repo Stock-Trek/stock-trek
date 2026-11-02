@@ -19,9 +19,7 @@ impl MarketRollingWindow {
 
     /// Returns the OHLCV values for a rolling window, if present.
     pub fn ohlcv(&self, window: RollingWindow) -> Option<MarketOhlcv> {
-        self.candles
-            .get(&window)
-            .map(|candle| candle.ohlcv.clone())
+        self.candles.get(&window).map(|candle| candle.ohlcv.clone())
     }
 }
 
