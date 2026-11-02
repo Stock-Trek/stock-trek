@@ -14,13 +14,18 @@ use strum::Display;
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum AccountIdValue {
     /// A literal account identifier.
-    Literal { literal: AccountId },
+    Literal {
+        /// The account identifier.
+        literal: AccountId,
+    },
     /// An account identifier read from a signal.
-    Signal { signal: SignalKey<AccountId> },
+    Signal {
+        /// The key of the signal holding the account identifier.
+        signal: SignalKey<AccountId>,
+    },
 }
 
 impl AccountIdValue {
@@ -38,13 +43,18 @@ impl AccountIdValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum CexIdValue {
     /// A literal CEX identifier.
-    Literal { literal: CexId },
+    Literal {
+        /// The CEX identifier.
+        literal: CexId,
+    },
     /// A CEX identifier read from a signal.
-    Signal { signal: SignalKey<CexId> },
+    Signal {
+        /// The key of the signal holding the CEX identifier.
+        signal: SignalKey<CexId>,
+    },
 }
 
 impl CexIdValue {
@@ -62,13 +72,18 @@ impl CexIdValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum AssetIdValue {
     /// A literal asset identifier.
-    Literal { literal: AssetId },
+    Literal {
+        /// The asset identifier.
+        literal: AssetId,
+    },
     /// An asset identifier read from a signal.
-    Signal { signal: SignalKey<AssetId> },
+    Signal {
+        /// The key of the signal holding the asset identifier.
+        signal: SignalKey<AssetId>,
+    },
 }
 
 impl AssetIdValue {
@@ -86,13 +101,18 @@ impl AssetIdValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum FlagValue {
     /// A literal boolean flag.
-    Literal { literal: bool },
+    Literal {
+        /// The flag.
+        literal: bool,
+    },
     /// A boolean flag read from a signal.
-    Signal { signal: SignalKey<bool> },
+    Signal {
+        /// The key of the signal holding the flag.
+        signal: SignalKey<bool>,
+    },
 }
 
 impl FlagValue {
@@ -110,61 +130,102 @@ impl FlagValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum NumberValue {
     /// A literal number.
-    Literal { literal: f64 },
-    /// A number read from a signal.
-    Signal { signal: SignalKey<f64> },
-    /// The total number of pending orders.
-    PendingOrders,
-    /// The number of pending orders with a specific tag.
-    PendingOrdersWithTag { tag: Tag },
-    /// The number of pending orders in a CEX account.
-    PendingOrdersInCexAccount {
-        cex_id_value: CexIdValue,
-        account_id_value: AccountIdValue,
+    Literal {
+        /// The number.
+        literal: f64,
     },
-    /// The number of pending orders with a specific tag in a CEX account.
-    PendingOrdersInCexAccountWithTag {
-        cex_id_value: CexIdValue,
-        account_id_value: AccountIdValue,
+    /// A number read from a signal.
+    Signal {
+        /// The key of the signal holding the number.
+        signal: SignalKey<f64>,
+    },
+    /// The number of pending orders across all CEX accounts.
+    PendingOrders,
+    /// The number of pending orders with the tag, across all CEX accounts.
+    PendingOrdersWithTag {
+        /// Only orders carrying this tag are counted.
         tag: Tag,
     },
-    /// The total amount of an asset.
-    AssetTotal { asset_id_value: AssetIdValue },
-    /// The total amount of an asset in a CEX account.
+    /// The number of pending orders in a CEX account.
+    PendingOrdersInCexAccount {
+        /// The CEX the account is on.
+        cex_id_value: CexIdValue,
+        /// The account to count pending orders in.
+        account_id_value: AccountIdValue,
+    },
+    /// The number of pending orders with the tag in a CEX account.
+    PendingOrdersInCexAccountWithTag {
+        /// The CEX the account is on.
+        cex_id_value: CexIdValue,
+        /// The account to count pending orders in.
+        account_id_value: AccountIdValue,
+        /// Only orders carrying this tag are counted.
+        tag: Tag,
+    },
+    /// The amount of an asset held across all CEX accounts, available and
+    /// reserved.
+    AssetTotal {
+        /// The asset to sum.
+        asset_id_value: AssetIdValue,
+    },
+    /// The amount of an asset held in a CEX account, available and reserved.
     AssetTotalInCexAccount {
+        /// The asset to sum.
         asset_id_value: AssetIdValue,
+        /// The CEX the account is on.
         cex_id_value: CexIdValue,
+        /// The account to sum the balance of.
         account_id_value: AccountIdValue,
     },
-    /// The available amount of an asset.
-    AssetAvailable { asset_id_value: AssetIdValue },
-    /// The available amount of an asset in a CEX account.
+    /// The amount of an asset across all CEX accounts that is not reserved
+    /// for pending orders.
+    AssetAvailable {
+        /// The asset to measure.
+        asset_id_value: AssetIdValue,
+    },
+    /// The amount of an asset in a CEX account that is not reserved for
+    /// pending orders.
     AssetAvailableInCexAccount {
+        /// The asset to measure.
         asset_id_value: AssetIdValue,
+        /// The CEX the account is on.
         cex_id_value: CexIdValue,
+        /// The account to measure the balance of.
         account_id_value: AccountIdValue,
     },
-    /// The reserved amount of an asset.
-    AssetReserved { asset_id_value: AssetIdValue },
-    /// The reserved amount of an asset in a CEX account.
+    /// The amount of an asset across all CEX accounts that is reserved for
+    /// pending orders.
+    AssetReserved {
+        /// The asset to measure.
+        asset_id_value: AssetIdValue,
+    },
+    /// The amount of an asset in a CEX account that is reserved for pending
+    /// orders.
     AssetReservedInCexAccount {
+        /// The asset to measure.
         asset_id_value: AssetIdValue,
+        /// The CEX the account is on.
         cex_id_value: CexIdValue,
+        /// The account to measure the reservations of.
         account_id_value: AccountIdValue,
     },
-    /// A binary calculation.
+    /// `left` combined with `right` by the operator.
     BinaryCalculation {
+        /// The left-hand operand.
         left: Box<NumberValue>,
+        /// The operation applied to the operands.
         operator: BinaryOperator,
+        /// The right-hand operand.
         right: Box<NumberValue>,
     },
-    /// A unary calculation.
+    /// `number` transformed by the operator.
     UnaryCalculation {
+        /// The operation applied to the value.
         operator: UnaryOperator,
+        /// The value transformed by the operation.
         number: Box<NumberValue>,
     },
 }

@@ -5,15 +5,21 @@ use crate::{
     signal::signals::Signals,
 };
 
-/// The context used when resolving actions and values.
-#[allow(missing_docs)]
+/// The context used when interpreting a command tree.
+///
+/// Carries the latest portfolio and signals, plus the callback that receives
+/// the actions the tree enqueues.
 pub struct ResolvedContext {
+    /// Receives each action as it is enqueued, together with the recovery
+    /// policy the action should follow on error.
     pub enqueue_action: EnqueueActionFn,
+    /// The latest portfolio snapshot.
     pub portfolio: Portfolio,
+    /// The signals from the latest [`Algorithm::signals`] evaluation.
     pub signals: Signals,
 }
 
-/// Callback type for enqueuing a resolved action with a recovery policy.
+/// Receives a resolved action and its recovery policy during interpretation.
 pub type EnqueueActionFn = Box<dyn FnMut(&ResolvedAction, &RecoveryPolicy) -> StockTrekResult<()>>;
 
 impl ResolvedContext {

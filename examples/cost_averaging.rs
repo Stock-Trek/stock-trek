@@ -10,7 +10,7 @@ const ORDER_QUANTITY_SATOSHIS: f64 = 100.0;
 const ORDER_QUANTITY: f64 = ORDER_QUANTITY_SATOSHIS / SATOSHIS_PER_BITCOIN;
 /// The quote-currency buffer added to the order notional to cover fees and rounding.
 const FEE_BUFFER_RATE: f64 = 0.001;
-/// The CEX account that should place orders. TODO make this injectable and mapped by CexId
+/// The CEX account that should place orders.
 const CEX_ACCOUNT_ID: &str = "main";
 
 pub struct CostAveraging {

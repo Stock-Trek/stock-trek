@@ -5,12 +5,15 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;
 
 /// Candles grouped by aligned windows.
+///
+/// Candles within a window are kept in chronological order and exposed either
+/// as whole candles or as per-field series such as `opens` and `closes`, in
+/// the order needed for indicator calculations.
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketAlignedWindow {
     candles: BTreeMap<AlignedWindow, Vec<MarketCandle>>,
 }
 
-#[allow(missing_docs)]
 impl MarketAlignedWindow {
     /// Creates an aligned-window collection from candles grouped by window.
     ///
@@ -32,24 +35,32 @@ impl MarketAlignedWindow {
     pub fn candles_for(&self, window: AlignedWindow) -> Option<&[MarketCandle]> {
         self.candles.get(&window).map(Vec::as_slice)
     }
+    /// The opening price of each candle in the window, chronologically.
     pub fn opens(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::open)
     }
+    /// The highest price of each candle in the window, chronologically.
     pub fn highs(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::high)
     }
+    /// The lowest price of each candle in the window, chronologically.
     pub fn lows(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::low)
     }
+    /// The closing price of each candle in the window, chronologically.
     pub fn closes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::close)
     }
+    /// The base-asset volume of each candle in the window, chronologically.
     pub fn volumes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::volume)
     }
+    /// The quote-asset volume of each candle in the window, chronologically.
     pub fn quote_volumes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::quote_volume)
     }
+    /// The volume-weighted average price of each candle in the window,
+    /// chronologically.
     pub fn vwaps(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::vwap)
     }

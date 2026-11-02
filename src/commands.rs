@@ -10,28 +10,45 @@ use stock_trek_types::cex::capability::CexCapability;
 use strum::Display;
 
 /// A command produced by a strategy and executed against a resolved context.
+///
+/// Commands form a tree. `If` and `List` structure it, `Plan` enqueues
+/// actions, and `NoOp` does nothing. Interpretation walks the tree in order,
+/// evaluating conditions against the current portfolio and signals.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum Command {
     /// Executes one of two commands based on a condition.
     If {
+        /// The condition evaluated against the current context.
         condition: Condition,
+        /// The command run when the condition holds.
         if_true: Box<Command>,
+        /// The command run when the condition does not hold.
         if_false: Box<Command>,
     },
     /// Executes a list of commands in order.
-    List { commands: Vec<Command> },
+    List {
+        /// The commands run in order.
+        commands: Vec<Command>,
+    },
     /// Does nothing.
     NoOp,
     /// Enqueues a list of actions.
-    Plan { actions: Vec<RecoverableAction> },
+    Plan {
+        /// The actions enqueued, in order, each with its recovery policy.
+        actions: Vec<RecoverableAction>,
+    },
 }
 
 impl Command {
-    /// Executes the command against the resolved context.
+    /// Interprets the command tree, enqueueing the actions it selects.
+    ///
+    /// Conditions are evaluated against the current portfolio and signals in
+    /// `c`; enqueueing an action does not execute it, execution happens after
+    /// interpretation. The first error aborts the walk, leaving already
+    /// enqueued actions in place.
     pub fn execute(&self, c: &mut ResolvedContext) -> StockTrekResult<()> {
         match self {
             Command::If {
@@ -89,11 +106,13 @@ impl HasRequiredCapabilities for Command {
 }
 
 /// Factory for constructing commands.
+///
+/// Available as the `commands` field of a [`StrategyContext`].
 #[derive(Debug, Clone, Default)]
 pub struct CommandFactory;
 
-#[allow(missing_docs)]
 impl CommandFactory {
+    /// Runs `if_true` when `condition` holds and `if_false` otherwise.
     pub fn if_else(&self, condition: Condition, if_true: Command, if_false: Command) -> Command {
         Command::If {
             condition,
@@ -101,12 +120,15 @@ impl CommandFactory {
             if_false: Box::new(if_false),
         }
     }
+    /// Runs each command in order.
     pub fn list(&self, commands: Vec<Command>) -> Command {
         Command::List { commands }
     }
+    /// A command that does nothing.
     pub fn no_op(&self) -> Command {
         Command::NoOp
     }
+    /// Enqueues each action when the branch is reached.
     pub fn plan(&self, actions: Vec<RecoverableAction>) -> Command {
         Command::Plan { actions }
     }
