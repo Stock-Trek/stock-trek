@@ -139,12 +139,12 @@ impl MarketBuilder {
 
     /// Adds a market tick with the given bid, ask, and last price/quantity pairs.
     pub fn tick(
-        &mut self,
+        mut self,
         timestamp_millis: TimestampMillis,
         bid: PriceQuantity,
         ask: PriceQuantity,
         last: PriceQuantity,
-    ) -> &mut Self {
+    ) -> Self {
         let tick = MarketTick::new(
             timestamp_millis,
             MarketQuote::new(bid.0, bid.1),
@@ -155,26 +155,22 @@ impl MarketBuilder {
         self
     }
     /// Sets the candle for a fixed-length rolling window.
-    pub fn rolling_set_candle(&mut self, window: RollingWindow, candle: MarketCandle) -> &mut Self {
+    pub fn rolling_set_candle(mut self, window: RollingWindow, candle: MarketCandle) -> Self {
         self.rolling.insert(window, candle);
         self
     }
     /// Appends a candle to an aligned window.
-    pub fn aligned_push_candle(
-        &mut self,
-        window: AlignedWindow,
-        candle: MarketCandle,
-    ) -> &mut Self {
+    pub fn aligned_push_candle(mut self, window: AlignedWindow, candle: MarketCandle) -> Self {
         self.aligned.entry(window).or_default().push(candle);
         self
     }
     /// Adds a bid quote to the order book.
-    pub fn order_book_bid(&mut self, price: f64, quantity: f64) -> &mut Self {
+    pub fn order_book_bid(mut self, price: f64, quantity: f64) -> Self {
         self.order_book_bids.push(MarketQuote::new(price, quantity));
         self
     }
     /// Adds an ask quote to the order book.
-    pub fn order_book_ask(&mut self, price: f64, quantity: f64) -> &mut Self {
+    pub fn order_book_ask(mut self, price: f64, quantity: f64) -> Self {
         self.order_book_asks.push(MarketQuote::new(price, quantity));
         self
     }
@@ -189,5 +185,48 @@ impl MarketBuilder {
             aligned: MarketAlignedWindow::new(self.aligned),
             order_book: MarketOrderBook::new(self.order_book_bids, self.order_book_asks),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::market_data::market_ohlcv::MarketOhlcv;
+
+    fn candle(start_millis: u64) -> MarketCandle {
+        MarketCandle::new(
+            TimestampMillis::new(start_millis),
+            TimestampMillis::new(start_millis + 1_000),
+            TimestampMillis::new(1_000),
+            true,
+            MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4),
+            3,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn builder_methods_can_be_chained() {
+        let market = MarketBuilder::new(0.000_001, 0.01, 1.0)
+            .tick(
+                TimestampMillis::new(1),
+                (100.0, 1.0),
+                (101.0, 2.0),
+                (100.5, 3.0),
+            )
+            .rolling_set_candle(RollingWindow::Minutes1, candle(1_000))
+            .aligned_push_candle(AlignedWindow::Minutes1, candle(1_000))
+            .order_book_bid(100.0, 1.0)
+            .order_book_ask(101.0, 2.0)
+            .build();
+
+        assert_eq!(market.base_increment(), 0.000_001);
+        assert_eq!(market.quote_increment(), 0.01);
+        assert_eq!(market.minimum_notional(), 1.0);
+        assert_eq!(market.ticks().ticks().len(), 1);
+        assert_eq!(market.rolling().candles().len(), 1);
+        assert_eq!(market.aligned().candles().len(), 1);
+        assert_eq!(market.order_book().bids().len(), 1);
+        assert_eq!(market.order_book().asks().len(), 1);
     }
 }
