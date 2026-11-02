@@ -5,9 +5,12 @@ use crate::market_data::{
 use serde::{Deserialize, Deserializer, Serialize};
 
 /// A collection of recent market ticks.
+///
+/// Ticks are kept in chronological order, regardless of the order in which they
+/// are supplied.
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketTicks {
-    /// The ticks in chronological order.
     pub ticks: Vec<MarketTick>,
 }
 
@@ -19,15 +22,15 @@ impl MarketTicks {
         ticks.sort_by_key(|tick| tick.timestamp_millis);
         Self { ticks }
     }
-    /// Returns the bid quotes as timestamped price/quantity tuples.
+    /// Returns `(timestamp, price, quantity)` for each tick's best bid.
     pub fn bid_timed_price_quantities(&self) -> Vec<TimedPriceQuantity> {
         self.values(|tick| &tick.bid)
     }
-    /// Returns the ask quotes as timestamped price/quantity tuples.
+    /// Returns `(timestamp, price, quantity)` for each tick's best ask.
     pub fn ask_timed_price_quantities(&self) -> Vec<TimedPriceQuantity> {
         self.values(|tick| &tick.ask)
     }
-    /// Returns the last-trade quotes as timestamped price/quantity tuples.
+    /// Returns `(timestamp, price, quantity)` for each tick's last trade.
     pub fn last_timed_price_quantities(&self) -> Vec<TimedPriceQuantity> {
         self.values(|tick| &tick.last)
     }

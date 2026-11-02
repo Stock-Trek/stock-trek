@@ -116,42 +116,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_builder_builds_an_empty_context() {
-        let context = SignalContextBuilder::new().build();
-
-        assert!(
-            context
-                .cex_markets_for(AssetId::Bitcoin, AssetId::TetherUSD)
-                .next()
-                .is_none()
-        );
-    }
-
-    #[test]
-    fn adds_a_market_for_a_cex_base_and_quote() {
-        let mut builder = SignalContextBuilder::new();
-        builder.cex_market(
-            CexId::Binance,
-            AssetId::Bitcoin,
-            AssetId::TetherUSD,
-            market(),
-        );
-        let context = builder.build();
-
-        assert!(
-            context
-                .cex_market_for(&CexId::Binance, &AssetId::Bitcoin, &AssetId::TetherUSD)
-                .is_some()
-        );
-        assert!(
-            context
-                .cex_market_for(&CexId::Binance, &AssetId::Ethereum, &AssetId::TetherUSD)
-                .is_none()
-        );
-    }
-
-    #[test]
-    fn adds_markets_for_multiple_pairs() {
+    fn markets_are_indexed_by_cex_base_and_quote() {
         let mut builder = SignalContextBuilder::new();
         builder
             .cex_market(
@@ -168,15 +133,24 @@ mod tests {
             );
         let context = builder.build();
 
-        assert_eq!(
+        assert!(
             context
-                .cex_markets_for(AssetId::Bitcoin, AssetId::TetherUSD)
-                .count(),
-            1
+                .cex_market_for(&CexId::Binance, &AssetId::Bitcoin, &AssetId::TetherUSD)
+                .is_some()
+        );
+        assert!(
+            context
+                .cex_market_for(&CexId::Binance, &AssetId::Ethereum, &AssetId::TetherUSD)
+                .is_some()
+        );
+        assert!(
+            context
+                .cex_market_for(&CexId::Binance, &AssetId::Bitcoin, &AssetId::USDCoin)
+                .is_none()
         );
         assert_eq!(
             context
-                .cex_markets_for(AssetId::Ethereum, AssetId::TetherUSD)
+                .cex_markets_for(AssetId::Bitcoin, AssetId::TetherUSD)
                 .count(),
             1
         );

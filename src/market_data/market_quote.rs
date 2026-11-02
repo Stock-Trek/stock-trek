@@ -7,11 +7,10 @@ pub type PriceQuantity = (f64, f64);
 pub type TimedPriceQuantity = (TimestampMillis, f64, f64);
 
 /// A price and quantity quote from a market.
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketQuote {
-    /// The quoted price.
     pub price: f64,
-    /// The quoted quantity.
     pub quantity: f64,
 }
 

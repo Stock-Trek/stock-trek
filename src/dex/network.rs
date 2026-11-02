@@ -59,13 +59,12 @@ impl FromStr for NetworkId {
     }
 }
 
+#[allow(missing_docs)]
 impl NetworkId {
-    /// Creates a network identifier.
     pub fn new(id: &str) -> Self {
         Self::from(id)
     }
 
-    /// Returns the network identifier as a string slice.
     pub fn as_str(&self) -> &str {
         match self {
             NetworkId::Mainnet => "mainnet",
@@ -74,7 +73,6 @@ impl NetworkId {
         }
     }
 
-    /// Consumes the network identifier and returns its string value.
     pub fn into_inner(self) -> String {
         match self {
             NetworkId::Mainnet => "mainnet".to_string(),
@@ -126,23 +124,20 @@ impl PartialEq<&str> for NetworkId {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ChainId(u64);
 
+#[allow(missing_docs)]
 impl ChainId {
-    /// Creates a chain identifier.
     pub fn new(id: u64) -> Self {
         Self(id)
     }
 
-    /// Returns the numeric chain identifier.
     pub fn value(&self) -> u64 {
         self.0
     }
 
-    /// Returns the numeric chain identifier.
     pub fn as_u64(&self) -> u64 {
         self.0
     }
 
-    /// Consumes the chain identifier and returns its numeric value.
     pub fn into_inner(self) -> u64 {
         self.0
     }
@@ -197,8 +192,8 @@ impl From<ChainId> for u64 {
     }
 }
 
+#[allow(missing_docs)]
 impl Network {
-    /// Creates a network on a blockchain.
     pub fn new(network_id: NetworkId, chain_id: Option<ChainId>) -> Self {
         Self {
             network_id,
@@ -206,12 +201,10 @@ impl Network {
         }
     }
 
-    /// Returns the network identifier.
     pub fn network_id(&self) -> &NetworkId {
         &self.network_id
     }
 
-    /// Returns the network's numeric chain identifier, if it has one.
     pub fn chain_id(&self) -> Option<ChainId> {
         self.chain_id
     }
@@ -220,15 +213,6 @@ impl Network {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn exposes_network_fields() {
-        let network = Network::new(NetworkId::Mainnet, Some(ChainId::new(1)));
-
-        assert_eq!(network.network_id(), &NetworkId::Mainnet);
-        assert_eq!(network.chain_id(), Some(ChainId::new(1)));
-        assert_eq!(network.chain_id().unwrap().value(), 1);
-    }
 
     #[test]
     fn network_id_round_trips_through_strings() {

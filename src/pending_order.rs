@@ -9,8 +9,8 @@ pub struct PendingOrder {
     filled_quote_quantity: Decimal,
 }
 
+#[allow(missing_docs)]
 impl PendingOrder {
-    /// Creates a pending order with its filled base and quote quantities.
     pub fn new(
         order_request: OrderRequest<AssetId, Decimal>,
         filled_base_quantity: Decimal,
@@ -23,17 +23,14 @@ impl PendingOrder {
         }
     }
 
-    /// Returns the order request that created this pending order.
     pub fn order_request(&self) -> &OrderRequest<AssetId, Decimal> {
         &self.order_request
     }
 
-    /// Returns the quantity of the base asset that has been filled.
     pub fn filled_base_quantity(&self) -> Decimal {
         self.filled_base_quantity
     }
 
-    /// Returns the quantity of the quote asset that has been filled.
     pub fn filled_quote_quantity(&self) -> Decimal {
         self.filled_quote_quantity
     }

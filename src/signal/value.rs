@@ -7,20 +7,19 @@ use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::Ce
 use strum::Display;
 
 /// A dynamically typed signal value.
+///
+/// Signals may hold CEX, account, and asset identifiers, boolean flags, or
+/// numbers.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
+#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum SignalValue {
-    /// A CEX identifier.
     CexId(CexId),
-    /// A CEX account identifier.
     AccountId(AccountId),
-    /// An asset identifier.
     AssetId(AssetId),
-    /// A boolean flag.
     Flag(bool),
-    /// A numeric value.
     Number(f64),
 }
 

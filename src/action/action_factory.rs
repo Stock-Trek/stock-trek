@@ -11,8 +11,8 @@ use stock_trek_types::cex::{order_request::OrderRequest, tag::Tag};
 #[derive(Debug, Clone, Default)]
 pub struct ActionFactory;
 
+#[allow(missing_docs)]
 impl ActionFactory {
-    /// Creates an action that places an order using the given recovery policy.
     pub fn place_order(
         &self,
         cex_id_value: CexIdValue,
@@ -29,11 +29,9 @@ impl ActionFactory {
             recovery_policy,
         )
     }
-    /// Creates an action that cancels all orders across all CEX accounts.
     pub fn cancel_all_orders(&self, recovery_policy: RecoveryPolicy) -> RecoverableAction {
         RecoverableAction::new(Action::CancelAllOrders { tag: None }, recovery_policy)
     }
-    /// Creates an action that cancels all orders across all CEX accounts with `tag`.
     pub fn cancel_all_orders_with_tag(
         &self,
         tag: Tag,
@@ -41,7 +39,6 @@ impl ActionFactory {
     ) -> RecoverableAction {
         RecoverableAction::new(Action::CancelAllOrders { tag: Some(tag) }, recovery_policy)
     }
-    /// Creates an action that cancels all orders in a CEX.
     pub fn cancel_all_orders_in_cex(
         &self,
         cex_id_value: CexIdValue,
@@ -55,7 +52,6 @@ impl ActionFactory {
             recovery_policy,
         )
     }
-    /// Creates an action that cancels all orders in a CEX with `tag`.
     pub fn cancel_all_orders_in_cex_with_tag(
         &self,
         cex_id_value: CexIdValue,
@@ -70,7 +66,6 @@ impl ActionFactory {
             recovery_policy,
         )
     }
-    /// Creates an action that cancels all orders in a CEX account.
     pub fn cancel_all_orders_in_cex_account(
         &self,
         cex_id_value: CexIdValue,
@@ -86,7 +81,6 @@ impl ActionFactory {
             recovery_policy,
         )
     }
-    /// Creates an action that cancels all orders in a CEX account with `tag`.
     pub fn cancel_all_orders_in_cex_account_with_tag(
         &self,
         cex_id_value: CexIdValue,

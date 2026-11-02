@@ -25,6 +25,7 @@ where
     }
 }
 
+#[allow(missing_docs)]
 impl<T> SignalKey<T>
 where
     T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
@@ -45,11 +46,9 @@ where
             _phantom: PhantomData,
         }
     }
-    /// Returns the string key used to store the signal.
     pub fn key(&self) -> &str {
         &self.key
     }
-    /// Returns the key's default value, if one was provided.
     pub fn default(&self) -> Option<T> {
         self.default.clone()
     }

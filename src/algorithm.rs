@@ -4,12 +4,10 @@ use crate::{
 };
 
 /// A trading algorithm that produces signals and strategy commands.
+#[allow(missing_docs)]
 pub trait Algorithm: Send + Sync {
-    /// Returns the name of the algorithm.
     fn name(&self) -> &str;
-    /// Returns a description of the algorithm.
     fn description(&self) -> &str;
-    /// Returns the preferences used when running the algorithm.
     fn preferences(&self) -> Preferences;
     /// Produces the signals used by the algorithm for the given market context.
     /// This is run *every* time.

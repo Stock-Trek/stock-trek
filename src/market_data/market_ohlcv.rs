@@ -1,21 +1,18 @@
 use serde::{Deserialize, Serialize};
 
 /// Open, high, low, close, and volume values for a candle.
+///
+/// `volume` is denominated in the base asset, while `quote_volume` is
+/// denominated in the quote asset.
+#[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MarketOhlcv {
-    /// The opening price.
     pub open: f64,
-    /// The highest price.
     pub high: f64,
-    /// The lowest price.
     pub low: f64,
-    /// The closing price.
     pub close: f64,
-    /// The base-asset volume.
     pub volume: f64,
-    /// The quote-asset volume.
     pub quote_volume: f64,
-    /// The volume-weighted average price.
     pub vwap: f64,
 }
 

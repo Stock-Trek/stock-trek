@@ -6,12 +6,10 @@ use crate::{
 };
 
 /// The context used when resolving actions and values.
+#[allow(missing_docs)]
 pub struct ResolvedContext {
-    /// Callback used to enqueue an action with its recovery policy.
     pub enqueue_action: EnqueueActionFn,
-    /// The current portfolio state.
     pub portfolio: Portfolio,
-    /// The signals produced by the algorithm.
     pub signals: Signals,
 }
 

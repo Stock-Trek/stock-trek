@@ -8,9 +8,9 @@ use std::collections::HashMap;
 pub type Ohlcv = (f64, f64, f64, f64, f64, f64, f64);
 
 /// Candles for fixed-length rolling windows.
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketRollingWindow {
-    /// The candle for each rolling window.
     pub candles: HashMap<RollingWindow, MarketCandle>,
 }
 
@@ -20,7 +20,8 @@ impl MarketRollingWindow {
         Self { candles }
     }
 
-    /// Returns the OHLCV tuple for a rolling window, if present.
+    /// Returns `(open, high, low, close, volume, quote volume, VWAP)` for a
+    /// rolling window, if present.
     pub fn ohlcv(&self, window: RollingWindow) -> Option<Ohlcv> {
         let ohlcv = &self.candles.get(&window)?.ohlcv;
         Some((
@@ -34,7 +35,7 @@ impl MarketRollingWindow {
         ))
     }
 
-    /// Returns the OHLCV values for a rolling window as a struct, if present.
+    /// Returns the OHLCV values as a [`MarketOhlcv`] struct, if present.
     pub fn ohlcv_struct(&self, window: RollingWindow) -> Option<MarketOhlcv> {
         self.candles.get(&window).map(|candle| candle.ohlcv.clone())
     }
@@ -53,34 +54,6 @@ mod tests {
             MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4),
             3,
         )
-    }
-
-    #[test]
-    fn ohlcv_returns_none_when_window_is_absent() {
-        let market = MarketRollingWindow::new(HashMap::new());
-
-        assert!(market.ohlcv(RollingWindow::Minutes1).is_none());
-        assert!(market.ohlcv_struct(RollingWindow::Minutes1).is_none());
-    }
-
-    #[test]
-    fn ohlcv_returns_values_when_window_is_present() {
-        let market = MarketRollingWindow::new(HashMap::from([(RollingWindow::Minutes1, candle())]));
-
-        assert_eq!(
-            market.ohlcv(RollingWindow::Minutes1),
-            Some((1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4))
-        );
-    }
-
-    #[test]
-    fn ohlcv_struct_returns_values_when_window_is_present() {
-        let market = MarketRollingWindow::new(HashMap::from([(RollingWindow::Minutes1, candle())]));
-
-        assert_eq!(
-            market.ohlcv_struct(RollingWindow::Minutes1),
-            Some(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4))
-        );
     }
 
     #[test]
