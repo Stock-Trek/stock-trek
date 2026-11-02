@@ -2,13 +2,11 @@ use crate::{
     error::{
         result::{StockTrekError, StockTrekResult},
         stats::StatsError,
-        value::ValueError,
     },
-    market_data::{millis::*, timestamp::TimestampMillis},
+    market_data::{millis::*, timestamp::TimestampMillis, window_label::window_label_funcs},
 };
 use chrono::{DateTime, Datelike, Months, TimeZone, Utc};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::str::FromStr;
+use serde::{Deserialize, Serialize};
 use strum::{EnumCount, EnumIter, FromRepr};
 
 /// A window aligned to fixed or calendar boundaries.
@@ -55,6 +53,40 @@ pub enum AlignedWindow {
     Years1,
     Years2,
 }
+
+window_label_funcs!(
+    AlignedWindow,
+    Seconds1 => "1s",
+    Seconds5 => "5s",
+    Seconds10 => "10s",
+    Seconds15 => "15s",
+    Seconds30 => "30s",
+    Minutes1 => "1m",
+    Minutes2 => "2m",
+    Minutes3 => "3m",
+    Minutes5 => "5m",
+    Minutes10 => "10m",
+    Minutes15 => "15m",
+    Minutes30 => "30m",
+    Hours1 => "1h",
+    Hours2 => "2h",
+    Hours3 => "3h",
+    Hours4 => "4h",
+    Hours6 => "6h",
+    Hours8 => "8h",
+    Hours12 => "12h",
+    Days1 => "1d",
+    Weeks1 => "1w",
+    Weeks2 => "2w",
+    Weeks4 => "4w",
+    Months1 => "1mo",
+    Months2 => "2mo",
+    Months3 => "3mo",
+    Months4 => "4mo",
+    Months6 => "6mo",
+    Years1 => "1y",
+    Years2 => "2y",
+);
 
 /// The bounds of an aligned window, both as [`TimestampMillis`].
 ///
@@ -238,118 +270,6 @@ impl AlignedWindow {
             AlignedWindow::Years2 => Some(24),
             _ => None,
         }
-    }
-
-    /// Returns the short label for the window, such as `1h` or `7d`.
-    pub fn label(self) -> &'static str {
-        match self {
-            AlignedWindow::Seconds1 => "1s",
-            AlignedWindow::Seconds5 => "5s",
-            AlignedWindow::Seconds10 => "10s",
-            AlignedWindow::Seconds15 => "15s",
-            AlignedWindow::Seconds30 => "30s",
-            AlignedWindow::Minutes1 => "1m",
-            AlignedWindow::Minutes2 => "2m",
-            AlignedWindow::Minutes3 => "3m",
-            AlignedWindow::Minutes5 => "5m",
-            AlignedWindow::Minutes10 => "10m",
-            AlignedWindow::Minutes15 => "15m",
-            AlignedWindow::Minutes30 => "30m",
-            AlignedWindow::Hours1 => "1h",
-            AlignedWindow::Hours2 => "2h",
-            AlignedWindow::Hours3 => "3h",
-            AlignedWindow::Hours4 => "4h",
-            AlignedWindow::Hours6 => "6h",
-            AlignedWindow::Hours8 => "8h",
-            AlignedWindow::Hours12 => "12h",
-            AlignedWindow::Days1 => "1d",
-            AlignedWindow::Weeks1 => "1w",
-            AlignedWindow::Weeks2 => "2w",
-            AlignedWindow::Weeks4 => "4w",
-            AlignedWindow::Months1 => "1mo",
-            AlignedWindow::Months2 => "2mo",
-            AlignedWindow::Months3 => "3mo",
-            AlignedWindow::Months4 => "4mo",
-            AlignedWindow::Months6 => "6mo",
-            AlignedWindow::Years1 => "1y",
-            AlignedWindow::Years2 => "2y",
-        }
-    }
-}
-
-impl std::fmt::Display for AlignedWindow {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.label())
-    }
-}
-
-impl Serialize for AlignedWindow {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(self.label())
-    }
-}
-
-impl<'de> Deserialize<'de> for AlignedWindow {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let label = String::deserialize(deserializer)?;
-        Self::try_from(label.as_str()).map_err(serde::de::Error::custom)
-    }
-}
-
-impl TryFrom<&str> for AlignedWindow {
-    type Error = StockTrekError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            "1s" => Ok(AlignedWindow::Seconds1),
-            "5s" => Ok(AlignedWindow::Seconds5),
-            "10s" => Ok(AlignedWindow::Seconds10),
-            "15s" => Ok(AlignedWindow::Seconds15),
-            "30s" => Ok(AlignedWindow::Seconds30),
-            "1m" => Ok(AlignedWindow::Minutes1),
-            "2m" => Ok(AlignedWindow::Minutes2),
-            "3m" => Ok(AlignedWindow::Minutes3),
-            "5m" => Ok(AlignedWindow::Minutes5),
-            "10m" => Ok(AlignedWindow::Minutes10),
-            "15m" => Ok(AlignedWindow::Minutes15),
-            "30m" => Ok(AlignedWindow::Minutes30),
-            "1h" => Ok(AlignedWindow::Hours1),
-            "2h" => Ok(AlignedWindow::Hours2),
-            "3h" => Ok(AlignedWindow::Hours3),
-            "4h" => Ok(AlignedWindow::Hours4),
-            "6h" => Ok(AlignedWindow::Hours6),
-            "8h" => Ok(AlignedWindow::Hours8),
-            "12h" => Ok(AlignedWindow::Hours12),
-            "1d" => Ok(AlignedWindow::Days1),
-            "1w" => Ok(AlignedWindow::Weeks1),
-            "2w" => Ok(AlignedWindow::Weeks2),
-            "4w" => Ok(AlignedWindow::Weeks4),
-            "1mo" => Ok(AlignedWindow::Months1),
-            "2mo" => Ok(AlignedWindow::Months2),
-            "3mo" => Ok(AlignedWindow::Months3),
-            "4mo" => Ok(AlignedWindow::Months4),
-            "6mo" => Ok(AlignedWindow::Months6),
-            "1y" => Ok(AlignedWindow::Years1),
-            "2y" => Ok(AlignedWindow::Years2),
-            _ => Err(StockTrekError::Value(ValueError::IncorrectType {
-                expected: "AlignedWindow".into(),
-                found: value.into(),
-            })),
-        }
-    }
-}
-
-impl FromStr for AlignedWindow {
-    type Err = StockTrekError;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        Self::try_from(value)
     }
 }
 
