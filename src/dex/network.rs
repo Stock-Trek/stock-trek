@@ -1,7 +1,10 @@
 //! Networks within a blockchain.
 
 use crate::dex::string_id::string_id_funcs;
-use crate::error::{result::StockTrekError, value::ValueError};
+use crate::error::{
+    result::{StockTrekError, StockTrekResult},
+    value::ValueError,
+};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
@@ -35,11 +38,11 @@ impl NetworkId {
 
     /// Creates a network identifier from a static string.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Panics if `id` is empty or whitespace-only.
-    pub fn from_static(id: &'static str) -> Self {
-        Self::try_from(id).expect("network id must not be empty or whitespace-only")
+    /// Returns an error if `id` is empty or whitespace-only.
+    pub fn from_static(id: &'static str) -> StockTrekResult<Self> {
+        Self::try_from(id)
     }
 
     /// Returns the identifier as a string slice.
@@ -212,6 +215,7 @@ mod tests {
         for value in ["", " ", "\t\n"] {
             assert!(NetworkId::new(value).is_err());
             assert!(NetworkId::try_from(value).is_err());
+            assert!(NetworkId::from_static(value).is_err());
             assert!(value.parse::<NetworkId>().is_err());
         }
     }
