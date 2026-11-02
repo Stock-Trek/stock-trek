@@ -84,22 +84,10 @@ impl HasRequiredCapabilities for Command {
         match self {
             Command::If {
                 if_true, if_false, ..
-            } => combine_capabilities(&[if_true.as_ref(), if_false.as_ref()]),
-            Command::List { commands } => {
-                let mut capabilities = Vec::new();
-                for command in commands {
-                    capabilities.extend(command.required_capabilities());
-                }
-                capabilities
-            }
+            } => combine_capabilities([if_true.as_ref(), if_false.as_ref()]),
+            Command::List { commands } => combine_capabilities(commands),
             Command::NoOp => Vec::new(),
-            Command::Plan { actions } => {
-                let mut capabilities = Vec::new();
-                for action in actions {
-                    capabilities.extend(action.required_capabilities());
-                }
-                capabilities
-            }
+            Command::Plan { actions } => combine_capabilities(actions),
         }
     }
 }

@@ -91,12 +91,6 @@ mod tests {
         let json = serde_json::to_string(&order_book).unwrap();
         let deserialized: MarketOrderBook = serde_json::from_str(&json).unwrap();
 
-        assert_eq!(deserialized.bids.len(), 1);
-        assert_eq!(deserialized.bids[0].price(), 100.0);
-        assert_eq!(deserialized.bids[0].quantity(), 1.5);
-        assert_eq!(deserialized.asks.len(), 1);
-        assert_eq!(deserialized.asks[0].price(), 101.0);
-        assert_eq!(deserialized.asks[0].quantity(), 2.5);
         assert_eq!(deserialized.bids, [quote(100.0, 1.5)]);
         assert_eq!(deserialized.asks, [quote(101.0, 2.5)]);
     }
