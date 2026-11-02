@@ -1,7 +1,4 @@
-use crate::{
-    error::result::{StockTrekError, StockTrekResult},
-    market_data::market_quote::MarketQuote,
-};
+use crate::market_data::market_quote::MarketQuote;
 use serde::{Deserialize, Serialize};
 
 /// The current bids and asks for a market.
@@ -9,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// Bids are kept from highest to lowest price and asks from lowest to highest
 /// price, regardless of the order in which they are supplied.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(try_from = "MarketOrderBookData")]
+#[serde(from = "MarketOrderBookData")]
 pub struct MarketOrderBook {
     bids: Vec<MarketQuote>,
     asks: Vec<MarketQuote>,
@@ -19,22 +16,11 @@ impl MarketOrderBook {
     /// Creates an order book from bid and ask quotes.
     ///
     /// Bids are sorted from highest to lowest price and asks from lowest to
-    /// highest price. Returns an error if any quote is invalid.
-    pub fn new(bids: Vec<MarketQuote>, asks: Vec<MarketQuote>) -> StockTrekResult<Self> {
-        Self::from_parts("MarketOrderBook::new", bids, asks)
-    }
-
-    fn from_parts(
-        function: &'static str,
-        mut bids: Vec<MarketQuote>,
-        mut asks: Vec<MarketQuote>,
-    ) -> StockTrekResult<Self> {
-        for quote in bids.iter().chain(asks.iter()) {
-            quote.validate(function)?;
-        }
+    /// highest price.
+    pub fn new(mut bids: Vec<MarketQuote>, mut asks: Vec<MarketQuote>) -> Self {
         bids.sort_by(|a, b| b.price().total_cmp(&a.price()));
         asks.sort_by(|a, b| a.price().total_cmp(&b.price()));
-        Ok(Self { bids, asks })
+        Self { bids, asks }
     }
 
     /// Returns bids ordered from highest to lowest price.
@@ -53,10 +39,8 @@ struct MarketOrderBookData {
     asks: Vec<MarketQuote>,
 }
 
-impl TryFrom<MarketOrderBookData> for MarketOrderBook {
-    type Error = StockTrekError;
-
-    fn try_from(data: MarketOrderBookData) -> Result<Self, Self::Error> {
+impl From<MarketOrderBookData> for MarketOrderBook {
+    fn from(data: MarketOrderBookData) -> Self {
         Self::new(data.bids, data.asks)
     }
 }
@@ -70,7 +54,6 @@ mod tests {
             vec![MarketQuote::new(100.0, 1.5).unwrap()],
             vec![MarketQuote::new(101.0, 2.5).unwrap()],
         )
-        .unwrap()
     }
 
     fn quote(price: f64, quantity: f64) -> MarketQuote {
@@ -90,8 +73,7 @@ mod tests {
                 MarketQuote::new(102.0, 2.0).unwrap(),
                 MarketQuote::new(104.0, 3.0).unwrap(),
             ],
-        )
-        .unwrap();
+        );
 
         assert_eq!(
             order_book.bids(),

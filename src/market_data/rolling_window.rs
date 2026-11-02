@@ -138,11 +138,6 @@ impl RollingWindow {
             RollingWindow::Weeks40 => Some(40 * millis_per_week),
         }
     }
-
-    /// Returns the window length in milliseconds as an upper bound.
-    pub fn millis_upper_bound(&self) -> Option<u64> {
-        self.millis_exact()
-    }
 }
 
 #[cfg(test)]

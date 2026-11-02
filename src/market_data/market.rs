@@ -143,46 +143,6 @@ impl MarketBuilder {
         }
     }
 
-    /// Returns the minimum increment for the base asset quantity.
-    pub fn base_increment(&self) -> f64 {
-        self.base_increment
-    }
-
-    /// Returns the minimum increment for the quote asset price.
-    pub fn quote_increment(&self) -> f64 {
-        self.quote_increment
-    }
-
-    /// Returns the minimum notional value for an order.
-    pub fn minimum_notional(&self) -> f64 {
-        self.minimum_notional
-    }
-
-    /// Returns the ticks added to the builder.
-    pub fn ticks(&self) -> &[MarketTick] {
-        &self.ticks
-    }
-
-    /// Returns the rolling-window candles added to the builder, ordered by window.
-    pub fn rolling(&self) -> &BTreeMap<RollingWindow, MarketCandle> {
-        &self.rolling
-    }
-
-    /// Returns the aligned-window candles added to the builder, ordered by window.
-    pub fn aligned(&self) -> &BTreeMap<AlignedWindow, Vec<MarketCandle>> {
-        &self.aligned
-    }
-
-    /// Returns the bid quotes added to the builder.
-    pub fn order_book_bids(&self) -> &[MarketQuote] {
-        &self.order_book_bids
-    }
-
-    /// Returns the ask quotes added to the builder.
-    pub fn order_book_asks(&self) -> &[MarketQuote] {
-        &self.order_book_asks
-    }
-
     /// Adds a market tick with the given bid, ask, and last quotes.
     pub fn tick(
         mut self,
@@ -235,7 +195,7 @@ impl MarketBuilder {
             self.quote_increment,
             self.minimum_notional,
         )?;
-        let order_book = MarketOrderBook::new(self.order_book_bids, self.order_book_asks)?;
+        let order_book = MarketOrderBook::new(self.order_book_bids, self.order_book_asks);
         Ok(Market {
             base_increment: self.base_increment,
             quote_increment: self.quote_increment,
@@ -267,7 +227,6 @@ mod tests {
         MarketCandle::new(
             TimestampMillis::new(start_millis),
             TimestampMillis::new(start_millis + 1_000),
-            TimestampMillis::new(1_000),
             true,
             MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap(),
             3,

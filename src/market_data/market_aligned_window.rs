@@ -97,7 +97,6 @@ mod tests {
         MarketCandle::new(
             TimestampMillis::new(start_time_millis_inc),
             TimestampMillis::new(start_time_millis_inc + 1),
-            TimestampMillis::new(1),
             true,
             MarketOhlcv::new(open, open + 1.0, open - 0.5, open + 0.5, 10.0, 15.0, 1.4).unwrap(),
             3,
