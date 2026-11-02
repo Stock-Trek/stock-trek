@@ -18,6 +18,9 @@ keywords = [
 ]
 exclude = [
   ".github/**",
+  ".gitignore",
+  "rust-toolchain.toml",
+  "tests/**",
 ]
 
 [lib]
