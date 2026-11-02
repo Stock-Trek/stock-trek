@@ -1,6 +1,8 @@
 use super::*;
 use stock_trek_types::cex::{
-    activation::Activation, quantity::Quantity, side::Side, time_in_force::TimeInForce,
+    account_id::AccountId, activation::Activation, asset_id::AssetId, cex_id::CexId,
+    order_request::OrderRequest, quantity::Quantity, side::Side, tag::Tag,
+    time_in_force::TimeInForce,
 };
 
 fn portfolio_with(
