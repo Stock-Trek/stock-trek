@@ -161,7 +161,7 @@ mod tests {
                 (*ask, 1.0),
             );
         }
-        builder.build()
+        builder.build().unwrap()
     }
 
     fn context(markets: Vec<(CexId, Market)>) -> SignalContext {
@@ -268,13 +268,15 @@ mod tests {
     }
 
     #[test]
-    fn skips_non_finite_asks() {
-        let algorithm = CostAveraging::default();
-        let signals = algorithm
-            .signals(&context(vec![(CexId::Binance, market(&[f64::NAN]))]))
-            .unwrap();
+    fn rejects_non_finite_asks() {
+        let builder = MarketBuilder::new(0.000_001, 0.01, 0.000_1).tick(
+            TimestampMillis::new(0),
+            (0.0, 1.0),
+            (f64::NAN, 1.0),
+            (f64::NAN, 1.0),
+        );
 
-        assert!(!signals.read(&algorithm.key_market_exists).unwrap());
+        assert!(builder.build().is_err());
     }
 
     #[test]

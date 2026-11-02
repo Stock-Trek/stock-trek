@@ -1,5 +1,5 @@
 use crate::{
-    cex::capability::HasRequiredCapabilities,
+    cex::{capability::HasRequiredCapabilities, order_quantity::positive_quantity},
     error::result::StockTrekResult,
     resolvable::Resolvable,
     resolved_context::ResolvedContext,
@@ -27,7 +27,11 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
                     quote: quote.asset_id(c)?,
                     side: *side,
                     activation: activation.try_resolve(c)?,
-                    limit_price: limit_price.number(c)?,
+                    limit_price: positive_quantity(
+                        "OrderRequest::Limit",
+                        "limit price",
+                        limit_price.number(c)?,
+                    )?,
                     time_in_force: *time_in_force,
                     quantity: quantity.try_resolve(c)?,
                     tag: tag.clone(),
@@ -45,7 +49,11 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
                     base: base.asset_id(c)?,
                     quote: quote.asset_id(c)?,
                     activation: activation.try_resolve(c)?,
-                    quote_quantity: quote_quantity.number(c)?,
+                    quote_quantity: positive_quantity(
+                        "OrderRequest::MarketBuy",
+                        "quote quantity",
+                        quote_quantity.number(c)?,
+                    )?,
                     tag: tag.clone(),
                 };
                 Ok(order_request)
@@ -61,7 +69,11 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
                     base: base.asset_id(c)?,
                     quote: quote.asset_id(c)?,
                     activation: activation.try_resolve(c)?,
-                    base_quantity: base_quantity.number(c)?,
+                    base_quantity: positive_quantity(
+                        "OrderRequest::MarketSell",
+                        "base quantity",
+                        base_quantity.number(c)?,
+                    )?,
                     tag: tag.clone(),
                 };
                 Ok(order_request)

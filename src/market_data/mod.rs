@@ -11,6 +11,7 @@ pub mod market_ticks;
 pub mod millis;
 pub mod rolling_window;
 pub mod timestamp;
+mod validation;
 mod window_label;
 
 #[cfg(test)]

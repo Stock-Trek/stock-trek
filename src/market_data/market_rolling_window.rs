@@ -63,7 +63,7 @@ mod tests {
             TimestampMillis::new(1),
             TimestampMillis::new(1),
             true,
-            MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4),
+            MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap(),
             3,
         )
         .unwrap()
@@ -81,7 +81,7 @@ mod tests {
         );
         assert_eq!(
             deserialized.ohlcv_struct(RollingWindow::Minutes1),
-            Some(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4))
+            Some(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap())
         );
     }
 }
