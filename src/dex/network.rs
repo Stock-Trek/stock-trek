@@ -15,35 +15,36 @@ pub struct Network {
 
 define_string_id! {
     /// Identifier for a network on a blockchain.
-    NetworkId {
-        /// The main network of a blockchain.
-        #[allow(non_upper_case_globals)]
-        pub const Mainnet: Self = Self::from_static("mainnet");
+    NetworkId
+}
 
-        /// A test network of a blockchain.
-        #[allow(non_upper_case_globals)]
-        pub const Testnet: Self = Self::from_static("testnet");
+#[allow(missing_docs, non_upper_case_globals)]
+impl NetworkId {
+    /// The main network of a blockchain.
+    pub const Mainnet: Self = Self::from_static("mainnet");
 
-        /// Creates a network identifier from a static string.
-        ///
-        /// # Panics
-        ///
-        /// Panics if `id` is empty.
-        pub const fn from_static(id: &'static str) -> Self {
-            assert!(!id.is_empty(), "network id must not be empty");
-            Self(std::borrow::Cow::Borrowed(id))
-        }
+    /// A test network of a blockchain.
+    pub const Testnet: Self = Self::from_static("testnet");
 
-        /// Creates a network identifier for an arbitrary network name.
-        ///
-        /// # Panics
-        ///
-        /// Panics if `name` is empty or whitespace-only.
-        #[allow(non_snake_case)]
-        pub fn Other(name: impl Into<String>) -> Self {
-            let name = name.into();
-            Self::try_from(name).expect("network id must not be empty or whitespace-only")
-        }
+    /// Creates a network identifier from a static string.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `id` is empty.
+    pub const fn from_static(id: &'static str) -> Self {
+        assert!(!id.is_empty(), "network id must not be empty");
+        Self(std::borrow::Cow::Borrowed(id))
+    }
+
+    /// Creates a network identifier for an arbitrary network name.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `name` is empty or whitespace-only.
+    #[allow(non_snake_case)]
+    pub fn Other(name: impl Into<String>) -> Self {
+        let name = name.into();
+        Self::try_from(name).expect("network id must not be empty or whitespace-only")
     }
 }
 

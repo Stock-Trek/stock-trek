@@ -3,17 +3,9 @@
 /// Defines a validated, string-backed identifier type.
 ///
 /// The generated type is serialized as a plain string, rejects empty and
-/// whitespace-only values, and dereferences to `str`. Additional inherent
-/// items can be supplied in a trailing block.
+/// whitespace-only values, and dereferences to `str`.
 macro_rules! define_string_id {
     ($(#[$meta:meta])* $name:ident) => {
-        define_string_id!($(#[$meta])* $name {});
-    };
-    (
-        $(#[$meta:meta])*
-        $name:ident
-        { $($extra:tt)* }
-    ) => {
         $(#[$meta])*
         #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
         #[serde(try_from = "String", into = "String")]
@@ -50,8 +42,6 @@ macro_rules! define_string_id {
             pub fn into_inner(self) -> String {
                 self.0.into_owned()
             }
-
-            $($extra)*
         }
 
         impl TryFrom<&str> for $name {
