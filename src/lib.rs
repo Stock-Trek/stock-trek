@@ -18,6 +18,7 @@ mod conditions;
 pub mod dex;
 mod error;
 mod market_data;
+pub mod numeric;
 mod pending_order;
 mod portfolio;
 mod preferences;
@@ -33,6 +34,8 @@ pub use algorithm::Algorithm;
 pub use cex::order_factory::OrderFactory;
 pub use commands::{Command, CommandFactory};
 pub use conditions::{Condition, ConditionFactory, QuantityOf};
+/// Alias for the exact numeric boundary module.
+pub use numeric as boundary;
 pub use pending_order::PendingOrder;
 pub use portfolio::{CexAccountPortfolio, Portfolio, PortfolioBuilder};
 pub use preferences::Preferences;
@@ -63,6 +66,7 @@ pub mod capabilities {
 pub mod errors {
     pub use crate::error::{
         dex::DexError,
+        numeric::NumericError,
         result::{StockTrekError, StockTrekResult},
         stats::StatsError,
         value::ValueError,

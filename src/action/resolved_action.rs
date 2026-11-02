@@ -1,3 +1,4 @@
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use stock_trek_types::cex::{
     account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest, tag::Tag,
@@ -38,6 +39,6 @@ pub enum ResolvedAction {
         /// The account that should place the order.
         account_id: AccountId,
         /// The resolved order request to send.
-        order_request: OrderRequest<AssetId, f64>,
+        order_request: OrderRequest<AssetId, Decimal>,
     },
 }

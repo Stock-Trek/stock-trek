@@ -222,14 +222,36 @@ impl ConditionFactory {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{portfolio::Portfolio, signal::signals::Signals};
+    use crate::{
+        portfolio::Portfolio, preferences::Preferences, signal::signals::Signals,
+        signal_context::SignalContext,
+    };
+    use rust_decimal::RoundingStrategy;
     use std::collections::HashMap;
+    use stock_trek_types::cex::{preferences::CexPreferences, preferences::CexRoundingPreferences};
+
+    fn preferences() -> Preferences {
+        Preferences {
+            cex: CexPreferences {
+                max_network_delay_millis: 0,
+                rounding: CexRoundingPreferences {
+                    activation_price_triggered_above: RoundingStrategy::ToZero,
+                    activation_price_triggered_below: RoundingStrategy::ToZero,
+                    price: RoundingStrategy::ToZero,
+                    quantity: RoundingStrategy::ToZero,
+                    callback_rate_bps: RoundingStrategy::ToZero,
+                },
+            },
+        }
+    }
 
     fn context() -> ResolvedContext {
         ResolvedContext {
             enqueue_action: Box::new(|_, _| Ok(())),
             portfolio: Portfolio::new(HashMap::new()),
             signals: Signals::new(),
+            preferences: preferences(),
+            markets: SignalContext::new(HashMap::new()),
         }
     }
 

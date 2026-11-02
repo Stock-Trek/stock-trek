@@ -1,11 +1,12 @@
 use crate::{
-    error::result::StockTrekResult, resolvable::Resolvable, resolved_context::ResolvedContext,
-    value::value::NumberValue,
+    error::result::StockTrekResult, numeric::Price, resolvable::Resolvable,
+    resolved_context::ResolvedContext, value::value::NumberValue,
 };
+use rust_decimal::Decimal;
 use stock_trek_types::cex::activation::Activation;
 
-impl Resolvable<Activation<f64>> for Activation<NumberValue> {
-    fn try_resolve(&self, context: &ResolvedContext) -> StockTrekResult<Activation<f64>> {
+impl Resolvable<Activation<Decimal>> for Activation<NumberValue> {
+    fn try_resolve(&self, context: &ResolvedContext) -> StockTrekResult<Activation<Decimal>> {
         match self {
             Self::Immediate => Ok(Activation::Immediate),
             Self::PriceTriggered {
@@ -14,7 +15,8 @@ impl Resolvable<Activation<f64>> for Activation<NumberValue> {
                 direction,
                 mode,
             } => Ok(Activation::PriceTriggered {
-                activation_price: activation_price.number(context)?,
+                activation_price: Price::try_from_calc(activation_price.number(context)?)?
+                    .to_decimal(),
                 basis: *basis,
                 direction: *direction,
                 mode: *mode,
@@ -25,7 +27,8 @@ impl Resolvable<Activation<f64>> for Activation<NumberValue> {
                 callback_rate_bps,
                 direction,
             } => Ok(Activation::Trailing {
-                activation_price: activation_price.number(context)?,
+                activation_price: Price::try_from_calc(activation_price.number(context)?)?
+                    .to_decimal(),
                 basis: *basis,
                 callback_rate_bps: *callback_rate_bps,
                 direction: *direction,
