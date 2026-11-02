@@ -27,14 +27,6 @@ impl NetworkId {
 
     /// A test network of a blockchain.
     pub const TESTNET: Self = Self(std::borrow::Cow::Borrowed("testnet"));
-
-    /// The main network of a blockchain.
-    #[allow(non_upper_case_globals)]
-    pub const Mainnet: Self = Self::MAINNET;
-
-    /// A test network of a blockchain.
-    #[allow(non_upper_case_globals)]
-    pub const Testnet: Self = Self::TESTNET;
 }
 
 impl NetworkId {
@@ -53,18 +45,6 @@ impl NetworkId {
     /// Returns an error if `name` is empty or whitespace-only.
     pub fn other(name: impl Into<String>) -> StockTrekResult<Self> {
         Self::try_from(name.into())
-    }
-
-    /// Creates an arbitrary network identifier by name.
-    ///
-    /// This is an alias for [`Self::other`].
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if `name` is empty or whitespace-only.
-    #[allow(non_snake_case)]
-    pub fn Other(name: impl Into<String>) -> StockTrekResult<Self> {
-        Self::other(name)
     }
 
     /// Returns the identifier as a string slice.
@@ -197,17 +177,11 @@ mod tests {
     }
 
     #[test]
-    fn legacy_network_id_constants_alias_the_primary_constants() {
-        assert_eq!(NetworkId::Mainnet, NetworkId::MAINNET);
-        assert_eq!(NetworkId::Testnet, NetworkId::TESTNET);
-    }
-
-    #[test]
     fn mainnet_and_testnet_have_a_single_representation() {
         assert_eq!(NetworkId::new("mainnet").unwrap(), NetworkId::MAINNET);
         assert_eq!(NetworkId::new("testnet").unwrap(), NetworkId::TESTNET);
-        assert_eq!(NetworkId::Other("mainnet").unwrap(), NetworkId::MAINNET);
-        assert_eq!(NetworkId::Other("testnet").unwrap(), NetworkId::TESTNET);
+        assert_eq!(NetworkId::other("mainnet").unwrap(), NetworkId::MAINNET);
+        assert_eq!(NetworkId::other("testnet").unwrap(), NetworkId::TESTNET);
         assert_eq!(
             serde_json::to_string(&NetworkId::new("mainnet").unwrap()).unwrap(),
             serde_json::to_string(&NetworkId::MAINNET).unwrap()
@@ -256,7 +230,6 @@ mod tests {
             assert!(NetworkId::try_from(value).is_err());
             assert!(value.parse::<NetworkId>().is_err());
             assert!(NetworkId::other(value).is_err());
-            assert!(NetworkId::Other(value).is_err());
         }
     }
 
