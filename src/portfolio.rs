@@ -1,5 +1,4 @@
 use crate::pending_order::PendingOrder;
-use rust_decimal::Decimal;
 use std::collections::HashMap;
 use stock_trek_types::cex::{
     account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest,
@@ -15,7 +14,7 @@ pub struct Portfolio {
 /// Asset balances and pending orders for a single CEX account.
 #[derive(Debug, Clone, Default)]
 pub struct CexAccountPortfolio {
-    asset_counts: HashMap<AssetId, Decimal>,
+    asset_counts: HashMap<AssetId, f64>,
     pending_orders: HashMap<Tag, Vec<PendingOrder>>,
 }
 
@@ -164,7 +163,7 @@ impl Portfolio {
     }
 
     /// Total `asset_id` held across **all** accounts (counts available and reserved).
-    pub fn asset_total(&self, asset_id: &AssetId) -> Decimal {
+    pub fn asset_total(&self, asset_id: &AssetId) -> f64 {
         self.portfolios
             .values()
             .flat_map(|accounts| accounts.values())
@@ -178,19 +177,19 @@ impl Portfolio {
         cex_id: &CexId,
         account_id: &AccountId,
         asset_id: &AssetId,
-    ) -> Decimal {
+    ) -> f64 {
         self.portfolios
             .get(cex_id)
             .and_then(|accounts| accounts.get(account_id))
             .and_then(|account| account.asset_counts.get(asset_id))
             .copied()
-            .unwrap_or(Decimal::ZERO)
+            .unwrap_or(0.0)
     }
     /// Total available (free) amount of `asset_id` across all accounts (total - reserved).
     ///
     /// The result is clamped to zero when pending orders reserve more than the
     /// portfolio holds.
-    pub fn asset_available(&self, asset_id: &AssetId) -> Decimal {
+    pub fn asset_available(&self, asset_id: &AssetId) -> f64 {
         Self::available_quantity(self.asset_total(asset_id), self.asset_reserved(asset_id))
     }
     /// Available (free) amount of `asset_id` in a specific CEX account (total - reserved).
@@ -202,15 +201,15 @@ impl Portfolio {
         cex_id: &CexId,
         account_id: &AccountId,
         asset_id: &AssetId,
-    ) -> Decimal {
+    ) -> f64 {
         Self::available_quantity(
             self.asset_total_in_cex_account(cex_id, account_id, asset_id),
             self.asset_reserved_in_cex_account(cex_id, account_id, asset_id),
         )
     }
     /// Total amount of `asset_id` reserved (locked in unfilled pending orders) across all accounts.
-    pub fn asset_reserved(&self, asset_id: &AssetId) -> Decimal {
-        let mut total = Decimal::ZERO;
+    pub fn asset_reserved(&self, asset_id: &AssetId) -> f64 {
+        let mut total = 0.0;
         for accounts in self.portfolios.values() {
             for account in accounts.values() {
                 for pending_orders in account.pending_orders.values() {
@@ -228,7 +227,7 @@ impl Portfolio {
         cex_id: &CexId,
         account_id: &AccountId,
         asset_id: &AssetId,
-    ) -> Decimal {
+    ) -> f64 {
         self.portfolios
             .get(cex_id)
             .and_then(|accounts| accounts.get(account_id))
@@ -240,16 +239,16 @@ impl Portfolio {
                     .map(|pending_order| {
                         self.reserved_quantity_for_pending_order(pending_order, asset_id)
                     })
-                    .sum::<Decimal>()
+                    .sum::<f64>()
             })
-            .unwrap_or(Decimal::ZERO)
+            .unwrap_or(0.0)
     }
 
     fn reserved_quantity_for_pending_order(
         &self,
         pending_order: &PendingOrder,
         asset_id: &AssetId,
-    ) -> Decimal {
+    ) -> f64 {
         match pending_order.order_request() {
             OrderRequest::Limit {
                 base,
@@ -261,8 +260,8 @@ impl Portfolio {
                 let base_quantity = match quantity {
                     Quantity::OfBase(base_quantity) => *base_quantity,
                     Quantity::OfQuote(quote_quantity) => {
-                        if limit_price.is_zero() {
-                            Decimal::ZERO
+                        if *limit_price == 0.0 {
+                            0.0
                         } else {
                             *quote_quantity / limit_price
                         }
@@ -297,23 +296,23 @@ impl Portfolio {
             } if asset_id == base => {
                 Self::remaining_quantity(*base_quantity, pending_order.filled_base_quantity())
             }
-            _ => Decimal::ZERO,
+            _ => 0.0,
         }
     }
 
-    fn remaining_quantity(ordered: Decimal, filled: Decimal) -> Decimal {
-        (ordered - filled).max(Decimal::ZERO)
+    fn remaining_quantity(ordered: f64, filled: f64) -> f64 {
+        (ordered - filled).max(0.0)
     }
 
-    fn available_quantity(total: Decimal, reserved: Decimal) -> Decimal {
-        (total - reserved).max(Decimal::ZERO)
+    fn available_quantity(total: f64, reserved: f64) -> f64 {
+        (total - reserved).max(0.0)
     }
 }
 
 impl CexAccountPortfolio {
     /// Creates an account portfolio from asset balances and pending orders.
     pub fn new(
-        asset_counts: HashMap<AssetId, Decimal>,
+        asset_counts: HashMap<AssetId, f64>,
         pending_orders: HashMap<Tag, Vec<PendingOrder>>,
     ) -> Self {
         Self {
@@ -323,23 +322,20 @@ impl CexAccountPortfolio {
     }
 
     /// Returns all asset balances (available and reserved) keyed by asset.
-    pub fn asset_counts(&self) -> &HashMap<AssetId, Decimal> {
+    pub fn asset_counts(&self) -> &HashMap<AssetId, f64> {
         &self.asset_counts
     }
 
     /// Iterates over all asset balances keyed by asset.
-    pub fn assets(&self) -> impl Iterator<Item = (&AssetId, &Decimal)> {
+    pub fn assets(&self) -> impl Iterator<Item = (&AssetId, &f64)> {
         self.asset_counts.iter()
     }
 
     /// Returns the total balance (available and reserved) of an asset.
     ///
     /// Returns zero when the account does not hold the asset.
-    pub fn asset_count(&self, asset_id: &AssetId) -> Decimal {
-        self.asset_counts
-            .get(asset_id)
-            .copied()
-            .unwrap_or(Decimal::ZERO)
+    pub fn asset_count(&self, asset_id: &AssetId) -> f64 {
+        self.asset_counts.get(asset_id).copied().unwrap_or(0.0)
     }
 
     /// Returns all pending orders grouped by tag.
@@ -378,7 +374,7 @@ impl PortfolioBuilder {
         cex_id: CexId,
         account_id: AccountId,
         asset_id: AssetId,
-        count: Decimal,
+        count: f64,
     ) -> &mut Self {
         self.portfolios
             .entry(cex_id)
@@ -397,9 +393,9 @@ impl PortfolioBuilder {
         &mut self,
         cex_id: CexId,
         account_id: AccountId,
-        order_request: OrderRequest<AssetId, Decimal>,
-        filled_base_quantity: Decimal,
-        filled_quote_quantity: Decimal,
+        order_request: OrderRequest<AssetId, f64>,
+        filled_base_quantity: f64,
+        filled_quote_quantity: f64,
     ) -> &mut Self {
         let tag = Self::order_request_tag(&order_request).clone();
         self.portfolios
@@ -423,7 +419,7 @@ impl PortfolioBuilder {
         Portfolio::new(self.portfolios)
     }
 
-    fn order_request_tag(order_request: &OrderRequest<AssetId, Decimal>) -> &Tag {
+    fn order_request_tag(order_request: &OrderRequest<AssetId, f64>) -> &Tag {
         match order_request {
             OrderRequest::Limit { tag, .. }
             | OrderRequest::MarketBuy { tag, .. }

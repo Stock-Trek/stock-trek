@@ -8,7 +8,6 @@ use crate::{
     util::serde_ordering::OrderingSerde,
     value::value::NumberValue,
 };
-use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId};
@@ -80,9 +79,7 @@ impl Condition {
                 let test_result = condition.test(c)?;
                 Ok(!test_result)
             }
-            Condition::OwnsAsset { asset_id } => {
-                Ok(c.portfolio.asset_total(asset_id) > Decimal::ZERO)
-            }
+            Condition::OwnsAsset { asset_id } => Ok(c.portfolio.asset_total(asset_id) > 0.0),
             Condition::OwnsAssetInCexAccount {
                 cex_id,
                 account_id,
@@ -90,7 +87,7 @@ impl Condition {
             } => Ok(c
                 .portfolio
                 .asset_total_in_cex_account(cex_id, account_id, asset_id)
-                > Decimal::ZERO),
+                > 0.0),
             Condition::QuantityOf {
                 quantity_of,
                 conditions,
