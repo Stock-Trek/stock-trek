@@ -104,10 +104,10 @@ macro_rules! define_network {
                     $native_decimals,
                     $address_format,
                 )?;
-                let network = Network::new(network.into(), None);
-                Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+                let network = Network::for_blockchain($blockchain, network.into(), None);
+                crate::dex::asset_on_chain::AssetOnChain::new(
                     blockchain, network, asset_kind,
-                ))
+                )
             }
         }
     };
@@ -365,6 +365,69 @@ fn evm_asset_on_chain(
     asset_kind: AssetKind,
 ) -> StockTrekResult<AssetOnChain> {
     let blockchain = evm_blockchain(blockchain_name)?;
-    let network = Network::new(network.into(), Some(ChainId::new(network.into())));
-    Ok(AssetOnChain::new(blockchain, network, asset_kind))
+    let network = Network::for_blockchain(
+        blockchain_name,
+        network.into(),
+        Some(ChainId::new(network.into())),
+    );
+    AssetOnChain::new(blockchain, network, asset_kind)
+}
+
+pub(crate) fn network_belongs_to_blockchain(
+    blockchain_id: &str,
+    network_id: &NetworkId,
+    chain_id: Option<ChainId>,
+) -> Option<bool> {
+    let known_networks: &[(&str, Option<u64>)] = match blockchain_id {
+        "arbitrum" => &[
+            ("mainnet", Some(42161)),
+            ("sepolia", Some(421614)),
+            ("nova", Some(42170)),
+        ],
+        "avalanche" => &[("mainnet", Some(43114)), ("fuji", Some(43113))],
+        "base" => &[("mainnet", Some(8453)), ("sepolia", Some(84532))],
+        "bitcoin" => &[
+            ("mainnet", None),
+            ("testnet", None),
+            ("signet", None),
+            ("regtest", None),
+        ],
+        "bitcoin-cash" => &[("mainnet", None), ("testnet", None)],
+        "bsc" => &[("mainnet", Some(56)), ("testnet", Some(97))],
+        "celo" => &[("mainnet", Some(42220)), ("alfajores", Some(44787))],
+        "cosmos" => &[("mainnet", None), ("testnet", None)],
+        "cronos" => &[("mainnet", Some(25)), ("testnet", Some(338))],
+        "dogecoin" => &[("mainnet", None), ("testnet", None)],
+        "ethereum" => &[
+            ("mainnet", Some(1)),
+            ("sepolia", Some(11155111)),
+            ("holesky", Some(17000)),
+        ],
+        "fantom" => &[("mainnet", Some(250)), ("testnet", Some(4002))],
+        "gnosis" => &[("mainnet", Some(100)), ("chiado", Some(10200))],
+        "litecoin" => &[("mainnet", None), ("testnet", None)],
+        "moonbeam" => &[("mainnet", Some(1284)), ("moonbase", Some(1287))],
+        "near" => &[("mainnet", None), ("testnet", None)],
+        "optimism" => &[("mainnet", Some(10)), ("sepolia", Some(11155420))],
+        "osmosis" => &[("mainnet", None), ("testnet", None)],
+        "polygon" => &[
+            ("mainnet", Some(137)),
+            ("amoy", Some(80002)),
+            ("mumbai", Some(80001)),
+        ],
+        "solana" => &[("mainnet", None), ("testnet", None), ("devnet", None)],
+        "tron" => &[("mainnet", None), ("shasta", None), ("nile", None)],
+        _ => return None,
+    };
+
+    let belongs = match chain_id {
+        Some(chain_id) => known_networks
+            .iter()
+            .any(|(_, known_chain_id)| *known_chain_id == Some(chain_id.as_u64())),
+        None => known_networks
+            .iter()
+            .any(|(known_network_id, _)| *known_network_id == network_id.as_str()),
+    };
+
+    Some(belongs)
 }

@@ -1,5 +1,6 @@
 //! Networks within a blockchain.
 
+use crate::dex::blockchain::BlockchainId;
 use crate::errors::{StockTrekError, ValueError};
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
@@ -10,6 +11,8 @@ use std::str::FromStr;
 pub struct Network {
     network_id: NetworkId,
     chain_id: Option<ChainId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    blockchain_id: Option<BlockchainId>,
 }
 
 /// Well-known network identifiers.
@@ -198,6 +201,20 @@ impl Network {
         Self {
             network_id,
             chain_id,
+            blockchain_id: None,
+        }
+    }
+
+    /// Creates a network that is explicitly associated with a blockchain.
+    pub fn for_blockchain(
+        blockchain_id: impl Into<BlockchainId>,
+        network_id: NetworkId,
+        chain_id: Option<ChainId>,
+    ) -> Self {
+        Self {
+            network_id,
+            chain_id,
+            blockchain_id: Some(blockchain_id.into()),
         }
     }
 
@@ -207,6 +224,11 @@ impl Network {
 
     pub fn chain_id(&self) -> Option<ChainId> {
         self.chain_id
+    }
+
+    /// Returns the blockchain this network is explicitly associated with, if any.
+    pub fn blockchain_id(&self) -> Option<&BlockchainId> {
+        self.blockchain_id.as_ref()
     }
 }
 

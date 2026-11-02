@@ -163,6 +163,22 @@ impl Blockchain {
     pub fn is_valid_address(&self, contract_address: &str) -> bool {
         self.address_regex.is_match(contract_address)
     }
+
+    /// Validates that `contract_address` matches the blockchain's address format.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `contract_address` does not match the address format.
+    pub fn validate_address(&self, contract_address: &str) -> StockTrekResult<()> {
+        if self.is_valid_address(contract_address) {
+            return Ok(());
+        }
+
+        Err(StockTrekError::Dex(DexError::InvalidAddress {
+            blockchain_id: self.blockchain_id.to_string(),
+            address: contract_address.to_string(),
+        }))
+    }
 }
 
 impl std::fmt::Display for Blockchain {
