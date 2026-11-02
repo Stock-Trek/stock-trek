@@ -1,9 +1,7 @@
 //! Networks within a blockchain.
 
-use crate::error::{
-    result::{StockTrekError, StockTrekResult},
-    value::ValueError,
-};
+use crate::dex::string_id::define_string_id;
+use crate::error::{result::StockTrekError, value::ValueError};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
@@ -28,6 +26,13 @@ pub enum NetworkId {
 }
 
 impl NetworkId {
+    fn from_string(value: String) -> Self {
+        match Self::canonical(&value) {
+            Some(network_id) => network_id,
+            None => Self::Other(value),
+        }
+    }
+
     /// Creates a network identifier from a static string.
     ///
     /// # Panics
@@ -35,15 +40,6 @@ impl NetworkId {
     /// Panics if `id` is empty or whitespace-only.
     pub fn from_static(id: &'static str) -> Self {
         Self::try_from(id).expect("network id must not be empty or whitespace-only")
-    }
-
-    /// Creates a network identifier from a string.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the value is empty or whitespace-only.
-    pub fn new(id: &str) -> StockTrekResult<Self> {
-        Self::try_from(id)
     }
 
     /// Returns the identifier as a string slice.
@@ -64,16 +60,6 @@ impl NetworkId {
         }
     }
 
-    fn validate(value: &str) -> StockTrekResult<()> {
-        if value.trim().is_empty() {
-            return Err(StockTrekError::Value(ValueError::IncorrectType {
-                expected: "NetworkId".into(),
-                found: value.into(),
-            }));
-        }
-        Ok(())
-    }
-
     fn canonical(value: &str) -> Option<Self> {
         match value {
             "mainnet" => Some(Self::Mainnet),
@@ -83,72 +69,7 @@ impl NetworkId {
     }
 }
 
-impl TryFrom<&str> for NetworkId {
-    type Error = StockTrekError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::validate(value)?;
-        Ok(Self::canonical(value).unwrap_or_else(|| Self::Other(value.to_string())))
-    }
-}
-
-impl TryFrom<String> for NetworkId {
-    type Error = StockTrekError;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::validate(&value)?;
-        Ok(match Self::canonical(&value) {
-            Some(network_id) => network_id,
-            None => Self::Other(value),
-        })
-    }
-}
-
-impl FromStr for NetworkId {
-    type Err = StockTrekError;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        Self::try_from(value)
-    }
-}
-
-impl std::fmt::Display for NetworkId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-impl AsRef<str> for NetworkId {
-    fn as_ref(&self) -> &str {
-        self.as_str()
-    }
-}
-
-impl std::ops::Deref for NetworkId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        self.as_str()
-    }
-}
-
-impl PartialEq<str> for NetworkId {
-    fn eq(&self, other: &str) -> bool {
-        self.as_str() == other
-    }
-}
-
-impl PartialEq<&str> for NetworkId {
-    fn eq(&self, other: &&str) -> bool {
-        self.as_str() == *other
-    }
-}
-
-impl From<NetworkId> for String {
-    fn from(value: NetworkId) -> Self {
-        value.into_inner()
-    }
-}
+define_string_id!(NetworkId, custom);
 
 /// Numeric chain identifier, such as an EVM chain ID.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -21,15 +21,19 @@ pub struct Blockchain {
     address_regex: Regex,
 }
 
-define_string_id! {
-    /// Unique identifier for a blockchain.
-    BlockchainId
-}
+/// Unique identifier for a blockchain.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct BlockchainId(std::borrow::Cow<'static, str>);
 
-define_string_id! {
-    /// Identifier for a blockchain family, such as EVM.
-    FamilyId
-}
+define_string_id!(BlockchainId);
+
+/// Identifier for a blockchain family, such as EVM.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct FamilyId(std::borrow::Cow<'static, str>);
+
+define_string_id!(FamilyId);
 
 #[allow(missing_docs)]
 impl Blockchain {
