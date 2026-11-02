@@ -23,11 +23,6 @@ impl TimestampMillis {
         self.0
     }
 
-    /// Returns the underlying milliseconds since the Unix epoch.
-    pub const fn into_inner(self) -> u64 {
-        self.0
-    }
-
     /// Adds `rhs` milliseconds, returning `None` on overflow.
     pub const fn checked_add(self, rhs: Self) -> Option<Self> {
         match self.0.checked_add(rhs.0) {
@@ -66,7 +61,7 @@ impl From<u64> for TimestampMillis {
 
 impl From<TimestampMillis> for u64 {
     fn from(timestamp: TimestampMillis) -> Self {
-        timestamp.into_inner()
+        timestamp.as_millis()
     }
 }
 
@@ -82,7 +77,7 @@ impl TryFrom<TimestampMillis> for i64 {
     type Error = TryFromIntError;
 
     fn try_from(timestamp: TimestampMillis) -> Result<Self, Self::Error> {
-        i64::try_from(timestamp.into_inner())
+        i64::try_from(timestamp.as_millis())
     }
 }
 
@@ -125,7 +120,6 @@ mod tests {
         let timestamp = TimestampMillis::new(1_700_000_000_123);
 
         assert_eq!(timestamp.as_millis(), 1_700_000_000_123);
-        assert_eq!(timestamp.into_inner(), 1_700_000_000_123);
         assert_eq!(u64::from(timestamp), 1_700_000_000_123);
         assert_eq!(TimestampMillis::from(1_700_000_000_123), timestamp);
         assert_eq!(

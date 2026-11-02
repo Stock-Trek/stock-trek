@@ -62,12 +62,6 @@ impl FromStr for ChainId {
     }
 }
 
-impl AsRef<u64> for ChainId {
-    fn as_ref(&self) -> &u64 {
-        &self.0
-    }
-}
-
 impl PartialEq<u64> for ChainId {
     fn eq(&self, other: &u64) -> bool {
         self.0 == *other
@@ -77,18 +71,6 @@ impl PartialEq<u64> for ChainId {
 impl PartialEq<ChainId> for u64 {
     fn eq(&self, other: &ChainId) -> bool {
         *self == other.0
-    }
-}
-
-impl From<u64> for ChainId {
-    fn from(value: u64) -> Self {
-        Self::new(value)
-    }
-}
-
-impl From<ChainId> for u64 {
-    fn from(value: ChainId) -> Self {
-        value.value()
     }
 }
 
