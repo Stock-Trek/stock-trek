@@ -133,30 +133,54 @@ mod tests {
     }
 
     fn candle() -> MarketCandle {
-        MarketCandle::new(1_000, 2_000, 1_000, true, ohlcv(), 3).unwrap()
+        MarketCandle::new(
+            TimestampMillis::new(1_000),
+            TimestampMillis::new(2_000),
+            TimestampMillis::new(1_000),
+            true,
+            ohlcv(),
+            3,
+        )
+        .unwrap()
     }
 
     #[test]
     fn accepts_a_duration_that_matches_the_interval() {
         let candle = candle();
 
-        assert_eq!(candle.duration_millis(), 1_000);
+        assert_eq!(candle.duration_millis(), TimestampMillis::new(1_000));
         assert_eq!(
             candle.end_time_millis_exc() - candle.start_time_millis_inc(),
-            1_000
+            TimestampMillis::new(1_000)
         );
     }
 
     #[test]
     fn accepts_a_zero_length_interval() {
-        let candle = MarketCandle::new(1_000, 1_000, 0, true, ohlcv(), 0).unwrap();
+        let candle = MarketCandle::new(
+            TimestampMillis::new(1_000),
+            TimestampMillis::new(1_000),
+            TimestampMillis::new(0),
+            true,
+            ohlcv(),
+            0,
+        )
+        .unwrap();
 
-        assert_eq!(candle.duration_millis(), 0);
+        assert_eq!(candle.duration_millis(), TimestampMillis::new(0));
     }
 
     #[test]
     fn rejects_a_duration_that_does_not_match_the_interval() {
-        let error = MarketCandle::new(1_000, 2_000, 999, true, ohlcv(), 3).unwrap_err();
+        let error = MarketCandle::new(
+            TimestampMillis::new(1_000),
+            TimestampMillis::new(2_000),
+            TimestampMillis::new(999),
+            true,
+            ohlcv(),
+            3,
+        )
+        .unwrap_err();
 
         assert!(matches!(
             error,
@@ -166,7 +190,15 @@ mod tests {
 
     #[test]
     fn rejects_an_end_that_precedes_the_start() {
-        let error = MarketCandle::new(2_000, 1_000, 1_000, true, ohlcv(), 3).unwrap_err();
+        let error = MarketCandle::new(
+            TimestampMillis::new(2_000),
+            TimestampMillis::new(1_000),
+            TimestampMillis::new(1_000),
+            true,
+            ohlcv(),
+            3,
+        )
+        .unwrap_err();
 
         assert!(matches!(
             error,
