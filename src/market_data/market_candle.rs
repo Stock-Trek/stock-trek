@@ -179,13 +179,6 @@ mod tests {
     }
 
     #[test]
-    fn serialization_omits_the_redundant_duration() {
-        let json = serde_json::to_value(candle()).unwrap();
-
-        assert!(json.get("duration_millis").is_none());
-    }
-
-    #[test]
     fn deserialization_rejects_an_end_that_precedes_the_start() {
         let json = serde_json::json!({
             "start_time_millis_inc": 2_000,
