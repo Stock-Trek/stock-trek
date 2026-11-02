@@ -140,7 +140,8 @@ impl Blockchain {
     ///
     /// # Errors
     ///
-    /// Returns an error if `address_format` is not a valid regular expression.
+    /// Returns an error if `address_format` is not a valid regular expression or
+    /// is not anchored at both the start and end.
     pub fn new(
         blockchain_id: BlockchainId,
         family_id: FamilyId,
@@ -153,6 +154,12 @@ impl Blockchain {
                 message: error.to_string(),
             })
         })?;
+        if !Self::has_anchors(address_format) {
+            return Err(StockTrekError::Dex(DexError::InvalidAddressFormat {
+                blockchain_id: blockchain_id.to_string(),
+                message: "address format must start and end with an anchor".into(),
+            }));
+        }
         Ok(Self {
             blockchain_id,
             family_id,
@@ -181,9 +188,35 @@ impl Blockchain {
         self.address_regex.as_str()
     }
 
-    /// Returns whether `contract_address` matches the blockchain's address format.
+    /// Returns whether `contract_address` fully matches the blockchain's address format.
     pub fn is_valid_address(&self, contract_address: &str) -> bool {
-        self.address_regex.is_match(contract_address)
+        self.address_regex
+            .find(contract_address)
+            .is_some_and(|matched| matched.start() == 0 && matched.end() == contract_address.len())
+    }
+
+    fn has_anchors(address_format: &str) -> bool {
+        let pattern = Self::strip_leading_flags(address_format);
+        (pattern.starts_with('^') || pattern.starts_with(r"\A"))
+            && (pattern.ends_with('$') || pattern.ends_with(r"\z"))
+    }
+
+    fn strip_leading_flags(mut pattern: &str) -> &str {
+        while let Some(rest) = pattern.strip_prefix("(?") {
+            let Some(end) = rest.find(')') else {
+                break;
+            };
+            let flags = &rest[..end];
+            if flags.is_empty()
+                || !flags
+                    .chars()
+                    .all(|flag| flag.is_ascii_alphabetic() || flag == '-')
+            {
+                break;
+            }
+            pattern = &rest[end + 1..];
+        }
+        pattern
     }
 }
 
@@ -288,6 +321,8 @@ mod tests {
 
         assert!(blockchain.is_valid_address("0x0000000000000000000000000000000000000000"));
         assert!(!blockchain.is_valid_address("not-an-address"));
+        assert!(!blockchain.is_valid_address("prefix-0x0000000000000000000000000000000000000000"));
+        assert!(!blockchain.is_valid_address("0x0000000000000000000000000000000000000000-suffix"));
     }
 
     #[test]
@@ -321,5 +356,26 @@ mod tests {
     fn identifiers_reject_empty_values_when_deserialized() {
         assert!(serde_json::from_str::<BlockchainId>("\"\"").is_err());
         assert!(serde_json::from_str::<FamilyId>("\" \"").is_err());
+    }
+
+    #[test]
+    fn returns_an_error_for_an_unanchored_address_format() {
+        assert!(blockchain("0x[a-fA-F0-9]{40}").is_err());
+        assert!(blockchain("^0x[a-fA-F0-9]{40}").is_err());
+        assert!(blockchain("0x[a-fA-F0-9]{40}$").is_err());
+    }
+
+    #[test]
+    fn preserves_anchored_address_formats() {
+        assert_eq!(
+            blockchain(r"\A0x[a-fA-F0-9]{40}\z")
+                .unwrap()
+                .address_format(),
+            r"\A0x[a-fA-F0-9]{40}\z"
+        );
+        assert_eq!(
+            blockchain("(?i)^0x[a-f0-9]{40}$").unwrap().address_format(),
+            "(?i)^0x[a-f0-9]{40}$"
+        );
     }
 }
