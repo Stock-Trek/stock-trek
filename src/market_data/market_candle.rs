@@ -150,8 +150,10 @@ mod tests {
 
         assert_eq!(candle.duration_millis(), TimestampMillis::new(1_000));
         assert_eq!(
-            candle.end_time_millis_exc() - candle.start_time_millis_inc(),
-            TimestampMillis::new(1_000)
+            candle
+                .end_time_millis_exc()
+                .checked_sub(candle.start_time_millis_inc()),
+            Some(TimestampMillis::new(1_000))
         );
     }
 
