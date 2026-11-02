@@ -2,6 +2,7 @@
 
 use crate::errors::{StockTrekError, ValueError};
 use serde::{Deserialize, Serialize};
+use std::ops::Deref;
 use std::str::FromStr;
 
 /// A network on a blockchain.
@@ -34,28 +35,50 @@ impl From<&str> for NetworkId {
     }
 }
 
-impl FromStr for NetworkId {
-    type Err = StockTrekError;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        match value {
-            "mainnet" => Ok(NetworkId::Mainnet),
-            "testnet" => Ok(NetworkId::Testnet),
-            "" => Err(StockTrekError::Value(ValueError::NotFound {
-                name: "NetworkId".into(),
-                key: value.into(),
-            })),
-            name => Ok(NetworkId::Other(name.to_string())),
+impl From<String> for NetworkId {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "mainnet" => NetworkId::Mainnet,
+            "testnet" => NetworkId::Testnet,
+            _ => NetworkId::Other(value),
         }
     }
 }
 
+impl FromStr for NetworkId {
+    type Err = StockTrekError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        if value.is_empty() {
+            return Err(StockTrekError::Value(ValueError::NotFound {
+                name: "NetworkId".into(),
+                key: value.into(),
+            }));
+        }
+        Ok(Self::from(value))
+    }
+}
+
 impl NetworkId {
+    /// Creates a network identifier.
+    pub fn new(id: &str) -> Self {
+        Self::from(id)
+    }
+
     /// Returns the network identifier as a string slice.
     pub fn as_str(&self) -> &str {
         match self {
             NetworkId::Mainnet => "mainnet",
             NetworkId::Testnet => "testnet",
+            NetworkId::Other(name) => name,
+        }
+    }
+
+    /// Consumes the network identifier and returns its string value.
+    pub fn into_inner(self) -> String {
+        match self {
+            NetworkId::Mainnet => "mainnet".to_string(),
+            NetworkId::Testnet => "testnet".to_string(),
             NetworkId::Other(name) => name,
         }
     }
@@ -70,6 +93,20 @@ impl std::fmt::Display for NetworkId {
 impl AsRef<str> for NetworkId {
     fn as_ref(&self) -> &str {
         self.as_str()
+    }
+}
+
+impl Deref for NetworkId {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.as_str()
+    }
+}
+
+impl From<NetworkId> for String {
+    fn from(value: NetworkId) -> Self {
+        value.into_inner()
     }
 }
 
@@ -100,9 +137,57 @@ impl ChainId {
         self.0
     }
 
+    /// Returns the numeric chain identifier.
+    pub fn as_u64(&self) -> u64 {
+        self.0
+    }
+
     /// Consumes the chain identifier and returns its numeric value.
     pub fn into_inner(self) -> u64 {
         self.0
+    }
+}
+
+impl std::fmt::Display for ChainId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl FromStr for ChainId {
+    type Err = StockTrekError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        value.parse::<u64>().map(Self::new).map_err(|_| {
+            StockTrekError::Value(ValueError::IncorrectType {
+                expected: "u64".into(),
+                found: value.into(),
+            })
+        })
+    }
+}
+
+impl AsRef<u64> for ChainId {
+    fn as_ref(&self) -> &u64 {
+        &self.0
+    }
+}
+
+impl PartialEq<u64> for ChainId {
+    fn eq(&self, other: &u64) -> bool {
+        self.0 == *other
+    }
+}
+
+impl PartialEq<ChainId> for u64 {
+    fn eq(&self, other: &ChainId) -> bool {
+        *self == other.0
+    }
+}
+
+impl From<u64> for ChainId {
+    fn from(value: u64) -> Self {
+        Self::new(value)
     }
 }
 
@@ -157,6 +242,28 @@ mod tests {
                 network_id
             );
             assert_eq!(NetworkId::from(network_id.as_str()), network_id);
+            assert_eq!(NetworkId::new(network_id.as_str()), network_id);
+            assert_eq!(NetworkId::from(network_id.to_string()), network_id);
+            assert_eq!(String::from(network_id.clone()), network_id.as_str());
+            assert_eq!(network_id.clone().into_inner(), network_id.as_str());
         }
+    }
+
+    #[test]
+    fn chain_id_round_trips_through_strings() {
+        let chain_id = ChainId::new(1);
+
+        assert_eq!(chain_id.to_string(), "1");
+        assert_eq!("1".parse::<ChainId>().unwrap(), chain_id);
+        assert_eq!(ChainId::from(1), chain_id);
+        assert_eq!(u64::from(chain_id), 1);
+        assert_eq!(chain_id.as_u64(), 1);
+        assert_eq!(chain_id.into_inner(), 1);
+    }
+
+    #[test]
+    fn empty_network_ids_and_invalid_chain_ids_are_rejected_when_parsed() {
+        assert!("".parse::<NetworkId>().is_err());
+        assert!("not-a-number".parse::<ChainId>().is_err());
     }
 }
