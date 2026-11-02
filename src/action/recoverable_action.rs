@@ -3,7 +3,7 @@ use crate::{
     error::result::StockTrekResult, resolvable::Resolvable, resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt::Debug};
+use std::{collections::BTreeMap, fmt::Debug};
 use stock_trek_types::cex::capability::CexCapability;
 use strum::Display;
 
@@ -42,7 +42,7 @@ impl HasRequiredCapabilities for RecoverableAction {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoveryPolicy {
     pub default_response: ActionErrorResponse,
-    pub on_error: HashMap<ActionErrorCause, ActionErrorResponse>,
+    pub on_error: BTreeMap<ActionErrorCause, ActionErrorResponse>,
 }
 
 impl RecoveryPolicy {
@@ -50,7 +50,7 @@ impl RecoveryPolicy {
     pub fn with_default_response(default_response: ActionErrorResponse) -> Self {
         Self {
             default_response,
-            on_error: HashMap::new(),
+            on_error: BTreeMap::new(),
         }
     }
     /// Maps a specific error cause to a response.
@@ -61,7 +61,9 @@ impl RecoveryPolicy {
 }
 
 /// Causes of action errors that can trigger a recovery response.
-#[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Debug, Display, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum ActionErrorCause {
@@ -94,4 +96,39 @@ pub enum ActionErrorResponse {
         /// The actions to enqueue instead of the failed action.
         plan: Vec<RecoverableAction>,
     },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn error_overrides_are_ordered_by_cause() {
+        let policy = RecoveryPolicy::with_default_response(ActionErrorResponse::Stop)
+            .on_error(ActionErrorCause::StaleAction, ActionErrorResponse::Ignore)
+            .on_error(
+                ActionErrorCause::InsufficientBalance,
+                ActionErrorResponse::Ignore,
+            )
+            .on_error(
+                ActionErrorCause::TemporaryCexRejection,
+                ActionErrorResponse::Retry { max_retries: 1 },
+            )
+            .on_error(
+                ActionErrorCause::PermanentCexRejection,
+                ActionErrorResponse::Ignore,
+            );
+
+        let causes: Vec<_> = policy.on_error.keys().copied().collect();
+
+        assert_eq!(
+            causes,
+            vec![
+                ActionErrorCause::PermanentCexRejection,
+                ActionErrorCause::TemporaryCexRejection,
+                ActionErrorCause::InsufficientBalance,
+                ActionErrorCause::StaleAction,
+            ]
+        );
+    }
 }

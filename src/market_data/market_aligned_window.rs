@@ -2,12 +2,12 @@ use crate::market_data::{
     aligned_window::AlignedWindow, market_candle::MarketCandle, market_ohlcv::MarketOhlcv,
 };
 use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Candles grouped by aligned windows.
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketAlignedWindow {
-    candles: HashMap<AlignedWindow, Vec<MarketCandle>>,
+    candles: BTreeMap<AlignedWindow, Vec<MarketCandle>>,
 }
 
 #[allow(missing_docs)]
@@ -15,7 +15,8 @@ impl MarketAlignedWindow {
     /// Creates an aligned-window collection from candles grouped by window.
     ///
     /// Candles are sorted chronologically by start time.
-    pub fn new(mut candles: HashMap<AlignedWindow, Vec<MarketCandle>>) -> Self {
+    pub fn new(candles: impl IntoIterator<Item = (AlignedWindow, Vec<MarketCandle>)>) -> Self {
+        let mut candles: BTreeMap<AlignedWindow, Vec<MarketCandle>> = candles.into_iter().collect();
         for window_candles in candles.values_mut() {
             window_candles.sort_by_key(|candle| {
                 (candle.start_time_millis_inc(), candle.end_time_millis_exc())
@@ -23,8 +24,8 @@ impl MarketAlignedWindow {
         }
         Self { candles }
     }
-    /// Returns all candles grouped by aligned window.
-    pub fn candles(&self) -> &HashMap<AlignedWindow, Vec<MarketCandle>> {
+    /// Returns all candles grouped by aligned window, ordered by window.
+    pub fn candles(&self) -> &BTreeMap<AlignedWindow, Vec<MarketCandle>> {
         &self.candles
     }
     /// Returns the candles for an aligned window, ordered chronologically.
@@ -75,7 +76,7 @@ impl<'de> Deserialize<'de> for MarketAlignedWindow {
     {
         #[derive(Deserialize)]
         struct MarketAlignedWindowData {
-            candles: HashMap<AlignedWindow, Vec<MarketCandle>>,
+            candles: BTreeMap<AlignedWindow, Vec<MarketCandle>>,
         }
 
         let data = MarketAlignedWindowData::deserialize(deserializer)?;
@@ -106,7 +107,7 @@ mod tests {
 
     #[test]
     fn new_sorts_candles_chronologically() {
-        let market = MarketAlignedWindow::new(HashMap::from([(
+        let market = MarketAlignedWindow::new(BTreeMap::from([(
             AlignedWindow::Minutes1,
             vec![candle_at(2, 2.0), candle_at(1, 1.0)],
         )]));
@@ -117,7 +118,7 @@ mod tests {
     #[test]
     fn serde_json_round_trip() {
         let market =
-            MarketAlignedWindow::new(HashMap::from([(AlignedWindow::Minutes1, vec![candle()])]));
+            MarketAlignedWindow::new(BTreeMap::from([(AlignedWindow::Minutes1, vec![candle()])]));
         let json = serde_json::to_string(&market).unwrap();
         let deserialized: MarketAlignedWindow = serde_json::from_str(&json).unwrap();
 
@@ -139,6 +140,26 @@ mod tests {
         assert_eq!(
             deserialized.opens(AlignedWindow::Minutes1),
             Some(vec![1.0, 2.0])
+        );
+    }
+
+    #[test]
+    fn candles_are_ordered_by_window_regardless_of_insertion_order() {
+        let market = MarketAlignedWindow::new(std::collections::HashMap::from([
+            (AlignedWindow::Hours1, vec![candle()]),
+            (AlignedWindow::Seconds1, vec![candle()]),
+            (AlignedWindow::Minutes1, vec![candle()]),
+        ]));
+
+        let windows: Vec<_> = market.candles().keys().copied().collect();
+
+        assert_eq!(
+            windows,
+            vec![
+                AlignedWindow::Seconds1,
+                AlignedWindow::Minutes1,
+                AlignedWindow::Hours1,
+            ]
         );
     }
 }
