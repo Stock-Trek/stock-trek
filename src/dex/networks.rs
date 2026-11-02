@@ -4,7 +4,7 @@ use crate::dex::{
     blockchain::{Blockchain, BlockchainId, FamilyId},
     network::{ChainId, Network, NetworkId},
 };
-use crate::error::result::StockTrekResult;
+use crate::error::result::{StockTrekError, StockTrekResult};
 
 pub const FAMILY_ID_BITCOIN: &str = "bitcoin";
 pub const FAMILY_ID_BITCOIN_CASH: &str = "bitcoin-cash";
@@ -27,10 +27,12 @@ macro_rules! define_network_name {
             $($variant,)+
         }
 
-        impl From<NetworkName> for NetworkId {
-            fn from(value: NetworkName) -> Self {
+        impl TryFrom<NetworkName> for NetworkId {
+            type Error = crate::error::result::StockTrekError;
+
+            fn try_from(value: NetworkName) -> Result<Self, Self::Error> {
                 match value {
-                    $(NetworkName::$variant => $network_id,)+
+                    $(NetworkName::$variant => Ok($network_id),)+
                 }
             }
         }
@@ -104,7 +106,7 @@ macro_rules! define_network {
                     $native_decimals,
                     $address_format,
                 )?;
-                let network = Network::new(network.into(), None);
+                let network = Network::new(NetworkId::try_from(network)?, None);
                 crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
             }
         }
@@ -116,8 +118,8 @@ define_evm_network! {
     "arbitrum",
     {
         Mainnet => (42161, NetworkId::Mainnet),
-        Sepolia => (421614, NetworkId::from_static("sepolia")),
-        Nova => (42170, NetworkId::from_static("nova")),
+        Sepolia => (421614, NetworkId::from_static("sepolia")?),
+        Nova => (42170, NetworkId::from_static("nova")?),
     }
 }
 
@@ -126,7 +128,7 @@ define_evm_network! {
     "avalanche",
     {
         Mainnet => (43114, NetworkId::Mainnet),
-        Fuji => (43113, NetworkId::from_static("fuji")),
+        Fuji => (43113, NetworkId::from_static("fuji")?),
     }
 }
 
@@ -135,7 +137,7 @@ define_evm_network! {
     "base",
     {
         Mainnet => (8453, NetworkId::Mainnet),
-        Sepolia => (84532, NetworkId::from_static("sepolia")),
+        Sepolia => (84532, NetworkId::from_static("sepolia")?),
     }
 }
 
@@ -148,8 +150,8 @@ define_network! {
     {
         Mainnet => NetworkId::Mainnet,
         Testnet => NetworkId::Testnet,
-        Signet => NetworkId::from_static("signet"),
-        Regtest => NetworkId::from_static("regtest"),
+        Signet => NetworkId::from_static("signet")?,
+        Regtest => NetworkId::from_static("regtest")?,
     }
 }
 
@@ -179,7 +181,7 @@ define_evm_network! {
     "celo",
     {
         Mainnet => (42220, NetworkId::Mainnet),
-        Alfajores => (44787, NetworkId::from_static("alfajores")),
+        Alfajores => (44787, NetworkId::from_static("alfajores")?),
     }
 }
 
@@ -221,8 +223,8 @@ define_evm_network! {
     "ethereum",
     {
         Mainnet => (1, NetworkId::Mainnet),
-        Sepolia => (11155111, NetworkId::from_static("sepolia")),
-        Holesky => (17000, NetworkId::from_static("holesky")),
+        Sepolia => (11155111, NetworkId::from_static("sepolia")?),
+        Holesky => (17000, NetworkId::from_static("holesky")?),
     }
 }
 
@@ -240,7 +242,7 @@ define_evm_network! {
     "gnosis",
     {
         Mainnet => (100, NetworkId::Mainnet),
-        Chiado => (10200, NetworkId::from_static("chiado")),
+        Chiado => (10200, NetworkId::from_static("chiado")?),
     }
 }
 
@@ -261,7 +263,7 @@ define_evm_network! {
     "moonbeam",
     {
         Mainnet => (1284, NetworkId::Mainnet),
-        Moonbase => (1287, NetworkId::from_static("moonbase")),
+        Moonbase => (1287, NetworkId::from_static("moonbase")?),
     }
 }
 
@@ -282,7 +284,7 @@ define_evm_network! {
     "optimism",
     {
         Mainnet => (10, NetworkId::Mainnet),
-        Sepolia => (11155420, NetworkId::from_static("sepolia")),
+        Sepolia => (11155420, NetworkId::from_static("sepolia")?),
     }
 }
 
@@ -303,8 +305,8 @@ define_evm_network! {
     "polygon",
     {
         Mainnet => (137, NetworkId::Mainnet),
-        Amoy => (80002, NetworkId::from_static("amoy")),
-        Mumbai => (80001, NetworkId::from_static("mumbai")),
+        Amoy => (80002, NetworkId::from_static("amoy")?),
+        Mumbai => (80001, NetworkId::from_static("mumbai")?),
     }
 }
 
@@ -317,7 +319,7 @@ define_network! {
     {
         Mainnet => NetworkId::Mainnet,
         Testnet => NetworkId::Testnet,
-        Devnet => NetworkId::from_static("devnet"),
+        Devnet => NetworkId::from_static("devnet")?,
     }
 }
 
@@ -329,8 +331,8 @@ define_network! {
     "^T[a-zA-HJ-NP-Z0-9]{33}$",
     {
         Mainnet => NetworkId::Mainnet,
-        Shasta => NetworkId::from_static("shasta"),
-        Nile => NetworkId::from_static("nile"),
+        Shasta => NetworkId::from_static("shasta")?,
+        Nile => NetworkId::from_static("nile")?,
     }
 }
 
@@ -357,11 +359,12 @@ impl Blockchain {
 impl AssetOnChain {
     fn evm(
         blockchain_name: &str,
-        network: impl Into<NetworkId> + Into<u64> + Copy,
+        network: impl TryInto<NetworkId, Error = StockTrekError> + Into<u64> + Copy,
         asset_kind: AssetKind,
     ) -> StockTrekResult<Self> {
         let blockchain = Blockchain::evm(blockchain_name)?;
-        let network = Network::new(network.into(), Some(ChainId::new(network.into())));
+        let network_id = network.try_into()?;
+        let network = Network::new(network_id, Some(ChainId::new(network.into())));
         Self::new(blockchain, network, asset_kind)
     }
 }
