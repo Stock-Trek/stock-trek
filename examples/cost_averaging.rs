@@ -1,8 +1,13 @@
 use std::cmp::Ordering;
 use stock_trek::{prelude::*, values::BinaryOperator};
 
-/// The minimum base-asset quantity supported by the example market (0.000001 BTC).
-const MINIMUM_BASE_UNIT_QUANTITY: f64 = 0.000_001;
+/// The number of satoshis in one bitcoin.
+const SATOSHIS_PER_BITCOIN: f64 = 100_000_000.0;
+/// The base-asset quantity bought per order, expressed in satoshis. This matches the
+/// example market's minimum base increment.
+const ORDER_QUANTITY_SATOSHIS: f64 = 100.0;
+/// The base-asset quantity bought per order (100 satoshis = 0.000001 BTC).
+const ORDER_QUANTITY: f64 = ORDER_QUANTITY_SATOSHIS / SATOSHIS_PER_BITCOIN;
 /// The quote-currency buffer added to the order notional to cover fees and rounding.
 const FEE_BUFFER_RATE: f64 = 0.001;
 /// The CEX account that should place orders. TODO make this injectable and mapped by CexId
@@ -13,7 +18,7 @@ pub struct CostAveraging {
     key_account: SignalKey<AccountId>,
     key_market_exists: SignalKey<bool>,
     key_cheapest_price: SignalKey<f64>,
-    key_minimum_base_unit_quantity: SignalKey<f64>,
+    key_order_quantity: SignalKey<f64>,
 }
 
 impl Default for CostAveraging {
@@ -23,7 +28,7 @@ impl Default for CostAveraging {
             key_account: SignalKey::new_required("ACCOUNT"),
             key_market_exists: SignalKey::new_optional("MARKET_EXISTS", false),
             key_cheapest_price: SignalKey::new_required("CHEAPEST_PRICE"),
-            key_minimum_base_unit_quantity: SignalKey::new_required("MINIMUM_BASE_UNIT_QUANTITY"),
+            key_order_quantity: SignalKey::new_required("ORDER_QUANTITY"),
         }
     }
 }
@@ -52,10 +57,7 @@ impl Algorithm for CostAveraging {
     }
     fn signals(&self, c: &SignalContext) -> StockTrekResult<Signals> {
         let mut signals = Signals::new();
-        signals.write(
-            &self.key_minimum_base_unit_quantity,
-            MINIMUM_BASE_UNIT_QUANTITY,
-        );
+        signals.write(&self.key_order_quantity, ORDER_QUANTITY);
         signals.write(&self.key_account, AccountId::new(CEX_ACCOUNT_ID));
 
         let cheapest_market = c
@@ -83,11 +85,11 @@ impl Algorithm for CostAveraging {
         let btc = c.literals.asset_id(AssetId::Bitcoin);
         let usdt = c.literals.asset_id(AssetId::TetherUSD);
         let cheapest_price = c.signals.number(&self.key_cheapest_price);
-        let minimum_base_unit_quantity = c.signals.number(&self.key_minimum_base_unit_quantity);
+        let order_quantity = c.signals.number(&self.key_order_quantity);
         let notional = c.calculations.binary(
             cheapest_price.clone(),
             BinaryOperator::Mul,
-            minimum_base_unit_quantity.clone(),
+            order_quantity.clone(),
         );
         let required_quote = c.calculations.binary(
             notional,
@@ -116,7 +118,7 @@ impl Algorithm for CostAveraging {
                         Activation::Immediate,
                         cheapest_price,
                         TimeInForce::ImmediateOrCancel,
-                        Quantity::OfBase(minimum_base_unit_quantity),
+                        Quantity::OfBase(order_quantity),
                         tag,
                     ),
                     RecoveryPolicy::with_default_response(ActionErrorResponse::Stop).on_error(
@@ -150,7 +152,7 @@ mod tests {
     const ASK: f64 = 200.0;
 
     fn market(asks: &[f64]) -> Market {
-        let mut builder = MarketBuilder::new(MINIMUM_BASE_UNIT_QUANTITY, 0.01, 0.000_1);
+        let mut builder = MarketBuilder::new(ORDER_QUANTITY, 0.01, 0.000_1);
         for (index, ask) in asks.iter().enumerate() {
             builder = builder.tick(
                 TimestampMillis::from(index as u64),
@@ -226,7 +228,7 @@ mod tests {
                         assert_eq!(*limit_price, ASK);
                         match quantity {
                             Quantity::OfBase(quantity) => {
-                                assert_eq!(*quantity, MINIMUM_BASE_UNIT_QUANTITY);
+                                assert_eq!(*quantity, ORDER_QUANTITY);
                             }
                             Quantity::OfQuote(_) => panic!("expected a base-asset quantity"),
                         }
@@ -300,7 +302,7 @@ mod tests {
             .signals(&context(vec![(CexId::Binance, market(&[ASK]))]))
             .unwrap();
 
-        assert!(execute(&algorithm, signals, ASK * MINIMUM_BASE_UNIT_QUANTITY).is_empty());
+        assert!(execute(&algorithm, signals, ASK * ORDER_QUANTITY).is_empty());
     }
 
     #[test]
