@@ -33,10 +33,10 @@ macro_rules! string_id_funcs {
         impl $name {
             fn validate(value: &str) -> crate::error::result::StockTrekResult<()> {
                 if value.trim().is_empty() {
-                    return Err(crate::error::result::StockTrekError::Value(
-                        crate::error::value::ValueError::IncorrectType {
-                            expected: stringify!($name).into(),
-                            found: value.into(),
+                    return Err(crate::error::result::StockTrekError::Dex(
+                        crate::error::dex::DexError::InvalidIdentifier {
+                            identifier_type: stringify!($name),
+                            value: value.into(),
                         },
                     ));
                 }

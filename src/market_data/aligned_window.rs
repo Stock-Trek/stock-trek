@@ -1,7 +1,7 @@
 use crate::{
     error::{
+        market_data::MarketDataError,
         result::{StockTrekError, StockTrekResult},
-        stats::StatsError,
     },
     market_data::{millis::*, timestamp::TimestampMillis, window_label::window_label_funcs},
 };
@@ -193,7 +193,7 @@ impl AlignedWindow {
     }
 
     fn bounds_error(message: String) -> StockTrekError {
-        StockTrekError::Stats(StatsError::DomainError {
+        StockTrekError::MarketData(MarketDataError::DomainError {
             function: "AlignedWindow::bounds_for",
             message,
         })

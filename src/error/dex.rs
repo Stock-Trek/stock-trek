@@ -10,6 +10,13 @@ pub enum DexError {
         /// Details about the invalid address format.
         message: String,
     },
+    /// An identifier was empty or whitespace-only.
+    InvalidIdentifier {
+        /// The kind of identifier that was invalid.
+        identifier_type: &'static str,
+        /// The invalid identifier value.
+        value: String,
+    },
     /// A contract address did not match the blockchain's address format.
     InvalidContractAddress {
         /// The identifier of the blockchain.
@@ -29,6 +36,14 @@ impl fmt::Display for DexError {
                 f,
                 "Invalid address format for blockchain '{}': {}",
                 blockchain_id, message
+            ),
+            DexError::InvalidIdentifier {
+                identifier_type,
+                value,
+            } => write!(
+                f,
+                "Invalid {} '{}': identifiers must not be empty or whitespace-only",
+                identifier_type, value
             ),
             DexError::InvalidContractAddress {
                 blockchain_id,

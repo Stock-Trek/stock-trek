@@ -135,7 +135,6 @@ impl std::fmt::Display for Blockchain {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::value::ValueError;
 
     fn blockchain(address_format: &str) -> StockTrekResult<Blockchain> {
         Blockchain::new(
@@ -174,13 +173,16 @@ mod tests {
     }
 
     #[test]
-    fn invalid_identifiers_are_reported_as_incorrect_types() {
-        let error = BlockchainId::new("").unwrap_err();
-
-        assert!(matches!(
-            error,
-            StockTrekError::Value(ValueError::IncorrectType { .. })
-        ));
+    fn invalid_identifiers_are_reported_as_dex_errors() {
+        for error in [
+            BlockchainId::new("").unwrap_err(),
+            FamilyId::new(" ").unwrap_err(),
+        ] {
+            assert!(matches!(
+                error,
+                StockTrekError::Dex(DexError::InvalidIdentifier { .. })
+            ));
+        }
     }
 
     #[test]
