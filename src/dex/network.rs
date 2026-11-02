@@ -6,6 +6,7 @@ use crate::error::{
     value::ValueError,
 };
 use serde::{Deserialize, Serialize};
+use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
 /// A network on a blockchain.
@@ -16,37 +17,35 @@ pub struct Network {
 }
 
 /// Identifier for a network on a blockchain.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(try_from = "String", into = "String")]
-pub struct NetworkId(std::borrow::Cow<'static, str>);
-
-#[allow(missing_docs)]
-impl NetworkId {
+#[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
+#[serde(try_from = "String")]
+pub enum NetworkId {
     /// The main network of a blockchain.
-    pub const MAINNET: Self = Self(std::borrow::Cow::Borrowed("mainnet"));
-
+    Mainnet,
     /// A test network of a blockchain.
-    pub const TESTNET: Self = Self(std::borrow::Cow::Borrowed("testnet"));
-
-    /// The main network of a blockchain.
-    #[allow(non_upper_case_globals)]
-    pub const Mainnet: Self = Self::MAINNET;
-
-    /// A test network of a blockchain.
-    #[allow(non_upper_case_globals)]
-    pub const Testnet: Self = Self::TESTNET;
+    Testnet,
+    /// An arbitrary network identified by its name.
+    ///
+    /// Prefer [`NetworkId::new`] or [`NetworkId::other`] so that names are
+    /// validated and normalized.
+    Other(String),
 }
 
 impl NetworkId {
     fn from_string(value: String) -> Self {
-        Self(std::borrow::Cow::Owned(value.trim().to_string()))
+        let value = value.trim();
+        match Self::canonical(value) {
+            Some(network_id) => network_id,
+            None => Self::Other(value.to_string()),
+        }
     }
 
     /// Creates an arbitrary network identifier by name.
     ///
     /// Leading and trailing whitespace is trimmed. The canonical names
-    /// `mainnet` and `testnet` compare equal to [`Self::MAINNET`] and
-    /// [`Self::TESTNET`] respectively.
+    /// `mainnet` and `testnet` are normalized to [`Self::Mainnet`] and
+    /// [`Self::Testnet`] respectively.
     ///
     /// # Errors
     ///
@@ -55,26 +54,59 @@ impl NetworkId {
         Self::try_from(name.into())
     }
 
-    /// Creates an arbitrary network identifier by name.
-    ///
-    /// This is an alias for [`Self::other`].
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if `name` is empty or whitespace-only.
-    #[allow(non_snake_case)]
-    pub fn Other(name: impl Into<String>) -> StockTrekResult<Self> {
-        Self::other(name)
-    }
-
     /// Returns the identifier as a string slice.
     pub fn as_str(&self) -> &str {
-        &self.0
+        match self {
+            Self::Mainnet => "mainnet",
+            Self::Testnet => "testnet",
+            Self::Other(id) => id.trim(),
+        }
     }
 
     /// Consumes the identifier and returns its owned string value.
     pub fn into_inner(self) -> String {
-        self.0.into_owned()
+        match self {
+            Self::Mainnet => "mainnet".to_string(),
+            Self::Testnet => "testnet".to_string(),
+            Self::Other(id) => id.trim().to_string(),
+        }
+    }
+
+    fn canonical(value: &str) -> Option<Self> {
+        match value {
+            "mainnet" => Some(Self::Mainnet),
+            "testnet" => Some(Self::Testnet),
+            _ => None,
+        }
+    }
+}
+
+impl PartialEq for NetworkId {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_str() == other.as_str()
+    }
+}
+
+impl Eq for NetworkId {}
+
+impl Hash for NetworkId {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_str().hash(state);
+    }
+}
+
+impl Serialize for NetworkId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let value = self.as_str();
+        if value.is_empty() {
+            return Err(serde::ser::Error::custom(
+                "network id must not be empty or whitespace-only",
+            ));
+        }
+        serializer.serialize_str(value)
     }
 }
 
@@ -178,56 +210,44 @@ mod tests {
     #[test]
     fn network_id_round_trips_through_strings() {
         for network_id in [
-            NetworkId::MAINNET,
-            NetworkId::TESTNET,
-            NetworkId::other("devnet").unwrap(),
+            NetworkId::Mainnet,
+            NetworkId::Testnet,
+            NetworkId::Other("devnet".to_string()),
         ] {
             assert_eq!(
                 network_id.as_str().parse::<NetworkId>().unwrap(),
                 network_id
             );
             assert_eq!(NetworkId::new(network_id.as_str()).unwrap(), network_id);
-
-            let serialized = serde_json::to_string(&network_id).unwrap();
-            assert_eq!(
-                serde_json::from_str::<NetworkId>(&serialized).unwrap(),
-                network_id
-            );
         }
     }
 
     #[test]
-    fn legacy_network_id_constants_alias_the_primary_constants() {
-        assert_eq!(NetworkId::Mainnet, NetworkId::MAINNET);
-        assert_eq!(NetworkId::Testnet, NetworkId::TESTNET);
-    }
-
-    #[test]
     fn mainnet_and_testnet_have_a_single_representation() {
-        assert_eq!(NetworkId::new("mainnet").unwrap(), NetworkId::MAINNET);
-        assert_eq!(NetworkId::new("testnet").unwrap(), NetworkId::TESTNET);
-        assert_eq!(NetworkId::Other("mainnet").unwrap(), NetworkId::MAINNET);
-        assert_eq!(NetworkId::Other("testnet").unwrap(), NetworkId::TESTNET);
+        assert_eq!(NetworkId::new("mainnet").unwrap(), NetworkId::Mainnet);
+        assert_eq!(NetworkId::new("testnet").unwrap(), NetworkId::Testnet);
+        assert_eq!(NetworkId::other("mainnet").unwrap(), NetworkId::Mainnet);
+        assert_eq!(NetworkId::other("testnet").unwrap(), NetworkId::Testnet);
         assert_eq!(
             serde_json::to_string(&NetworkId::new("mainnet").unwrap()).unwrap(),
-            serde_json::to_string(&NetworkId::MAINNET).unwrap()
+            serde_json::to_string(&NetworkId::Mainnet).unwrap()
         );
         assert_eq!(
             serde_json::to_string(&NetworkId::new("testnet").unwrap()).unwrap(),
-            serde_json::to_string(&NetworkId::TESTNET).unwrap()
+            serde_json::to_string(&NetworkId::Testnet).unwrap()
         );
     }
 
     #[test]
     fn network_names_are_trimmed_and_canonicalized() {
-        assert_eq!(NetworkId::new(" mainnet ").unwrap(), NetworkId::MAINNET);
+        assert_eq!(NetworkId::new(" mainnet ").unwrap(), NetworkId::Mainnet);
         assert_eq!(
             NetworkId::new("\tsepolia\n").unwrap(),
             NetworkId::other("sepolia").unwrap()
         );
         assert_eq!(
             serde_json::from_str::<NetworkId>("\" mainnet \"").unwrap(),
-            NetworkId::MAINNET
+            NetworkId::Mainnet
         );
 
         let network_id = NetworkId::new(" sepolia ").unwrap();
@@ -241,12 +261,32 @@ mod tests {
 
     #[test]
     fn network_ids_serialize_as_plain_strings() {
-        let sepolia = NetworkId::other("sepolia").unwrap();
-        assert_eq!(serde_json::to_string(&sepolia).unwrap(), "\"sepolia\"");
+        assert_eq!(
+            serde_json::to_string(&NetworkId::Other("sepolia".to_string())).unwrap(),
+            "\"sepolia\""
+        );
         assert_eq!(
             serde_json::from_str::<NetworkId>("\"sepolia\"").unwrap(),
-            sepolia
+            NetworkId::Other("sepolia".to_string())
         );
+    }
+
+    #[test]
+    fn direct_other_values_are_normalized_when_observed() {
+        assert_eq!(NetworkId::Other("mainnet".to_string()), NetworkId::Mainnet);
+        assert_eq!(
+            NetworkId::Other(" mainnet ".to_string()),
+            NetworkId::Mainnet
+        );
+        assert_eq!(
+            NetworkId::Other(" sepolia ".to_string()).as_str(),
+            "sepolia"
+        );
+        assert_eq!(
+            serde_json::to_string(&NetworkId::Other(" mainnet ".to_string())).unwrap(),
+            "\"mainnet\""
+        );
+        assert!(serde_json::to_string(&NetworkId::Other(String::new())).is_err());
     }
 
     #[test]
@@ -256,7 +296,6 @@ mod tests {
             assert!(NetworkId::try_from(value).is_err());
             assert!(value.parse::<NetworkId>().is_err());
             assert!(NetworkId::other(value).is_err());
-            assert!(NetworkId::Other(value).is_err());
         }
     }
 

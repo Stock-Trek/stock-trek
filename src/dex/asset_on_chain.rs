@@ -91,7 +91,7 @@ mod tests {
     }
 
     fn network() -> Network {
-        Network::new(NetworkId::MAINNET, Some(ChainId::new(1)))
+        Network::new(NetworkId::Mainnet, Some(ChainId::new(1)))
     }
 
     #[test]
