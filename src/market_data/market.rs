@@ -18,33 +18,68 @@ use std::collections::HashMap;
 /// The increment and notional fields describe exchange constraints. Ticks,
 /// rolling candles, aligned candles, and the order book hold the recent market
 /// history.
-#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Market {
-    pub base_increment: f64,
-    pub quote_increment: f64,
-    pub minimum_notional: f64,
-    pub ticks: MarketTicks,
-    pub rolling: MarketRollingWindow,
-    pub aligned: MarketAlignedWindow,
-    pub order_book: MarketOrderBook,
+    base_increment: f64,
+    quote_increment: f64,
+    minimum_notional: f64,
+    ticks: MarketTicks,
+    rolling: MarketRollingWindow,
+    aligned: MarketAlignedWindow,
+    order_book: MarketOrderBook,
+}
+
+impl Market {
+    /// Returns the minimum increment for the base asset quantity.
+    pub fn base_increment(&self) -> f64 {
+        self.base_increment
+    }
+
+    /// Returns the minimum increment for the quote asset price.
+    pub fn quote_increment(&self) -> f64 {
+        self.quote_increment
+    }
+
+    /// Returns the minimum notional value for an order.
+    pub fn minimum_notional(&self) -> f64 {
+        self.minimum_notional
+    }
+
+    /// Returns the recent market ticks.
+    pub fn ticks(&self) -> &MarketTicks {
+        &self.ticks
+    }
+
+    /// Returns the candles for fixed-length rolling windows.
+    pub fn rolling(&self) -> &MarketRollingWindow {
+        &self.rolling
+    }
+
+    /// Returns the candles for aligned windows.
+    pub fn aligned(&self) -> &MarketAlignedWindow {
+        &self.aligned
+    }
+
+    /// Returns the current order book.
+    pub fn order_book(&self) -> &MarketOrderBook {
+        &self.order_book
+    }
 }
 
 /// Builder for constructing a [`Market`].
 ///
 /// New markets start empty. Add ticks, candles, and order book quotes before
 /// calling [`MarketBuilder::build`].
-#[allow(missing_docs)]
 #[derive(Debug, Clone)]
 pub struct MarketBuilder {
-    pub base_increment: f64,
-    pub quote_increment: f64,
-    pub minimum_notional: f64,
-    pub ticks: Vec<MarketTick>,
-    pub rolling: HashMap<RollingWindow, MarketCandle>,
-    pub aligned: HashMap<AlignedWindow, Vec<MarketCandle>>,
-    pub order_book_asks: Vec<MarketQuote>,
-    pub order_book_bids: Vec<MarketQuote>,
+    base_increment: f64,
+    quote_increment: f64,
+    minimum_notional: f64,
+    ticks: Vec<MarketTick>,
+    rolling: HashMap<RollingWindow, MarketCandle>,
+    aligned: HashMap<AlignedWindow, Vec<MarketCandle>>,
+    order_book_asks: Vec<MarketQuote>,
+    order_book_bids: Vec<MarketQuote>,
 }
 
 impl MarketBuilder {
@@ -61,6 +96,47 @@ impl MarketBuilder {
             order_book_asks: Vec::new(),
         }
     }
+
+    /// Returns the minimum increment for the base asset quantity.
+    pub fn base_increment(&self) -> f64 {
+        self.base_increment
+    }
+
+    /// Returns the minimum increment for the quote asset price.
+    pub fn quote_increment(&self) -> f64 {
+        self.quote_increment
+    }
+
+    /// Returns the minimum notional value for an order.
+    pub fn minimum_notional(&self) -> f64 {
+        self.minimum_notional
+    }
+
+    /// Returns the ticks added to the builder.
+    pub fn ticks(&self) -> &[MarketTick] {
+        &self.ticks
+    }
+
+    /// Returns the rolling-window candles added to the builder.
+    pub fn rolling(&self) -> &HashMap<RollingWindow, MarketCandle> {
+        &self.rolling
+    }
+
+    /// Returns the aligned-window candles added to the builder.
+    pub fn aligned(&self) -> &HashMap<AlignedWindow, Vec<MarketCandle>> {
+        &self.aligned
+    }
+
+    /// Returns the bid quotes added to the builder.
+    pub fn order_book_bids(&self) -> &[MarketQuote] {
+        &self.order_book_bids
+    }
+
+    /// Returns the ask quotes added to the builder.
+    pub fn order_book_asks(&self) -> &[MarketQuote] {
+        &self.order_book_asks
+    }
+
     /// Adds a market tick with the given bid, ask, and last price/quantity pairs.
     pub fn tick(
         &mut self,
@@ -69,21 +145,12 @@ impl MarketBuilder {
         ask: PriceQuantity,
         last: PriceQuantity,
     ) -> &mut Self {
-        let tick = MarketTick {
+        let tick = MarketTick::new(
             timestamp_millis,
-            bid: MarketQuote {
-                price: bid.0,
-                quantity: bid.1,
-            },
-            ask: MarketQuote {
-                price: ask.0,
-                quantity: ask.1,
-            },
-            last: MarketQuote {
-                price: last.0,
-                quantity: last.1,
-            },
-        };
+            MarketQuote::new(bid.0, bid.1),
+            MarketQuote::new(ask.0, ask.1),
+            MarketQuote::new(last.0, last.1),
+        );
         self.ticks.push(tick);
         self
     }
@@ -103,12 +170,12 @@ impl MarketBuilder {
     }
     /// Adds a bid quote to the order book.
     pub fn order_book_bid(&mut self, price: f64, quantity: f64) -> &mut Self {
-        self.order_book_bids.push(MarketQuote { price, quantity });
+        self.order_book_bids.push(MarketQuote::new(price, quantity));
         self
     }
     /// Adds an ask quote to the order book.
     pub fn order_book_ask(&mut self, price: f64, quantity: f64) -> &mut Self {
-        self.order_book_asks.push(MarketQuote { price, quantity });
+        self.order_book_asks.push(MarketQuote::new(price, quantity));
         self
     }
     /// Builds the [`Market`] from the collected data.

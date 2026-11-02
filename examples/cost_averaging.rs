@@ -58,7 +58,7 @@ impl Algorithm for CostAveraging {
         let cheapest_market = c
             .cex_markets_for(AssetId::Bitcoin, AssetId::TetherUSD)
             .filter_map(|(cex, market)| {
-                let ask_price = market.ticks.latest()?.ask.price;
+                let ask_price = market.ticks().latest()?.ask().price();
                 (ask_price.is_finite() && ask_price > 0.0).then_some((cex, ask_price))
             })
             .min_by(|(a_cex, a_price), (b_cex, b_price)| {
