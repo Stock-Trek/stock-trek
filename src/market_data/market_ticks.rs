@@ -45,17 +45,11 @@ impl MarketTicks {
     fn values(&self, to_quote: impl Fn(&MarketTick) -> &MarketQuote) -> Vec<TimedPriceQuantity> {
         self.ticks
             .iter()
-            .map(|tick| Self::to_timed_price_quantity(tick, &to_quote))
+            .map(|tick| {
+                let quote = to_quote(tick);
+                quote.to_timed_price_quantity(tick.timestamp_millis())
+            })
             .collect()
-    }
-
-    fn to_timed_price_quantity(
-        tick: &MarketTick,
-        to_quote: impl Fn(&MarketTick) -> &MarketQuote,
-    ) -> TimedPriceQuantity {
-        let timestamp = tick.timestamp_millis();
-        let quote = to_quote(tick);
-        quote.to_timed_price_quantity(timestamp)
     }
 }
 
