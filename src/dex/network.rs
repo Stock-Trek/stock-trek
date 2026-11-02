@@ -216,6 +216,18 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "network id must not be empty or whitespace-only")]
+    fn from_static_rejects_whitespace_only_network_ids() {
+        NetworkId::from_static(" ");
+    }
+
+    #[test]
+    fn from_static_accepts_non_blank_network_ids() {
+        assert_eq!(NetworkId::from_static("mainnet"), NetworkId::Mainnet);
+        assert_eq!(NetworkId::from_static("devnet").as_str(), "devnet");
+    }
+
+    #[test]
     fn invalid_network_id_values_have_consistent_error_semantics() {
         let error = NetworkId::new("").unwrap_err();
         assert!(matches!(
