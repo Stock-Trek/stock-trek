@@ -25,7 +25,7 @@ exclude = [
 name = "stock_trek"
 
 [features]
-default = []
+default = ["dex"]
 dex = ["dep:regex", "dep:serde_with"]
 
 [dependencies]
