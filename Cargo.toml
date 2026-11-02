@@ -19,19 +19,22 @@ keywords = [
 exclude = [
   ".github/**",
   "examples/**",
-  "src/dex/**",
 ]
 
 [lib]
 name = "stock_trek"
 
+[features]
+default = []
+dex = ["dep:regex", "dep:serde_with"]
+
 [dependencies]
 chrono = "0.4"
-regex = "1"
+regex = { version = "1", optional = true }
 rust_decimal = "1"
 serde = "1"
 serde_json = {version = "1", features = ["float_roundtrip"] }
-serde_with = "3"
+serde_with = { version = "3", optional = true }
 stock-trek-types = { version = "0.5", features = ["serde"] }
 strum = { version = "0.28", features = ["derive"] }
 traitreg = "0.4"
@@ -41,6 +44,6 @@ module_inception = "allow"
 
 [package.metadata.docs.rs]
 default-target = "x86_64-unknown-linux-gnu"
-features = []
+features = ["dex"]
 no-deps = true
 targets = ["x86_64-unknown-linux-gnu"]

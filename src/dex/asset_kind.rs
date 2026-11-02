@@ -1,10 +1,15 @@
+//! Asset identifiers within a blockchain.
+
 use serde::{Deserialize, Serialize};
 
+/// The kind of asset on a blockchain.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum AssetKind {
+    /// The blockchain's native asset.
     Native,
+    /// A contract-based asset, identified by its contract address.
     Contract(String),
 }
 
