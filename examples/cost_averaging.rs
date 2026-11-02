@@ -42,18 +42,16 @@ impl Algorithm for CostAveraging {
         "Finds the cheapest market BTC/USDT price, then places a Limit order at that price"
     }
     fn preferences(&self) -> Preferences {
-        Preferences {
-            cex: CexPreferences {
-                max_network_delay_millis: 5000,
-                rounding: CexRoundingPreferences {
-                    activation_price_triggered_above: RoundingStrategy::AwayFromZero,
-                    activation_price_triggered_below: RoundingStrategy::ToZero,
-                    price: RoundingStrategy::ToZero,
-                    quantity: RoundingStrategy::ToZero,
-                    callback_rate_bps: RoundingStrategy::ToZero,
-                },
+        Preferences::new(CexPreferences {
+            max_network_delay_millis: 5000,
+            rounding: CexRoundingPreferences {
+                activation_price_triggered_above: RoundingStrategy::AwayFromZero,
+                activation_price_triggered_below: RoundingStrategy::ToZero,
+                price: RoundingStrategy::ToZero,
+                quantity: RoundingStrategy::ToZero,
+                callback_rate_bps: RoundingStrategy::ToZero,
             },
-        }
+        })
     }
     fn signals(&self, c: &SignalContext) -> StockTrekResult<Signals> {
         let mut signals = Signals::new();
@@ -76,55 +74,60 @@ impl Algorithm for CostAveraging {
         Ok(signals)
     }
     fn strategy(&self, c: &StrategyContext) -> Command {
-        let cex = c.signals.cex_id(&self.key_cex);
-        let account = c.signals.account_id(&self.key_account);
-        let btc = c.literals.asset_id(AssetId::Bitcoin);
-        let usdt = c.literals.asset_id(AssetId::TetherUSD);
-        let cheapest_price = c.signals.number(&self.key_cheapest_price);
-        let order_quantity = c.signals.number(&self.key_order_quantity);
-        let notional = c.calculations.binary(
+        let cex = c.signals().cex_id(&self.key_cex);
+        let account = c.signals().account_id(&self.key_account);
+        let btc = c.literals().asset_id(AssetId::Bitcoin);
+        let usdt = c.literals().asset_id(AssetId::TetherUSD);
+        let cheapest_price = c.signals().number(&self.key_cheapest_price);
+        let order_quantity = c.signals().number(&self.key_order_quantity);
+        let notional = c.calculations().binary(
             cheapest_price.clone(),
             BinaryOperator::Mul,
             order_quantity.clone(),
         );
-        let required_quote = c.calculations.binary(
+        let required_quote = c.calculations().binary(
             notional,
             BinaryOperator::Mul,
-            c.literals.number(1.0 + FEE_BUFFER_RATE),
+            c.literals().number(1.0 + FEE_BUFFER_RATE),
         );
-        let available_quote =
-            c.portfolio
-                .asset_available_in_cex_account(cex.clone(), account.clone(), usdt.clone());
+        let available_quote = c.portfolio().asset_available_in_cex_account(
+            cex.clone(),
+            account.clone(),
+            usdt.clone(),
+        );
         let tag = Tag::new("CostAveraging");
-        c.commands.if_else(
-            c.conditions.signal(&self.key_market_exists),
-            c.commands.if_else(
-                c.conditions.not(c.conditions.compare(
+        c.commands().if_else(
+            c.conditions().signal(&self.key_market_exists),
+            c.commands().if_else(
+                c.conditions().not(c.conditions().compare(
                     available_quote,
                     Ordering::Less,
                     required_quote,
                 )),
-                c.commands.plan(vec![c.actions.place_order(
-                    cex.clone(),
-                    account.clone(),
-                    c.orders.limit(
-                        btc,
-                        usdt.clone(),
-                        Side::Buy,
-                        Activation::Immediate,
-                        cheapest_price,
-                        TimeInForce::ImmediateOrCancel,
-                        Quantity::OfBase(order_quantity),
-                        tag,
+                c.commands().plan(vec![
+                    c.actions().place_order(
+                        cex.clone(),
+                        account.clone(),
+                        c.orders().limit(
+                            btc,
+                            usdt.clone(),
+                            Side::Buy,
+                            Activation::Immediate,
+                            cheapest_price,
+                            TimeInForce::ImmediateOrCancel,
+                            Quantity::OfBase(order_quantity),
+                            tag,
+                        ),
+                        RecoveryPolicy::with_default_response(ActionErrorResponse::Stop)
+                            .with_error_response(
+                                ActionErrorCause::TemporaryCexRejection,
+                                ActionErrorResponse::Retry { max_retries: 3 },
+                            ),
                     ),
-                    RecoveryPolicy::with_default_response(ActionErrorResponse::Stop).on_error(
-                        ActionErrorCause::TemporaryCexRejection,
-                        ActionErrorResponse::Retry { max_retries: 3 },
-                    ),
-                )]),
-                c.commands.no_op(),
+                ]),
+                c.commands().no_op(),
             ),
-            c.commands.no_op(),
+            c.commands().no_op(),
         )
     }
 }

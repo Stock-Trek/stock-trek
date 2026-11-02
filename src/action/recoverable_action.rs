@@ -8,11 +8,10 @@ use stock_trek_types::cex::capability::CexCapability;
 use strum::Display;
 
 /// An action paired with the policy used to recover from errors.
-#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoverableAction {
-    pub action: Action,
-    pub recovery_policy: RecoveryPolicy,
+    action: Action,
+    recovery_policy: RecoveryPolicy,
 }
 
 impl RecoverableAction {
@@ -23,10 +22,21 @@ impl RecoverableAction {
             recovery_policy,
         }
     }
+
+    /// Returns the action to execute.
+    pub fn action(&self) -> &Action {
+        &self.action
+    }
+
+    /// Returns how the runtime should respond if the action fails.
+    pub fn recovery_policy(&self) -> &RecoveryPolicy {
+        &self.recovery_policy
+    }
+
     /// Resolves and enqueues the action on the resolved context.
     pub fn enqueue(&self, c: &mut ResolvedContext) -> StockTrekResult<()> {
         let resolved_action = self.action.try_resolve(c)?;
-        (c.enqueue_action)(&resolved_action, &self.recovery_policy)?;
+        (c.enqueue_action())(&resolved_action, &self.recovery_policy)?;
         Ok(())
     }
 }
@@ -38,11 +48,10 @@ impl HasRequiredCapabilities for RecoverableAction {
 }
 
 /// Defines how an action should respond to different error causes.
-#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoveryPolicy {
-    pub default_response: ActionErrorResponse,
-    pub on_error: BTreeMap<ActionErrorCause, ActionErrorResponse>,
+    default_response: ActionErrorResponse,
+    on_error: BTreeMap<ActionErrorCause, ActionErrorResponse>,
 }
 
 impl RecoveryPolicy {
@@ -54,9 +63,23 @@ impl RecoveryPolicy {
         }
     }
     /// Maps a specific error cause to a response.
-    pub fn on_error(mut self, cause: ActionErrorCause, response: ActionErrorResponse) -> Self {
+    pub fn with_error_response(
+        mut self,
+        cause: ActionErrorCause,
+        response: ActionErrorResponse,
+    ) -> Self {
         self.on_error.insert(cause, response);
         self
+    }
+
+    /// Returns the response used for causes without an explicit override.
+    pub fn default_response(&self) -> &ActionErrorResponse {
+        &self.default_response
+    }
+
+    /// Returns the responses that override the default for specific causes.
+    pub fn on_error(&self) -> &BTreeMap<ActionErrorCause, ActionErrorResponse> {
+        &self.on_error
     }
 }
 
@@ -105,21 +128,21 @@ mod tests {
     #[test]
     fn error_overrides_are_ordered_by_cause() {
         let policy = RecoveryPolicy::with_default_response(ActionErrorResponse::Stop)
-            .on_error(ActionErrorCause::StaleAction, ActionErrorResponse::Ignore)
-            .on_error(
+            .with_error_response(ActionErrorCause::StaleAction, ActionErrorResponse::Ignore)
+            .with_error_response(
                 ActionErrorCause::InsufficientBalance,
                 ActionErrorResponse::Ignore,
             )
-            .on_error(
+            .with_error_response(
                 ActionErrorCause::TemporaryCexRejection,
                 ActionErrorResponse::Retry { max_retries: 1 },
             )
-            .on_error(
+            .with_error_response(
                 ActionErrorCause::PermanentCexRejection,
                 ActionErrorResponse::Ignore,
             );
 
-        let causes: Vec<_> = policy.on_error.keys().copied().collect();
+        let causes: Vec<_> = policy.on_error().keys().copied().collect();
 
         assert_eq!(
             causes,

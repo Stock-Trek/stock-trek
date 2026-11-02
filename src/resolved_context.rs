@@ -6,11 +6,10 @@ use crate::{
 };
 
 /// The context used when resolving actions and values.
-#[allow(missing_docs)]
 pub struct ResolvedContext {
-    pub enqueue_action: EnqueueActionFn,
-    pub portfolio: Portfolio,
-    pub signals: Signals,
+    enqueue_action: EnqueueActionFn,
+    portfolio: Portfolio,
+    signals: Signals,
 }
 
 /// Callback type for enqueuing a resolved action with a recovery policy.
@@ -24,6 +23,21 @@ impl ResolvedContext {
             portfolio,
             signals,
         }
+    }
+
+    /// Returns the callback used to enqueue resolved actions.
+    pub fn enqueue_action(&mut self) -> &mut EnqueueActionFn {
+        &mut self.enqueue_action
+    }
+
+    /// Returns the portfolio used to resolve values and conditions.
+    pub fn portfolio(&self) -> &Portfolio {
+        &self.portfolio
+    }
+
+    /// Returns the signals used to resolve values and conditions.
+    pub fn signals(&self) -> &Signals {
+        &self.signals
     }
 }
 

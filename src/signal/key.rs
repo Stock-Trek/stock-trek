@@ -54,7 +54,7 @@ where
     }
     /// Reads the signal value from the resolved context.
     pub fn read(&self, c: &ResolvedContext) -> StockTrekResult<T> {
-        c.signals.read(self)
+        c.signals().read(self)
     }
 }
 

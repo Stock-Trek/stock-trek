@@ -3,11 +3,11 @@ use crate::{portfolio::Portfolio, signal::signals::Signals};
 use std::collections::HashMap;
 
 fn context() -> ResolvedContext {
-    ResolvedContext {
-        enqueue_action: Box::new(|_, _| Ok(())),
-        portfolio: Portfolio::new(HashMap::new()),
-        signals: Signals::new(),
-    }
+    ResolvedContext::new(
+        Box::new(|_, _| Ok(())),
+        Portfolio::new(HashMap::new()),
+        Signals::new(),
+    )
 }
 
 fn compare(left: f64, comparison: Ordering, right: f64) -> bool {
