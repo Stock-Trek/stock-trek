@@ -10,6 +10,20 @@ pub enum DexError {
         /// Details about the invalid address format.
         message: String,
     },
+    /// An address did not match the blockchain's address format.
+    InvalidAddress {
+        /// The identifier of the blockchain.
+        blockchain_id: String,
+        /// The invalid address.
+        address: String,
+    },
+    /// A network does not belong to the blockchain it was paired with.
+    NetworkMismatch {
+        /// The identifier of the blockchain.
+        blockchain_id: String,
+        /// The identifier of the network.
+        network_id: String,
+    },
 }
 
 impl fmt::Display for DexError {
@@ -22,6 +36,22 @@ impl fmt::Display for DexError {
                 f,
                 "Invalid address format for blockchain '{}': {}",
                 blockchain_id, message
+            ),
+            DexError::InvalidAddress {
+                blockchain_id,
+                address,
+            } => write!(
+                f,
+                "Invalid address '{}' for blockchain '{}'",
+                address, blockchain_id
+            ),
+            DexError::NetworkMismatch {
+                blockchain_id,
+                network_id,
+            } => write!(
+                f,
+                "Network '{}' does not belong to blockchain '{}'",
+                network_id, blockchain_id
             ),
         }
     }

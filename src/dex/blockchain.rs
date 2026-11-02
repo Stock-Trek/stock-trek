@@ -1,5 +1,6 @@
 //! Blockchain definitions and address validation.
 
+use crate::dex::network::Network;
 use crate::error::{
     dex::DexError,
     result::{StockTrekError, StockTrekResult},
@@ -20,6 +21,8 @@ pub struct Blockchain {
     native_decimals: u8,
     #[serde_as(as = "DisplayFromStr")]
     address_regex: Regex,
+    #[serde(default)]
+    networks: Vec<Network>,
 }
 
 /// Unique identifier for a blockchain.
@@ -125,7 +128,29 @@ impl Blockchain {
         native_decimals: u8,
         address_format: &str,
     ) -> StockTrekResult<Self> {
-        let address_regex = Regex::new(address_format).map_err(|error| {
+        Self::new_with_networks(
+            blockchain_id,
+            family_id,
+            native_decimals,
+            address_format,
+            [],
+        )
+    }
+
+    /// Creates a blockchain definition together with its supported networks.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `address_format` is not a valid regular expression.
+    pub fn new_with_networks(
+        blockchain_id: BlockchainId,
+        family_id: FamilyId,
+        native_decimals: u8,
+        address_format: &str,
+        networks: impl IntoIterator<Item = Network>,
+    ) -> StockTrekResult<Self> {
+        let full_match_format = format!("^(?:{address_format})$");
+        let address_regex = Regex::new(&full_match_format).map_err(|error| {
             StockTrekError::Dex(DexError::InvalidAddressFormat {
                 blockchain_id: blockchain_id.to_string(),
                 message: error.to_string(),
@@ -136,6 +161,7 @@ impl Blockchain {
             family_id,
             native_decimals,
             address_regex,
+            networks: networks.into_iter().collect(),
         })
     }
 
@@ -159,9 +185,36 @@ impl Blockchain {
         self.address_regex.as_str()
     }
 
-    /// Returns whether `contract_address` matches the blockchain's address format.
+    pub fn networks(&self) -> &[Network] {
+        &self.networks
+    }
+
+    /// Returns whether `network` belongs to this blockchain.
+    ///
+    /// Networks that do not identify their blockchain are accepted when this
+    /// blockchain has no registered network list.
+    pub fn supports_network(&self, network: &Network) -> bool {
+        if let Some(blockchain_id) = network.blockchain_id()
+            && blockchain_id != &self.blockchain_id
+        {
+            return false;
+        }
+
+        if !self.networks.is_empty() {
+            return self.networks.iter().any(|known| {
+                known.network_id() == network.network_id() && known.chain_id() == network.chain_id()
+            });
+        }
+
+        crate::dex::networks::canonical_network_belongs(self.blockchain_id.as_str(), network)
+            .unwrap_or(true)
+    }
+
+    /// Returns whether `contract_address` fully matches the blockchain's address format.
     pub fn is_valid_address(&self, contract_address: &str) -> bool {
-        self.address_regex.is_match(contract_address)
+        self.address_regex
+            .find(contract_address)
+            .is_some_and(|matched| matched.start() == 0 && matched.end() == contract_address.len())
     }
 }
 
@@ -266,6 +319,15 @@ mod tests {
 
         assert!(blockchain.is_valid_address("0x0000000000000000000000000000000000000000"));
         assert!(!blockchain.is_valid_address("not-an-address"));
+    }
+
+    #[test]
+    fn unanchored_address_formats_are_matched_against_the_whole_address() {
+        let blockchain = blockchain("0x[a-fA-F0-9]{40}").unwrap();
+
+        assert!(blockchain.is_valid_address("0x0000000000000000000000000000000000000000"));
+        assert!(!blockchain.is_valid_address("prefix-0x0000000000000000000000000000000000000000"));
+        assert!(!blockchain.is_valid_address("0x0000000000000000000000000000000000000000-suffix"));
     }
 
     #[test]

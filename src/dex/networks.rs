@@ -63,11 +63,31 @@ macro_rules! define_evm_network {
                 }
             }
 
+            pub(crate) fn supports_network(network: &crate::dex::network::Network) -> bool {
+                $(
+                    (network.network_id() == &{
+                        let network_id: NetworkId = $network_id;
+                        network_id
+                    }
+                        && network.chain_id()
+                            == Some(crate::dex::network::ChainId::new($chain_id)))
+                        ||)+ false
+            }
+
             pub fn asset_on_chain(
                 network: NetworkName,
                 asset_kind: crate::dex::asset_kind::AssetKind,
             ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-                super::evm_asset_on_chain($blockchain, network, asset_kind)
+                let networks = vec![
+                    $(
+                        crate::dex::network::Network::for_blockchain(
+                            crate::dex::blockchain::BlockchainId::new($blockchain),
+                            $network_id,
+                            Some(crate::dex::network::ChainId::new($chain_id)),
+                        )
+                    ),+
+                ];
+                super::evm_asset_on_chain($blockchain, network, asset_kind, networks)
             }
         }
     };
@@ -94,20 +114,44 @@ macro_rules! define_network {
                 $($variant => $network_id,)+
             }
 
+            pub(crate) fn supports_network(network: &Network) -> bool {
+                network.chain_id().is_none()
+                    $(&& network.network_id() == &{
+                        let network_id: NetworkId = $network_id;
+                        network_id
+                    })*
+            }
+
             pub fn asset_on_chain(
                 network: NetworkName,
                 asset_kind: crate::dex::asset_kind::AssetKind,
             ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
+                let network = Network::for_blockchain(
+                    crate::dex::blockchain::BlockchainId::new($blockchain),
+                    network.into(),
+                    None,
+                );
+                let networks = vec![
+                    $(
+                        Network::for_blockchain(
+                            crate::dex::blockchain::BlockchainId::new($blockchain),
+                            $network_id,
+                            None,
+                        )
+                    ),+
+                ];
                 let blockchain = super::blockchain(
                     $blockchain,
                     super::$family_id,
                     $native_decimals,
                     $address_format,
+                    networks,
                 )?;
-                let network = Network::new(network.into(), None);
-                Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-                    blockchain, network, asset_kind,
-                ))
+                crate::dex::asset_on_chain::AssetOnChain::new(
+                    blockchain,
+                    network,
+                    asset_kind,
+                )
             }
         }
     };
@@ -336,26 +380,67 @@ define_network! {
     }
 }
 
+macro_rules! canonical_network_lookup {
+    ($($module:ident => $blockchain_id:literal),+ $(,)?) => {
+        pub(crate) fn canonical_network_belongs(
+            blockchain_id: &str,
+            network: &Network,
+        ) -> Option<bool> {
+            match blockchain_id {
+                $($blockchain_id => Some($module::supports_network(network)),)+
+                _ => None,
+            }
+        }
+    };
+}
+
+canonical_network_lookup! {
+    arbitrum => "arbitrum",
+    avalanche => "avalanche",
+    base => "base",
+    bitcoin => "bitcoin",
+    bitcoin_cash => "bitcoin-cash",
+    bsc => "bsc",
+    celo => "celo",
+    cosmos => "cosmos",
+    cronos => "cronos",
+    dogecoin => "dogecoin",
+    ethereum => "ethereum",
+    fantom => "fantom",
+    gnosis => "gnosis",
+    litecoin => "litecoin",
+    moonbeam => "moonbeam",
+    near => "near",
+    optimism => "optimism",
+    osmosis => "osmosis",
+    polygon => "polygon",
+    solana => "solana",
+    tron => "tron",
+}
+
 fn blockchain(
     blockchain_id: &str,
     family_id: &str,
     native_decimals: u8,
     address_format: &str,
+    networks: Vec<Network>,
 ) -> StockTrekResult<Blockchain> {
-    Blockchain::new(
+    Blockchain::new_with_networks(
         BlockchainId::new(blockchain_id),
         FamilyId::new(family_id),
         native_decimals,
         address_format,
+        networks,
     )
 }
 
-fn evm_blockchain(blockchain_name: &str) -> StockTrekResult<Blockchain> {
-    Blockchain::new(
+fn evm_blockchain(blockchain_name: &str, networks: Vec<Network>) -> StockTrekResult<Blockchain> {
+    Blockchain::new_with_networks(
         BlockchainId::new(blockchain_name),
         FamilyId::new(FAMILY_ID_EVM),
         18,
         "^0x[a-fA-F0-9]{40}$",
+        networks,
     )
 }
 
@@ -363,8 +448,13 @@ fn evm_asset_on_chain(
     blockchain_name: &str,
     network: impl Into<NetworkId> + Into<u64> + Copy,
     asset_kind: AssetKind,
+    networks: Vec<Network>,
 ) -> StockTrekResult<AssetOnChain> {
-    let blockchain = evm_blockchain(blockchain_name)?;
-    let network = Network::new(network.into(), Some(ChainId::new(network.into())));
-    Ok(AssetOnChain::new(blockchain, network, asset_kind))
+    let blockchain = evm_blockchain(blockchain_name, networks)?;
+    let network = Network::for_blockchain(
+        BlockchainId::new(blockchain_name),
+        network.into(),
+        Some(ChainId::new(network.into())),
+    );
+    AssetOnChain::new(blockchain, network, asset_kind)
 }

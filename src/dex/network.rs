@@ -1,5 +1,6 @@
 //! Networks within a blockchain.
 
+use crate::dex::blockchain::BlockchainId;
 use crate::errors::{StockTrekError, ValueError};
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
@@ -8,6 +9,8 @@ use std::str::FromStr;
 /// A network on a blockchain.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Network {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    blockchain_id: Option<BlockchainId>,
     network_id: NetworkId,
     chain_id: Option<ChainId>,
 }
@@ -196,9 +199,27 @@ impl From<ChainId> for u64 {
 impl Network {
     pub fn new(network_id: NetworkId, chain_id: Option<ChainId>) -> Self {
         Self {
+            blockchain_id: None,
             network_id,
             chain_id,
         }
+    }
+
+    /// Creates a network that is explicitly associated with a blockchain.
+    pub fn for_blockchain(
+        blockchain_id: BlockchainId,
+        network_id: NetworkId,
+        chain_id: Option<ChainId>,
+    ) -> Self {
+        Self {
+            blockchain_id: Some(blockchain_id),
+            network_id,
+            chain_id,
+        }
+    }
+
+    pub fn blockchain_id(&self) -> Option<&BlockchainId> {
+        self.blockchain_id.as_ref()
     }
 
     pub fn network_id(&self) -> &NetworkId {
@@ -233,5 +254,22 @@ mod tests {
     fn empty_network_ids_and_invalid_chain_ids_are_rejected_when_parsed() {
         assert!("".parse::<NetworkId>().is_err());
         assert!("not-a-number".parse::<ChainId>().is_err());
+    }
+
+    #[test]
+    fn networks_can_be_associated_with_a_blockchain() {
+        let network = Network::for_blockchain(
+            BlockchainId::new("ethereum"),
+            NetworkId::Mainnet,
+            Some(ChainId::new(1)),
+        );
+
+        assert_eq!(
+            network.blockchain_id().map(BlockchainId::as_str),
+            Some("ethereum")
+        );
+        assert_eq!(network.network_id(), &NetworkId::Mainnet);
+        assert_eq!(network.chain_id(), Some(ChainId::new(1)));
+        assert_eq!(Network::new(NetworkId::Mainnet, None).blockchain_id(), None);
     }
 }
