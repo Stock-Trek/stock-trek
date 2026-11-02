@@ -1,9 +1,4 @@
-use crate::{
-    error::{result::StockTrekError, value::ValueError},
-    market_data::millis::*,
-};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::str::FromStr;
+use crate::market_data::{millis::*, window_label::window_label_funcs};
 use strum::{EnumCount, EnumIter, FromRepr};
 
 /// A fixed-length rolling time window.
@@ -56,6 +51,46 @@ pub enum RollingWindow {
     Weeks40,
 }
 
+window_label_funcs!(
+    RollingWindow,
+    Seconds1 => "1s",
+    Seconds5 => "5s",
+    Seconds10 => "10s",
+    Seconds15 => "15s",
+    Seconds30 => "30s",
+    Minutes1 => "1m",
+    Minutes2 => "2m",
+    Minutes3 => "3m",
+    Minutes5 => "5m",
+    Minutes10 => "10m",
+    Minutes15 => "15m",
+    Minutes30 => "30m",
+    Minutes45 => "45m",
+    Minutes90 => "90m",
+    Hours1 => "1h",
+    Hours2 => "2h",
+    Hours3 => "3h",
+    Hours4 => "4h",
+    Hours6 => "6h",
+    Hours8 => "8h",
+    Hours12 => "12h",
+    Days1 => "1d",
+    Days2 => "2d",
+    Days3 => "3d",
+    Days30 => "30d",
+    Days45 => "45d",
+    Days60 => "60d",
+    Days90 => "90d",
+    Days180 => "180d",
+    Days360 => "360d",
+    Weeks1 => "1w",
+    Weeks2 => "2w",
+    Weeks4 => "4w",
+    Weeks10 => "10w",
+    Weeks20 => "20w",
+    Weeks40 => "40w",
+);
+
 impl RollingWindow {
     /// Returns the exact window length in milliseconds.
     pub fn millis_exact(&self) -> Option<u64> {
@@ -107,130 +142,6 @@ impl RollingWindow {
     /// Returns the window length in milliseconds as an upper bound.
     pub fn millis_upper_bound(&self) -> Option<u64> {
         self.millis_exact()
-    }
-
-    /// Returns the short label for the window, such as `1h` or `1w`.
-    pub fn label(self) -> &'static str {
-        match self {
-            RollingWindow::Seconds1 => "1s",
-            RollingWindow::Seconds5 => "5s",
-            RollingWindow::Seconds10 => "10s",
-            RollingWindow::Seconds15 => "15s",
-            RollingWindow::Seconds30 => "30s",
-            RollingWindow::Minutes1 => "1m",
-            RollingWindow::Minutes2 => "2m",
-            RollingWindow::Minutes3 => "3m",
-            RollingWindow::Minutes5 => "5m",
-            RollingWindow::Minutes10 => "10m",
-            RollingWindow::Minutes15 => "15m",
-            RollingWindow::Minutes30 => "30m",
-            RollingWindow::Minutes45 => "45m",
-            RollingWindow::Minutes90 => "90m",
-            RollingWindow::Hours1 => "1h",
-            RollingWindow::Hours2 => "2h",
-            RollingWindow::Hours3 => "3h",
-            RollingWindow::Hours4 => "4h",
-            RollingWindow::Hours6 => "6h",
-            RollingWindow::Hours8 => "8h",
-            RollingWindow::Hours12 => "12h",
-            RollingWindow::Days1 => "1d",
-            RollingWindow::Days2 => "2d",
-            RollingWindow::Days3 => "3d",
-            RollingWindow::Days30 => "30d",
-            RollingWindow::Days45 => "45d",
-            RollingWindow::Days60 => "60d",
-            RollingWindow::Days90 => "90d",
-            RollingWindow::Days180 => "180d",
-            RollingWindow::Days360 => "360d",
-            RollingWindow::Weeks1 => "1w",
-            RollingWindow::Weeks2 => "2w",
-            RollingWindow::Weeks4 => "4w",
-            RollingWindow::Weeks10 => "10w",
-            RollingWindow::Weeks20 => "20w",
-            RollingWindow::Weeks40 => "40w",
-        }
-    }
-}
-
-impl std::fmt::Display for RollingWindow {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.label())
-    }
-}
-
-impl Serialize for RollingWindow {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(self.label())
-    }
-}
-
-impl<'de> Deserialize<'de> for RollingWindow {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let label = String::deserialize(deserializer)?;
-        Self::try_from(label.as_str()).map_err(serde::de::Error::custom)
-    }
-}
-
-impl TryFrom<&str> for RollingWindow {
-    type Error = StockTrekError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            "1s" => Ok(RollingWindow::Seconds1),
-            "5s" => Ok(RollingWindow::Seconds5),
-            "10s" => Ok(RollingWindow::Seconds10),
-            "15s" => Ok(RollingWindow::Seconds15),
-            "30s" => Ok(RollingWindow::Seconds30),
-            "1m" => Ok(RollingWindow::Minutes1),
-            "2m" => Ok(RollingWindow::Minutes2),
-            "3m" => Ok(RollingWindow::Minutes3),
-            "5m" => Ok(RollingWindow::Minutes5),
-            "10m" => Ok(RollingWindow::Minutes10),
-            "15m" => Ok(RollingWindow::Minutes15),
-            "30m" => Ok(RollingWindow::Minutes30),
-            "45m" => Ok(RollingWindow::Minutes45),
-            "90m" => Ok(RollingWindow::Minutes90),
-            "1h" => Ok(RollingWindow::Hours1),
-            "2h" => Ok(RollingWindow::Hours2),
-            "3h" => Ok(RollingWindow::Hours3),
-            "4h" => Ok(RollingWindow::Hours4),
-            "6h" => Ok(RollingWindow::Hours6),
-            "8h" => Ok(RollingWindow::Hours8),
-            "12h" => Ok(RollingWindow::Hours12),
-            "1d" => Ok(RollingWindow::Days1),
-            "2d" => Ok(RollingWindow::Days2),
-            "3d" => Ok(RollingWindow::Days3),
-            "30d" => Ok(RollingWindow::Days30),
-            "45d" => Ok(RollingWindow::Days45),
-            "60d" => Ok(RollingWindow::Days60),
-            "90d" => Ok(RollingWindow::Days90),
-            "180d" => Ok(RollingWindow::Days180),
-            "360d" => Ok(RollingWindow::Days360),
-            "1w" => Ok(RollingWindow::Weeks1),
-            "2w" => Ok(RollingWindow::Weeks2),
-            "4w" => Ok(RollingWindow::Weeks4),
-            "10w" => Ok(RollingWindow::Weeks10),
-            "20w" => Ok(RollingWindow::Weeks20),
-            "40w" => Ok(RollingWindow::Weeks40),
-            _ => Err(StockTrekError::Value(ValueError::IncorrectType {
-                expected: "RollingWindow".into(),
-                found: value.into(),
-            })),
-        }
-    }
-}
-
-impl FromStr for RollingWindow {
-    type Err = StockTrekError;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        Self::try_from(value)
     }
 }
 
