@@ -3,7 +3,8 @@ use std::{fmt, num::TryFromIntError, ops::Add, ops::Sub, str::FromStr};
 
 /// A timestamp expressed as milliseconds since the Unix epoch.
 ///
-/// The `+` and `-` operators saturate at the representable bounds. Use
+/// The `+` and `-` operators use checked arithmetic and panic on overflow or
+/// underflow rather than silently clamping the result. Use
 /// [`Self::checked_add`], [`Self::checked_sub`], [`Self::saturating_add`], or
 /// [`Self::saturating_sub`] when the overflow behaviour should be explicit.
 #[derive(
@@ -56,6 +57,16 @@ impl TimestampMillis {
     pub const fn saturating_sub(self, rhs: Self) -> Self {
         Self::new(self.0.saturating_sub(rhs.0))
     }
+
+    /// Returns the duration elapsed from `earlier` to this timestamp.
+    ///
+    /// Returns `None` when `earlier` is after this timestamp.
+    pub const fn duration_since(self, earlier: Self) -> Option<DurationMillis> {
+        match self.0.checked_sub(earlier.0) {
+            Some(millis) => Some(DurationMillis::new(millis)),
+            None => None,
+        }
+    }
 }
 
 impl From<u64> for TimestampMillis {
@@ -104,7 +115,8 @@ impl Add for TimestampMillis {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        self.saturating_add(rhs)
+        self.checked_add(rhs)
+            .expect("TimestampMillis addition overflowed")
     }
 }
 
@@ -112,7 +124,107 @@ impl Sub for TimestampMillis {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        self.saturating_sub(rhs)
+        self.checked_sub(rhs)
+            .expect("TimestampMillis subtraction underflowed")
+    }
+}
+
+/// A non-negative duration expressed in milliseconds.
+///
+/// Unlike [`TimestampMillis`], which identifies an instant since the Unix
+/// epoch, this type represents elapsed time. It is returned by
+/// [`MarketCandle::duration_millis`](crate::markets::MarketCandle::duration_millis).
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
+)]
+#[serde(transparent)]
+pub struct DurationMillis(u64);
+
+impl DurationMillis {
+    /// Creates a duration from milliseconds.
+    pub const fn new(millis: u64) -> Self {
+        Self(millis)
+    }
+
+    /// Returns the duration as milliseconds.
+    pub const fn as_millis(&self) -> u64 {
+        self.0
+    }
+
+    /// Returns the underlying milliseconds.
+    pub const fn into_inner(self) -> u64 {
+        self.0
+    }
+
+    /// Adds `rhs` milliseconds, returning `None` on overflow.
+    pub const fn checked_add(self, rhs: Self) -> Option<Self> {
+        match self.0.checked_add(rhs.0) {
+            Some(millis) => Some(Self::new(millis)),
+            None => None,
+        }
+    }
+
+    /// Subtracts `rhs` milliseconds, returning `None` if the result would be
+    /// negative.
+    pub const fn checked_sub(self, rhs: Self) -> Option<Self> {
+        match self.0.checked_sub(rhs.0) {
+            Some(millis) => Some(Self::new(millis)),
+            None => None,
+        }
+    }
+
+    /// Adds `rhs` milliseconds, saturating at the maximum representable
+    /// duration.
+    pub const fn saturating_add(self, rhs: Self) -> Self {
+        Self::new(self.0.saturating_add(rhs.0))
+    }
+
+    /// Subtracts `rhs` milliseconds, saturating at zero if the result would be
+    /// negative.
+    pub const fn saturating_sub(self, rhs: Self) -> Self {
+        Self::new(self.0.saturating_sub(rhs.0))
+    }
+}
+
+impl From<u64> for DurationMillis {
+    fn from(millis: u64) -> Self {
+        Self::new(millis)
+    }
+}
+
+impl From<DurationMillis> for u64 {
+    fn from(duration: DurationMillis) -> Self {
+        duration.into_inner()
+    }
+}
+
+impl TryFrom<i64> for DurationMillis {
+    type Error = TryFromIntError;
+
+    fn try_from(millis: i64) -> Result<Self, Self::Error> {
+        u64::try_from(millis).map(Self::new)
+    }
+}
+
+impl TryFrom<DurationMillis> for i64 {
+    type Error = TryFromIntError;
+
+    fn try_from(duration: DurationMillis) -> Result<Self, Self::Error> {
+        i64::try_from(duration.into_inner())
+    }
+}
+
+impl FromStr for DurationMillis {
+    type Err = std::num::ParseIntError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        value.parse::<u64>().map(Self::new)
+    }
+}
+
+impl fmt::Display for DurationMillis {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
     }
 }
 
@@ -200,12 +312,70 @@ mod tests {
     }
 
     #[test]
-    fn operators_saturate_instead_of_panicking_or_wrapping() {
+    fn operators_panic_instead_of_saturating_or_wrapping() {
         let zero = TimestampMillis::new(0);
         let one = TimestampMillis::new(1);
         let max = TimestampMillis::new(u64::MAX);
 
-        assert_eq!(zero - one, zero);
-        assert_eq!(max + one, max);
+        assert!(std::panic::catch_unwind(|| zero - one).is_err());
+        assert!(std::panic::catch_unwind(|| max + one).is_err());
+    }
+
+    #[test]
+    fn operators_work_when_the_result_is_representable() {
+        let lower = TimestampMillis::new(1_000);
+        let upper = TimestampMillis::new(2_000);
+
+        assert_eq!(upper - lower, TimestampMillis::new(1_000));
+        assert_eq!(
+            lower + TimestampMillis::new(500),
+            TimestampMillis::new(1_500)
+        );
+    }
+
+    #[test]
+    fn duration_since_returns_a_duration_when_ordered() {
+        let start = TimestampMillis::new(1_000);
+        let end = TimestampMillis::new(2_500);
+
+        assert_eq!(end.duration_since(start), Some(DurationMillis::new(1_500)));
+        assert_eq!(start.duration_since(end), None);
+    }
+
+    #[test]
+    fn duration_converts_to_and_from_milliseconds() {
+        let duration = DurationMillis::new(1_500);
+
+        assert_eq!(duration.as_millis(), 1_500);
+        assert_eq!(duration.into_inner(), 1_500);
+        assert_eq!(u64::from(duration), 1_500);
+        assert_eq!(DurationMillis::from(1_500), duration);
+        assert_eq!(DurationMillis::try_from(1_500_i64).unwrap(), duration);
+        assert_eq!(i64::try_from(duration).unwrap(), 1_500);
+        assert!(DurationMillis::try_from(-1_i64).is_err());
+    }
+
+    #[test]
+    fn duration_supports_checked_and_saturating_arithmetic() {
+        let zero = DurationMillis::new(0);
+        let one = DurationMillis::new(1);
+        let max = DurationMillis::new(u64::MAX);
+
+        assert_eq!(one.checked_sub(one), Some(zero));
+        assert_eq!(zero.checked_sub(one), None);
+        assert_eq!(max.checked_add(one), None);
+        assert_eq!(zero.saturating_sub(one), zero);
+        assert_eq!(max.saturating_add(one), max);
+    }
+
+    #[test]
+    fn duration_displays_and_parses_milliseconds() {
+        let duration = DurationMillis::new(1_500);
+
+        assert_eq!(duration.to_string(), "1500");
+        assert_eq!(
+            duration.to_string().parse::<DurationMillis>().unwrap(),
+            duration
+        );
     }
 }

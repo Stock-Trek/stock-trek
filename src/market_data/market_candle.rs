@@ -1,6 +1,9 @@
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
-    market_data::{market_ohlcv::MarketOhlcv, timestamp::TimestampMillis},
+    market_data::{
+        market_ohlcv::MarketOhlcv,
+        timestamp::{DurationMillis, TimestampMillis},
+    },
     validation::Validation,
 };
 use serde::{Deserialize, Serialize};
@@ -63,9 +66,9 @@ impl MarketCandle {
     }
 
     /// Returns the candle duration in milliseconds.
-    pub fn duration_millis(&self) -> TimestampMillis {
+    pub fn duration_millis(&self) -> DurationMillis {
         self.end_time_millis_exc
-            .checked_sub(self.start_time_millis_inc)
+            .duration_since(self.start_time_millis_inc)
             .expect("MarketCandle guarantees the end is not before the start")
     }
 
@@ -131,7 +134,7 @@ mod tests {
     fn derives_the_duration_from_the_interval() {
         let candle = candle();
 
-        assert_eq!(candle.duration_millis(), TimestampMillis::new(1_000));
+        assert_eq!(candle.duration_millis(), DurationMillis::new(1_000));
         assert_eq!(
             candle
                 .end_time_millis_exc()
@@ -151,7 +154,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(candle.duration_millis(), TimestampMillis::new(0));
+        assert_eq!(candle.duration_millis(), DurationMillis::new(0));
     }
 
     #[test]

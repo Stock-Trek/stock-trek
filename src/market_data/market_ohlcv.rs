@@ -9,6 +9,11 @@ use serde::{Deserialize, Serialize};
 /// `volume` is denominated in the base asset, while `quote_volume` is
 /// denominated in the quote asset. Values are validated when the candle data
 /// is created or deserialized.
+///
+/// Prices and volumes may be zero so an empty candle, such as one covering a
+/// period with no trades, can be represented. This intentionally differs from
+/// [`MarketQuote`](crate::markets::MarketQuote), which describes an executable
+/// quote and therefore requires strictly positive values.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(try_from = "MarketOhlcvData")]
 pub struct MarketOhlcv {
@@ -26,7 +31,8 @@ impl MarketOhlcv {
     ///
     /// Returns an error for non-finite or negative values, negative volumes,
     /// or prices that are inconsistent with the high and low. The VWAP must
-    /// also be between the low and high.
+    /// also be between the low and high. Zero values are accepted for empty
+    /// candles with no trades.
     pub fn new(
         open: f64,
         high: f64,
@@ -173,6 +179,19 @@ impl TryFrom<MarketOhlcvData> for MarketOhlcv {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn accepts_zero_values_for_an_empty_candle() {
+        let ohlcv = MarketOhlcv::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0).unwrap();
+
+        assert_eq!(ohlcv.open(), 0.0);
+        assert_eq!(ohlcv.high(), 0.0);
+        assert_eq!(ohlcv.low(), 0.0);
+        assert_eq!(ohlcv.close(), 0.0);
+        assert_eq!(ohlcv.volume(), 0.0);
+        assert_eq!(ohlcv.quote_volume(), 0.0);
+        assert_eq!(ohlcv.vwap(), 0.0);
+    }
 
     #[test]
     fn accepts_consistent_ohlcv_values() {

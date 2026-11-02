@@ -106,7 +106,7 @@ pub mod markets {
         market_tick::MarketTick,
         market_ticks::MarketTicks,
         rolling_window::RollingWindow,
-        timestamp::TimestampMillis,
+        timestamp::{DurationMillis, TimestampMillis},
     };
 }
 

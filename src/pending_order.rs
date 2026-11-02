@@ -1,6 +1,7 @@
 use crate::{error::result::StockTrekResult, validation::Validation};
 use stock_trek_types::cex::{
     activation::Activation, asset_id::AssetId, order_request::OrderRequest, quantity::Quantity,
+    side::Side,
 };
 
 /// An order with the quantities that have already been filled.
@@ -59,11 +60,12 @@ impl PendingOrder {
         match order_request {
             OrderRequest::Limit {
                 activation,
+                side,
                 limit_price,
                 quantity,
                 ..
             } => {
-                Validation::positive(function, "limit price", *limit_price)?;
+                let limit_price = Validation::positive(function, "limit price", *limit_price)?;
                 match quantity {
                     Quantity::OfBase(value) => {
                         Validation::positive(function, "base quantity", *value)?;
@@ -72,6 +74,7 @@ impl PendingOrder {
                         Validation::positive(function, "quote quantity", *value)?;
                     }
                 }
+                Self::validate_reservation_amount(function, *side, limit_price, quantity)?;
                 Self::validate_activation(function, activation)?;
             }
             OrderRequest::MarketBuy {
@@ -94,6 +97,30 @@ impl PendingOrder {
         Ok(())
     }
 
+    fn validate_reservation_amount(
+        function: &'static str,
+        side: Side,
+        limit_price: f64,
+        quantity: &Quantity<f64>,
+    ) -> StockTrekResult<()> {
+        let (field, reserved) = match (side, quantity) {
+            (Side::Sell, Quantity::OfBase(base_quantity)) => {
+                ("reserved base quantity", *base_quantity)
+            }
+            (Side::Sell, Quantity::OfQuote(quote_quantity)) => {
+                ("reserved base quantity", *quote_quantity / limit_price)
+            }
+            (Side::Buy, Quantity::OfBase(base_quantity)) => {
+                ("reserved quote quantity", *base_quantity * limit_price)
+            }
+            (Side::Buy, Quantity::OfQuote(quote_quantity)) => {
+                ("reserved quote quantity", *quote_quantity)
+            }
+        };
+        Validation::finite(function, field, reserved)?;
+        Ok(())
+    }
+
     fn validate_activation(
         function: &'static str,
         activation: &Activation<f64>,
@@ -106,7 +133,7 @@ impl PendingOrder {
             | Activation::Trailing {
                 activation_price, ..
             } => {
-                Validation::finite(function, "activation price", *activation_price)?;
+                Validation::positive(function, "activation price", *activation_price)?;
             }
         }
         Ok(())
@@ -207,8 +234,8 @@ mod tests {
     }
 
     #[test]
-    fn rejects_non_finite_activation_prices() {
-        for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+    fn rejects_non_positive_activation_prices() {
+        for value in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
             let price_triggered = OrderRequest::Limit {
                 base: AssetId::Bitcoin,
                 quote: AssetId::TetherUSD,
@@ -243,5 +270,52 @@ mod tests {
             };
             assert!(PendingOrder::new(trailing, 0.0, 0.0).is_err());
         }
+    }
+
+    #[test]
+    fn rejects_limit_orders_with_an_infinite_reservation_amount() {
+        let overflowing_quote = OrderRequest::Limit {
+            base: AssetId::Bitcoin,
+            quote: AssetId::TetherUSD,
+            side: Side::Buy,
+            activation: Activation::Immediate,
+            limit_price: 2.0,
+            time_in_force: TimeInForce::GoodTillCancelled,
+            quantity: Quantity::OfBase(f64::MAX),
+            tag: Tag::new("tag"),
+        };
+        assert!(PendingOrder::new(overflowing_quote, 0.0, 0.0).is_err());
+
+        let overflowing_base = OrderRequest::Limit {
+            base: AssetId::Bitcoin,
+            quote: AssetId::TetherUSD,
+            side: Side::Sell,
+            activation: Activation::Immediate,
+            limit_price: f64::MIN_POSITIVE,
+            time_in_force: TimeInForce::GoodTillCancelled,
+            quantity: Quantity::OfQuote(f64::MAX),
+            tag: Tag::new("tag"),
+        };
+        assert!(PendingOrder::new(overflowing_base, 0.0, 0.0).is_err());
+    }
+
+    #[test]
+    fn accepts_limit_orders_with_finite_reservation_amounts() {
+        let order = PendingOrder::new(
+            OrderRequest::Limit {
+                base: AssetId::Bitcoin,
+                quote: AssetId::TetherUSD,
+                side: Side::Buy,
+                activation: Activation::Immediate,
+                limit_price: 2.0,
+                time_in_force: TimeInForce::GoodTillCancelled,
+                quantity: Quantity::OfBase(f64::MAX / 4.0),
+                tag: Tag::new("tag"),
+            },
+            0.0,
+            0.0,
+        );
+
+        assert!(order.is_ok());
     }
 }
