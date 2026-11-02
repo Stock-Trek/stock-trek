@@ -26,7 +26,11 @@ pub enum NetworkId {
 
 impl From<&str> for NetworkId {
     fn from(value: &str) -> Self {
-        NetworkId::Other(value.to_string())
+        match value {
+            "mainnet" => NetworkId::Mainnet,
+            "testnet" => NetworkId::Testnet,
+            name => NetworkId::Other(name.to_string()),
+        }
     }
 }
 
@@ -96,11 +100,6 @@ impl ChainId {
         self.0
     }
 
-    /// Returns the numeric chain identifier.
-    pub fn get(&self) -> u64 {
-        self.value()
-    }
-
     /// Consumes the chain identifier and returns its numeric value.
     pub fn into_inner(self) -> u64 {
         self.0
@@ -131,16 +130,6 @@ impl Network {
     pub fn chain_id(&self) -> Option<ChainId> {
         self.chain_id
     }
-
-    /// Returns the network identifier.
-    pub fn id(&self) -> &NetworkId {
-        self.network_id()
-    }
-
-    /// Returns the network's numeric chain identifier, if it has one.
-    pub fn chain(&self) -> Option<ChainId> {
-        self.chain_id()
-    }
 }
 
 #[cfg(test)]
@@ -167,6 +156,7 @@ mod tests {
                 network_id.as_str().parse::<NetworkId>().unwrap(),
                 network_id
             );
+            assert_eq!(NetworkId::from(network_id.as_str()), network_id);
         }
     }
 }

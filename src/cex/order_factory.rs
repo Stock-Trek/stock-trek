@@ -5,7 +5,7 @@ use stock_trek_types::cex::{
 };
 
 /// Factory for constructing CEX order requests.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct OrderFactory;
 
 impl OrderFactory {

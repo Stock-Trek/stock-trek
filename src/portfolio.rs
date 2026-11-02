@@ -7,7 +7,7 @@ use stock_trek_types::cex::{
 };
 
 /// A snapshot of asset balances and pending orders across CEX accounts.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Portfolio {
     portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>,
 }

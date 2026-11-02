@@ -8,7 +8,7 @@ use crate::{
 use stock_trek_types::cex::{order_request::OrderRequest, tag::Tag};
 
 /// Factory for constructing actions.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ActionFactory;
 
 impl ActionFactory {

@@ -35,9 +35,4 @@ impl AssetOnChain {
     pub fn identifier(&self) -> &AssetKind {
         &self.identifier
     }
-
-    /// Returns the kind of asset this is.
-    pub fn asset_kind(&self) -> &AssetKind {
-        &self.identifier
-    }
 }

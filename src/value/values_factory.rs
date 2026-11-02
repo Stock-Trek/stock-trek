@@ -9,16 +9,16 @@ use crate::{
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId, tag::Tag};
 
 /// Factory for values derived from the portfolio.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PortfolioValuesFactory;
 /// Factory for calculated values.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CalculationValuesFactory;
 /// Factory for literal values.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct LiteralValuesFactory;
 /// Factory for values read from signals.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SignalValuesFactory;
 
 impl PortfolioValuesFactory {
