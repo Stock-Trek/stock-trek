@@ -1,4 +1,4 @@
-use crate::market_data::market_quote::MarketQuote;
+use crate::market_data::market::market_quote::MarketQuote;
 use serde::{Deserialize, Serialize};
 
 /// The current bids and asks for a market.

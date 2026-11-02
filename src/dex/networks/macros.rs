@@ -9,7 +9,7 @@ macro_rules! define_network_name {
         }
 
         impl TryFrom<NetworkName> for NetworkId {
-            type Error = crate::error::result::StockTrekError;
+            type Error = crate::error::stock_trek_error::StockTrekError;
 
             fn try_from(value: NetworkName) -> Result<Self, Self::Error> {
                 match value {
@@ -30,7 +30,7 @@ macro_rules! define_evm_network {
     ) => {
         pub mod $module {
             use crate::dex::network::NetworkId;
-            use crate::error::result::StockTrekResult;
+            use crate::error::stock_trek_error::StockTrekResult;
             use serde::{Deserialize, Serialize};
             use strum::Display;
 
@@ -69,7 +69,7 @@ macro_rules! define_network {
     ) => {
         pub mod $module {
             use crate::dex::network::{Network, NetworkId};
-            use crate::error::result::StockTrekResult;
+            use crate::error::stock_trek_error::StockTrekResult;
             use serde::{Deserialize, Serialize};
             use strum::Display;
 

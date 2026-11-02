@@ -1,4 +1,6 @@
-use crate::{error::result::StockTrekResult, pending_order::PendingOrder, validation::Validation};
+use crate::{
+    error::stock_trek_error::StockTrekResult, pending_order::PendingOrder, validation::Validation,
+};
 use std::collections::{BTreeMap, HashMap};
 use stock_trek_types::cex::{asset_id::AssetId, tag::Tag};
 

@@ -3,7 +3,7 @@ use crate::{
         action::Action,
         recoverable_action::{RecoverableAction, RecoveryPolicy},
     },
-    value::value::{AccountIdValue, AssetIdValue, CexIdValue, NumberValue},
+    value::number_value::{AccountIdValue, AssetIdValue, CexIdValue, NumberValue},
 };
 use stock_trek_types::cex::{order_request::OrderRequest, tag::Tag};
 

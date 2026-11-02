@@ -1,5 +1,5 @@
 use super::operator_error::domain_check;
-use crate::error::result::StockTrekResult;
+use crate::error::stock_trek_error::StockTrekResult;
 use crate::validation::Validation;
 use serde::{Deserialize, Serialize};
 use strum::{Display, IntoStaticStr};

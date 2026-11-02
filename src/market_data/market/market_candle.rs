@@ -1,6 +1,6 @@
 use crate::{
-    error::result::{StockTrekError, StockTrekResult},
-    market_data::{market_ohlcv::MarketOhlcv, timestamp::TimestampMillis},
+    error::stock_trek_error::{StockTrekError, StockTrekResult},
+    market_data::{market::market_ohlcv::MarketOhlcv, timestamp::TimestampMillis},
     validation::Validation,
 };
 use serde::{Deserialize, Serialize};

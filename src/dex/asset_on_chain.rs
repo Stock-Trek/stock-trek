@@ -1,7 +1,7 @@
 //! An asset together with the blockchain and network it is deployed on.
 
 use crate::dex::{asset_kind::AssetKind, blockchain::Blockchain, network::Network};
-use crate::error::{dex::DexError, result::StockTrekResult};
+use crate::error::{dex::DexError, stock_trek_error::StockTrekResult};
 use serde::{Deserialize, Serialize};
 
 /// An asset deployed on a specific blockchain network.

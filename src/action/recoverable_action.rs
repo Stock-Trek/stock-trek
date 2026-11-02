@@ -1,6 +1,7 @@
 use crate::{
     action::action::Action, cex::capability::HasRequiredCapabilities,
-    error::result::StockTrekResult, resolvable::Resolvable, resolved_context::ResolvedContext,
+    error::stock_trek_error::StockTrekResult, resolvable::Resolvable,
+    resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fmt::Debug};

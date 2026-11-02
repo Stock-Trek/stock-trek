@@ -8,7 +8,7 @@ use crate::{
         blockchain::{Blockchain, BlockchainId, FamilyId},
         network::{ChainId, Network, NetworkId},
     },
-    error::result::{StockTrekError, StockTrekResult},
+    error::stock_trek_error::{StockTrekError, StockTrekResult},
 };
 
 impl Blockchain {

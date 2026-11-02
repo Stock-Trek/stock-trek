@@ -45,12 +45,12 @@ macro_rules! window_label_funcs {
         }
 
         impl ::std::convert::TryFrom<&str> for $name {
-            type Error = $crate::error::result::StockTrekError;
+            type Error = $crate::error::stock_trek_error::StockTrekError;
 
             fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
                 match value {
                     $($label => Ok(Self::$variant),)+
-                    _ => Err($crate::error::result::StockTrekError::Value(
+                    _ => Err($crate::error::stock_trek_error::StockTrekError::Value(
                         $crate::error::value::ValueError::IncorrectType {
                             expected: stringify!($name).into(),
                             found: value.into(),
@@ -61,7 +61,7 @@ macro_rules! window_label_funcs {
         }
 
         impl ::std::str::FromStr for $name {
-            type Err = $crate::error::result::StockTrekError;
+            type Err = $crate::error::stock_trek_error::StockTrekError;
 
             fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
                 Self::try_from(value)

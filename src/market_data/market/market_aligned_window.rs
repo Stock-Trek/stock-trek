@@ -1,5 +1,6 @@
 use crate::market_data::{
-    aligned_window::AlignedWindow, market_candle::MarketCandle, market_ohlcv::MarketOhlcv,
+    aligned_window::AlignedWindow,
+    market::{market_candle::MarketCandle, market_ohlcv::MarketOhlcv},
 };
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;

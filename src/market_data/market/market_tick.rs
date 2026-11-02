@@ -1,4 +1,4 @@
-use crate::market_data::{market_quote::MarketQuote, timestamp::TimestampMillis};
+use crate::market_data::{market::market_quote::MarketQuote, timestamp::TimestampMillis};
 use serde::{Deserialize, Serialize};
 
 /// A single market tick with bid, ask, and last quotes.

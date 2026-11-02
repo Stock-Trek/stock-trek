@@ -1,4 +1,4 @@
-use crate::market_data::{
+use crate::market_data::market::{
     market_quote::{MarketQuote, TimedPriceQuantity},
     market_tick::MarketTick,
 };

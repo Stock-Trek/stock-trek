@@ -85,8 +85,8 @@ pub mod errors {
     pub use crate::error::{
         dex::DexError,
         domain::DomainError,
-        result::{StockTrekError, StockTrekResult},
         stats::StatsError,
+        stock_trek_error::{StockTrekError, StockTrekResult},
         value::ValueError,
     };
 }
@@ -95,16 +95,17 @@ pub mod errors {
 pub mod markets {
     pub use crate::market_data::{
         aligned_window::{AlignedTimestampBounds, AlignedWindow},
-        market::Market,
-        market::MarketBuilder,
-        market_aligned_window::MarketAlignedWindow,
-        market_candle::MarketCandle,
-        market_ohlcv::MarketOhlcv,
-        market_order_book::MarketOrderBook,
-        market_quote::{MarketQuote, TimedPriceQuantity},
-        market_rolling_window::MarketRollingWindow,
-        market_tick::MarketTick,
-        market_ticks::MarketTicks,
+        market::{
+            Market, MarketBuilder,
+            market_aligned_window::MarketAlignedWindow,
+            market_candle::MarketCandle,
+            market_ohlcv::MarketOhlcv,
+            market_order_book::MarketOrderBook,
+            market_quote::{MarketQuote, TimedPriceQuantity},
+            market_rolling_window::MarketRollingWindow,
+            market_tick::MarketTick,
+            market_ticks::MarketTicks,
+        },
         rolling_window::RollingWindow,
         timestamp::TimestampMillis,
     };
@@ -115,8 +116,8 @@ pub mod signals {
     pub use crate::{
         signal::{
             key::{SignalKey, SignalKeyType},
+            signal_value::SignalValue,
             signals::Signals,
-            value::SignalValue,
         },
         signal_context::{
             CexMarketDataByBaseContext, CexMarketDataByQuoteContext, SignalContext,
@@ -152,8 +153,8 @@ pub mod types {
 pub mod values {
     pub use crate::value::{
         binary_operator::BinaryOperator,
+        number_value::{AccountIdValue, AssetIdValue, CexIdValue, FlagValue, NumberValue},
         unary_operator::UnaryOperator,
-        value::{AccountIdValue, AssetIdValue, CexIdValue, FlagValue, NumberValue},
         values_factory::{
             CalculationValuesFactory, LiteralValuesFactory, PortfolioValuesFactory,
             SignalValuesFactory,

@@ -1,6 +1,6 @@
 use crate::error::{
     domain::DomainError,
-    result::{StockTrekError, StockTrekResult},
+    stock_trek_error::{StockTrekError, StockTrekResult},
 };
 
 /// Shared finite, positive, and non-negative numeric validation.

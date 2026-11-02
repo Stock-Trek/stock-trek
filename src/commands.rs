@@ -2,7 +2,7 @@ use crate::{
     action::recoverable_action::RecoverableAction,
     cex::capability::{HasRequiredCapabilities, combine_capabilities},
     conditions::Condition,
-    error::result::StockTrekResult,
+    error::stock_trek_error::StockTrekResult,
     resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};

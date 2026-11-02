@@ -1,5 +1,5 @@
 use crate::{
-    error::result::{StockTrekError, StockTrekResult},
+    error::stock_trek_error::{StockTrekError, StockTrekResult},
     validation::Validation,
 };
 use serde::{Deserialize, Serialize};

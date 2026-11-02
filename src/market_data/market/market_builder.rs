@@ -1,11 +1,16 @@
 use super::Market;
 use crate::{
-    error::result::{StockTrekError, StockTrekResult},
+    error::stock_trek_error::{StockTrekError, StockTrekResult},
     market_data::{
-        aligned_window::AlignedWindow, market_aligned_window::MarketAlignedWindow,
-        market_candle::MarketCandle, market_order_book::MarketOrderBook, market_quote::MarketQuote,
-        market_rolling_window::MarketRollingWindow, market_tick::MarketTick,
-        market_ticks::MarketTicks, rolling_window::RollingWindow, timestamp::TimestampMillis,
+        aligned_window::AlignedWindow,
+        market::{
+            market_aligned_window::MarketAlignedWindow, market_candle::MarketCandle,
+            market_order_book::MarketOrderBook, market_quote::MarketQuote,
+            market_rolling_window::MarketRollingWindow, market_tick::MarketTick,
+            market_ticks::MarketTicks,
+        },
+        rolling_window::RollingWindow,
+        timestamp::TimestampMillis,
     },
 };
 use std::collections::BTreeMap;

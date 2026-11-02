@@ -1,9 +1,9 @@
 use crate::{
     error::{
-        result::{StockTrekError, StockTrekResult},
+        stock_trek_error::{StockTrekError, StockTrekResult},
         value::ValueError,
     },
-    signal::{key::SignalKey, key::SignalKeyType, value::SignalValue},
+    signal::{key::SignalKey, key::SignalKeyType, signal_value::SignalValue},
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, convert::TryFrom};

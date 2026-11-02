@@ -47,7 +47,6 @@ impl Visitor<'_> for OrderingVisitor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::serde_ordering::OrderingSerde;
     use serde::{Deserialize, Serialize};
 
     #[derive(Debug, PartialEq, Serialize, Deserialize)]

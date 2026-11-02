@@ -1,6 +1,6 @@
 use crate::{
     error::{
-        result::{StockTrekError, StockTrekResult},
+        stock_trek_error::{StockTrekError, StockTrekResult},
         value::ValueError,
     },
     validation::Validation,

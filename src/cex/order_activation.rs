@@ -1,6 +1,6 @@
 use crate::{
-    error::result::StockTrekResult, resolvable::Resolvable, resolved_context::ResolvedContext,
-    validation::Validation, value::value::NumberValue,
+    error::stock_trek_error::StockTrekResult, resolvable::Resolvable,
+    resolved_context::ResolvedContext, validation::Validation, value::number_value::NumberValue,
 };
 use stock_trek_types::cex::activation::Activation;
 

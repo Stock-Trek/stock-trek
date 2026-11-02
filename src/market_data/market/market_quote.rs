@@ -1,5 +1,6 @@
 use crate::{
-    error::result::StockTrekResult, market_data::timestamp::TimestampMillis, validation::Validation,
+    error::stock_trek_error::StockTrekResult, market_data::timestamp::TimestampMillis,
+    validation::Validation,
 };
 use serde::{Deserialize, Serialize};
 
@@ -99,7 +100,7 @@ struct TimedPriceQuantityData {
 }
 
 impl TryFrom<TimedPriceQuantityData> for TimedPriceQuantity {
-    type Error = crate::error::result::StockTrekError;
+    type Error = crate::error::stock_trek_error::StockTrekError;
 
     fn try_from(data: TimedPriceQuantityData) -> Result<Self, Self::Error> {
         Self::new(data.timestamp_millis, data.price, data.quantity)
@@ -113,7 +114,7 @@ struct MarketQuoteData {
 }
 
 impl TryFrom<MarketQuoteData> for MarketQuote {
-    type Error = crate::error::result::StockTrekError;
+    type Error = crate::error::stock_trek_error::StockTrekError;
 
     fn try_from(data: MarketQuoteData) -> Result<Self, Self::Error> {
         Self::new(data.price, data.quantity)

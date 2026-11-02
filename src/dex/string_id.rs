@@ -23,9 +23,9 @@ macro_rules! string_id_funcs {
                 self.0.into_owned()
             }
 
-            fn validate(value: &str) -> crate::error::result::StockTrekResult<()> {
+            fn validate(value: &str) -> crate::error::stock_trek_error::StockTrekResult<()> {
                 if value.trim().is_empty() {
-                    return Err(crate::error::result::StockTrekError::Dex(
+                    return Err(crate::error::stock_trek_error::StockTrekError::Dex(
                         crate::error::dex::DexError::InvalidIdentifier {
                             identifier_type: stringify!($name),
                             value: value.into(),
@@ -42,13 +42,15 @@ macro_rules! string_id_funcs {
             /// # Errors
             ///
             /// Returns an error if the value is empty or whitespace-only.
-            pub fn new(id: impl Into<String>) -> crate::error::result::StockTrekResult<Self> {
+            pub fn new(
+                id: impl Into<String>,
+            ) -> crate::error::stock_trek_error::StockTrekResult<Self> {
                 Self::try_from(id.into())
             }
         }
 
         impl TryFrom<&str> for $name {
-            type Error = crate::error::result::StockTrekError;
+            type Error = crate::error::stock_trek_error::StockTrekError;
 
             fn try_from(value: &str) -> Result<Self, Self::Error> {
                 Self::validate(value)?;
@@ -57,7 +59,7 @@ macro_rules! string_id_funcs {
         }
 
         impl TryFrom<String> for $name {
-            type Error = crate::error::result::StockTrekError;
+            type Error = crate::error::stock_trek_error::StockTrekError;
 
             fn try_from(value: String) -> Result<Self, Self::Error> {
                 Self::validate(&value)?;
@@ -66,7 +68,7 @@ macro_rules! string_id_funcs {
         }
 
         impl std::str::FromStr for $name {
-            type Err = crate::error::result::StockTrekError;
+            type Err = crate::error::stock_trek_error::StockTrekError;
 
             fn from_str(value: &str) -> Result<Self, Self::Err> {
                 Self::try_from(value)

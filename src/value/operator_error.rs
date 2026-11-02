@@ -1,4 +1,4 @@
-use crate::error::{result::StockTrekError, stats::StatsError};
+use crate::error::{stats::StatsError, stock_trek_error::StockTrekError};
 
 /// Error helpers shared by the binary and unary operators.
 pub(super) struct OperatorError;

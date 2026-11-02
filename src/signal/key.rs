@@ -1,7 +1,7 @@
 use crate::{
-    error::result::{StockTrekError, StockTrekResult},
+    error::stock_trek_error::{StockTrekError, StockTrekResult},
     resolved_context::ResolvedContext,
-    signal::value::SignalValue,
+    signal::signal_value::SignalValue,
 };
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, marker::PhantomData};

@@ -1,5 +1,5 @@
 use crate::{
-    error::result::StockTrekResult,
+    error::stock_trek_error::StockTrekResult,
     resolved_context::ResolvedContext,
     signal::key::SignalKey,
     validation::Validation,

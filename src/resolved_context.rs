@@ -1,7 +1,7 @@
 use crate::{
     Portfolio,
     action::{recoverable_action::RecoveryPolicy, resolved_action::ResolvedAction},
-    error::result::StockTrekResult,
+    error::stock_trek_error::StockTrekResult,
     signal::signals::Signals,
 };
 

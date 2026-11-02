@@ -1,4 +1,4 @@
-use crate::{error::result::StockTrekResult, validation::Validation};
+use crate::{error::stock_trek_error::StockTrekResult, validation::Validation};
 use stock_trek_types::cex::{
     activation::Activation, asset_id::AssetId, order_request::OrderRequest, quantity::Quantity,
 };

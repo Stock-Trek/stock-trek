@@ -1,7 +1,7 @@
 //! Networks within a blockchain.
 
 use crate::dex::string_id::string_id_funcs;
-use crate::error::{result::StockTrekError, value::ValueError};
+use crate::error::{stock_trek_error::StockTrekError, value::ValueError};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 

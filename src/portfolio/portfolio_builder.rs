@@ -1,6 +1,6 @@
 use super::{CexAccountPortfolio, Portfolio};
 use crate::{
-    error::result::{StockTrekError, StockTrekResult},
+    error::stock_trek_error::{StockTrekError, StockTrekResult},
     pending_order::PendingOrder,
     validation::Validation,
 };

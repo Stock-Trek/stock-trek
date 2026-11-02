@@ -1,5 +1,5 @@
 use crate::{
-    commands::Command, error::result::StockTrekResult, preferences::Preferences,
+    commands::Command, error::stock_trek_error::StockTrekResult, preferences::Preferences,
     signal::signals::Signals, signal_context::SignalContext, strategy_context::StrategyContext,
 };
 
