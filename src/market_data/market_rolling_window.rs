@@ -66,6 +66,7 @@ mod tests {
             MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4),
             3,
         )
+        .unwrap()
     }
 
     #[test]
