@@ -127,12 +127,17 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use stock_trek::markets::{Market, MarketBuilder};
+    use stock_trek::markets::{Market, MarketBuilder, TimestampMillis};
 
     fn market(asks: &[f64]) -> Market {
         let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.000_1);
         for (index, ask) in asks.iter().enumerate() {
-            builder.tick(index as u64, (ask - 1.0, 1.0), (*ask, 1.0), (*ask, 1.0));
+            builder.tick(
+                TimestampMillis::from(index as u64),
+                (ask - 1.0, 1.0),
+                (*ask, 1.0),
+                (*ask, 1.0),
+            );
         }
         builder.build()
     }
