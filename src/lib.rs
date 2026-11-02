@@ -16,7 +16,8 @@ mod conditions;
 /// Decentralised exchange (DEX) types.
 #[cfg(feature = "dex")]
 pub mod dex;
-mod error;
+/// Error types returned by stock-trek operations.
+pub mod error;
 mod market_data;
 mod pending_order;
 mod portfolio;
@@ -57,16 +58,6 @@ pub mod actions {
 /// Traits and helpers for CEX capabilities.
 pub mod capabilities {
     pub use crate::cex::capability::{HasRequiredCapabilities, combine_capabilities};
-}
-
-/// Error types returned by stock-trek operations.
-pub mod errors {
-    pub use crate::error::{
-        dex::DexError,
-        result::{StockTrekError, StockTrekResult},
-        stats::StatsError,
-        value::ValueError,
-    };
 }
 
 /// Market data types and time window helpers.
@@ -144,7 +135,12 @@ pub mod prelude {
     pub use super::{
         Algorithm, Command, Preferences, RoundingStrategy, StrategyContext,
         actions::{ActionErrorCause, ActionErrorResponse, RecoveryPolicy},
-        errors::{DexError, StatsError, StockTrekError, StockTrekResult, ValueError},
+        error::{
+            dex::DexError,
+            result::{StockTrekError, StockTrekResult},
+            stats::StatsError,
+            value::ValueError,
+        },
         pending_order::PendingOrder,
         portfolio::{CexAccountPortfolio, Portfolio},
         register_algorithm,

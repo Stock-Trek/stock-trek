@@ -1,5 +1,5 @@
 use crate::{
-    errors::{StockTrekError, ValueError},
+    error::{result::StockTrekError, value::ValueError},
     market_data::millis::*,
 };
 use serde::{Deserialize, Deserializer, Serialize, Serializer};

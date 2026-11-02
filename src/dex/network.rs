@@ -1,6 +1,9 @@
 //! Networks within a blockchain.
 
-use crate::errors::{StockTrekError, StockTrekResult, ValueError};
+use crate::error::{
+    result::{StockTrekError, StockTrekResult},
+    value::ValueError,
+};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::ops::Deref;

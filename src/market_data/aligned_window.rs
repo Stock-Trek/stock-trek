@@ -1,5 +1,9 @@
 use crate::{
-    errors::{StatsError, StockTrekError, StockTrekResult, ValueError},
+    error::{
+        result::{StockTrekError, StockTrekResult},
+        stats::StatsError,
+        value::ValueError,
+    },
     market_data::{millis::*, timestamp::TimestampMillis},
 };
 use chrono::{DateTime, Datelike, Months, TimeZone, Utc};
