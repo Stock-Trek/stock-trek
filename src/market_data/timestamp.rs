@@ -23,6 +23,15 @@ impl TimestampMillis {
     pub const fn into_inner(self) -> u64 {
         self.0
     }
+
+    /// Returns the difference between two timestamps, or `None` if `rhs` is
+    /// later than `self`.
+    pub const fn checked_sub(self, rhs: Self) -> Option<Self> {
+        match self.0.checked_sub(rhs.0) {
+            Some(millis) => Some(Self::new(millis)),
+            None => None,
+        }
+    }
 }
 
 impl From<u64> for TimestampMillis {
@@ -140,5 +149,7 @@ mod tests {
             lower + TimestampMillis::new(500),
             TimestampMillis::new(1_500)
         );
+        assert_eq!(upper.checked_sub(lower), Some(TimestampMillis::new(1_000)));
+        assert_eq!(lower.checked_sub(upper), None);
     }
 }
