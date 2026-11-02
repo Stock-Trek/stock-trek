@@ -80,9 +80,7 @@ pub mod markets {
         market_ohlcv::MarketOhlcv,
         market_order_book::MarketOrderBook,
         market_quote::{MarketQuote, PriceQuantity, TimedPriceQuantity},
-        market_rolling_window::{
-            MarketRollingWindow, Ohlcv, OhlcvData, OhlcvStruct, OhlcvTuple, OhlcvValues,
-        },
+        market_rolling_window::MarketRollingWindow,
         market_tick::MarketTick,
         market_ticks::MarketTicks,
         rolling_window::RollingWindow,
