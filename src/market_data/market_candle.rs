@@ -63,9 +63,13 @@ impl MarketCandle {
     }
 
     /// Returns the candle duration in milliseconds.
-    pub fn duration_millis(&self) -> TimestampMillis {
+    ///
+    /// The result is a duration, not a timestamp, so it is returned as `u64`
+    /// rather than [`TimestampMillis`].
+    pub fn duration_millis(&self) -> u64 {
         self.end_time_millis_exc
-            .checked_sub(self.start_time_millis_inc)
+            .as_millis()
+            .checked_sub(self.start_time_millis_inc.as_millis())
             .expect("MarketCandle guarantees the end is not before the start")
     }
 
@@ -131,7 +135,7 @@ mod tests {
     fn derives_the_duration_from_the_interval() {
         let candle = candle();
 
-        assert_eq!(candle.duration_millis(), TimestampMillis::new(1_000));
+        assert_eq!(candle.duration_millis(), 1_000);
         assert_eq!(
             candle
                 .end_time_millis_exc()
@@ -151,7 +155,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(candle.duration_millis(), TimestampMillis::new(0));
+        assert_eq!(candle.duration_millis(), 0);
     }
 
     #[test]

@@ -283,12 +283,34 @@ impl AlignedWindow {
     }
 
     /// Returns an upper bound on the window length in milliseconds.
+    ///
+    /// Fixed-length windows return their exact length. Calendar windows
+    /// return an upper bound based on the longest possible month or year.
     pub fn millis_upper_bound(&self) -> Option<u64> {
-        if let Some(millis) = self.millis_exact() {
-            return Some(millis);
-        }
-
         match self {
+            AlignedWindow::Seconds1
+            | AlignedWindow::Seconds5
+            | AlignedWindow::Seconds10
+            | AlignedWindow::Seconds15
+            | AlignedWindow::Seconds30
+            | AlignedWindow::Minutes1
+            | AlignedWindow::Minutes2
+            | AlignedWindow::Minutes3
+            | AlignedWindow::Minutes5
+            | AlignedWindow::Minutes10
+            | AlignedWindow::Minutes15
+            | AlignedWindow::Minutes30
+            | AlignedWindow::Hours1
+            | AlignedWindow::Hours2
+            | AlignedWindow::Hours3
+            | AlignedWindow::Hours4
+            | AlignedWindow::Hours6
+            | AlignedWindow::Hours8
+            | AlignedWindow::Hours12
+            | AlignedWindow::Days1
+            | AlignedWindow::Weeks1
+            | AlignedWindow::Weeks2
+            | AlignedWindow::Weeks4 => self.millis_exact(),
             AlignedWindow::Months1 => Some(MILLIS_PER_MONTH_UPPER_BOUND),
             AlignedWindow::Months2 => Some(2 * MILLIS_PER_MONTH_UPPER_BOUND),
             AlignedWindow::Months3 => Some(3 * MILLIS_PER_MONTH_UPPER_BOUND),
@@ -296,9 +318,6 @@ impl AlignedWindow {
             AlignedWindow::Months6 => Some(6 * MILLIS_PER_MONTH_UPPER_BOUND),
             AlignedWindow::Years1 => Some(MILLIS_PER_YEAR_UPPER_BOUND),
             AlignedWindow::Years2 => Some(2 * MILLIS_PER_YEAR_UPPER_BOUND),
-            _ => {
-                unreachable!("only calendar based windows lack an exact millisecond length")
-            }
         }
     }
 }
