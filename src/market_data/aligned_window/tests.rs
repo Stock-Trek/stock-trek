@@ -29,7 +29,7 @@ fn timestamps(
     lower: impl Into<TimestampMillis>,
     upper: impl Into<TimestampMillis>,
 ) -> AlignedTimestampBounds {
-    AlignedTimestampBounds::new(lower.into(), upper.into())
+    AlignedTimestampBounds::new(lower.into(), upper.into()).unwrap()
 }
 
 fn is_calendar_window(window: AlignedWindow) -> bool {
@@ -57,7 +57,9 @@ fn bounds_for_returns_containing_bounds() {
 
     for window in AlignedWindow::iter() {
         for timestamp in timestamps {
-            let AlignedTimestampBounds { lower, upper } = bounds_for(window, timestamp);
+            let bounds = bounds_for(window, timestamp);
+            let lower = bounds.lower();
+            let upper = bounds.upper();
 
             assert!(lower <= timestamp);
             assert!(timestamp < upper);
@@ -180,11 +182,11 @@ fn bounds_for_month_windows_handle_leap_years() {
     let days_millis = u64::from(24 * MILLIS_PER_HOUR);
 
     assert_eq!(
-        (february_2024.upper - february_2024.lower).as_millis() / days_millis,
+        (february_2024.upper() - february_2024.lower()).as_millis() / days_millis,
         29
     );
     assert_eq!(
-        (february_2023.upper - february_2023.lower).as_millis() / days_millis,
+        (february_2023.upper() - february_2023.lower()).as_millis() / days_millis,
         28
     );
 }
@@ -253,3 +255,47 @@ window_tests!(
     AlignedWindow::Months1 => "1mo",
     AlignedWindow::Years2 => "2y",
 );
+
+#[test]
+fn timestamp_bounds_allow_equal_and_ordered_bounds() {
+    let equal =
+        AlignedTimestampBounds::new(TimestampMillis::new(1_000), TimestampMillis::new(1_000))
+            .unwrap();
+    let ordered = timestamps(1_000, 2_000);
+
+    assert_eq!(equal.lower(), equal.upper());
+    assert_eq!(ordered.lower(), TimestampMillis::new(1_000));
+    assert_eq!(ordered.upper(), TimestampMillis::new(2_000));
+}
+
+#[test]
+fn timestamp_bounds_reject_lower_above_upper() {
+    let result =
+        AlignedTimestampBounds::new(TimestampMillis::new(2_000), TimestampMillis::new(1_000));
+
+    assert!(matches!(
+        result,
+        Err(StockTrekError::MarketData(
+            MarketDataError::DomainError { .. }
+        ))
+    ));
+}
+
+#[test]
+fn timestamp_bounds_serde_round_trip_preserves_bounds() {
+    let bounds = timestamps(1_000, 2_000);
+    let json = serde_json::to_value(bounds).unwrap();
+    let deserialized: AlignedTimestampBounds = serde_json::from_value(json).unwrap();
+
+    assert_eq!(deserialized, bounds);
+}
+
+#[test]
+fn timestamp_bounds_deserialization_rejects_lower_above_upper() {
+    let json = serde_json::json!({
+        "lower": 2_000,
+        "upper": 1_000,
+    });
+
+    assert!(serde_json::from_value::<AlignedTimestampBounds>(json).is_err());
+}

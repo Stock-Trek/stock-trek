@@ -90,19 +90,57 @@ window_label_funcs!(
 
 /// The bounds of an aligned window, both as [`TimestampMillis`].
 ///
-/// `lower` is inclusive and `upper` is exclusive.
+/// `lower` is inclusive and `upper` is exclusive. The lower bound is validated
+/// against the upper bound when the bounds are created or deserialized.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(try_from = "AlignedTimestampBoundsData")]
 pub struct AlignedTimestampBounds {
-    /// The inclusive lower bound.
-    pub lower: TimestampMillis,
-    /// The exclusive upper bound.
-    pub upper: TimestampMillis,
+    lower: TimestampMillis,
+    upper: TimestampMillis,
 }
 
 impl AlignedTimestampBounds {
     /// Creates bounds from an inclusive lower and exclusive upper timestamp.
-    pub fn new(lower: TimestampMillis, upper: TimestampMillis) -> Self {
-        Self { lower, upper }
+    ///
+    /// Returns an error when `lower` is greater than `upper`.
+    pub fn new(lower: TimestampMillis, upper: TimestampMillis) -> StockTrekResult<Self> {
+        if lower > upper {
+            return Err(Self::error(format!(
+                "lower bound {lower} must not be greater than upper bound {upper}"
+            )));
+        }
+        Ok(Self { lower, upper })
+    }
+
+    /// Returns the inclusive lower bound.
+    pub fn lower(&self) -> TimestampMillis {
+        self.lower
+    }
+
+    /// Returns the exclusive upper bound.
+    pub fn upper(&self) -> TimestampMillis {
+        self.upper
+    }
+
+    fn error(message: String) -> StockTrekError {
+        StockTrekError::MarketData(MarketDataError::DomainError {
+            function: "AlignedTimestampBounds::new",
+            message,
+        })
+    }
+}
+
+#[derive(Deserialize)]
+struct AlignedTimestampBoundsData {
+    lower: TimestampMillis,
+    upper: TimestampMillis,
+}
+
+impl TryFrom<AlignedTimestampBoundsData> for AlignedTimestampBounds {
+    type Error = StockTrekError;
+
+    fn try_from(data: AlignedTimestampBoundsData) -> Result<Self, Self::Error> {
+        Self::new(data.lower, data.upper)
     }
 }
 
@@ -139,10 +177,10 @@ impl AlignedWindow {
                 "upper bound for timestamp {timestamp} could not be represented"
             ))
         })?;
-        Ok(AlignedTimestampBounds::new(
+        AlignedTimestampBounds::new(
             TimestampMillis::new(lower_millis),
             TimestampMillis::new(upper_millis),
-        ))
+        )
     }
 
     fn calendar_bounds(
@@ -189,7 +227,7 @@ impl AlignedWindow {
                 "calendar window upper bound for {start_year}-{start_month:02} could not be represented as a timestamp"
             ))
         })?;
-        Ok(AlignedTimestampBounds { lower, upper })
+        AlignedTimestampBounds::new(lower, upper)
     }
 
     fn bounds_error(message: String) -> StockTrekError {
