@@ -1,5 +1,10 @@
 macro_rules! define_network_name {
     ($($variant:ident => $network_id:expr),+ $(,)?) => {
+        /// Networks defined for this blockchain.
+        ///
+        /// Each variant maps to a [`NetworkId`](crate::dex::network::NetworkId)
+        /// and, where the blockchain supports it, a numeric chain ID.
+        #[allow(missing_docs)]
         #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
         #[serde(rename_all = "snake_case")]
         #[strum(serialize_all = "snake_case")]
@@ -28,6 +33,7 @@ macro_rules! define_evm_network {
             $($variant:ident => ($chain_id:literal, $network_id:expr)),+ $(,)?
         }
     ) => {
+        #[doc = concat!("Well-known networks and assets for ", $blockchain, ".")]
         pub mod $module {
             use crate::dex::network::NetworkId;
             use crate::error::result::StockTrekResult;
@@ -46,6 +52,10 @@ macro_rules! define_evm_network {
                 }
             }
 
+            /// Builds an asset on one of this blockchain's networks.
+            ///
+            /// Returns an error if a contract address does not match the
+            /// blockchain's address format.
             pub fn asset_on_chain(
                 network: NetworkName,
                 asset_kind: crate::dex::asset_kind::AssetKind,
@@ -67,6 +77,7 @@ macro_rules! define_network {
             $($variant:ident => $network_id:expr),+ $(,)?
         }
     ) => {
+        #[doc = concat!("Well-known networks and assets for ", $blockchain, ".")]
         pub mod $module {
             use crate::dex::network::{Network, NetworkId};
             use crate::error::result::StockTrekResult;
@@ -77,6 +88,10 @@ macro_rules! define_network {
                 $($variant => $network_id,)+
             }
 
+            /// Builds an asset on one of this blockchain's networks.
+            ///
+            /// Returns an error if a contract address does not match the
+            /// blockchain's address format.
             pub fn asset_on_chain(
                 network: NetworkName,
                 asset_kind: crate::dex::asset_kind::AssetKind,

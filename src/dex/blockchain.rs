@@ -44,7 +44,6 @@ pub struct FamilyId(std::borrow::Cow<'static, str>);
 
 string_id_funcs!(FamilyId);
 
-#[allow(missing_docs)]
 impl Blockchain {
     /// Creates a blockchain definition.
     ///
@@ -84,22 +83,29 @@ impl Blockchain {
         })
     }
 
+    /// Returns the blockchain's unique identifier.
     pub fn blockchain_id(&self) -> &BlockchainId {
         &self.blockchain_id
     }
 
+    /// Returns the family the blockchain belongs to, such as `evm`.
     pub fn family_id(&self) -> &FamilyId {
         &self.family_id
     }
 
+    /// Returns the number of decimals used by the blockchain's native asset.
     pub fn native_decimals(&self) -> u8 {
         self.native_decimals
     }
 
+    /// Returns the compiled regular expression used to validate contract
+    /// addresses.
     pub fn address_regex(&self) -> &Regex {
         &self.address_regex
     }
 
+    /// Returns the address format as the regular expression string it was built
+    /// from.
     pub fn address_format(&self) -> &str {
         self.address_regex.as_str()
     }

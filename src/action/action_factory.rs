@@ -11,8 +11,11 @@ use stock_trek_types::cex::{order_request::OrderRequest, tag::Tag};
 #[derive(Debug, Clone, Default)]
 pub struct ActionFactory;
 
-#[allow(missing_docs)]
 impl ActionFactory {
+    /// Places an order in a CEX account.
+    ///
+    /// `recovery_policy` determines what the runtime does if the exchange
+    /// rejects the order or the account lacks sufficient balance.
     pub fn place_order(
         &self,
         cex_id_value: CexIdValue,
@@ -29,9 +32,12 @@ impl ActionFactory {
             recovery_policy,
         )
     }
+    /// Cancels every order across all CEX accounts.
     pub fn cancel_all_orders(&self, recovery_policy: RecoveryPolicy) -> RecoverableAction {
         RecoverableAction::new(Action::CancelAllOrders { tag: None }, recovery_policy)
     }
+
+    /// Cancels the orders carrying `tag` across all CEX accounts.
     pub fn cancel_all_orders_with_tag(
         &self,
         tag: Tag,
@@ -39,6 +45,7 @@ impl ActionFactory {
     ) -> RecoverableAction {
         RecoverableAction::new(Action::CancelAllOrders { tag: Some(tag) }, recovery_policy)
     }
+    /// Cancels every order on a CEX, regardless of account.
     pub fn cancel_all_orders_in_cex(
         &self,
         cex_id_value: CexIdValue,
@@ -52,6 +59,7 @@ impl ActionFactory {
             recovery_policy,
         )
     }
+    /// Cancels the orders carrying `tag` on a CEX, regardless of account.
     pub fn cancel_all_orders_in_cex_with_tag(
         &self,
         cex_id_value: CexIdValue,
@@ -66,6 +74,7 @@ impl ActionFactory {
             recovery_policy,
         )
     }
+    /// Cancels every order in a specific CEX account.
     pub fn cancel_all_orders_in_cex_account(
         &self,
         cex_id_value: CexIdValue,
@@ -81,6 +90,7 @@ impl ActionFactory {
             recovery_policy,
         )
     }
+    /// Cancels the orders carrying `tag` in a specific CEX account.
     pub fn cancel_all_orders_in_cex_account_with_tag(
         &self,
         cex_id_value: CexIdValue,

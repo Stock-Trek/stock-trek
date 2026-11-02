@@ -8,10 +8,14 @@ use stock_trek_types::cex::capability::CexCapability;
 use strum::Display;
 
 /// An action paired with the policy used to recover from errors.
-#[allow(missing_docs)]
+///
+/// Build these through [`ActionFactory`](crate::actions::ActionFactory) so the
+/// action and its recovery policy stay together.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoverableAction {
+    /// The action to execute.
     pub action: Action,
+    /// How the runtime should respond if the action fails.
     pub recovery_policy: RecoveryPolicy,
 }
 
@@ -23,7 +27,11 @@ impl RecoverableAction {
             recovery_policy,
         }
     }
-    /// Resolves and enqueues the action on the resolved context.
+    /// Resolves the action's values and passes it to the context's enqueue
+    /// callback together with the recovery policy.
+    ///
+    /// Resolution can fail before the action reaches the runtime, for example
+    /// when a required signal is missing or an order price is not positive.
     pub fn enqueue(&self, c: &mut ResolvedContext) -> StockTrekResult<()> {
         let resolved_action = self.action.try_resolve(c)?;
         (c.enqueue_action)(&resolved_action, &self.recovery_policy)?;
@@ -38,15 +46,22 @@ impl HasRequiredCapabilities for RecoverableAction {
 }
 
 /// Defines how an action should respond to different error causes.
-#[allow(missing_docs)]
+///
+/// The policy has a default response plus optional overrides for specific
+/// causes. For example, a strategy can retry temporary exchange rejections while
+/// stopping on permanent ones. Build policies with
+/// [`RecoveryPolicy::with_default_response`] and
+/// [`RecoveryPolicy::on_error`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoveryPolicy {
+    /// The response used for causes that have no explicit override.
     pub default_response: ActionErrorResponse,
+    /// Responses that override the default for specific causes.
     pub on_error: BTreeMap<ActionErrorCause, ActionErrorResponse>,
 }
 
 impl RecoveryPolicy {
-    /// Creates a policy using `default_response` for unlisted error causes.
+    /// Returns a new policy that uses `default_response` for unlisted causes.
     pub fn with_default_response(default_response: ActionErrorResponse) -> Self {
         Self {
             default_response,

@@ -9,12 +9,22 @@ use stock_trek_types::cex::{
 };
 
 /// A snapshot of asset balances and pending orders across CEX accounts.
+///
+/// Balances include both available and reserved amounts. Reserved amounts are
+/// derived from unfilled pending orders, so a strategy can ask for either the
+/// total holding or the portion it can still spend. Pending orders are grouped
+/// by their exchange tag, which lets a strategy cancel or count only the orders
+/// it created for a particular purpose.
 #[derive(Debug, Clone, Default)]
 pub struct Portfolio {
     portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
 }
 
 /// Asset balances and pending orders for a single CEX account.
+///
+/// Asset counts are the total balances reported by the exchange. Pending-order
+/// reservations are calculated from the unfilled quantities of orders that are
+/// still open.
 #[derive(Debug, Clone, Default)]
 pub struct CexAccountPortfolio {
     asset_counts: BTreeMap<AssetId, f64>,

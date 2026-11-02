@@ -14,13 +14,18 @@ use strum::Display;
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum AccountIdValue {
     /// A literal account identifier.
-    Literal { literal: AccountId },
+    Literal {
+        /// The concrete account identifier.
+        literal: AccountId,
+    },
     /// An account identifier read from a signal.
-    Signal { signal: SignalKey<AccountId> },
+    Signal {
+        /// The key of the signal holding the account identifier.
+        signal: SignalKey<AccountId>,
+    },
 }
 
 impl AccountIdValue {
@@ -38,13 +43,18 @@ impl AccountIdValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum CexIdValue {
     /// A literal CEX identifier.
-    Literal { literal: CexId },
+    Literal {
+        /// The concrete CEX identifier.
+        literal: CexId,
+    },
     /// A CEX identifier read from a signal.
-    Signal { signal: SignalKey<CexId> },
+    Signal {
+        /// The key of the signal holding the CEX identifier.
+        signal: SignalKey<CexId>,
+    },
 }
 
 impl CexIdValue {
@@ -62,13 +72,18 @@ impl CexIdValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum AssetIdValue {
     /// A literal asset identifier.
-    Literal { literal: AssetId },
+    Literal {
+        /// The concrete asset identifier.
+        literal: AssetId,
+    },
     /// An asset identifier read from a signal.
-    Signal { signal: SignalKey<AssetId> },
+    Signal {
+        /// The key of the signal holding the asset identifier.
+        signal: SignalKey<AssetId>,
+    },
 }
 
 impl AssetIdValue {
@@ -86,13 +101,18 @@ impl AssetIdValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum FlagValue {
     /// A literal boolean flag.
-    Literal { literal: bool },
+    Literal {
+        /// The concrete flag value.
+        literal: bool,
+    },
     /// A boolean flag read from a signal.
-    Signal { signal: SignalKey<bool> },
+    Signal {
+        /// The key of the signal holding the flag.
+        signal: SignalKey<bool>,
+    },
 }
 
 impl FlagValue {
@@ -106,71 +126,117 @@ impl FlagValue {
 }
 
 /// A value that resolves to a number.
+///
+/// Numbers may be literals, signal values, portfolio quantities, or
+/// calculations. Portfolio quantities are evaluated against the portfolio of
+/// the current evaluation, so the same `NumberValue` can produce different
+/// results over time.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum NumberValue {
     /// A literal number.
-    Literal { literal: f64 },
+    Literal {
+        /// The concrete number.
+        literal: f64,
+    },
     /// A number read from a signal.
-    Signal { signal: SignalKey<f64> },
+    Signal {
+        /// The key of the signal holding the number.
+        signal: SignalKey<f64>,
+    },
     /// The total number of pending orders.
     PendingOrders,
     /// The number of pending orders with a specific tag.
-    PendingOrdersWithTag { tag: Tag },
+    PendingOrdersWithTag {
+        /// Only orders carrying this tag are counted.
+        tag: Tag,
+    },
     /// The number of pending orders in a CEX account.
     PendingOrdersInCexAccount {
+        /// The CEX to count orders in.
         cex_id_value: CexIdValue,
+        /// The account to count orders in.
         account_id_value: AccountIdValue,
     },
     /// The number of pending orders with a specific tag in a CEX account.
     PendingOrdersInCexAccountWithTag {
+        /// The CEX to count orders in.
         cex_id_value: CexIdValue,
+        /// The account to count orders in.
         account_id_value: AccountIdValue,
+        /// Only orders carrying this tag are counted.
         tag: Tag,
     },
     /// The total amount of an asset.
-    AssetTotal { asset_id_value: AssetIdValue },
+    AssetTotal {
+        /// The asset whose total balance should be read.
+        asset_id_value: AssetIdValue,
+    },
     /// The total amount of an asset in a CEX account.
     AssetTotalInCexAccount {
+        /// The asset whose total balance should be read.
         asset_id_value: AssetIdValue,
+        /// The CEX containing the account.
         cex_id_value: CexIdValue,
+        /// The account whose balance should be read.
         account_id_value: AccountIdValue,
     },
     /// The available amount of an asset.
-    AssetAvailable { asset_id_value: AssetIdValue },
+    AssetAvailable {
+        /// The asset whose available balance should be read.
+        asset_id_value: AssetIdValue,
+    },
     /// The available amount of an asset in a CEX account.
     AssetAvailableInCexAccount {
+        /// The asset whose available balance should be read.
         asset_id_value: AssetIdValue,
+        /// The CEX containing the account.
         cex_id_value: CexIdValue,
+        /// The account whose balance should be read.
         account_id_value: AccountIdValue,
     },
     /// The reserved amount of an asset.
-    AssetReserved { asset_id_value: AssetIdValue },
+    AssetReserved {
+        /// The asset whose reserved balance should be read.
+        asset_id_value: AssetIdValue,
+    },
     /// The reserved amount of an asset in a CEX account.
     AssetReservedInCexAccount {
+        /// The asset whose reserved balance should be read.
         asset_id_value: AssetIdValue,
+        /// The CEX containing the account.
         cex_id_value: CexIdValue,
+        /// The account whose balance should be read.
         account_id_value: AccountIdValue,
     },
     /// A binary calculation.
     BinaryCalculation {
+        /// The left-hand operand.
         left: Box<NumberValue>,
+        /// The operation to apply.
         operator: BinaryOperator,
+        /// The right-hand operand.
         right: Box<NumberValue>,
     },
     /// A unary calculation.
     UnaryCalculation {
+        /// The operation to apply.
         operator: UnaryOperator,
+        /// The operand.
         number: Box<NumberValue>,
     },
 }
 
 impl NumberValue {
     /// Resolves the number against the resolved context.
+    ///
+    /// Literal and signal values must be finite. Calculations propagate
+    /// numeric errors such as division by zero or a non-finite result. Asset
+    /// totals include both available and reserved amounts; available amounts
+    /// are clamped to zero if pending orders reserve more than the balance.
     pub fn number(&self, c: &ResolvedContext) -> StockTrekResult<f64> {
         match self {
             Self::Literal { literal } => {

@@ -10,28 +10,46 @@ use stock_trek_types::cex::capability::CexCapability;
 use strum::Display;
 
 /// A command produced by a strategy and executed against a resolved context.
+///
+/// Commands form a small expression language for strategies. They can branch on
+/// [`Condition`]s, run commands in sequence, and enqueue actions. Command
+/// construction is separate from execution so the same command can be
+/// evaluated repeatedly as market data and the portfolio change.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum Command {
     /// Executes one of two commands based on a condition.
     If {
+        /// The condition to evaluate.
         condition: Condition,
+        /// The command to execute when the condition is true.
         if_true: Box<Command>,
+        /// The command to execute when the condition is false.
         if_false: Box<Command>,
     },
     /// Executes a list of commands in order.
-    List { commands: Vec<Command> },
+    List {
+        /// The commands to execute.
+        commands: Vec<Command>,
+    },
     /// Does nothing.
     NoOp,
     /// Enqueues a list of actions.
-    Plan { actions: Vec<RecoverableAction> },
+    Plan {
+        /// The actions to enqueue, in order. Each action carries its own
+        /// recovery policy.
+        actions: Vec<RecoverableAction>,
+    },
 }
 
 impl Command {
     /// Executes the command against the resolved context.
+    ///
+    /// Conditions are evaluated against `c`, and every action reached by the
+    /// command is resolved and passed to `c.enqueue_action`. Execution stops at
+    /// the first resolution or enqueue error.
     pub fn execute(&self, c: &mut ResolvedContext) -> StockTrekResult<()> {
         match self {
             Command::If {
@@ -92,8 +110,9 @@ impl HasRequiredCapabilities for Command {
 #[derive(Debug, Clone, Default)]
 pub struct CommandFactory;
 
-#[allow(missing_docs)]
 impl CommandFactory {
+    /// Creates a command that executes `if_true` when `condition` is true and
+    /// `if_false` otherwise.
     pub fn if_else(&self, condition: Condition, if_true: Command, if_false: Command) -> Command {
         Command::If {
             condition,
@@ -101,12 +120,17 @@ impl CommandFactory {
             if_false: Box::new(if_false),
         }
     }
+    /// Creates a command that executes the given commands in order.
     pub fn list(&self, commands: Vec<Command>) -> Command {
         Command::List { commands }
     }
+
+    /// Creates a command that does nothing. Useful as an empty branch.
     pub fn no_op(&self) -> Command {
         Command::NoOp
     }
+
+    /// Creates a command that enqueues all of the given actions.
     pub fn plan(&self, actions: Vec<RecoverableAction>) -> Command {
         Command::Plan { actions }
     }

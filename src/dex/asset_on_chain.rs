@@ -19,7 +19,6 @@ struct AssetOnChainRepr {
     identifier: AssetKind,
 }
 
-#[allow(missing_docs)]
 impl AssetOnChain {
     /// Creates an asset on a blockchain network.
     ///
@@ -49,14 +48,18 @@ impl AssetOnChain {
         })
     }
 
+    /// Returns the blockchain the asset is deployed on.
     pub fn blockchain(&self) -> &Blockchain {
         &self.blockchain
     }
 
+    /// Returns the network within the blockchain.
     pub fn network(&self) -> &Network {
         &self.network
     }
 
+    /// Returns whether the asset is the chain's native asset or a contract
+    /// asset identified by its address.
     pub fn identifier(&self) -> &AssetKind {
         &self.identifier
     }

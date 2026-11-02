@@ -14,46 +14,71 @@ use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::Ce
 use strum::Display;
 
 /// A condition that can be evaluated against a resolved context.
+///
+/// Conditions read signals and portfolio state; they do not mutate anything.
+/// Build them with [`ConditionFactory`] and combine them with
+/// [`QuantityOf`] when a strategy needs "all", "none", or "some" semantics.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
 #[strum(serialize_all = "snake_case")]
-#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum Condition {
     /// Compares two numeric values.
     Compare {
+        /// The left-hand value.
         left: Box<NumberValue>,
+        /// The comparison to apply.
         #[serde(with = "OrderingSerde")]
         comparison: Ordering,
+        /// The right-hand value.
         right: Box<NumberValue>,
     },
-    /// Tests whether a CEX account exists.
+    /// Tests whether a CEX account exists in the portfolio.
     HasCexAccount {
+        /// The CEX to check.
         cex_id: CexId,
+        /// The account to check within the CEX.
         account_id: AccountId,
     },
     /// Negates another condition.
-    Not { condition: Box<Condition> },
+    Not {
+        /// The condition to negate.
+        condition: Box<Condition>,
+    },
     /// Tests whether the portfolio owns any of an asset.
-    OwnsAsset { asset_id: AssetId },
+    OwnsAsset {
+        /// The asset to check for across all accounts.
+        asset_id: AssetId,
+    },
     /// Tests whether a CEX account owns any of an asset.
     OwnsAssetInCexAccount {
+        /// The CEX to check.
         cex_id: CexId,
+        /// The account to check within the CEX.
         account_id: AccountId,
+        /// The asset to check for in the account.
         asset_id: AssetId,
     },
     /// Applies a quantity requirement to a list of conditions.
     QuantityOf {
+        /// How many of the nested conditions must be true.
         quantity_of: QuantityOf,
+        /// The conditions to evaluate.
         conditions: Vec<Condition>,
     },
     /// Tests the value of a boolean signal.
-    Signal { signal: SignalKey<bool> },
+    Signal {
+        /// The signal to read.
+        signal: SignalKey<bool>,
+    },
 }
 
 impl Condition {
     /// Evaluates the condition against the resolved context.
+    ///
+    /// Returns an error when a referenced signal is missing or has the wrong
+    /// type, or when numeric values cannot be compared (for example, NaN).
     pub fn test(&self, c: &ResolvedContext) -> StockTrekResult<bool> {
         match self {
             Condition::Compare {
@@ -131,6 +156,9 @@ impl Condition {
 }
 
 /// Specifies how many of a set of conditions must be true.
+///
+/// This is used by [`Condition::QuantityOf`] to express group requirements
+/// without nesting many `Not` conditions.
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
@@ -149,8 +177,8 @@ pub enum QuantityOf {
 #[derive(Debug, Clone, Default)]
 pub struct ConditionFactory;
 
-#[allow(missing_docs)]
 impl ConditionFactory {
+    /// Compares two values using `comparison`.
     pub fn compare(
         &self,
         left: NumberValue,
@@ -163,17 +191,21 @@ impl ConditionFactory {
             right: Box::new(right),
         }
     }
+    /// Tests whether a CEX account exists in the portfolio.
     pub fn has_cex_account(&self, cex_id: CexId, account_id: AccountId) -> Condition {
         Condition::HasCexAccount { cex_id, account_id }
     }
+    /// Negates a condition.
     pub fn not(&self, condition: Condition) -> Condition {
         Condition::Not {
             condition: Box::new(condition),
         }
     }
+    /// Tests whether any account holds the asset.
     pub fn owns_asset(&self, asset_id: AssetId) -> Condition {
         Condition::OwnsAsset { asset_id }
     }
+    /// Tests whether a specific CEX account holds the asset.
     pub fn owns_asset_in_cex_account(
         &self,
         cex_id: CexId,
@@ -186,12 +218,14 @@ impl ConditionFactory {
             asset_id,
         }
     }
+    /// Requires a specific number of the given conditions to be true.
     pub fn quantity_of(&self, quantity_of: QuantityOf, conditions: Vec<Condition>) -> Condition {
         Condition::QuantityOf {
             quantity_of,
             conditions,
         }
     }
+    /// Tests the value of a boolean signal.
     pub fn signal(&self, flag: &SignalKey<bool>) -> Condition {
         Condition::Signal {
             signal: flag.clone(),

@@ -20,7 +20,6 @@ pub struct Network {
 #[serde(try_from = "String", into = "String")]
 pub struct NetworkId(std::borrow::Cow<'static, str>);
 
-#[allow(missing_docs)]
 impl NetworkId {
     /// The main network of a blockchain.
     pub const MAINNET: Self = Self(std::borrow::Cow::Borrowed("mainnet"));
@@ -50,12 +49,13 @@ string_id_funcs!(NetworkId);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ChainId(u64);
 
-#[allow(missing_docs)]
 impl ChainId {
+    /// Creates a chain identifier from its numeric value.
     pub fn new(id: u64) -> Self {
         Self(id)
     }
 
+    /// Returns the numeric chain identifier.
     pub fn value(&self) -> u64 {
         self.0
     }
@@ -110,8 +110,11 @@ impl From<ChainId> for u64 {
     }
 }
 
-#[allow(missing_docs)]
 impl Network {
+    /// Creates a network from its identifier and optional numeric chain ID.
+    ///
+    /// EVM networks use the chain ID to identify the network on chain. Chains
+    /// without a numeric chain ID, such as Bitcoin, pass `None`.
     pub fn new(network_id: NetworkId, chain_id: Option<ChainId>) -> Self {
         Self {
             network_id,
@@ -119,10 +122,12 @@ impl Network {
         }
     }
 
+    /// Returns the network identifier, such as mainnet or testnet.
     pub fn network_id(&self) -> &NetworkId {
         &self.network_id
     }
 
+    /// Returns the numeric chain identifier, when the blockchain uses one.
     pub fn chain_id(&self) -> Option<ChainId> {
         self.chain_id
     }

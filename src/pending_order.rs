@@ -2,6 +2,11 @@ use crate::{error::result::StockTrekResult, validation::Validation};
 use stock_trek_types::cex::{asset_id::AssetId, order_request::OrderRequest};
 
 /// An order with the quantities that have already been filled.
+///
+/// The runtime uses pending orders to calculate reserved balances: the
+/// unfilled part of a sell reserves the base asset, while the unfilled part of
+/// a buy reserves the quote asset. A pending order remains in the portfolio
+/// until the runtime removes it after cancellation or full execution.
 #[derive(Debug, Clone)]
 pub struct PendingOrder {
     order_request: OrderRequest<AssetId, f64>,
@@ -9,7 +14,6 @@ pub struct PendingOrder {
     filled_quote_quantity: f64,
 }
 
-#[allow(missing_docs)]
 impl PendingOrder {
     /// Creates a pending order from its order request and filled quantities.
     ///

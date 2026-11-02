@@ -42,16 +42,23 @@ impl Market {
     }
 
     /// Returns the minimum increment for the base asset quantity.
+    ///
+    /// Order quantities must be a multiple of this value.
     pub fn base_increment(&self) -> f64 {
         self.base_increment
     }
 
     /// Returns the minimum increment for the quote asset price.
+    ///
+    /// Limit prices must be a multiple of this value.
     pub fn quote_increment(&self) -> f64 {
         self.quote_increment
     }
 
     /// Returns the minimum notional value for an order.
+    ///
+    /// The product of an order's price and quantity must be at least this
+    /// value.
     pub fn minimum_notional(&self) -> f64 {
         self.minimum_notional
     }

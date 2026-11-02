@@ -3,6 +3,10 @@ use std::collections::BTreeMap;
 use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
 /// The market data available while computing signals, grouped by CEX.
+///
+/// An algorithm uses this context to inspect markets and write the signals its
+/// strategy needs. It contains market data only; portfolio state is available
+/// later, when the command is resolved.
 #[derive(Debug, Clone)]
 pub struct SignalContext {
     cex_market_data: BTreeMap<CexId, CexMarketDataByBaseContext>,

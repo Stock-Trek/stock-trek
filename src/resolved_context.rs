@@ -6,14 +6,24 @@ use crate::{
 };
 
 /// The context used when resolving actions and values.
-#[allow(missing_docs)]
+///
+/// A resolved context contains the portfolio and signals for the current
+/// evaluation plus a callback that receives resolved actions. Commands use it
+/// to read values and enqueue actions without depending on the runtime that
+/// owns the exchange connections.
 pub struct ResolvedContext {
+    /// Callback invoked for each action produced by a command.
     pub enqueue_action: EnqueueActionFn,
+    /// Portfolio balances and pending orders visible to the current evaluation.
     pub portfolio: Portfolio,
+    /// Signals produced for the current evaluation.
     pub signals: Signals,
 }
 
 /// Callback type for enqueuing a resolved action with a recovery policy.
+///
+/// The runtime supplies this callback and is responsible for executing the
+/// action and applying the recovery policy on failure.
 pub type EnqueueActionFn = Box<dyn FnMut(&ResolvedAction, &RecoveryPolicy) -> StockTrekResult<()>>;
 
 impl ResolvedContext {

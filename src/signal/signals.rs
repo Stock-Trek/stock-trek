@@ -9,6 +9,10 @@ use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, convert::TryFrom};
 
 /// A collection of named signal values.
+///
+/// Values are stored under the string key of a [`SignalKey`]. Writing a key
+/// replaces its previous value for the current evaluation. Reading a missing
+/// key returns the key's default or, for required keys, an error.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Signals {
     signal_values: BTreeMap<String, SignalValue>,
@@ -20,7 +24,10 @@ impl Signals {
         Self::default()
     }
 
-    /// Reads a typed value from the collection, falling back to the key's default.
+    /// Reads a typed value from the collection.
+    ///
+    /// Missing optional keys return their default. Missing required keys and
+    /// values of the wrong type return an error.
     pub fn read<T>(&self, key: &SignalKey<T>) -> StockTrekResult<T>
     where
         T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
@@ -41,7 +48,7 @@ impl Signals {
             }
         }
     }
-    /// Writes a typed value to the collection under the given key.
+    /// Writes a typed value under the given key, replacing any previous value.
     pub fn write<T>(&mut self, key: &SignalKey<T>, value: T)
     where
         T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,

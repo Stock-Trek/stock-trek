@@ -10,7 +10,6 @@ pub struct MarketAlignedWindow {
     candles: BTreeMap<AlignedWindow, Vec<MarketCandle>>,
 }
 
-#[allow(missing_docs)]
 impl MarketAlignedWindow {
     /// Creates an aligned-window collection from candles grouped by window.
     ///
@@ -32,24 +31,38 @@ impl MarketAlignedWindow {
     pub fn candles_for(&self, window: AlignedWindow) -> Option<&[MarketCandle]> {
         self.candles.get(&window).map(Vec::as_slice)
     }
+    /// Returns the opening prices for a window in chronological order, or
+    /// `None` when the window has no candles.
     pub fn opens(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::open)
     }
+    /// Returns the highest prices for a window in chronological order, or
+    /// `None` when the window has no candles.
     pub fn highs(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::high)
     }
+    /// Returns the lowest prices for a window in chronological order, or
+    /// `None` when the window has no candles.
     pub fn lows(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::low)
     }
+    /// Returns the closing prices for a window in chronological order, or
+    /// `None` when the window has no candles.
     pub fn closes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::close)
     }
+    /// Returns the base-asset volumes for a window in chronological order, or
+    /// `None` when the window has no candles.
     pub fn volumes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::volume)
     }
+    /// Returns the quote-asset volumes for a window in chronological order, or
+    /// `None` when the window has no candles.
     pub fn quote_volumes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::quote_volume)
     }
+    /// Returns the volume-weighted average prices for a window in chronological
+    /// order, or `None` when the window has no candles.
     pub fn vwaps(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::vwap)
     }
