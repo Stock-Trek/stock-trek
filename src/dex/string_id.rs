@@ -1,16 +1,35 @@
 //! Shared implementation for string-backed DEX identifiers.
 
-/// Defines a validated, string-backed identifier type.
+/// Implements the shared behaviour for a validated, string-backed identifier.
 ///
-/// The generated type is serialized as a plain string, rejects empty and
-/// whitespace-only values, and dereferences to `str`.
-macro_rules! define_string_id {
-    ($(#[$meta:meta])* $name:ident) => {
-        $(#[$meta])*
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-        #[serde(try_from = "String", into = "String")]
-        pub struct $name(std::borrow::Cow<'static, str>);
+/// This macro only defines implementations; the identifier type must be declared
+/// separately. By default the type is expected to be a tuple struct backed by
+/// `Cow<'static, str>`. Pass `custom` for a type with a different representation
+/// that provides its own `from_string`, `as_str`, and `into_inner` methods.
+macro_rules! string_id_funcs {
+    ($name:ident) => {
+        impl $name {
+            fn from_string(value: String) -> Self {
+                Self(std::borrow::Cow::Owned(value))
+            }
 
+            /// Returns the identifier as a string slice.
+            pub fn as_str(&self) -> &str {
+                &self.0
+            }
+
+            /// Consumes the identifier and returns its owned string value.
+            pub fn into_inner(self) -> String {
+                self.0.into_owned()
+            }
+        }
+
+        string_id_funcs!(@shared $name);
+    };
+    ($name:ident, custom) => {
+        string_id_funcs!(@shared $name);
+    };
+    (@shared $name:ident) => {
         impl $name {
             fn validate(value: &str) -> crate::error::result::StockTrekResult<()> {
                 if value.trim().is_empty() {
@@ -32,16 +51,6 @@ macro_rules! define_string_id {
             pub fn new(id: &str) -> crate::error::result::StockTrekResult<Self> {
                 Self::try_from(id)
             }
-
-            /// Returns the identifier as a string slice.
-            pub fn as_str(&self) -> &str {
-                &self.0
-            }
-
-            /// Consumes the identifier and returns its owned string value.
-            pub fn into_inner(self) -> String {
-                self.0.into_owned()
-            }
         }
 
         impl TryFrom<&str> for $name {
@@ -49,7 +58,7 @@ macro_rules! define_string_id {
 
             fn try_from(value: &str) -> Result<Self, Self::Error> {
                 Self::validate(value)?;
-                Ok(Self(std::borrow::Cow::Owned(value.to_string())))
+                Ok(Self::from_string(value.to_string()))
             }
         }
 
@@ -58,7 +67,7 @@ macro_rules! define_string_id {
 
             fn try_from(value: String) -> Result<Self, Self::Error> {
                 Self::validate(&value)?;
-                Ok(Self(std::borrow::Cow::Owned(value)))
+                Ok(Self::from_string(value))
             }
         }
 
@@ -110,4 +119,4 @@ macro_rules! define_string_id {
     };
 }
 
-pub(crate) use define_string_id;
+pub(crate) use string_id_funcs;

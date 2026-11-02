@@ -1,10 +1,9 @@
 //! Networks within a blockchain.
 
+use crate::dex::string_id::string_id_funcs;
 use crate::error::{result::StockTrekError, value::ValueError};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-
-use super::string_id::define_string_id;
 
 /// A network on a blockchain.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -13,40 +12,64 @@ pub struct Network {
     chain_id: Option<ChainId>,
 }
 
-define_string_id! {
-    /// Identifier for a network on a blockchain.
-    NetworkId
+/// Identifier for a network on a blockchain.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
+#[serde(try_from = "String", into = "String")]
+pub enum NetworkId {
+    /// The main network of a blockchain.
+    Mainnet,
+    /// A test network of a blockchain.
+    Testnet,
+    /// An arbitrary network identified by its name.
+    Other(String),
 }
 
-#[allow(missing_docs, non_upper_case_globals)]
 impl NetworkId {
-    /// The main network of a blockchain.
-    pub const Mainnet: Self = Self::from_static("mainnet");
-
-    /// A test network of a blockchain.
-    pub const Testnet: Self = Self::from_static("testnet");
+    fn from_string(value: String) -> Self {
+        match Self::canonical(&value) {
+            Some(network_id) => network_id,
+            None => Self::Other(value),
+        }
+    }
 
     /// Creates a network identifier from a static string.
     ///
     /// # Panics
     ///
-    /// Panics if `id` is empty.
-    pub const fn from_static(id: &'static str) -> Self {
-        assert!(!id.is_empty(), "network id must not be empty");
-        Self(std::borrow::Cow::Borrowed(id))
+    /// Panics if `id` is empty or whitespace-only.
+    pub fn from_static(id: &'static str) -> Self {
+        Self::try_from(id).expect("network id must not be empty or whitespace-only")
     }
 
-    /// Creates a network identifier for an arbitrary network name.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `name` is empty or whitespace-only.
-    #[allow(non_snake_case)]
-    pub fn Other(name: impl Into<String>) -> Self {
-        let name = name.into();
-        Self::try_from(name).expect("network id must not be empty or whitespace-only")
+    /// Returns the identifier as a string slice.
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Mainnet => "mainnet",
+            Self::Testnet => "testnet",
+            Self::Other(id) => id,
+        }
+    }
+
+    /// Consumes the identifier and returns its owned string value.
+    pub fn into_inner(self) -> String {
+        match self {
+            Self::Mainnet => "mainnet".to_string(),
+            Self::Testnet => "testnet".to_string(),
+            Self::Other(id) => id,
+        }
+    }
+
+    fn canonical(value: &str) -> Option<Self> {
+        match value {
+            "mainnet" => Some(Self::Mainnet),
+            "testnet" => Some(Self::Testnet),
+            _ => None,
+        }
     }
 }
+
+string_id_funcs!(NetworkId, custom);
 
 /// Numeric chain identifier, such as an EVM chain ID.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -159,14 +182,14 @@ mod tests {
 
     #[test]
     fn mainnet_and_testnet_have_a_single_representation() {
-        assert_eq!(NetworkId::Other("mainnet"), NetworkId::Mainnet);
-        assert_eq!(NetworkId::Other("testnet"), NetworkId::Testnet);
+        assert_eq!(NetworkId::new("mainnet").unwrap(), NetworkId::Mainnet);
+        assert_eq!(NetworkId::new("testnet").unwrap(), NetworkId::Testnet);
         assert_eq!(
-            serde_json::to_string(&NetworkId::Other("mainnet")).unwrap(),
+            serde_json::to_string(&NetworkId::new("mainnet").unwrap()).unwrap(),
             serde_json::to_string(&NetworkId::Mainnet).unwrap()
         );
         assert_eq!(
-            serde_json::to_string(&NetworkId::Other("testnet")).unwrap(),
+            serde_json::to_string(&NetworkId::new("testnet").unwrap()).unwrap(),
             serde_json::to_string(&NetworkId::Testnet).unwrap()
         );
     }
@@ -174,12 +197,12 @@ mod tests {
     #[test]
     fn network_ids_serialize_as_plain_strings() {
         assert_eq!(
-            serde_json::to_string(&NetworkId::Other("sepolia")).unwrap(),
+            serde_json::to_string(&NetworkId::Other("sepolia".to_string())).unwrap(),
             "\"sepolia\""
         );
         assert_eq!(
             serde_json::from_str::<NetworkId>("\"sepolia\"").unwrap(),
-            NetworkId::Other("sepolia")
+            NetworkId::Other("sepolia".to_string())
         );
     }
 

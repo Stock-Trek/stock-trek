@@ -8,7 +8,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as};
 
-use super::string_id::define_string_id;
+use super::string_id::string_id_funcs;
 
 /// A blockchain, its family, and its address format.
 #[serde_as]
@@ -21,15 +21,19 @@ pub struct Blockchain {
     address_regex: Regex,
 }
 
-define_string_id! {
-    /// Unique identifier for a blockchain.
-    BlockchainId
-}
+/// Unique identifier for a blockchain.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct BlockchainId(std::borrow::Cow<'static, str>);
 
-define_string_id! {
-    /// Identifier for a blockchain family, such as EVM.
-    FamilyId
-}
+string_id_funcs!(BlockchainId);
+
+/// Identifier for a blockchain family, such as EVM.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct FamilyId(std::borrow::Cow<'static, str>);
+
+string_id_funcs!(FamilyId);
 
 #[allow(missing_docs)]
 impl Blockchain {
