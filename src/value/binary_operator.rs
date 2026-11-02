@@ -1,4 +1,4 @@
-use super::operator_error::{division_by_zero, domain_check};
+use super::operator_error::{check_finite, division_by_zero, domain_check};
 use crate::error::result::StockTrekResult;
 use serde::{Deserialize, Serialize};
 use strum::Display;
@@ -28,8 +28,25 @@ pub enum BinaryOperator {
 }
 
 impl BinaryOperator {
+    fn name(self) -> &'static str {
+        match self {
+            BinaryOperator::Add => "Add",
+            BinaryOperator::Atan2 => "Atan2",
+            BinaryOperator::Div => "Div",
+            BinaryOperator::Log => "Log",
+            BinaryOperator::Mod => "Mod",
+            BinaryOperator::Mul => "Mul",
+            BinaryOperator::Pow => "Pow",
+            BinaryOperator::Sub => "Sub",
+        }
+    }
+
     /// Applies the operator to `left` and `right`.
     pub fn calculate(self, left: f64, right: f64) -> StockTrekResult<f64> {
+        let function = self.name();
+        check_finite(function, "left operand", left)?;
+        check_finite(function, "right operand", right)?;
+
         let calculation_result = match self {
             BinaryOperator::Add => left + right,
             BinaryOperator::Atan2 => left.atan2(right),
@@ -81,6 +98,50 @@ impl BinaryOperator {
             BinaryOperator::Mul => left * right,
             BinaryOperator::Sub => left - right,
         };
+        check_finite(function, "result", calculation_result)?;
         Ok(calculation_result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const OPERATORS: [BinaryOperator; 8] = [
+        BinaryOperator::Add,
+        BinaryOperator::Sub,
+        BinaryOperator::Mul,
+        BinaryOperator::Div,
+        BinaryOperator::Mod,
+        BinaryOperator::Pow,
+        BinaryOperator::Log,
+        BinaryOperator::Atan2,
+    ];
+
+    #[test]
+    fn rejects_nan_operands() {
+        for operator in OPERATORS {
+            assert!(operator.calculate(f64::NAN, 2.0).is_err(), "{operator}");
+            assert!(operator.calculate(2.0, f64::NAN).is_err(), "{operator}");
+        }
+    }
+
+    #[test]
+    fn rejects_infinite_operands() {
+        for operator in OPERATORS {
+            for value in [f64::INFINITY, f64::NEG_INFINITY] {
+                assert!(operator.calculate(value, 2.0).is_err(), "{operator}");
+                assert!(operator.calculate(2.0, value).is_err(), "{operator}");
+            }
+        }
+    }
+
+    #[test]
+    fn rejects_non_finite_results() {
+        assert!(BinaryOperator::Add.calculate(f64::MAX, f64::MAX).is_err());
+        assert!(BinaryOperator::Sub.calculate(f64::MIN, f64::MAX).is_err());
+        assert!(BinaryOperator::Mul.calculate(f64::MAX, 2.0).is_err());
+        assert!(BinaryOperator::Div.calculate(f64::MAX, 0.5).is_err());
+        assert!(BinaryOperator::Pow.calculate(2.0, 1024.0).is_err());
     }
 }
