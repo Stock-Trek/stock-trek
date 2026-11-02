@@ -105,9 +105,7 @@ macro_rules! define_network {
                     $address_format,
                 )?;
                 let network = Network::new(network.into(), None);
-                Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-                    blockchain, network, asset_kind,
-                ))
+                crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
             }
         }
     };
@@ -364,6 +362,6 @@ impl AssetOnChain {
     ) -> StockTrekResult<Self> {
         let blockchain = Blockchain::evm(blockchain_name)?;
         let network = Network::new(network.into(), Some(ChainId::new(network.into())));
-        Ok(Self::new(blockchain, network, asset_kind))
+        Self::new(blockchain, network, asset_kind)
     }
 }
