@@ -30,10 +30,6 @@ impl NetworkId {
 }
 
 impl NetworkId {
-    fn from_string(value: String) -> Self {
-        Self(std::borrow::Cow::Owned(value.trim().to_string()))
-    }
-
     /// Creates an arbitrary network identifier by name.
     ///
     /// Leading and trailing whitespace is trimmed. The canonical names
@@ -46,19 +42,9 @@ impl NetworkId {
     pub fn other(name: impl Into<String>) -> StockTrekResult<Self> {
         Self::try_from(name.into())
     }
-
-    /// Returns the identifier as a string slice.
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    /// Consumes the identifier and returns its owned string value.
-    pub fn into_inner(self) -> String {
-        self.0.into_owned()
-    }
 }
 
-string_id_funcs!(NetworkId, custom);
+string_id_funcs!(NetworkId);
 
 /// Numeric chain identifier, such as an EVM chain ID.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

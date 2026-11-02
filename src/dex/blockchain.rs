@@ -197,6 +197,32 @@ mod tests {
     }
 
     #[test]
+    fn identifiers_are_trimmed() {
+        for blockchain_id in [
+            BlockchainId::new(" ethereum ").unwrap(),
+            BlockchainId::try_from("\tethereum\n".to_string()).unwrap(),
+            " ethereum ".parse::<BlockchainId>().unwrap(),
+            serde_json::from_str::<BlockchainId>("\" ethereum \"").unwrap(),
+        ] {
+            assert_eq!(blockchain_id.as_str(), "ethereum");
+            assert_eq!(
+                serde_json::to_string(&blockchain_id).unwrap(),
+                "\"ethereum\""
+            );
+        }
+
+        for family_id in [
+            FamilyId::new(" evm ").unwrap(),
+            FamilyId::try_from("\tevm\n".to_string()).unwrap(),
+            " evm ".parse::<FamilyId>().unwrap(),
+            serde_json::from_str::<FamilyId>("\" evm \"").unwrap(),
+        ] {
+            assert_eq!(family_id.as_str(), "evm");
+            assert_eq!(serde_json::to_string(&family_id).unwrap(), "\"evm\"");
+        }
+    }
+
+    #[test]
     fn invalid_identifiers_are_reported_as_dex_errors() {
         for error in [
             BlockchainId::new("").unwrap_err(),

@@ -6,11 +6,13 @@
 /// separately. By default the type is expected to be a tuple struct backed by
 /// `Cow<'static, str>`. Pass `custom` for a type with a different representation
 /// that provides its own `from_string`, `as_str`, and `into_inner` methods.
+///
+/// Identifiers are trimmed of leading and trailing whitespace when constructed.
 macro_rules! string_id_funcs {
     ($name:ident) => {
         impl $name {
             fn from_string(value: String) -> Self {
-                Self(std::borrow::Cow::Owned(value))
+                Self(std::borrow::Cow::Owned(value.trim().to_string()))
             }
 
             /// Returns the identifier as a string slice.
@@ -44,6 +46,8 @@ macro_rules! string_id_funcs {
             }
 
             /// Creates an identifier from a string.
+            ///
+            /// Leading and trailing whitespace is trimmed.
             ///
             /// # Errors
             ///
