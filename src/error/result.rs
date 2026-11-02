@@ -34,3 +34,21 @@ impl std::error::Error for StockTrekError {
         }
     }
 }
+
+impl From<DexError> for StockTrekError {
+    fn from(value: DexError) -> Self {
+        Self::Dex(value)
+    }
+}
+
+impl From<StatsError> for StockTrekError {
+    fn from(value: StatsError) -> Self {
+        Self::Stats(value)
+    }
+}
+
+impl From<ValueError> for StockTrekError {
+    fn from(value: ValueError) -> Self {
+        Self::Value(value)
+    }
+}

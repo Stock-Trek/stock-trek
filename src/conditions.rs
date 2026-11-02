@@ -160,7 +160,7 @@ pub enum QuantityOf {
 }
 
 /// Factory for constructing conditions.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ConditionFactory;
 
 impl ConditionFactory {

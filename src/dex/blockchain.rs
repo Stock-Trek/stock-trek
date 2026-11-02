@@ -43,11 +43,6 @@ impl BlockchainId {
     pub fn into_inner(self) -> String {
         self.0
     }
-
-    /// Returns the identifier as a string slice.
-    pub fn get(&self) -> &str {
-        self.as_str()
-    }
 }
 
 impl FamilyId {
@@ -64,11 +59,6 @@ impl FamilyId {
     /// Consumes the identifier and returns its string value.
     pub fn into_inner(self) -> String {
         self.0
-    }
-
-    /// Returns the identifier as a string slice.
-    pub fn get(&self) -> &str {
-        self.as_str()
     }
 }
 
@@ -103,29 +93,14 @@ impl Blockchain {
         &self.blockchain_id
     }
 
-    /// Returns the blockchain identifier.
-    pub fn id(&self) -> &BlockchainId {
-        self.blockchain_id()
-    }
-
     /// Returns the blockchain family identifier.
     pub fn family_id(&self) -> &FamilyId {
         &self.family_id
     }
 
-    /// Returns the blockchain family identifier.
-    pub fn family(&self) -> &FamilyId {
-        self.family_id()
-    }
-
     /// Returns the number of decimals used by the blockchain's native asset.
     pub fn native_decimals(&self) -> u8 {
         self.native_decimals
-    }
-
-    /// Returns the number of decimals used by the blockchain's native asset.
-    pub fn decimals(&self) -> u8 {
-        self.native_decimals()
     }
 
     /// Returns the regular expression used to validate addresses.

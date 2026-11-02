@@ -76,7 +76,7 @@ impl HasRequiredCapabilities for Command {
         match self {
             Command::If {
                 if_true, if_false, ..
-            } => combine_capabilities(&[if_false.as_ref(), if_true.as_ref()]),
+            } => combine_capabilities(&[if_true.as_ref(), if_false.as_ref()]),
             Command::List { commands } => {
                 let mut capabilities = Vec::new();
                 for command in commands {
@@ -97,7 +97,7 @@ impl HasRequiredCapabilities for Command {
 }
 
 /// Factory for constructing commands.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CommandFactory;
 
 impl CommandFactory {
