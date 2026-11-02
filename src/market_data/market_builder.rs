@@ -1,4 +1,4 @@
-use super::Market;
+use super::market::Market;
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
     market_data::{
