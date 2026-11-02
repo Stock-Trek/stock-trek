@@ -238,9 +238,9 @@ impl TryFrom<&str> for RollingWindow {
             "10w" => Ok(RollingWindow::Weeks10),
             "20w" => Ok(RollingWindow::Weeks20),
             "40w" => Ok(RollingWindow::Weeks40),
-            _ => Err(StockTrekError::Value(ValueError::NotFound {
-                name: "RollingWindow".into(),
-                key: value.into(),
+            _ => Err(StockTrekError::Value(ValueError::IncorrectType {
+                expected: "RollingWindow".into(),
+                found: value.into(),
             })),
         }
     }

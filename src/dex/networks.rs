@@ -67,7 +67,7 @@ macro_rules! define_evm_network {
                 network: NetworkName,
                 asset_kind: crate::dex::asset_kind::AssetKind,
             ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-                super::evm_asset_on_chain($blockchain, network, asset_kind)
+                super::AssetOnChain::evm($blockchain, network, asset_kind)
             }
         }
     };
@@ -98,7 +98,7 @@ macro_rules! define_network {
                 network: NetworkName,
                 asset_kind: crate::dex::asset_kind::AssetKind,
             ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-                let blockchain = super::blockchain(
+                let blockchain = super::Blockchain::from_ids(
                     $blockchain,
                     super::$family_id,
                     $native_decimals,
@@ -118,8 +118,8 @@ define_evm_network! {
     "arbitrum",
     {
         Mainnet => (42161, NetworkId::Mainnet),
-        Sepolia => (421614, "sepolia".into()),
-        Nova => (42170, "nova".into()),
+        Sepolia => (421614, NetworkId::from_static("sepolia")),
+        Nova => (42170, NetworkId::from_static("nova")),
     }
 }
 
@@ -128,7 +128,7 @@ define_evm_network! {
     "avalanche",
     {
         Mainnet => (43114, NetworkId::Mainnet),
-        Fuji => (43113, "fuji".into()),
+        Fuji => (43113, NetworkId::from_static("fuji")),
     }
 }
 
@@ -137,7 +137,7 @@ define_evm_network! {
     "base",
     {
         Mainnet => (8453, NetworkId::Mainnet),
-        Sepolia => (84532, "sepolia".into()),
+        Sepolia => (84532, NetworkId::from_static("sepolia")),
     }
 }
 
@@ -150,8 +150,8 @@ define_network! {
     {
         Mainnet => NetworkId::Mainnet,
         Testnet => NetworkId::Testnet,
-        Signet => "signet".into(),
-        Regtest => "regtest".into(),
+        Signet => NetworkId::from_static("signet"),
+        Regtest => NetworkId::from_static("regtest"),
     }
 }
 
@@ -181,7 +181,7 @@ define_evm_network! {
     "celo",
     {
         Mainnet => (42220, NetworkId::Mainnet),
-        Alfajores => (44787, "alfajores".into()),
+        Alfajores => (44787, NetworkId::from_static("alfajores")),
     }
 }
 
@@ -223,8 +223,8 @@ define_evm_network! {
     "ethereum",
     {
         Mainnet => (1, NetworkId::Mainnet),
-        Sepolia => (11155111, "sepolia".into()),
-        Holesky => (17000, "holesky".into()),
+        Sepolia => (11155111, NetworkId::from_static("sepolia")),
+        Holesky => (17000, NetworkId::from_static("holesky")),
     }
 }
 
@@ -242,7 +242,7 @@ define_evm_network! {
     "gnosis",
     {
         Mainnet => (100, NetworkId::Mainnet),
-        Chiado => (10200, "chiado".into()),
+        Chiado => (10200, NetworkId::from_static("chiado")),
     }
 }
 
@@ -263,7 +263,7 @@ define_evm_network! {
     "moonbeam",
     {
         Mainnet => (1284, NetworkId::Mainnet),
-        Moonbase => (1287, "moonbase".into()),
+        Moonbase => (1287, NetworkId::from_static("moonbase")),
     }
 }
 
@@ -284,7 +284,7 @@ define_evm_network! {
     "optimism",
     {
         Mainnet => (10, NetworkId::Mainnet),
-        Sepolia => (11155420, "sepolia".into()),
+        Sepolia => (11155420, NetworkId::from_static("sepolia")),
     }
 }
 
@@ -305,8 +305,8 @@ define_evm_network! {
     "polygon",
     {
         Mainnet => (137, NetworkId::Mainnet),
-        Amoy => (80002, "amoy".into()),
-        Mumbai => (80001, "mumbai".into()),
+        Amoy => (80002, NetworkId::from_static("amoy")),
+        Mumbai => (80001, NetworkId::from_static("mumbai")),
     }
 }
 
@@ -319,7 +319,7 @@ define_network! {
     {
         Mainnet => NetworkId::Mainnet,
         Testnet => NetworkId::Testnet,
-        Devnet => "devnet".into(),
+        Devnet => NetworkId::from_static("devnet"),
     }
 }
 
@@ -331,40 +331,39 @@ define_network! {
     "^T[a-zA-HJ-NP-Z0-9]{33}$",
     {
         Mainnet => NetworkId::Mainnet,
-        Shasta => "shasta".into(),
-        Nile => "nile".into(),
+        Shasta => NetworkId::from_static("shasta"),
+        Nile => NetworkId::from_static("nile"),
     }
 }
 
-fn blockchain(
-    blockchain_id: &str,
-    family_id: &str,
-    native_decimals: u8,
-    address_format: &str,
-) -> StockTrekResult<Blockchain> {
-    Blockchain::new(
-        BlockchainId::new(blockchain_id),
-        FamilyId::new(family_id),
-        native_decimals,
-        address_format,
-    )
+impl Blockchain {
+    fn from_ids(
+        blockchain_id: &str,
+        family_id: &str,
+        native_decimals: u8,
+        address_format: &str,
+    ) -> StockTrekResult<Self> {
+        Self::new(
+            BlockchainId::new(blockchain_id)?,
+            FamilyId::new(family_id)?,
+            native_decimals,
+            address_format,
+        )
+    }
+
+    fn evm(blockchain_name: &str) -> StockTrekResult<Self> {
+        Self::from_ids(blockchain_name, FAMILY_ID_EVM, 18, "^0x[a-fA-F0-9]{40}$")
+    }
 }
 
-fn evm_blockchain(blockchain_name: &str) -> StockTrekResult<Blockchain> {
-    Blockchain::new(
-        BlockchainId::new(blockchain_name),
-        FamilyId::new(FAMILY_ID_EVM),
-        18,
-        "^0x[a-fA-F0-9]{40}$",
-    )
-}
-
-fn evm_asset_on_chain(
-    blockchain_name: &str,
-    network: impl Into<NetworkId> + Into<u64> + Copy,
-    asset_kind: AssetKind,
-) -> StockTrekResult<AssetOnChain> {
-    let blockchain = evm_blockchain(blockchain_name)?;
-    let network = Network::new(network.into(), Some(ChainId::new(network.into())));
-    Ok(AssetOnChain::new(blockchain, network, asset_kind))
+impl AssetOnChain {
+    fn evm(
+        blockchain_name: &str,
+        network: impl Into<NetworkId> + Into<u64> + Copy,
+        asset_kind: AssetKind,
+    ) -> StockTrekResult<Self> {
+        let blockchain = Blockchain::evm(blockchain_name)?;
+        let network = Network::new(network.into(), Some(ChainId::new(network.into())));
+        Ok(Self::new(blockchain, network, asset_kind))
+    }
 }

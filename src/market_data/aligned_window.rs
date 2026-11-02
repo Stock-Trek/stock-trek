@@ -349,9 +349,9 @@ impl TryFrom<&str> for AlignedWindow {
             "12mo" => Ok(AlignedWindow::Months12),
             "1y" => Ok(AlignedWindow::Years1),
             "2y" => Ok(AlignedWindow::Years2),
-            _ => Err(StockTrekError::Value(ValueError::NotFound {
-                name: "AlignedWindow".into(),
-                key: value.into(),
+            _ => Err(StockTrekError::Value(ValueError::IncorrectType {
+                expected: "AlignedWindow".into(),
+                found: value.into(),
             })),
         }
     }
