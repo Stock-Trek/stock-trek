@@ -30,7 +30,7 @@ impl Signals {
         match v {
             None => match key.default() {
                 None => Err(StockTrekError::Value(ValueError::NotFound {
-                    name: "Key".to_string(),
+                    name: T::KEY_NAME.to_string(),
                     key: key_str.to_string(),
                 })),
                 Some(d) => Ok(d),
@@ -48,5 +48,30 @@ impl Signals {
     {
         self.signal_values
             .insert(key.key().to_string(), value.into());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn missing_name<T>(key: &SignalKey<T>) -> String
+    where
+        T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
+    {
+        match Signals::new().read(key) {
+            Err(StockTrekError::Value(ValueError::NotFound { name, .. })) => name,
+            Err(other) => panic!("expected NotFound, got {other:?}"),
+            Ok(_) => panic!("expected NotFound, got a value"),
+        }
+    }
+
+    #[test]
+    fn missing_signal_error_uses_key_type_name() {
+        let number = SignalKey::<f64>::new_required("missing_number");
+        assert_eq!(missing_name(&number), "Number");
+
+        let flag = SignalKey::<bool>::new_required("missing_flag");
+        assert_eq!(missing_name(&flag), "Flag");
     }
 }
