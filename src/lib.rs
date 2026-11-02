@@ -63,6 +63,7 @@ pub mod capabilities {
 pub mod errors {
     pub use crate::error::{
         dex::DexError,
+        market_data::MarketDataError,
         result::{StockTrekError, StockTrekResult},
         stats::StatsError,
         value::ValueError,
@@ -144,7 +145,9 @@ pub mod prelude {
     pub use super::{
         Algorithm, Command, Preferences, RoundingStrategy, StrategyContext,
         actions::{ActionErrorCause, ActionErrorResponse, RecoveryPolicy},
-        errors::{DexError, StatsError, StockTrekError, StockTrekResult, ValueError},
+        errors::{
+            DexError, MarketDataError, StatsError, StockTrekError, StockTrekResult, ValueError,
+        },
         pending_order::PendingOrder,
         portfolio::{CexAccountPortfolio, Portfolio},
         register_algorithm,

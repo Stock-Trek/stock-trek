@@ -1,7 +1,7 @@
 use crate::{
     error::{
+        market_data::MarketDataError,
         result::{StockTrekError, StockTrekResult},
-        stats::StatsError,
     },
     market_data::{market_ohlcv::MarketOhlcv, timestamp::TimestampMillis},
 };
@@ -62,7 +62,7 @@ impl MarketCandle {
     }
 
     fn error(message: String) -> StockTrekError {
-        StockTrekError::Stats(StatsError::DomainError {
+        StockTrekError::MarketData(MarketDataError::DomainError {
             function: "MarketCandle::new",
             message,
         })
@@ -186,7 +186,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            StockTrekError::Stats(StatsError::DomainError { .. })
+            StockTrekError::MarketData(MarketDataError::DomainError { .. })
         ));
     }
 
@@ -204,7 +204,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            StockTrekError::Stats(StatsError::DomainError { .. })
+            StockTrekError::MarketData(MarketDataError::DomainError { .. })
         ));
     }
 

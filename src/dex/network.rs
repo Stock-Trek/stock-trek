@@ -164,6 +164,7 @@ impl Network {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error::dex::DexError;
 
     #[test]
     fn network_id_round_trips_through_strings() {
@@ -220,7 +221,7 @@ mod tests {
         let error = NetworkId::new("").unwrap_err();
         assert!(matches!(
             error,
-            StockTrekError::Value(ValueError::IncorrectType { .. })
+            StockTrekError::Dex(DexError::InvalidIdentifier { .. })
         ));
 
         let error = "not-a-number".parse::<ChainId>().unwrap_err();
