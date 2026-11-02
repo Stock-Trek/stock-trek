@@ -5,10 +5,9 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
 /// Candles grouped by aligned windows.
-#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketAlignedWindow {
-    pub candles: HashMap<AlignedWindow, Vec<MarketCandle>>,
+    candles: HashMap<AlignedWindow, Vec<MarketCandle>>,
 }
 
 #[allow(missing_docs)]
@@ -18,10 +17,19 @@ impl MarketAlignedWindow {
     /// Candles are sorted chronologically by start time.
     pub fn new(mut candles: HashMap<AlignedWindow, Vec<MarketCandle>>) -> Self {
         for window_candles in candles.values_mut() {
-            window_candles
-                .sort_by_key(|candle| (candle.start_time_millis_inc, candle.end_time_millis_exc));
+            window_candles.sort_by_key(|candle| {
+                (candle.start_time_millis_inc(), candle.end_time_millis_exc())
+            });
         }
         Self { candles }
+    }
+    /// Returns all candles grouped by aligned window.
+    pub fn candles(&self) -> &HashMap<AlignedWindow, Vec<MarketCandle>> {
+        &self.candles
+    }
+    /// Returns the candles for an aligned window, ordered chronologically.
+    pub fn candles_for(&self, window: AlignedWindow) -> Option<&[MarketCandle]> {
+        self.candles.get(&window).map(Vec::as_slice)
     }
     pub fn opens(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, |ohlcv| ohlcv.open)
@@ -54,7 +62,7 @@ impl MarketAlignedWindow {
         Some(
             candles
                 .iter()
-                .map(|candle| to_value(&candle.ohlcv))
+                .map(|candle| to_value(candle.ohlcv()))
                 .collect(),
         )
     }

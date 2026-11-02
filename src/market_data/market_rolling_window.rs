@@ -8,10 +8,9 @@ use std::collections::HashMap;
 pub type Ohlcv = (f64, f64, f64, f64, f64, f64, f64);
 
 /// Candles for fixed-length rolling windows.
-#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketRollingWindow {
-    pub candles: HashMap<RollingWindow, MarketCandle>,
+    candles: HashMap<RollingWindow, MarketCandle>,
 }
 
 impl MarketRollingWindow {
@@ -20,10 +19,20 @@ impl MarketRollingWindow {
         Self { candles }
     }
 
+    /// Returns the candle for a rolling window, if present.
+    pub fn candle(&self, window: RollingWindow) -> Option<&MarketCandle> {
+        self.candles.get(&window)
+    }
+
+    /// Returns all candles grouped by rolling window.
+    pub fn candles(&self) -> &HashMap<RollingWindow, MarketCandle> {
+        &self.candles
+    }
+
     /// Returns `(open, high, low, close, volume, quote volume, VWAP)` for a
     /// rolling window, if present.
     pub fn ohlcv(&self, window: RollingWindow) -> Option<Ohlcv> {
-        let ohlcv = &self.candles.get(&window)?.ohlcv;
+        let ohlcv = self.candles.get(&window)?.ohlcv();
         Some((
             ohlcv.open,
             ohlcv.high,
@@ -37,7 +46,9 @@ impl MarketRollingWindow {
 
     /// Returns the OHLCV values as a [`MarketOhlcv`] struct, if present.
     pub fn ohlcv_struct(&self, window: RollingWindow) -> Option<MarketOhlcv> {
-        self.candles.get(&window).map(|candle| candle.ohlcv.clone())
+        self.candles
+            .get(&window)
+            .map(|candle| candle.ohlcv().clone())
     }
 }
 

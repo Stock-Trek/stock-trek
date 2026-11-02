@@ -8,10 +8,9 @@ use serde::{Deserialize, Deserializer, Serialize};
 ///
 /// Ticks are kept in chronological order, regardless of the order in which they
 /// are supplied.
-#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketTicks {
-    pub ticks: Vec<MarketTick>,
+    ticks: Vec<MarketTick>,
 }
 
 impl MarketTicks {
@@ -21,6 +20,14 @@ impl MarketTicks {
     pub fn new(mut ticks: Vec<MarketTick>) -> Self {
         ticks.sort_by_key(|tick| tick.timestamp_millis);
         Self { ticks }
+    }
+    /// Returns all ticks in chronological order.
+    pub fn ticks(&self) -> &[MarketTick] {
+        &self.ticks
+    }
+    /// Returns the most recent tick, if there is one.
+    pub fn latest(&self) -> Option<&MarketTick> {
+        self.ticks.last()
     }
     /// Returns `(timestamp, price, quantity)` for each tick's best bid.
     pub fn bid_timed_price_quantities(&self) -> Vec<TimedPriceQuantity> {

@@ -5,15 +5,14 @@ use serde::{Deserialize, Serialize};
 ///
 /// The start is inclusive and the end is exclusive. `is_candle_closed` marks
 /// candles that will no longer receive updates.
-#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketCandle {
-    pub start_time_millis_inc: TimestampMillis,
-    pub end_time_millis_exc: TimestampMillis,
-    pub duration_millis: TimestampMillis,
-    pub is_candle_closed: bool,
-    pub ohlcv: MarketOhlcv,
-    pub trade_count: u64,
+    start_time_millis_inc: TimestampMillis,
+    end_time_millis_exc: TimestampMillis,
+    duration_millis: TimestampMillis,
+    is_candle_closed: bool,
+    ohlcv: MarketOhlcv,
+    trade_count: u64,
 }
 
 impl MarketCandle {
@@ -34,5 +33,35 @@ impl MarketCandle {
             ohlcv,
             trade_count,
         }
+    }
+
+    /// Returns the inclusive start time of the candle.
+    pub fn start_time_millis_inc(&self) -> TimestampMillis {
+        self.start_time_millis_inc
+    }
+
+    /// Returns the exclusive end time of the candle.
+    pub fn end_time_millis_exc(&self) -> TimestampMillis {
+        self.end_time_millis_exc
+    }
+
+    /// Returns the candle duration in milliseconds.
+    pub fn duration_millis(&self) -> TimestampMillis {
+        self.duration_millis
+    }
+
+    /// Returns whether the candle is closed and will no longer receive updates.
+    pub fn is_candle_closed(&self) -> bool {
+        self.is_candle_closed
+    }
+
+    /// Returns the candle's OHLCV values.
+    pub fn ohlcv(&self) -> &MarketOhlcv {
+        &self.ohlcv
+    }
+
+    /// Returns the number of trades in the candle.
+    pub fn trade_count(&self) -> u64 {
+        self.trade_count
     }
 }
