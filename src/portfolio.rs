@@ -80,7 +80,7 @@ impl Portfolio {
         self.cex_accounts()
             .flat_map(|(cex_id, account_id, portfolio)| {
                 portfolio
-                    .assets()
+                    .asset_counts()
                     .map(move |(asset_id, count)| (cex_id, account_id, asset_id, count))
             })
     }
@@ -93,7 +93,7 @@ impl Portfolio {
     ) -> impl Iterator<Item = (&AssetId, &f64)> {
         self.cex_account(cex_id, account_id)
             .into_iter()
-            .flat_map(|portfolio| portfolio.assets())
+            .flat_map(|portfolio| portfolio.asset_counts())
     }
 
     /// Iterates over every pending order with its CEX, account, and tag.
@@ -209,11 +209,6 @@ impl CexAccountPortfolio {
         self.asset_counts.iter()
     }
 
-    /// Iterates over all asset balances keyed by asset.
-    pub fn assets(&self) -> impl Iterator<Item = (&AssetId, &f64)> {
-        self.asset_counts()
-    }
-
     /// Returns the total balance (available and reserved) of an asset.
     ///
     /// Returns zero when the account does not hold the asset.
@@ -222,8 +217,10 @@ impl CexAccountPortfolio {
     }
 
     /// Iterates over all pending orders grouped by tag.
-    pub fn pending_orders(&self) -> impl Iterator<Item = (&Tag, &Vec<PendingOrder>)> {
-        self.pending_orders.iter()
+    pub fn pending_orders(&self) -> impl Iterator<Item = (&Tag, &[PendingOrder])> {
+        self.pending_orders
+            .iter()
+            .map(|(tag, orders)| (tag, orders.as_slice()))
     }
 
     /// Returns the pending orders with the given tag, if any.

@@ -22,12 +22,6 @@ impl MarketQuote {
         Self::from_parts("MarketQuote::new", price, quantity)
     }
 
-    pub(crate) fn validate(&self, function: &'static str) -> StockTrekResult<()> {
-        Validation::positive(function, "price", self.price)?;
-        Validation::positive(function, "quantity", self.quantity)?;
-        Ok(())
-    }
-
     fn from_parts(function: &'static str, price: f64, quantity: f64) -> StockTrekResult<Self> {
         Validation::positive(function, "price", price)?;
         Validation::positive(function, "quantity", quantity)?;

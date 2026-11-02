@@ -8,14 +8,13 @@ use serde::{Deserialize, Serialize};
 /// A single OHLCV candle for a market.
 ///
 /// The start is inclusive and the end is exclusive. `is_candle_closed` marks
-/// candles that will no longer receive updates. The duration is validated
-/// against the timestamp bounds when the candle is created or deserialized.
+/// candles that will no longer receive updates. The end timestamp is validated
+/// against the start when the candle is created or deserialized.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(try_from = "MarketCandleData")]
 pub struct MarketCandle {
     start_time_millis_inc: TimestampMillis,
     end_time_millis_exc: TimestampMillis,
-    duration_millis: TimestampMillis,
     is_candle_closed: bool,
     ohlcv: MarketOhlcv,
     trade_count: u64,
@@ -24,17 +23,15 @@ pub struct MarketCandle {
 impl MarketCandle {
     /// Creates a market candle from its timestamp, OHLCV, and trade count.
     ///
-    /// Returns an error when the end precedes the start or when `duration_millis`
-    /// does not equal the difference between the end and start timestamps.
+    /// Returns an error when the end precedes the start.
     pub fn new(
         start_time_millis_inc: TimestampMillis,
         end_time_millis_exc: TimestampMillis,
-        duration_millis: TimestampMillis,
         is_candle_closed: bool,
         ohlcv: MarketOhlcv,
         trade_count: u64,
     ) -> StockTrekResult<Self> {
-        let expected_duration = end_time_millis_exc
+        end_time_millis_exc
             .checked_sub(start_time_millis_inc)
             .ok_or_else(|| {
                 Self::error(format!(
@@ -42,17 +39,9 @@ impl MarketCandle {
                 ))
             })?;
 
-        if duration_millis != expected_duration {
-            return Err(Self::error(format!(
-                "duration {duration_millis} does not match the interval between start time \
-                 {start_time_millis_inc} and end time {end_time_millis_exc} ({expected_duration})"
-            )));
-        }
-
         Ok(Self {
             start_time_millis_inc,
             end_time_millis_exc,
-            duration_millis,
             is_candle_closed,
             ohlcv,
             trade_count,
@@ -75,7 +64,9 @@ impl MarketCandle {
 
     /// Returns the candle duration in milliseconds.
     pub fn duration_millis(&self) -> TimestampMillis {
-        self.duration_millis
+        self.end_time_millis_exc
+            .checked_sub(self.start_time_millis_inc)
+            .expect("MarketCandle guarantees the end is not before the start")
     }
 
     /// Returns whether the candle is closed and will no longer receive updates.
@@ -98,7 +89,6 @@ impl MarketCandle {
 struct MarketCandleData {
     start_time_millis_inc: TimestampMillis,
     end_time_millis_exc: TimestampMillis,
-    duration_millis: TimestampMillis,
     is_candle_closed: bool,
     ohlcv: MarketOhlcv,
     trade_count: u64,
@@ -111,7 +101,6 @@ impl TryFrom<MarketCandleData> for MarketCandle {
         Self::new(
             data.start_time_millis_inc,
             data.end_time_millis_exc,
-            data.duration_millis,
             data.is_candle_closed,
             data.ohlcv,
             data.trade_count,
@@ -131,7 +120,6 @@ mod tests {
         MarketCandle::new(
             TimestampMillis::new(1_000),
             TimestampMillis::new(2_000),
-            TimestampMillis::new(1_000),
             true,
             ohlcv(),
             3,
@@ -140,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn accepts_a_duration_that_matches_the_interval() {
+    fn derives_the_duration_from_the_interval() {
         let candle = candle();
 
         assert_eq!(candle.duration_millis(), TimestampMillis::new(1_000));
@@ -157,7 +145,6 @@ mod tests {
         let candle = MarketCandle::new(
             TimestampMillis::new(1_000),
             TimestampMillis::new(1_000),
-            TimestampMillis::new(0),
             true,
             ohlcv(),
             0,
@@ -168,25 +155,9 @@ mod tests {
     }
 
     #[test]
-    fn rejects_a_duration_that_does_not_match_the_interval() {
-        let error = MarketCandle::new(
-            TimestampMillis::new(1_000),
-            TimestampMillis::new(2_000),
-            TimestampMillis::new(999),
-            true,
-            ohlcv(),
-            3,
-        )
-        .unwrap_err();
-
-        assert!(matches!(error, StockTrekError::Domain(_)));
-    }
-
-    #[test]
     fn rejects_an_end_that_precedes_the_start() {
         let error = MarketCandle::new(
             TimestampMillis::new(2_000),
-            TimestampMillis::new(1_000),
             TimestampMillis::new(1_000),
             true,
             ohlcv(),
@@ -208,17 +179,10 @@ mod tests {
     }
 
     #[test]
-    fn deserialization_rejects_a_duration_that_does_not_match_the_interval() {
-        let json = serde_json::json!({
-            "start_time_millis_inc": 1_000,
-            "end_time_millis_exc": 2_000,
-            "duration_millis": 999,
-            "is_candle_closed": true,
-            "ohlcv": ohlcv(),
-            "trade_count": 3,
-        });
+    fn serialization_omits_the_redundant_duration() {
+        let json = serde_json::to_value(candle()).unwrap();
 
-        assert!(serde_json::from_value::<MarketCandle>(json).is_err());
+        assert!(json.get("duration_millis").is_none());
     }
 
     #[test]
@@ -226,7 +190,6 @@ mod tests {
         let json = serde_json::json!({
             "start_time_millis_inc": 2_000,
             "end_time_millis_exc": 1_000,
-            "duration_millis": 1_000,
             "is_candle_closed": true,
             "ohlcv": ohlcv(),
             "trade_count": 3,
