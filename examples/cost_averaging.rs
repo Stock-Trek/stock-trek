@@ -1,10 +1,15 @@
 use std::cmp::Ordering;
-use stock_trek::prelude::*;
+use stock_trek::{prelude::*, values::BinaryOperator};
 
-/// The satoshi multiplier
-const SATOSHI_SCALE: f64 = 1_000_000.0;
-/// The base-asset quantity for one satoshi.
-const SATOSHI_QUANTITY: f64 = 1.0 / SATOSHI_SCALE;
+/// The number of satoshis in one bitcoin.
+const SATOSHIS_PER_BITCOIN: f64 = 100_000_000.0;
+/// The base-asset quantity bought per order, expressed in satoshis. This matches the
+/// example market's minimum base increment.
+const ORDER_QUANTITY_SATOSHIS: f64 = 100.0;
+/// The base-asset quantity bought per order (100 satoshis = 0.000001 BTC).
+const ORDER_QUANTITY: f64 = ORDER_QUANTITY_SATOSHIS / SATOSHIS_PER_BITCOIN;
+/// The quote-currency buffer added to the order notional to cover fees and rounding.
+const FEE_BUFFER_RATE: f64 = 0.001;
 /// The CEX account that should place orders. TODO make this injectable and mapped by CexId
 const CEX_ACCOUNT_ID: &str = "main";
 
@@ -13,7 +18,7 @@ pub struct CostAveraging {
     key_account: SignalKey<AccountId>,
     key_market_exists: SignalKey<bool>,
     key_cheapest_price: SignalKey<f64>,
-    key_satoshi_quantity: SignalKey<f64>,
+    key_order_quantity: SignalKey<f64>,
 }
 
 impl Default for CostAveraging {
@@ -23,7 +28,7 @@ impl Default for CostAveraging {
             key_account: SignalKey::new_required("ACCOUNT"),
             key_market_exists: SignalKey::new_optional("MARKET_EXISTS", false),
             key_cheapest_price: SignalKey::new_required("CHEAPEST_PRICE"),
-            key_satoshi_quantity: SignalKey::new_required("SATOSHI_QUANTITY"),
+            key_order_quantity: SignalKey::new_required("ORDER_QUANTITY"),
         }
     }
 }
@@ -52,7 +57,7 @@ impl Algorithm for CostAveraging {
     }
     fn signals(&self, c: &SignalContext) -> StockTrekResult<Signals> {
         let mut signals = Signals::new();
-        signals.write(&self.key_satoshi_quantity, SATOSHI_QUANTITY);
+        signals.write(&self.key_order_quantity, ORDER_QUANTITY);
         signals.write(&self.key_account, AccountId::new(CEX_ACCOUNT_ID));
 
         let cheapest_market = c
@@ -80,20 +85,29 @@ impl Algorithm for CostAveraging {
         let btc = c.literals.asset_id(AssetId::Bitcoin);
         let usdt = c.literals.asset_id(AssetId::TetherUSD);
         let cheapest_price = c.signals.number(&self.key_cheapest_price);
-        let satoshi_quantity = c.signals.number(&self.key_satoshi_quantity);
+        let order_quantity = c.signals.number(&self.key_order_quantity);
+        let notional = c.calculations.binary(
+            cheapest_price.clone(),
+            BinaryOperator::Mul,
+            order_quantity.clone(),
+        );
+        let required_quote = c.calculations.binary(
+            notional,
+            BinaryOperator::Mul,
+            c.literals.number(1.0 + FEE_BUFFER_RATE),
+        );
+        let available_quote =
+            c.portfolio
+                .asset_available_in_cex_account(cex.clone(), account.clone(), usdt.clone());
         let tag = Tag::new("CostAveraging");
         c.commands.if_else(
             c.conditions.signal(&self.key_market_exists),
             c.commands.if_else(
-                c.conditions.compare(
-                    c.portfolio.asset_available_in_cex_account(
-                        cex.clone(),
-                        account.clone(),
-                        usdt.clone(),
-                    ),
-                    Ordering::Greater,
-                    cheapest_price.clone(),
-                ),
+                c.conditions.not(c.conditions.compare(
+                    available_quote,
+                    Ordering::Less,
+                    required_quote,
+                )),
                 c.commands.plan(vec![c.actions.place_order(
                     cex.clone(),
                     account.clone(),
@@ -104,7 +118,7 @@ impl Algorithm for CostAveraging {
                         Activation::Immediate,
                         cheapest_price,
                         TimeInForce::ImmediateOrCancel,
-                        Quantity::OfBase(satoshi_quantity),
+                        Quantity::OfBase(order_quantity),
                         tag,
                     ),
                     RecoveryPolicy::with_default_response(ActionErrorResponse::Stop).on_error(
@@ -127,10 +141,18 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use stock_trek::markets::{Market, MarketBuilder, TimestampMillis};
+    use std::{cell::RefCell, rc::Rc};
+    use stock_trek::{
+        PortfolioBuilder, ResolvedContext,
+        actions::ResolvedAction,
+        markets::{Market, MarketBuilder, TimestampMillis},
+        types::OrderRequest,
+    };
+
+    const ASK: f64 = 200.0;
 
     fn market(asks: &[f64]) -> Market {
-        let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.000_1);
+        let mut builder = MarketBuilder::new(ORDER_QUANTITY, 0.01, 0.000_1);
         for (index, ask) in asks.iter().enumerate() {
             builder = builder.tick(
                 TimestampMillis::from(index as u64),
@@ -148,6 +170,74 @@ mod tests {
             builder.cex_market(cex, AssetId::Bitcoin, AssetId::TetherUSD, market);
         }
         builder.build()
+    }
+
+    fn execute(
+        algorithm: &CostAveraging,
+        signals: Signals,
+        available_usdt: f64,
+    ) -> Vec<ResolvedAction> {
+        let actions = Rc::new(RefCell::new(Vec::new()));
+        let enqueued_actions = Rc::clone(&actions);
+        let mut portfolio = PortfolioBuilder::new();
+        portfolio.asset_count(
+            CexId::Binance,
+            AccountId::new(CEX_ACCOUNT_ID),
+            AssetId::TetherUSD,
+            available_usdt,
+        );
+        let mut resolved = ResolvedContext::new(
+            Box::new(move |action, _| {
+                enqueued_actions.borrow_mut().push(action.clone());
+                Ok(())
+            }),
+            portfolio.build(),
+            signals,
+        );
+        algorithm
+            .strategy(&StrategyContext::new())
+            .execute(&mut resolved)
+            .unwrap();
+        actions.borrow().clone()
+    }
+
+    fn assert_places_expected_order(actions: &[ResolvedAction]) {
+        assert_eq!(actions.len(), 1);
+        match &actions[0] {
+            ResolvedAction::PlaceOrder {
+                cex_id,
+                account_id,
+                order_request,
+            } => {
+                assert_eq!(*cex_id, CexId::Binance);
+                assert_eq!(account_id, &AccountId::new(CEX_ACCOUNT_ID));
+                match order_request {
+                    OrderRequest::Limit {
+                        base,
+                        quote,
+                        side,
+                        limit_price,
+                        time_in_force,
+                        quantity,
+                        ..
+                    } => {
+                        assert_eq!(*base, AssetId::Bitcoin);
+                        assert_eq!(*quote, AssetId::TetherUSD);
+                        assert_eq!(*side, Side::Buy);
+                        assert_eq!(*time_in_force, TimeInForce::ImmediateOrCancel);
+                        assert_eq!(*limit_price, ASK);
+                        match quantity {
+                            Quantity::OfBase(quantity) => {
+                                assert_eq!(*quantity, ORDER_QUANTITY);
+                            }
+                            Quantity::OfQuote(_) => panic!("expected a base-asset quantity"),
+                        }
+                    }
+                    other => panic!("expected a limit order, got {other:?}"),
+                }
+            }
+            other => panic!("expected a place-order action, got {other:?}"),
+        }
     }
 
     #[test]
@@ -185,5 +275,43 @@ mod tests {
             .unwrap();
 
         assert!(!signals.read(&algorithm.key_market_exists).unwrap());
+    }
+
+    #[test]
+    fn places_an_order_when_available_quote_covers_notional_and_fees() {
+        let algorithm = CostAveraging::default();
+        let signals = algorithm
+            .signals(&context(vec![(CexId::Binance, market(&[ASK]))]))
+            .unwrap();
+
+        assert_places_expected_order(&execute(&algorithm, signals, 1.0));
+    }
+
+    #[test]
+    fn does_not_place_an_order_without_a_market() {
+        let algorithm = CostAveraging::default();
+        let signals = algorithm.signals(&context(vec![])).unwrap();
+
+        assert!(execute(&algorithm, signals, 1.0).is_empty());
+    }
+
+    #[test]
+    fn does_not_place_an_order_when_available_quote_covers_only_the_notional() {
+        let algorithm = CostAveraging::default();
+        let signals = algorithm
+            .signals(&context(vec![(CexId::Binance, market(&[ASK]))]))
+            .unwrap();
+
+        assert!(execute(&algorithm, signals, ASK * ORDER_QUANTITY).is_empty());
+    }
+
+    #[test]
+    fn does_not_place_an_order_when_quote_is_insufficient() {
+        let algorithm = CostAveraging::default();
+        let signals = algorithm
+            .signals(&context(vec![(CexId::Binance, market(&[ASK]))]))
+            .unwrap();
+
+        assert!(execute(&algorithm, signals, 0.0001).is_empty());
     }
 }
