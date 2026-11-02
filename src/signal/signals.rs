@@ -6,12 +6,12 @@ use crate::{
     signal::{key::SignalKey, key::SignalKeyType, value::SignalValue},
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, convert::TryFrom};
+use std::{collections::BTreeMap, convert::TryFrom};
 
 /// A collection of named signal values.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Signals {
-    signal_values: HashMap<String, SignalValue>,
+    signal_values: BTreeMap<String, SignalValue>,
 }
 
 impl Signals {
@@ -73,5 +73,21 @@ mod tests {
 
         let flag = SignalKey::<bool>::new_required("missing_flag");
         assert_eq!(missing_name(&flag), "Flag");
+    }
+
+    #[test]
+    fn serializes_signal_values_in_key_order() {
+        let mut signals = Signals::new();
+        let z = SignalKey::<f64>::new_required("z");
+        let a = SignalKey::<f64>::new_required("a");
+        signals.write(&z, 2.0);
+        signals.write(&a, 1.0);
+
+        let json = serde_json::to_string(&signals).unwrap();
+
+        assert_eq!(
+            json,
+            r#"{"signal_values":{"a":{"number":1.0},"z":{"number":2.0}}}"#
+        );
     }
 }

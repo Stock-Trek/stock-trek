@@ -9,7 +9,7 @@ use crate::{
     },
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Market data for a single trading pair on a CEX.
 ///
@@ -119,8 +119,8 @@ pub struct MarketBuilder {
     quote_increment: f64,
     minimum_notional: f64,
     ticks: Vec<MarketTick>,
-    rolling: HashMap<RollingWindow, MarketCandle>,
-    aligned: HashMap<AlignedWindow, Vec<MarketCandle>>,
+    rolling: BTreeMap<RollingWindow, MarketCandle>,
+    aligned: BTreeMap<AlignedWindow, Vec<MarketCandle>>,
     order_book_asks: Vec<MarketQuote>,
     order_book_bids: Vec<MarketQuote>,
     error: Option<StockTrekError>,
@@ -134,8 +134,8 @@ impl MarketBuilder {
             quote_increment,
             minimum_notional,
             ticks: Vec::new(),
-            rolling: HashMap::new(),
-            aligned: HashMap::new(),
+            rolling: BTreeMap::new(),
+            aligned: BTreeMap::new(),
             order_book_bids: Vec::new(),
             order_book_asks: Vec::new(),
             error: None,
@@ -162,13 +162,13 @@ impl MarketBuilder {
         &self.ticks
     }
 
-    /// Returns the rolling-window candles added to the builder.
-    pub fn rolling(&self) -> &HashMap<RollingWindow, MarketCandle> {
+    /// Returns the rolling-window candles added to the builder, ordered by window.
+    pub fn rolling(&self) -> &BTreeMap<RollingWindow, MarketCandle> {
         &self.rolling
     }
 
-    /// Returns the aligned-window candles added to the builder.
-    pub fn aligned(&self) -> &HashMap<AlignedWindow, Vec<MarketCandle>> {
+    /// Returns the aligned-window candles added to the builder, ordered by window.
+    pub fn aligned(&self) -> &BTreeMap<AlignedWindow, Vec<MarketCandle>> {
         &self.aligned
     }
 

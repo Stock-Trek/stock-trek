@@ -66,11 +66,7 @@ impl Algorithm for CostAveraging {
                 let ask_price = market.ticks().latest()?.ask().price();
                 (ask_price.is_finite() && ask_price > 0.0).then_some((cex, ask_price))
             })
-            .min_by(|(a_cex, a_price), (b_cex, b_price)| {
-                a_price
-                    .total_cmp(b_price)
-                    .then_with(|| a_cex.to_string().cmp(&b_cex.to_string()))
-            });
+            .min_by(|(_, a_price), (_, b_price)| a_price.total_cmp(b_price));
 
         if let Some((cheapest_cex, cheapest_ask)) = cheapest_market {
             signals.write(&self.key_cex, cheapest_cex);
