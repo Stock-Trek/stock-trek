@@ -25,7 +25,8 @@ impl MarketOhlcv {
     /// Creates OHLCV values from their individual components.
     ///
     /// Returns an error for non-finite or negative values, negative volumes,
-    /// or prices that are inconsistent with the high and low.
+    /// or prices that are inconsistent with the high and low. The VWAP must
+    /// also be between the low and high.
     pub fn new(
         open: f64,
         high: f64,
@@ -86,6 +87,12 @@ impl MarketOhlcv {
             return Err(Validation::error(
                 function,
                 format!("close {close} must be between low {low} and high {high}"),
+            ));
+        }
+        if vwap < low || vwap > high {
+            return Err(Validation::error(
+                function,
+                format!("vwap {vwap} must be between low {low} and high {high}"),
             ));
         }
 
@@ -214,6 +221,14 @@ mod tests {
     }
 
     #[test]
+    fn rejects_a_vwap_outside_the_high_and_low() {
+        assert!(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 0.4).is_err());
+        assert!(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 2.1).is_err());
+        assert!(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 0.5).is_ok());
+        assert!(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 2.0).is_ok());
+    }
+
+    #[test]
     fn serde_json_round_trip_preserves_the_values() {
         let ohlcv = MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap();
         let json = serde_json::to_string(&ohlcv).unwrap();
@@ -232,6 +247,21 @@ mod tests {
             "volume": -10.0,
             "quote_volume": -15.0,
             "vwap": 1.4,
+        });
+
+        assert!(serde_json::from_value::<MarketOhlcv>(json).is_err());
+    }
+
+    #[test]
+    fn deserialization_rejects_a_vwap_outside_the_high_and_low() {
+        let json = serde_json::json!({
+            "open": 100.0,
+            "high": 110.0,
+            "low": 90.0,
+            "close": 105.0,
+            "volume": 10.0,
+            "quote_volume": 15.0,
+            "vwap": 1000.0,
         });
 
         assert!(serde_json::from_value::<MarketOhlcv>(json).is_err());
