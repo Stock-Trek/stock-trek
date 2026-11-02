@@ -1,6 +1,6 @@
 //! Networks within a blockchain.
 
-use crate::dex::string_id::define_string_id;
+use crate::dex::string_id::string_id_funcs;
 use crate::error::{result::StockTrekError, value::ValueError};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -69,7 +69,7 @@ impl NetworkId {
     }
 }
 
-define_string_id!(NetworkId, custom);
+string_id_funcs!(NetworkId, custom);
 
 /// Numeric chain identifier, such as an EVM chain ID.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

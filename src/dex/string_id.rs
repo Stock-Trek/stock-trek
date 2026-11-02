@@ -6,7 +6,7 @@
 /// separately. By default the type is expected to be a tuple struct backed by
 /// `Cow<'static, str>`. Pass `custom` for a type with a different representation
 /// that provides its own `from_string`, `as_str`, and `into_inner` methods.
-macro_rules! define_string_id {
+macro_rules! string_id_funcs {
     ($name:ident) => {
         impl $name {
             fn from_string(value: String) -> Self {
@@ -24,10 +24,10 @@ macro_rules! define_string_id {
             }
         }
 
-        define_string_id!(@shared $name);
+        string_id_funcs!(@shared $name);
     };
     ($name:ident, custom) => {
-        define_string_id!(@shared $name);
+        string_id_funcs!(@shared $name);
     };
     (@shared $name:ident) => {
         impl $name {
@@ -119,4 +119,4 @@ macro_rules! define_string_id {
     };
 }
 
-pub(crate) use define_string_id;
+pub(crate) use string_id_funcs;
