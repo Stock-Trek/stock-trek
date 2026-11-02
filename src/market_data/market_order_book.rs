@@ -5,11 +5,10 @@ use serde::{Deserialize, Deserializer, Serialize};
 ///
 /// Bids are kept from highest to lowest price and asks from lowest to highest
 /// price, regardless of the order in which they are supplied.
-#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketOrderBook {
-    pub bids: Vec<MarketQuote>,
-    pub asks: Vec<MarketQuote>,
+    bids: Vec<MarketQuote>,
+    asks: Vec<MarketQuote>,
 }
 
 impl MarketOrderBook {
@@ -21,6 +20,14 @@ impl MarketOrderBook {
         bids.sort_by(|a, b| b.price.total_cmp(&a.price));
         asks.sort_by(|a, b| a.price.total_cmp(&b.price));
         Self { bids, asks }
+    }
+    /// Returns bids ordered from highest to lowest price.
+    pub fn bids(&self) -> &[MarketQuote] {
+        &self.bids
+    }
+    /// Returns asks ordered from lowest to highest price.
+    pub fn asks(&self) -> &[MarketQuote] {
+        &self.asks
     }
     /// Returns bids as `(price, quantity)` pairs.
     pub fn bid_price_quantities(&self) -> Vec<PriceQuantity> {
