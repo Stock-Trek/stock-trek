@@ -46,7 +46,7 @@ impl OperatorError {
 }
 
 macro_rules! domain_check {
-    ($condition:expr, $function:literal, $message:expr $(,)?) => {
+    ($condition:expr, $function:expr, $message:expr $(,)?) => {
         if $condition {
             return Err($crate::value::operator_error::OperatorError::domain_error(
                 $function, $message,

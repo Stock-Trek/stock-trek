@@ -1,10 +1,12 @@
 use super::operator_error::{OperatorError, domain_check};
 use crate::error::result::StockTrekResult;
 use serde::{Deserialize, Serialize};
-use strum::Display;
+use strum::{Display, IntoStaticStr};
 
 /// Binary operations that can be applied to two numeric values.
-#[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Debug, Display, IntoStaticStr, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
@@ -28,22 +30,9 @@ pub enum BinaryOperator {
 }
 
 impl BinaryOperator {
-    fn name(self) -> &'static str {
-        match self {
-            BinaryOperator::Add => "Add",
-            BinaryOperator::Atan2 => "Atan2",
-            BinaryOperator::Div => "Div",
-            BinaryOperator::Log => "Log",
-            BinaryOperator::Mod => "Mod",
-            BinaryOperator::Mul => "Mul",
-            BinaryOperator::Pow => "Pow",
-            BinaryOperator::Sub => "Sub",
-        }
-    }
-
     /// Applies the operator to `left` and `right`.
     pub fn calculate(self, left: f64, right: f64) -> StockTrekResult<f64> {
-        let function = self.name();
+        let function: &'static str = self.into();
         OperatorError::check_finite(function, "left operand", left)?;
         OperatorError::check_finite(function, "right operand", right)?;
 
@@ -53,7 +42,7 @@ impl BinaryOperator {
             BinaryOperator::Div => {
                 if right == 0.0 {
                     return Err(OperatorError::division_by_zero(
-                        "Div",
+                        function,
                         "divisor = 0 would produce +/- infinity",
                     ));
                 }
@@ -62,7 +51,7 @@ impl BinaryOperator {
             BinaryOperator::Pow => {
                 domain_check!(
                     left < 0.0 && right.fract() != 0.0,
-                    "Pow",
+                    function,
                     format!(
                         "base {} < 0 with fractional exponent {} would produce a complex number",
                         left, right
@@ -71,17 +60,17 @@ impl BinaryOperator {
                 left.powf(right)
             }
             BinaryOperator::Log => {
-                domain_check!(left == 0.0, "Log", "argument = 0 is undefined");
-                domain_check!(right == 0.0, "Log", "base = 0 is undefined");
-                domain_check!(right == 1.0, "Log", "base = 1 is undefined");
+                domain_check!(left == 0.0, function, "argument = 0 is undefined");
+                domain_check!(right == 0.0, function, "base = 0 is undefined");
+                domain_check!(right == 1.0, function, "base = 1 is undefined");
                 domain_check!(
                     left < 0.0,
-                    "Log",
+                    function,
                     format!("argument {} < 0 would produce a complex number", left)
                 );
                 domain_check!(
                     right < 0.0,
-                    "Log",
+                    function,
                     format!("base {} < 0 would produce a complex number", right)
                 );
                 left.log(right)
@@ -89,7 +78,7 @@ impl BinaryOperator {
             BinaryOperator::Mod => {
                 if right == 0.0 {
                     return Err(OperatorError::division_by_zero(
-                        "Mod",
+                        function,
                         "divisor = 0 would produce +/- infinity",
                     ));
                 }

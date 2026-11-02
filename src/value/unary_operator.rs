@@ -1,10 +1,12 @@
 use super::operator_error::{OperatorError, domain_check};
 use crate::error::result::StockTrekResult;
 use serde::{Deserialize, Serialize};
-use strum::Display;
+use strum::{Display, IntoStaticStr};
 
 /// Unary operations that can be applied to a numeric value.
-#[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Debug, Display, IntoStaticStr, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
@@ -64,40 +66,9 @@ pub enum UnaryOperator {
 }
 
 impl UnaryOperator {
-    fn name(self) -> &'static str {
-        match self {
-            UnaryOperator::Abs => "Abs",
-            UnaryOperator::Acos => "Acos",
-            UnaryOperator::Acosh => "Acosh",
-            UnaryOperator::Asin => "Asin",
-            UnaryOperator::Asinh => "Asinh",
-            UnaryOperator::Atan => "Atan",
-            UnaryOperator::Atanh => "Atanh",
-            UnaryOperator::Ceil => "Ceil",
-            UnaryOperator::Cos => "Cos",
-            UnaryOperator::Cosh => "Cosh",
-            UnaryOperator::Exp => "Exp",
-            UnaryOperator::Exp2 => "Exp2",
-            UnaryOperator::Floor => "Floor",
-            UnaryOperator::Frac => "Frac",
-            UnaryOperator::Log10 => "Log10",
-            UnaryOperator::Log2 => "Log2",
-            UnaryOperator::LogE => "LogE",
-            UnaryOperator::Neg => "Neg",
-            UnaryOperator::RoundAwayFrom0 => "RoundAwayFrom0",
-            UnaryOperator::RoundTiesEven => "RoundTiesEven",
-            UnaryOperator::Sin => "Sin",
-            UnaryOperator::Sinh => "Sinh",
-            UnaryOperator::Sqrt => "Sqrt",
-            UnaryOperator::Tan => "Tan",
-            UnaryOperator::Tanh => "Tanh",
-            UnaryOperator::Trunc => "Trunc",
-        }
-    }
-
     /// Applies the operator to `value`.
     pub fn calculate(self, value: f64) -> StockTrekResult<f64> {
-        let function = self.name();
+        let function: &'static str = self.into();
         OperatorError::check_finite(function, "value", value)?;
 
         let calculation_result = match self {
@@ -105,19 +76,19 @@ impl UnaryOperator {
             UnaryOperator::Acos => {
                 domain_check!(
                     value < -1.0 || value > 1.0,
-                    "Acos",
+                    function,
                     format!("value {} outside [-1, 1]", value)
                 );
                 value.acos()
             }
             UnaryOperator::Acosh => {
-                domain_check!(value < 1.0, "Acosh", format!("value {} < 1", value));
+                domain_check!(value < 1.0, function, format!("value {} < 1", value));
                 value.acosh()
             }
             UnaryOperator::Asin => {
                 domain_check!(
                     value < -1.0 || value > 1.0,
-                    "Asin",
+                    function,
                     format!("value {} outside [-1, 1]", value)
                 );
                 value.asin()
@@ -127,17 +98,17 @@ impl UnaryOperator {
             UnaryOperator::Atanh => {
                 domain_check!(
                     value == -1.0,
-                    "Atanh",
+                    function,
                     "value = -1 produces negative infinity"
                 );
                 domain_check!(
                     value == 1.0,
-                    "Atanh",
+                    function,
                     "value = 1 produces positive infinity"
                 );
                 domain_check!(
                     value < -1.0 || value > 1.0,
-                    "Atanh",
+                    function,
                     format!("value {} outside [-1, 1]", value)
                 );
                 value.atanh()
@@ -150,28 +121,28 @@ impl UnaryOperator {
             UnaryOperator::Floor => value.floor(),
             UnaryOperator::Frac => value.fract(),
             UnaryOperator::Log10 => {
-                domain_check!(value == 0.0, "Log10", "value = 0 is undefined");
+                domain_check!(value == 0.0, function, "value = 0 is undefined");
                 domain_check!(
                     value < 0.0,
-                    "Log10",
+                    function,
                     format!("value {} < 0 would produce a complex number", value)
                 );
                 value.log10()
             }
             UnaryOperator::Log2 => {
-                domain_check!(value == 0.0, "Log2", "value = 0 is undefined");
+                domain_check!(value == 0.0, function, "value = 0 is undefined");
                 domain_check!(
                     value < 0.0,
-                    "Log2",
+                    function,
                     format!("value {} < 0 would produce a complex number", value)
                 );
                 value.log2()
             }
             UnaryOperator::LogE => {
-                domain_check!(value == 0.0, "LogE", "value = 0 is undefined");
+                domain_check!(value == 0.0, function, "value = 0 is undefined");
                 domain_check!(
                     value < 0.0,
-                    "LogE",
+                    function,
                     format!("value {} < 0 would produce a complex number", value)
                 );
                 value.ln()
@@ -184,7 +155,7 @@ impl UnaryOperator {
             UnaryOperator::Sqrt => {
                 domain_check!(
                     value < 0.0,
-                    "Sqrt",
+                    function,
                     format!("value {} < 0 would produce a complex number", value)
                 );
                 value.sqrt()
