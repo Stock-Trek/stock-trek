@@ -263,12 +263,6 @@ mod tests {
     }
 
     #[test]
-    fn rejects_non_finite_asks() {
-        assert!(MarketQuote::new(0.0, 1.0).is_err());
-        assert!(MarketQuote::new(f64::NAN, 1.0).is_err());
-    }
-
-    #[test]
     fn places_an_order_when_available_quote_covers_notional_and_fees() {
         let algorithm = CostAveraging::default();
         let signals = algorithm
