@@ -5,13 +5,15 @@
 //! phases:
 //!
 //! 1. [`Algorithm::signals`] runs on every evaluation. It turns the market
-//!    data in a [`SignalContext`] into a [`Signals`] map that both phases can
-//!    read by key.
-//! 2. [`Algorithm::strategy`] runs exactly once. It builds a [`Command`] tree
-//!    from the factories on a [`StrategyContext`]. The platform then
+//!    data in a [`SignalContext`](crate::signals::SignalContext) into a
+//!    [`Signals`](crate::signals::Signals) map that both phases can read by
+//!    key.
+//! 2. [`Algorithm::strategy`] runs exactly once. It builds a [`Command`]
+//!    tree from the factories on a [`StrategyContext`]. The platform then
 //!    interprets that tree on every evaluation, resolving deferred values
-//!    against the latest [`Signals`] and [`Portfolio`] and enqueueing the
-//!    resulting [`actions::Action`]s for execution.
+//!    against the latest [`Signals`](crate::signals::Signals) and
+//!    [`Portfolio`] and enqueueing the resulting [`actions::Action`]s for
+//!    execution.
 //!
 //! Because the strategy phase runs once, every value that depends on market
 //! data or the portfolio must be produced by a factory rather than read

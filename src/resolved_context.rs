@@ -15,7 +15,8 @@ pub struct ResolvedContext {
     pub enqueue_action: EnqueueActionFn,
     /// The latest portfolio snapshot.
     pub portfolio: Portfolio,
-    /// The signals from the latest [`Algorithm::signals`] evaluation.
+    /// The signals from the latest
+    /// [`Algorithm::signals`](crate::Algorithm::signals) evaluation.
     pub signals: Signals,
 }
 

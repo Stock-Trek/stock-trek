@@ -29,7 +29,8 @@ pub trait Algorithm: Send + Sync {
     ///
     /// Called on every evaluation, before the command tree is interpreted.
     /// Writing the same keys on every call keeps later reads predictable:
-    /// required [`SignalKey`]s error when absent, so a signal that is only
+    /// required [`SignalKey`](crate::signals::SignalKey)s error when absent,
+    /// so a signal that is only
     /// sometimes available should be paired with an optional key carrying a
     /// default.
     fn signals(&self, c: &SignalContext) -> StockTrekResult<Signals>;

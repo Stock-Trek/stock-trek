@@ -6,7 +6,7 @@ use strum::Display;
 
 /// An action with all signal and portfolio values resolved.
 ///
-/// Produced when an [`super::Action`] is enqueued and handed to the
+/// Produced when an [`Action`](crate::actions::Action) is enqueued and handed to the
 /// [`EnqueueActionFn`](crate::resolved_context::EnqueueActionFn) callback for
 /// execution.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]

@@ -165,7 +165,7 @@ pub enum QuantityOf {
 
 /// Factory for constructing conditions.
 ///
-/// Available as the `conditions` field of a [`StrategyContext`].
+/// Available as the `conditions` field of a [`StrategyContext`](crate::StrategyContext).
 #[derive(Debug, Clone, Default)]
 pub struct ConditionFactory;
 

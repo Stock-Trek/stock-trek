@@ -107,7 +107,7 @@ impl HasRequiredCapabilities for Command {
 
 /// Factory for constructing commands.
 ///
-/// Available as the `commands` field of a [`StrategyContext`].
+/// Available as the `commands` field of a [`StrategyContext`](crate::StrategyContext).
 #[derive(Debug, Clone, Default)]
 pub struct CommandFactory;
 
