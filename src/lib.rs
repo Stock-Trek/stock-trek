@@ -33,7 +33,6 @@ mod algorithm;
 mod cex;
 mod commands;
 mod conditions;
-/// Decentralised exchange (DEX) types.
 #[allow(unused)]
 #[cfg(feature = "dex")]
 mod dex;
