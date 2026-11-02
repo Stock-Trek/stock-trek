@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Open, high, low, close, and volume values for a candle.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MarketOhlcv {
     /// The opening price.
     pub open: f64,

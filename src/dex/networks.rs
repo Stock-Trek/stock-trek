@@ -346,7 +346,7 @@ fn blockchain(
         BlockchainId::new(blockchain_id),
         FamilyId::new(family_id),
         native_decimals,
-        address_format.to_string(),
+        address_format,
     )
 }
 
@@ -355,7 +355,7 @@ fn evm_blockchain(blockchain_name: &str) -> StockTrekResult<Blockchain> {
         BlockchainId::new(blockchain_name),
         FamilyId::new(FAMILY_ID_EVM),
         18,
-        "^0x[a-fA-F0-9]{40}$".to_string(),
+        "^0x[a-fA-F0-9]{40}$",
     )
 }
 

@@ -1,4 +1,6 @@
-use crate::market_data::{market_candle::MarketCandle, rolling_window::RollingWindow};
+use crate::market_data::{
+    market_candle::MarketCandle, market_ohlcv::MarketOhlcv, rolling_window::RollingWindow,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -17,7 +19,8 @@ impl MarketRollingWindow {
     pub fn new(candles: HashMap<RollingWindow, MarketCandle>) -> Self {
         Self { candles }
     }
-    /// Returns the OHLCV values for a rolling window, if present.
+
+    /// Returns the OHLCV tuple for a rolling window, if present.
     pub fn ohlcv(&self, window: RollingWindow) -> Option<Ohlcv> {
         let ohlcv = &self.candles.get(&window)?.ohlcv;
         Some((
@@ -30,12 +33,16 @@ impl MarketRollingWindow {
             ohlcv.vwap,
         ))
     }
+
+    /// Returns the OHLCV values for a rolling window as a struct, if present.
+    pub fn ohlcv_struct(&self, window: RollingWindow) -> Option<MarketOhlcv> {
+        self.candles.get(&window).map(|candle| candle.ohlcv.clone())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::market_data::market_ohlcv::MarketOhlcv;
 
     fn candle() -> MarketCandle {
         MarketCandle::new(
@@ -53,6 +60,7 @@ mod tests {
         let market = MarketRollingWindow::new(HashMap::new());
 
         assert!(market.ohlcv(RollingWindow::Minutes1).is_none());
+        assert!(market.ohlcv_struct(RollingWindow::Minutes1).is_none());
     }
 
     #[test]
@@ -66,6 +74,16 @@ mod tests {
     }
 
     #[test]
+    fn ohlcv_struct_returns_values_when_window_is_present() {
+        let market = MarketRollingWindow::new(HashMap::from([(RollingWindow::Minutes1, candle())]));
+
+        assert_eq!(
+            market.ohlcv_struct(RollingWindow::Minutes1),
+            Some(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4))
+        );
+    }
+
+    #[test]
     fn serde_json_round_trip() {
         let market = MarketRollingWindow::new(HashMap::from([(RollingWindow::Minutes1, candle())]));
         let json = serde_json::to_string(&market).unwrap();
@@ -74,6 +92,10 @@ mod tests {
         assert_eq!(
             deserialized.ohlcv(RollingWindow::Minutes1),
             Some((1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4))
+        );
+        assert_eq!(
+            deserialized.ohlcv_struct(RollingWindow::Minutes1),
+            Some(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4))
         );
     }
 }
