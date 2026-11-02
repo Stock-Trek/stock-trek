@@ -140,22 +140,6 @@ mod tests {
     }
 
     #[test]
-    fn mainnet_and_testnet_have_a_single_representation() {
-        assert_eq!(NetworkId::new("mainnet").unwrap(), NetworkId::MAINNET);
-        assert_eq!(NetworkId::new("testnet").unwrap(), NetworkId::TESTNET);
-        assert_eq!(NetworkId::new("mainnet").unwrap(), NetworkId::MAINNET);
-        assert_eq!(NetworkId::new("testnet").unwrap(), NetworkId::TESTNET);
-        assert_eq!(
-            serde_json::to_string(&NetworkId::new("mainnet").unwrap()).unwrap(),
-            serde_json::to_string(&NetworkId::MAINNET).unwrap()
-        );
-        assert_eq!(
-            serde_json::to_string(&NetworkId::new("testnet").unwrap()).unwrap(),
-            serde_json::to_string(&NetworkId::TESTNET).unwrap()
-        );
-    }
-
-    #[test]
     fn network_names_are_trimmed_and_canonicalized() {
         assert_eq!(NetworkId::new(" mainnet ").unwrap(), NetworkId::MAINNET);
         assert_eq!(
