@@ -38,6 +38,85 @@ fn limit_sell(quantity: Quantity<f64>, limit_price: f64) -> OrderRequest<AssetId
 }
 
 #[test]
+fn asset_iterators_report_balances_for_each_account() {
+    let account_a = AccountId::new("a");
+    let account_b = AccountId::new("b");
+    let mut builder = PortfolioBuilder::new();
+    builder
+        .asset_count(CexId::Binance, account_a.clone(), AssetId::Bitcoin, 2.0)
+        .asset_count(CexId::Binance, account_a.clone(), AssetId::TetherUSD, 3.0)
+        .asset_count(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 4.0);
+    let portfolio = builder.build();
+
+    let balances: std::collections::HashMap<_, _> = portfolio
+        .assets_iter()
+        .map(|(cex_id, account_id, asset_id, count)| {
+            ((*cex_id, account_id.clone(), *asset_id), *count)
+        })
+        .collect();
+
+    assert_eq!(balances.len(), 3);
+    assert_eq!(
+        balances.get(&(CexId::Binance, account_a.clone(), AssetId::Bitcoin)),
+        Some(&2.0)
+    );
+    assert_eq!(
+        balances.get(&(CexId::Binance, account_a.clone(), AssetId::TetherUSD)),
+        Some(&3.0)
+    );
+    assert_eq!(
+        balances.get(&(CexId::Binance, account_b.clone(), AssetId::Bitcoin)),
+        Some(&4.0)
+    );
+
+    assert_eq!(
+        portfolio
+            .assets_in_cex_account_iter(&CexId::Binance, &account_a)
+            .count(),
+        2
+    );
+    assert_eq!(
+        portfolio.asset_total_in_cex_account(&CexId::Binance, &account_b, &AssetId::Bitcoin,),
+        4.0
+    );
+    assert_eq!(portfolio.asset_total(&AssetId::Bitcoin), 6.0);
+}
+
+#[test]
+fn pending_order_count_helpers_agree_with_their_iterators() {
+    let account_a = AccountId::new("a");
+    let account_b = AccountId::new("b");
+    let mut builder = PortfolioBuilder::new();
+    builder
+        .pending_order(
+            CexId::Binance,
+            account_a.clone(),
+            limit_sell(Quantity::OfBase(1.0), 100.0),
+            0.0,
+            0.0,
+        )
+        .pending_order(
+            CexId::Binance,
+            account_b.clone(),
+            limit_sell(Quantity::OfBase(1.0), 100.0),
+            0.0,
+            0.0,
+        );
+    let portfolio = builder.build();
+
+    assert_eq!(portfolio.pending_orders_count(), 2);
+    assert_eq!(portfolio.pending_orders_with_tag_count(&Tag::new("tag")), 2);
+    assert_eq!(
+        portfolio.pending_orders_with_tag_count(&Tag::new("other")),
+        0
+    );
+    assert_eq!(
+        portfolio.pending_orders_in_cex_account_count(&CexId::Binance, &account_a),
+        1
+    );
+}
+
+#[test]
 fn reserved_quantity_is_clamped_when_filled_exceeds_ordered() {
     let portfolio = portfolio_with(limit_sell(Quantity::OfBase(10.0), 100.0), 15.0, 0.0);
 
