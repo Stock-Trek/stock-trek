@@ -86,9 +86,9 @@ mod tests {
     fn tick_with_timestamp(timestamp_millis: u64, price: f64) -> MarketTick {
         MarketTick::new(
             TimestampMillis::new(timestamp_millis),
-            MarketQuote::new(price, 2.0),
-            MarketQuote::new(price + 1.0, 3.0),
-            MarketQuote::new(price + 0.5, 4.0),
+            MarketQuote::new(price, 2.0).unwrap(),
+            MarketQuote::new(price + 1.0, 3.0).unwrap(),
+            MarketQuote::new(price + 0.5, 4.0).unwrap(),
         )
     }
 
