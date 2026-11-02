@@ -5,8 +5,8 @@ use crate::{
         market_candle::MarketCandle, market_order_book::MarketOrderBook, market_quote::MarketQuote,
         market_rolling_window::MarketRollingWindow, market_tick::MarketTick,
         market_ticks::MarketTicks, rolling_window::RollingWindow, timestamp::TimestampMillis,
-        validation::Validation,
     },
+    validation::Validation,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -37,7 +37,8 @@ impl Market {
     ) -> StockTrekResult<()> {
         Validation::positive(function, "base increment", base_increment)?;
         Validation::positive(function, "quote increment", quote_increment)?;
-        Validation::non_negative(function, "minimum notional", minimum_notional)
+        Validation::non_negative(function, "minimum notional", minimum_notional)?;
+        Ok(())
     }
 
     /// Returns the minimum increment for the base asset quantity.

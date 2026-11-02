@@ -1,9 +1,7 @@
 use crate::{
-    error::{
-        market_data::MarketDataError,
-        result::{StockTrekError, StockTrekResult},
-    },
+    error::result::{StockTrekError, StockTrekResult},
     market_data::{market_ohlcv::MarketOhlcv, timestamp::TimestampMillis},
+    validation::Validation,
 };
 use serde::{Deserialize, Serialize};
 
@@ -62,10 +60,7 @@ impl MarketCandle {
     }
 
     fn error(message: String) -> StockTrekError {
-        StockTrekError::MarketData(MarketDataError::DomainError {
-            function: "MarketCandle::new",
-            message,
-        })
+        Validation::error("MarketCandle::new", message)
     }
 
     /// Returns the inclusive start time of the candle.
@@ -184,10 +179,7 @@ mod tests {
         )
         .unwrap_err();
 
-        assert!(matches!(
-            error,
-            StockTrekError::MarketData(MarketDataError::DomainError { .. })
-        ));
+        assert!(matches!(error, StockTrekError::Domain(_)));
     }
 
     #[test]
@@ -202,10 +194,7 @@ mod tests {
         )
         .unwrap_err();
 
-        assert!(matches!(
-            error,
-            StockTrekError::MarketData(MarketDataError::DomainError { .. })
-        ));
+        assert!(matches!(error, StockTrekError::Domain(_)));
     }
 
     #[test]

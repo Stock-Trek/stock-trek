@@ -1,6 +1,6 @@
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
-    market_data::validation::Validation,
+    validation::Validation,
 };
 use serde::{Deserialize, Serialize};
 

@@ -274,12 +274,7 @@ fn timestamp_bounds_reject_lower_above_upper() {
     let result =
         AlignedTimestampBounds::new(TimestampMillis::new(2_000), TimestampMillis::new(1_000));
 
-    assert!(matches!(
-        result,
-        Err(StockTrekError::MarketData(
-            MarketDataError::DomainError { .. }
-        ))
-    ));
+    assert!(matches!(result, Err(StockTrekError::Domain(_))));
 }
 
 #[test]

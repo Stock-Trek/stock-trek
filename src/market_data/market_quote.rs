@@ -1,6 +1,5 @@
 use crate::{
-    error::result::StockTrekResult,
-    market_data::{timestamp::TimestampMillis, validation::Validation},
+    error::result::StockTrekResult, market_data::timestamp::TimestampMillis, validation::Validation,
 };
 use serde::{Deserialize, Serialize};
 
@@ -25,7 +24,8 @@ impl MarketQuote {
 
     pub(crate) fn validate(&self, function: &'static str) -> StockTrekResult<()> {
         Validation::positive(function, "price", self.price)?;
-        Validation::positive(function, "quantity", self.quantity)
+        Validation::positive(function, "quantity", self.quantity)?;
+        Ok(())
     }
 
     fn from_parts(function: &'static str, price: f64, quantity: f64) -> StockTrekResult<Self> {

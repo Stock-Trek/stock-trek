@@ -1,7 +1,4 @@
-use crate::error::{
-    result::{StockTrekError, StockTrekResult},
-    stats::StatsError,
-};
+use crate::{error::result::StockTrekResult, validation::Validation};
 use stock_trek_types::cex::{asset_id::AssetId, order_request::OrderRequest};
 
 /// An order with the quantities that have already been filled.
@@ -22,8 +19,16 @@ impl PendingOrder {
         filled_base_quantity: f64,
         filled_quote_quantity: f64,
     ) -> StockTrekResult<Self> {
-        Self::validate_filled_quantity("filled base quantity", filled_base_quantity)?;
-        Self::validate_filled_quantity("filled quote quantity", filled_quote_quantity)?;
+        Validation::non_negative(
+            "PendingOrder::new",
+            "filled base quantity",
+            filled_base_quantity,
+        )?;
+        Validation::non_negative(
+            "PendingOrder::new",
+            "filled quote quantity",
+            filled_quote_quantity,
+        )?;
         Ok(Self {
             order_request,
             filled_base_quantity,
@@ -44,25 +49,6 @@ impl PendingOrder {
     /// Returns the quantity of the quote asset that has been filled.
     pub fn filled_quote_quantity(&self) -> f64 {
         self.filled_quote_quantity
-    }
-
-    fn validate_filled_quantity(field: &'static str, value: f64) -> StockTrekResult<()> {
-        if !value.is_finite() {
-            return Err(Self::error(format!(
-                "{field} {value} is not finite (NaN or infinity)"
-            )));
-        }
-        if value < 0.0 {
-            return Err(Self::error(format!("{field} {value} must be non-negative")));
-        }
-        Ok(())
-    }
-
-    fn error(message: String) -> StockTrekError {
-        StockTrekError::Stats(StatsError::DomainError {
-            function: "PendingOrder::new",
-            message,
-        })
     }
 }
 

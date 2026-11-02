@@ -1,5 +1,6 @@
-use super::operator_error::{OperatorError, domain_check};
+use super::operator_error::domain_check;
 use crate::error::result::StockTrekResult;
+use crate::validation::Validation;
 use serde::{Deserialize, Serialize};
 use strum::{Display, IntoStaticStr};
 
@@ -69,7 +70,7 @@ impl UnaryOperator {
     /// Applies the operator to `value`.
     pub fn calculate(self, value: f64) -> StockTrekResult<f64> {
         let function: &'static str = self.into();
-        OperatorError::check_finite(function, "value", value)?;
+        Validation::finite(function, "value", value)?;
 
         let calculation_result = match self {
             UnaryOperator::Abs => value.abs(),
@@ -164,7 +165,7 @@ impl UnaryOperator {
             UnaryOperator::Tanh => value.tanh(),
             UnaryOperator::Trunc => value.trunc(),
         };
-        OperatorError::check_finite(function, "result", calculation_result)?;
+        Validation::finite(function, "result", calculation_result)?;
         Ok(calculation_result)
     }
 }
