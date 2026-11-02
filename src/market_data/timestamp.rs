@@ -23,6 +23,23 @@ impl TimestampMillis {
     pub const fn into_inner(self) -> u64 {
         self.0
     }
+
+    /// Adds `rhs` milliseconds, returning `None` on overflow.
+    pub const fn checked_add(self, rhs: Self) -> Option<Self> {
+        match self.0.checked_add(rhs.0) {
+            Some(millis) => Some(Self::new(millis)),
+            None => None,
+        }
+    }
+
+    /// Subtracts `rhs` milliseconds, returning `None` if the result would be
+    /// negative.
+    pub const fn checked_sub(self, rhs: Self) -> Option<Self> {
+        match self.0.checked_sub(rhs.0) {
+            Some(millis) => Some(Self::new(millis)),
+            None => None,
+        }
+    }
 }
 
 impl From<u64> for TimestampMillis {
@@ -140,5 +157,16 @@ mod tests {
             lower + TimestampMillis::new(500),
             TimestampMillis::new(1_500)
         );
+    }
+
+    #[test]
+    fn checked_arithmetic_reports_overflow_and_underflow() {
+        let zero = TimestampMillis::new(0);
+        let one = TimestampMillis::new(1);
+        let max = TimestampMillis::new(u64::MAX);
+
+        assert_eq!(one.checked_sub(one), Some(zero));
+        assert_eq!(zero.checked_sub(one), None);
+        assert_eq!(max.checked_add(one), None);
     }
 }
