@@ -1,5 +1,5 @@
 use crate::{
-    action::action::Action, cex::capability::HasRequiredCapabilities,
+    action::action_type::Action, cex::capability::HasRequiredCapabilities,
     error::result::StockTrekResult, resolvable::Resolvable, resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};

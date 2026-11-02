@@ -44,9 +44,6 @@ traitreg = "0.4"
 [dev-dependencies]
 serde_json = { version = "1", features = ["float_roundtrip"] }
 
-[lints.clippy]
-module_inception = "allow"
-
 [package.metadata.docs.rs]
 default-target = "x86_64-unknown-linux-gnu"
 features = ["dex"]

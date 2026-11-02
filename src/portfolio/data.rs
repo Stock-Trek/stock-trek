@@ -1,6 +1,6 @@
 use super::CexAccountPortfolio;
 use crate::pending_order::PendingOrder;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId, tag::Tag};
 
 /// A snapshot of asset balances and pending orders across CEX accounts.
@@ -9,14 +9,77 @@ pub struct Portfolio {
     pub(super) portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
 }
 
+/// A single entry accepted by [`Portfolio::new`].
+///
+/// An entry is either a `(cex_id, accounts)` pair, where `accounts` is any
+/// iterator of account portfolios, or a flattened
+/// `(cex_id, account_id, portfolio)` tuple.
+pub trait PortfolioEntry {
+    /// Inserts this entry into `portfolios`.
+    fn insert_into(
+        self,
+        portfolios: &mut BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
+    );
+}
+
+impl<A> PortfolioEntry for (CexId, A)
+where
+    A: IntoIterator<Item = (AccountId, CexAccountPortfolio)>,
+{
+    fn insert_into(
+        self,
+        portfolios: &mut BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
+    ) {
+        let (cex_id, accounts) = self;
+        let accounts_by_id = portfolios.entry(cex_id).or_default();
+        for (account_id, portfolio) in accounts {
+            accounts_by_id.insert(account_id, portfolio);
+        }
+    }
+}
+
+impl PortfolioEntry for (CexId, AccountId, CexAccountPortfolio) {
+    fn insert_into(
+        self,
+        portfolios: &mut BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
+    ) {
+        let (cex_id, account_id, portfolio) = self;
+        portfolios
+            .entry(cex_id)
+            .or_default()
+            .insert(account_id, portfolio);
+    }
+}
+
+impl<E> FromIterator<E> for Portfolio
+where
+    E: PortfolioEntry,
+{
+    fn from_iter<T: IntoIterator<Item = E>>(iter: T) -> Self {
+        Self::new(iter)
+    }
+}
+
 impl Portfolio {
     /// Creates a portfolio from CEX and account portfolios.
-    pub fn new(portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>) -> Self {
-        let portfolios = portfolios
-            .into_iter()
-            .map(|(cex_id, accounts)| (cex_id, accounts.into_iter().collect()))
-            .collect();
-        Self { portfolios }
+    ///
+    /// Accepts any iterator of [`PortfolioEntry`] values. Entries can be
+    /// nested `(cex_id, accounts)` pairs, where each `accounts` value is
+    /// itself an iterator of `(account_id, portfolio)` pairs, or flattened
+    /// `(cex_id, account_id, portfolio)` tuples. For example, nested
+    /// `HashMap`s, `BTreeMap`s, or vectors can all be used.
+    pub fn new<I, E>(portfolios: I) -> Self
+    where
+        I: IntoIterator<Item = E>,
+        E: PortfolioEntry,
+    {
+        let mut portfolios_by_cex = BTreeMap::new();
+        for entry in portfolios {
+            entry.insert_into(&mut portfolios_by_cex);
+        }
+        Self {
+            portfolios: portfolios_by_cex,
+        }
     }
     /// Whether an account exists
     pub fn has_cex_account(&self, cex_id: &CexId, account_id: &AccountId) -> bool {

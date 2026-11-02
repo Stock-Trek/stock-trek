@@ -118,7 +118,7 @@ mod tests {
     };
 
     fn market() -> Market {
-        MarketBuilder::new(0.000_001, 0.01, 1.0).build().unwrap()
+        MarketBuilder::new(0.000_001, 0.01, 1.0).unwrap().build()
     }
 
     fn candle(start_millis: u64) -> MarketCandle {
@@ -144,6 +144,7 @@ mod tests {
     #[test]
     fn builder_methods_can_be_chained() {
         let market = MarketBuilder::new(0.000_001, 0.01, 1.0)
+            .unwrap()
             .tick(
                 TimestampMillis::new(1),
                 MarketQuote::new(100.0, 1.0).unwrap(),
@@ -153,9 +154,10 @@ mod tests {
             .rolling_set_candle(RollingWindow::Minutes1, candle(1_000))
             .aligned_push_candle(AlignedWindow::Minutes1, candle(1_000))
             .order_book_bid(100.0, 1.0)
+            .unwrap()
             .order_book_ask(101.0, 2.0)
-            .build()
-            .unwrap();
+            .unwrap()
+            .build();
 
         assert_eq!(market.base_increment(), 0.000_001);
         assert_eq!(market.quote_increment(), 0.01);
@@ -170,30 +172,31 @@ mod tests {
     #[test]
     fn rejects_non_finite_and_non_positive_parameters() {
         for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, 0.0, -1.0] {
-            assert!(MarketBuilder::new(value, 0.01, 1.0).build().is_err());
-            assert!(MarketBuilder::new(0.000_001, value, 1.0).build().is_err());
+            assert!(MarketBuilder::new(value, 0.01, 1.0).is_err());
+            assert!(MarketBuilder::new(0.000_001, value, 1.0).is_err());
         }
         for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -1.0] {
-            assert!(MarketBuilder::new(0.000_001, 0.01, value).build().is_err());
+            assert!(MarketBuilder::new(0.000_001, 0.01, value).is_err());
         }
     }
 
     #[test]
     fn rejects_invalid_order_book_quotes() {
-        let builder = MarketBuilder::new(0.000_001, 0.01, 1.0)
-            .order_book_bid(f64::NAN, 1.0)
-            .order_book_ask(101.0, f64::INFINITY);
+        let builder = MarketBuilder::new(0.000_001, 0.01, 1.0).unwrap();
 
-        assert!(builder.build().is_err());
+        assert!(builder.clone().order_book_bid(f64::NAN, 1.0).is_err());
+        assert!(builder.order_book_ask(101.0, f64::INFINITY).is_err());
     }
 
     #[test]
     fn serde_json_round_trip_preserves_the_market() {
         let market = MarketBuilder::new(0.000_001, 0.01, 1.0)
+            .unwrap()
             .order_book_bid(100.0, 1.0)
+            .unwrap()
             .order_book_ask(101.0, 1.0)
-            .build()
-            .unwrap();
+            .unwrap()
+            .build();
 
         let json = serde_json::to_string(&market).unwrap();
         let deserialized: Market = serde_json::from_str(&json).unwrap();
@@ -213,9 +216,10 @@ mod tests {
     #[test]
     fn deserialization_rejects_invalid_nested_quotes() {
         let market = MarketBuilder::new(0.000_001, 0.01, 1.0)
+            .unwrap()
             .order_book_bid(100.0, 1.0)
-            .build()
-            .unwrap();
+            .unwrap()
+            .build();
         let mut value = serde_json::to_value(market).unwrap();
         value["order_book"]["bids"][0]["quantity"] = serde_json::json!(0.0);
 

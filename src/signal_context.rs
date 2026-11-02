@@ -124,7 +124,7 @@ mod tests {
     use crate::market_data::market::MarketBuilder;
 
     fn market() -> Market {
-        MarketBuilder::new(0.000_001, 0.01, 1.0).build().unwrap()
+        MarketBuilder::new(0.000_001, 0.01, 1.0).unwrap().build()
     }
 
     #[test]

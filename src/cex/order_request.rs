@@ -4,7 +4,7 @@ use crate::{
     resolvable::Resolvable,
     resolved_context::ResolvedContext,
     validation::Validation,
-    value::value::{AssetIdValue, NumberValue},
+    value::value_types::{AssetIdValue, NumberValue},
 };
 use stock_trek_types::cex::{
     asset_id::AssetId, capability::CexCapability, order_request::OrderRequest, quantity::Quantity,

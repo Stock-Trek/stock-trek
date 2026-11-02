@@ -6,7 +6,7 @@ use crate::{
     resolved_context::ResolvedContext,
     signal::key::SignalKey,
     util::serde_ordering::OrderingSerde,
-    value::value::NumberValue,
+    value::value_types::NumberValue,
 };
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -118,7 +118,15 @@ impl Condition {
                     }
                     Ok(true)
                 }
-                QuantityOf::Partial => {
+                QuantityOf::Any => {
+                    for condition in conditions {
+                        if condition.test(c)? {
+                            return Ok(true);
+                        }
+                    }
+                    Ok(false)
+                }
+                QuantityOf::AtLeastOneButNotAll => {
                     let mut has_true = false;
                     let mut has_false = false;
                     for condition in conditions {
@@ -141,7 +149,7 @@ impl Condition {
                     }
                     Ok(true)
                 }
-                QuantityOf::Empty => Ok(conditions.is_empty()),
+                QuantityOf::EmptyList => Ok(conditions.is_empty()),
             },
             Condition::Signal { signal } => c.signals.read(signal),
         }
@@ -156,12 +164,52 @@ impl Condition {
 pub enum QuantityOf {
     /// All conditions must be true.
     All,
-    /// At least one and not all conditions must be true.
-    Partial,
+    /// At least one condition must be true.
+    Any,
+    /// At least one condition must be true and at least one must be false.
+    #[serde(
+        alias = "partial",
+        alias = "some",
+        alias = "some_but_not_all",
+        alias = "any_but_not_all",
+        alias = "not_all"
+    )]
+    AtLeastOneButNotAll,
     /// No conditions may be true.
     None,
     /// The condition list must be empty.
-    Empty,
+    #[serde(alias = "empty", alias = "is_empty", alias = "no_conditions")]
+    EmptyList,
+}
+
+impl QuantityOf {
+    /// Alias for [`QuantityOf::AtLeastOneButNotAll`].
+    #[allow(non_upper_case_globals)]
+    pub const Partial: Self = Self::AtLeastOneButNotAll;
+    /// Alias for [`QuantityOf::AtLeastOneButNotAll`].
+    #[allow(non_upper_case_globals)]
+    pub const SomeButNotAll: Self = Self::AtLeastOneButNotAll;
+    /// Alias for [`QuantityOf::AtLeastOneButNotAll`].
+    #[allow(non_upper_case_globals)]
+    pub const Some: Self = Self::AtLeastOneButNotAll;
+    /// Alias for [`QuantityOf::AtLeastOneButNotAll`].
+    #[allow(non_upper_case_globals)]
+    pub const AnyButNotAll: Self = Self::AtLeastOneButNotAll;
+    /// Alias for [`QuantityOf::AtLeastOneButNotAll`].
+    #[allow(non_upper_case_globals)]
+    pub const NotAll: Self = Self::AtLeastOneButNotAll;
+    /// Alias for [`QuantityOf::Any`].
+    #[allow(non_upper_case_globals)]
+    pub const AtLeastOne: Self = Self::Any;
+    /// Alias for [`QuantityOf::EmptyList`].
+    #[allow(non_upper_case_globals)]
+    pub const Empty: Self = Self::EmptyList;
+    /// Alias for [`QuantityOf::EmptyList`].
+    #[allow(non_upper_case_globals)]
+    pub const IsEmpty: Self = Self::EmptyList;
+    /// Alias for [`QuantityOf::EmptyList`].
+    #[allow(non_upper_case_globals)]
+    pub const NoConditions: Self = Self::EmptyList;
 }
 
 /// Factory for constructing conditions.
@@ -231,12 +279,11 @@ impl ConditionFactory {
 mod tests {
     use super::*;
     use crate::{portfolio::Portfolio, signal::signals::Signals};
-    use std::collections::HashMap;
 
     fn context() -> ResolvedContext {
         ResolvedContext {
             enqueue_action: Box::new(|_, _| Ok(())),
-            portfolio: Portfolio::new(HashMap::new()),
+            portfolio: Portfolio::default(),
             signals: Signals::new(),
         }
     }
@@ -327,27 +374,46 @@ mod tests {
     }
 
     #[test]
-    fn quantity_of_partial_short_circuits_after_true_and_false() {
+    fn quantity_of_at_least_one_but_not_all_short_circuits_after_true_and_false() {
         let conditions = vec![
             literal_condition(true),
             literal_condition(false),
             failing_condition(),
         ];
 
-        assert!(quantity_of(QuantityOf::Partial, conditions).unwrap());
+        assert!(quantity_of(QuantityOf::AtLeastOneButNotAll, conditions).unwrap());
     }
 
     #[test]
-    fn quantity_of_empty_does_not_evaluate_conditions() {
-        assert!(quantity_of(QuantityOf::Empty, vec![]).unwrap());
-        assert!(!quantity_of(QuantityOf::Empty, vec![failing_condition()]).unwrap());
+    fn quantity_of_empty_list_does_not_evaluate_conditions() {
+        assert!(quantity_of(QuantityOf::EmptyList, vec![]).unwrap());
+        assert!(!quantity_of(QuantityOf::EmptyList, vec![failing_condition()]).unwrap());
     }
 
     #[test]
     fn quantity_of_propagates_errors_when_the_result_is_not_determined() {
         assert!(quantity_of(QuantityOf::All, vec![failing_condition()]).is_err());
         assert!(quantity_of(QuantityOf::None, vec![failing_condition()]).is_err());
-        assert!(quantity_of(QuantityOf::Partial, vec![failing_condition()]).is_err());
+        assert!(quantity_of(QuantityOf::AtLeastOneButNotAll, vec![failing_condition()]).is_err());
+    }
+
+    #[test]
+    fn quantity_of_any_returns_true_when_at_least_one_condition_is_true() {
+        assert!(!quantity_of(QuantityOf::Any, vec![]).unwrap());
+        assert!(
+            quantity_of(
+                QuantityOf::Any,
+                vec![literal_condition(false), literal_condition(true)]
+            )
+            .unwrap()
+        );
+        assert!(
+            quantity_of(
+                QuantityOf::Any,
+                vec![literal_condition(true), literal_condition(true)]
+            )
+            .unwrap()
+        );
     }
 
     #[test]
@@ -368,14 +434,14 @@ mod tests {
         );
         assert!(
             quantity_of(
-                QuantityOf::Partial,
+                QuantityOf::AtLeastOneButNotAll,
                 vec![literal_condition(true), literal_condition(false)]
             )
             .unwrap()
         );
         assert!(
             !quantity_of(
-                QuantityOf::Partial,
+                QuantityOf::AtLeastOneButNotAll,
                 vec![literal_condition(true), literal_condition(true)]
             )
             .unwrap()

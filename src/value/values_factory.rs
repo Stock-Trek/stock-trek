@@ -3,7 +3,7 @@ use crate::{
     value::{
         binary_operator::BinaryOperator,
         unary_operator::UnaryOperator,
-        value::{AccountIdValue, AssetIdValue, CexIdValue, FlagValue, NumberValue},
+        value_types::{AccountIdValue, AssetIdValue, CexIdValue, FlagValue, NumberValue},
     },
 };
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId, tag::Tag};

@@ -1,9 +1,9 @@
 use crate::{
     action::{
-        action::Action,
+        action_type::Action,
         recoverable_action::{RecoverableAction, RecoveryPolicy},
     },
-    value::value::{AccountIdValue, AssetIdValue, CexIdValue, NumberValue},
+    value::value_types::{AccountIdValue, AssetIdValue, CexIdValue, NumberValue},
 };
 use stock_trek_types::cex::{order_request::OrderRequest, tag::Tag};
 

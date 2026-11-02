@@ -107,16 +107,16 @@ impl Algorithm for CostAveraging {
                 c.commands.plan(vec![c.actions.place_order(
                     cex.clone(),
                     account.clone(),
-                    c.orders.limit(
-                        btc,
-                        usdt.clone(),
-                        Side::Buy,
-                        Activation::Immediate,
-                        cheapest_price,
-                        TimeInForce::ImmediateOrCancel,
-                        Quantity::OfBase(order_quantity),
+                    c.orders.limit(LimitOrder {
+                        base: btc,
+                        quote: usdt.clone(),
+                        side: Side::Buy,
+                        activation: Activation::Immediate,
+                        limit_price: cheapest_price,
+                        time_in_force: TimeInForce::ImmediateOrCancel,
+                        quantity: Quantity::OfBase(order_quantity),
                         tag,
-                    ),
+                    }),
                     RecoveryPolicy::with_default_response(ActionErrorResponse::Stop).on_error(
                         ActionErrorCause::TemporaryCexRejection,
                         ActionErrorResponse::Retry { max_retries: 3 },
@@ -148,7 +148,7 @@ mod tests {
     const ASK: f64 = 200.0;
 
     fn market(asks: &[f64]) -> Market {
-        let mut builder = MarketBuilder::new(ORDER_QUANTITY, 0.01, 0.000_1);
+        let mut builder = MarketBuilder::new(ORDER_QUANTITY, 0.01, 0.000_1).unwrap();
         for (index, ask) in asks.iter().enumerate() {
             builder = builder.tick(
                 TimestampMillis::from(index as u64),
@@ -157,7 +157,7 @@ mod tests {
                 MarketQuote::new(*ask, 1.0).unwrap(),
             );
         }
-        builder.build().unwrap()
+        builder.build()
     }
 
     fn context(markets: Vec<(CexId, Market)>) -> SignalContext {
@@ -175,18 +175,20 @@ mod tests {
     ) -> Vec<ResolvedAction> {
         let actions = Rc::new(RefCell::new(Vec::new()));
         let enqueued_actions = Rc::clone(&actions);
-        let portfolio = PortfolioBuilder::new().asset_count(
-            CexId::Binance,
-            AccountId::new(CEX_ACCOUNT_ID),
-            AssetId::TetherUSD,
-            available_usdt,
-        );
+        let portfolio = PortfolioBuilder::new()
+            .asset_count(
+                CexId::Binance,
+                AccountId::new(CEX_ACCOUNT_ID),
+                AssetId::TetherUSD,
+                available_usdt,
+            )
+            .unwrap();
         let mut resolved = ResolvedContext::new(
             Box::new(move |action, _| {
                 enqueued_actions.borrow_mut().push(action.clone());
                 Ok(())
             }),
-            portfolio.build().unwrap(),
+            portfolio.build(),
             signals,
         );
         algorithm
