@@ -5,6 +5,7 @@ use crate::error::{
     result::{StockTrekError, StockTrekResult},
 };
 use regex::Regex;
+use regex_syntax::hir::{Hir, HirKind, Look};
 use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as};
 
@@ -55,7 +56,13 @@ impl Blockchain {
                 message: error.to_string(),
             })
         })?;
-        if !Self::has_anchors(address_format) {
+        let hir = regex_syntax::parse(address_format).map_err(|error| {
+            StockTrekError::Dex(DexError::InvalidAddressFormat {
+                blockchain_id: blockchain_id.to_string(),
+                message: error.to_string(),
+            })
+        })?;
+        if !Self::has_anchors(&hir) {
             return Err(StockTrekError::Dex(DexError::InvalidAddressFormat {
                 blockchain_id: blockchain_id.to_string(),
                 message: "address format must start and end with an anchor".into(),
@@ -96,28 +103,26 @@ impl Blockchain {
             .is_some_and(|matched| matched.start() == 0 && matched.end() == contract_address.len())
     }
 
-    fn has_anchors(address_format: &str) -> bool {
-        let pattern = Self::strip_leading_flags(address_format);
-        (pattern.starts_with('^') || pattern.starts_with(r"\A"))
-            && (pattern.ends_with('$') || pattern.ends_with(r"\z"))
+    fn has_anchors(hir: &Hir) -> bool {
+        Self::starts_anchored(hir) && Self::ends_anchored(hir)
     }
 
-    fn strip_leading_flags(mut pattern: &str) -> &str {
-        while let Some(rest) = pattern.strip_prefix("(?") {
-            let Some(end) = rest.find(')') else {
-                break;
-            };
-            let flags = &rest[..end];
-            if flags.is_empty()
-                || !flags
-                    .chars()
-                    .all(|flag| flag.is_ascii_alphabetic() || flag == '-')
-            {
-                break;
-            }
-            pattern = &rest[end + 1..];
+    fn starts_anchored(hir: &Hir) -> bool {
+        match hir.kind() {
+            HirKind::Look(Look::Start) => true,
+            HirKind::Capture(capture) => Self::starts_anchored(&capture.sub),
+            HirKind::Concat(items) => items.first().is_some_and(Self::starts_anchored),
+            _ => false,
         }
-        pattern
+    }
+
+    fn ends_anchored(hir: &Hir) -> bool {
+        match hir.kind() {
+            HirKind::Look(Look::End) => true,
+            HirKind::Capture(capture) => Self::ends_anchored(&capture.sub),
+            HirKind::Concat(items) => items.last().is_some_and(Self::ends_anchored),
+            _ => false,
+        }
     }
 }
 
@@ -189,6 +194,23 @@ mod tests {
         assert!(blockchain("0x[a-fA-F0-9]{40}").is_err());
         assert!(blockchain("^0x[a-fA-F0-9]{40}").is_err());
         assert!(blockchain("0x[a-fA-F0-9]{40}$").is_err());
+    }
+
+    #[test]
+    fn returns_an_error_for_an_unanchored_address_format_with_scoped_flags() {
+        assert!(blockchain("(?i:0x[a-f0-9]{40})").is_err());
+        assert!(blockchain("(?i:^0x[a-f0-9]{40})").is_err());
+        assert!(blockchain("(?i:0x[a-f0-9]{40}$)").is_err());
+    }
+
+    #[test]
+    fn accepts_an_address_format_with_scoped_flags() {
+        let blockchain = blockchain("(?i:^0x[a-f0-9]{40}$)").unwrap();
+
+        assert!(blockchain.is_valid_address("0x0000000000000000000000000000000000000000"));
+        assert!(blockchain.is_valid_address("0X0000000000000000000000000000000000000000"));
+        assert!(!blockchain.is_valid_address("not-an-address"));
+        assert!(!blockchain.is_valid_address("0x000000000000000000000000000000000000000"));
     }
 
     #[test]
