@@ -17,865 +17,322 @@ pub const FAMILY_ID_OSMOSIS: &str = "osmosis";
 pub const FAMILY_ID_SOLANA: &str = "solana";
 pub const FAMILY_ID_TRON: &str = "tron";
 
-pub mod arbitrum {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
+macro_rules! define_network_name {
+    ($($variant:ident => $network_id:expr),+ $(,)?) => {
+        #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+        #[serde(rename_all = "snake_case")]
+        #[strum(serialize_all = "snake_case")]
+        #[non_exhaustive]
+        pub enum NetworkName {
+            $($variant,)+
+        }
 
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Sepolia,
-        Nova,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 42161,
-                NetworkName::Sepolia => 421614,
-                NetworkName::Nova => 42170,
+        impl From<NetworkName> for NetworkId {
+            fn from(value: NetworkName) -> Self {
+                match value {
+                    $(NetworkName::$variant => $network_id,)+
+                }
             }
         }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Sepolia => "sepolia".into(),
-                NetworkName::Nova => "nova".into(),
+    };
+}
+
+macro_rules! define_evm_network {
+    (
+        $module:ident,
+        $blockchain:literal,
+        {
+            $($variant:ident => ($chain_id:literal, $network_id:expr)),+ $(,)?
+        }
+    ) => {
+        pub mod $module {
+            use crate::dex::network::NetworkId;
+            use crate::error::result::StockTrekResult;
+            use serde::{Deserialize, Serialize};
+            use strum::Display;
+
+            define_network_name! {
+                $($variant => $network_id,)+
+            }
+
+            impl From<NetworkName> for u64 {
+                fn from(value: NetworkName) -> Self {
+                    match value {
+                        $(NetworkName::$variant => $chain_id,)+
+                    }
+                }
+            }
+
+            pub fn asset_on_chain(
+                network: NetworkName,
+                asset_kind: crate::dex::asset_kind::AssetKind,
+            ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
+                super::evm_asset_on_chain($blockchain, network, asset_kind)
             }
         }
-    }
+    };
+}
 
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("arbitrum", network, asset_kind)
+macro_rules! define_network {
+    (
+        $module:ident,
+        $blockchain:literal,
+        $family_id:ident,
+        $native_decimals:literal,
+        $address_format:literal,
+        {
+            $($variant:ident => $network_id:expr),+ $(,)?
+        }
+    ) => {
+        pub mod $module {
+            use crate::dex::network::{Network, NetworkId};
+            use crate::error::result::StockTrekResult;
+            use serde::{Deserialize, Serialize};
+            use strum::Display;
+
+            define_network_name! {
+                $($variant => $network_id,)+
+            }
+
+            pub fn asset_on_chain(
+                network: NetworkName,
+                asset_kind: crate::dex::asset_kind::AssetKind,
+            ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
+                let blockchain = super::blockchain(
+                    $blockchain,
+                    super::$family_id,
+                    $native_decimals,
+                    $address_format,
+                )?;
+                let network = Network::new(network.into(), None);
+                Ok(crate::dex::asset_on_chain::AssetOnChain::new(
+                    blockchain, network, asset_kind,
+                ))
+            }
+        }
+    };
+}
+
+define_evm_network! {
+    arbitrum,
+    "arbitrum",
+    {
+        Mainnet => (42161, NetworkId::Mainnet),
+        Sepolia => (421614, "sepolia".into()),
+        Nova => (42170, "nova".into()),
     }
 }
 
-pub mod avalanche {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Fuji,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 43114,
-                NetworkName::Fuji => 43113,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Fuji => "fuji".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("avalanche", network, asset_kind)
+define_evm_network! {
+    avalanche,
+    "avalanche",
+    {
+        Mainnet => (43114, NetworkId::Mainnet),
+        Fuji => (43113, "fuji".into()),
     }
 }
 
-pub mod base {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Sepolia,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 8453,
-                NetworkName::Sepolia => 84532,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Sepolia => "sepolia".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("base", network, asset_kind)
+define_evm_network! {
+    base,
+    "base",
+    {
+        Mainnet => (8453, NetworkId::Mainnet),
+        Sepolia => (84532, "sepolia".into()),
     }
 }
 
-pub mod bitcoin {
-    use crate::dex::network::{Network, NetworkId};
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Testnet,
-        Signet,
-        Regtest,
-    }
-
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-                NetworkName::Signet => "signet".into(),
-                NetworkName::Regtest => "regtest".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        let blockchain = super::blockchain(
-            "bitcoin",
-            super::FAMILY_ID_BITCOIN,
-            8,
-            r"^([13][1-9A-HJ-NP-Za-km-z]{25,34}|bc1[ac-hj-np-z02-9]{39,59}|bc1p[ac-hj-np-z02-9]{58,59})$",
-        )?;
-        let network = Network::new(network.into(), None);
-        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-            blockchain, network, asset_kind,
-        ))
+define_network! {
+    bitcoin,
+    "bitcoin",
+    FAMILY_ID_BITCOIN,
+    8,
+    r"^([13][1-9A-HJ-NP-Za-km-z]{25,34}|bc1[ac-hj-np-z02-9]{39,59}|bc1p[ac-hj-np-z02-9]{58,59})$",
+    {
+        Mainnet => NetworkId::Mainnet,
+        Testnet => NetworkId::Testnet,
+        Signet => "signet".into(),
+        Regtest => "regtest".into(),
     }
 }
 
-pub mod bitcoin_cash {
-    use crate::dex::network::{Network, NetworkId};
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Testnet,
-    }
-
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        let blockchain = super::blockchain(
-            "bitcoin-cash",
-            super::FAMILY_ID_BITCOIN_CASH,
-            8,
-            "^(bitcoincash:)?(q|p)[a-zA-HJ-NP-Z0-9]{41,42}$",
-        )?;
-        let network = Network::new(network.into(), None);
-        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-            blockchain, network, asset_kind,
-        ))
+define_network! {
+    bitcoin_cash,
+    "bitcoin-cash",
+    FAMILY_ID_BITCOIN_CASH,
+    8,
+    "^(bitcoincash:)?(q|p)[a-zA-HJ-NP-Z0-9]{41,42}$",
+    {
+        Mainnet => NetworkId::Mainnet,
+        Testnet => NetworkId::Testnet,
     }
 }
 
-pub mod bsc {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Testnet,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 56,
-                NetworkName::Testnet => 97,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("bsc", network, asset_kind)
+define_evm_network! {
+    bsc,
+    "bsc",
+    {
+        Mainnet => (56, NetworkId::Mainnet),
+        Testnet => (97, NetworkId::Testnet),
     }
 }
 
-pub mod celo {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Alfajores,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 42220,
-                NetworkName::Alfajores => 44787,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Alfajores => "alfajores".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("celo", network, asset_kind)
+define_evm_network! {
+    celo,
+    "celo",
+    {
+        Mainnet => (42220, NetworkId::Mainnet),
+        Alfajores => (44787, "alfajores".into()),
     }
 }
 
-pub mod cosmos {
-    use crate::dex::network::{Network, NetworkId};
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Hub,
-        Testnet,
-    }
-
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Hub => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        let blockchain = super::blockchain(
-            "cosmos",
-            super::FAMILY_ID_COSMOS,
-            6,
-            "^cosmos1[a-zA-HJ-NP-Z0-9]{38}$",
-        )?;
-        let network = Network::new(network.into(), None);
-        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-            blockchain, network, asset_kind,
-        ))
+define_network! {
+    cosmos,
+    "cosmos",
+    FAMILY_ID_COSMOS,
+    6,
+    "^cosmos1[a-zA-HJ-NP-Z0-9]{38}$",
+    {
+        Hub => NetworkId::Mainnet,
+        Testnet => NetworkId::Testnet,
     }
 }
 
-pub mod cronos {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Testnet,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 25,
-                NetworkName::Testnet => 338,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("cronos", network, asset_kind)
+define_evm_network! {
+    cronos,
+    "cronos",
+    {
+        Mainnet => (25, NetworkId::Mainnet),
+        Testnet => (338, NetworkId::Testnet),
     }
 }
 
-pub mod dogecoin {
-    use crate::dex::network::{Network, NetworkId};
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Testnet,
-    }
-
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        let blockchain = super::blockchain(
-            "dogecoin",
-            super::FAMILY_ID_DOGECOIN,
-            8,
-            "^D[1-9A-HJ-NP-Za-km-z]{25,34}$",
-        )?;
-        let network = Network::new(network.into(), None);
-        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-            blockchain, network, asset_kind,
-        ))
+define_network! {
+    dogecoin,
+    "dogecoin",
+    FAMILY_ID_DOGECOIN,
+    8,
+    "^D[1-9A-HJ-NP-Za-km-z]{25,34}$",
+    {
+        Mainnet => NetworkId::Mainnet,
+        Testnet => NetworkId::Testnet,
     }
 }
 
-pub mod ethereum {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Sepolia,
-        Holesky,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 1,
-                NetworkName::Sepolia => 11155111,
-                NetworkName::Holesky => 17000,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Sepolia => "sepolia".into(),
-                NetworkName::Holesky => "holesky".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("ethereum", network, asset_kind)
+define_evm_network! {
+    ethereum,
+    "ethereum",
+    {
+        Mainnet => (1, NetworkId::Mainnet),
+        Sepolia => (11155111, "sepolia".into()),
+        Holesky => (17000, "holesky".into()),
     }
 }
 
-pub mod fantom {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Testnet,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 250,
-                NetworkName::Testnet => 4002,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("fantom", network, asset_kind)
+define_evm_network! {
+    fantom,
+    "fantom",
+    {
+        Mainnet => (250, NetworkId::Mainnet),
+        Testnet => (4002, NetworkId::Testnet),
     }
 }
 
-pub mod gnosis {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Chiado,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 100,
-                NetworkName::Chiado => 10200,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Chiado => "chiado".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("gnosis", network, asset_kind)
+define_evm_network! {
+    gnosis,
+    "gnosis",
+    {
+        Mainnet => (100, NetworkId::Mainnet),
+        Chiado => (10200, "chiado".into()),
     }
 }
 
-pub mod litecoin {
-    use crate::dex::network::{Network, NetworkId};
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Testnet,
-    }
-
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        let blockchain = super::blockchain(
-            "litecoin",
-            super::FAMILY_ID_LITECOIN,
-            8,
-            "^(L|M|ltc1|ltc1p)[a-zA-HJ-NP-Z0-9]{26,60}$",
-        )?;
-        let network = Network::new(network.into(), None);
-        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-            blockchain, network, asset_kind,
-        ))
+define_network! {
+    litecoin,
+    "litecoin",
+    FAMILY_ID_LITECOIN,
+    8,
+    "^(L|M|ltc1|ltc1p)[a-zA-HJ-NP-Z0-9]{26,60}$",
+    {
+        Mainnet => NetworkId::Mainnet,
+        Testnet => NetworkId::Testnet,
     }
 }
 
-pub mod moonbeam {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Moonbase,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 1284,
-                NetworkName::Moonbase => 1287,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Moonbase => "moonbase".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("moonbeam", network, asset_kind)
+define_evm_network! {
+    moonbeam,
+    "moonbeam",
+    {
+        Mainnet => (1284, NetworkId::Mainnet),
+        Moonbase => (1287, "moonbase".into()),
     }
 }
 
-pub mod near {
-    use crate::dex::network::{Network, NetworkId};
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Testnet,
-    }
-
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        let blockchain = super::blockchain(
-            "near",
-            super::FAMILY_ID_NEAR,
-            24,
-            "^(([a-z0-9]+[\\-_])?[a-z0-9]+\\.)?([a-z0-9]+[\\-_])?[a-z0-9]+$",
-        )?;
-        let network = Network::new(network.into(), None);
-        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-            blockchain, network, asset_kind,
-        ))
+define_network! {
+    near,
+    "near",
+    FAMILY_ID_NEAR,
+    24,
+    "^(([a-z0-9]+[\\-_])?[a-z0-9]+\\.)?([a-z0-9]+[\\-_])?[a-z0-9]+$",
+    {
+        Mainnet => NetworkId::Mainnet,
+        Testnet => NetworkId::Testnet,
     }
 }
 
-pub mod optimism {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Sepolia,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 10,
-                NetworkName::Sepolia => 11155420,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Sepolia => "sepolia".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("optimism", network, asset_kind)
+define_evm_network! {
+    optimism,
+    "optimism",
+    {
+        Mainnet => (10, NetworkId::Mainnet),
+        Sepolia => (11155420, "sepolia".into()),
     }
 }
 
-pub mod osmosis {
-    use crate::dex::network::{Network, NetworkId};
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Testnet,
-    }
-
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        let blockchain = super::blockchain(
-            "osmosis",
-            super::FAMILY_ID_OSMOSIS,
-            6,
-            "^osmo1[a-zA-HJ-NP-Z0-9]{38}$",
-        )?;
-        let network = Network::new(network.into(), None);
-        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-            blockchain, network, asset_kind,
-        ))
+define_network! {
+    osmosis,
+    "osmosis",
+    FAMILY_ID_OSMOSIS,
+    6,
+    "^osmo1[a-zA-HJ-NP-Z0-9]{38}$",
+    {
+        Mainnet => NetworkId::Mainnet,
+        Testnet => NetworkId::Testnet,
     }
 }
 
-pub mod polygon {
-    use crate::dex::network::NetworkId;
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Amoy,
-        Mumbai,
-    }
-
-    impl From<NetworkName> for u64 {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => 137,
-                NetworkName::Amoy => 80002,
-                NetworkName::Mumbai => 80001,
-            }
-        }
-    }
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Amoy => "amoy".into(),
-                NetworkName::Mumbai => "mumbai".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        super::evm_asset_on_chain("polygon", network, asset_kind)
+define_evm_network! {
+    polygon,
+    "polygon",
+    {
+        Mainnet => (137, NetworkId::Mainnet),
+        Amoy => (80002, "amoy".into()),
+        Mumbai => (80001, "mumbai".into()),
     }
 }
 
-pub mod solana {
-    use crate::dex::network::{Network, NetworkId};
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Testnet,
-        Devnet,
-    }
-
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Testnet => NetworkId::Testnet,
-                NetworkName::Devnet => "devnet".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        let blockchain = super::blockchain(
-            "solana",
-            super::FAMILY_ID_SOLANA,
-            9,
-            "^[1-9A-HJ-NP-Za-km-z]{32,44}$",
-        )?;
-        let network = Network::new(network.into(), None);
-        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-            blockchain, network, asset_kind,
-        ))
+define_network! {
+    solana,
+    "solana",
+    FAMILY_ID_SOLANA,
+    9,
+    "^[1-9A-HJ-NP-Za-km-z]{32,44}$",
+    {
+        Mainnet => NetworkId::Mainnet,
+        Testnet => NetworkId::Testnet,
+        Devnet => "devnet".into(),
     }
 }
 
-pub mod tron {
-    use crate::dex::network::{Network, NetworkId};
-    use crate::error::result::StockTrekResult;
-    use serde::{Deserialize, Serialize};
-    use strum::Display;
-
-    #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
-    #[non_exhaustive]
-    pub enum NetworkName {
-        Mainnet,
-        Shasta,
-        Nile,
-    }
-
-    impl From<NetworkName> for NetworkId {
-        fn from(value: NetworkName) -> Self {
-            match value {
-                NetworkName::Mainnet => NetworkId::Mainnet,
-                NetworkName::Shasta => "shasta".into(),
-                NetworkName::Nile => "nile".into(),
-            }
-        }
-    }
-
-    pub fn asset_on_chain(
-        network: NetworkName,
-        asset_kind: crate::dex::asset_kind::AssetKind,
-    ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-        let blockchain =
-            super::blockchain("tron", super::FAMILY_ID_TRON, 6, "^T[a-zA-HJ-NP-Z0-9]{33}$")?;
-        let network = Network::new(network.into(), None);
-        Ok(crate::dex::asset_on_chain::AssetOnChain::new(
-            blockchain, network, asset_kind,
-        ))
+define_network! {
+    tron,
+    "tron",
+    FAMILY_ID_TRON,
+    6,
+    "^T[a-zA-HJ-NP-Z0-9]{33}$",
+    {
+        Mainnet => NetworkId::Mainnet,
+        Shasta => "shasta".into(),
+        Nile => "nile".into(),
     }
 }
 
