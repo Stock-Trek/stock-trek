@@ -51,7 +51,7 @@ mod validation;
 mod value;
 
 pub use algorithm::Algorithm;
-pub use cex::order_factory::{LimitOrder, LimitOrderParams, LimitOrderRequest, OrderFactory};
+pub use cex::order_factory::OrderFactory;
 pub use commands::{Command, CommandFactory};
 pub use conditions::{Condition, ConditionFactory, QuantityOf};
 pub use pending_order::PendingOrder;
@@ -127,7 +127,6 @@ pub mod signals {
 
 /// Shared CEX and asset types.
 pub mod types {
-    pub use crate::cex::order_factory::{LimitOrder, LimitOrderParams, LimitOrderRequest};
     pub use stock_trek_types::cex::{
         account_id::AccountId,
         activation::Activation,
@@ -167,7 +166,6 @@ pub mod prelude {
     pub use super::{
         Algorithm, Command, Preferences, RoundingStrategy, StrategyContext,
         actions::{ActionErrorCause, ActionErrorResponse, RecoveryPolicy},
-        cex::order_factory::LimitOrder,
         errors::{DexError, DomainError, StatsError, StockTrekError, StockTrekResult, ValueError},
         pending_order::PendingOrder,
         portfolio::{CexAccountPortfolio, Portfolio},

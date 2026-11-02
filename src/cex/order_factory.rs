@@ -4,72 +4,6 @@ use stock_trek_types::cex::{
     time_in_force::TimeInForce,
 };
 
-/// Parameters for a limit order.
-///
-/// Grouping the values into a named struct keeps [`OrderFactory::limit`]
-/// readable and avoids a long list of positional arguments.
-#[derive(Debug, Clone)]
-pub struct LimitOrder {
-    /// The base asset being bought or sold.
-    pub base: AssetIdValue,
-    /// The quote asset used to price the order.
-    pub quote: AssetIdValue,
-    /// Whether the order buys or sells the base asset.
-    pub side: Side,
-    /// When the order becomes active.
-    pub activation: Activation<NumberValue>,
-    /// The limit price.
-    pub limit_price: NumberValue,
-    /// How long the order remains active.
-    pub time_in_force: TimeInForce,
-    /// The quantity to trade.
-    pub quantity: Quantity<NumberValue>,
-    /// The tag used to group the order.
-    pub tag: Tag,
-}
-
-/// Alias for [`LimitOrder`] documenting that these are request parameters.
-pub type LimitOrderParams = LimitOrder;
-/// Alias for [`LimitOrder`] documenting that these are request parameters.
-pub type LimitOrderRequest = LimitOrder;
-
-impl
-    From<(
-        AssetIdValue,
-        AssetIdValue,
-        Side,
-        Activation<NumberValue>,
-        NumberValue,
-        TimeInForce,
-        Quantity<NumberValue>,
-        Tag,
-    )> for LimitOrder
-{
-    fn from(
-        (base, quote, side, activation, limit_price, time_in_force, quantity, tag): (
-            AssetIdValue,
-            AssetIdValue,
-            Side,
-            Activation<NumberValue>,
-            NumberValue,
-            TimeInForce,
-            Quantity<NumberValue>,
-            Tag,
-        ),
-    ) -> Self {
-        Self {
-            base,
-            quote,
-            side,
-            activation,
-            limit_price,
-            time_in_force,
-            quantity,
-            tag,
-        }
-    }
-}
-
 /// Factory for constructing CEX order requests.
 ///
 /// Available as the `orders` field of a [`StrategyContext`].
@@ -80,17 +14,18 @@ pub struct OrderFactory;
 
 impl OrderFactory {
     /// A limit order, activated as specified, for the given trading pair.
-    pub fn limit(&self, order: impl Into<LimitOrder>) -> OrderRequest<AssetIdValue, NumberValue> {
-        let LimitOrder {
-            base,
-            quote,
-            side,
-            activation,
-            limit_price,
-            time_in_force,
-            quantity,
-            tag,
-        } = order.into();
+    #[allow(clippy::too_many_arguments)]
+    pub fn limit(
+        &self,
+        base: AssetIdValue,
+        quote: AssetIdValue,
+        side: Side,
+        activation: Activation<NumberValue>,
+        limit_price: NumberValue,
+        time_in_force: TimeInForce,
+        quantity: Quantity<NumberValue>,
+        tag: Tag,
+    ) -> OrderRequest<AssetIdValue, NumberValue> {
         OrderRequest::Limit {
             base,
             quote,

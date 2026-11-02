@@ -107,16 +107,16 @@ impl Algorithm for CostAveraging {
                 c.commands.plan(vec![c.actions.place_order(
                     cex.clone(),
                     account.clone(),
-                    c.orders.limit(LimitOrder {
-                        base: btc,
-                        quote: usdt.clone(),
-                        side: Side::Buy,
-                        activation: Activation::Immediate,
-                        limit_price: cheapest_price,
-                        time_in_force: TimeInForce::ImmediateOrCancel,
-                        quantity: Quantity::OfBase(order_quantity),
+                    c.orders.limit(
+                        btc,
+                        usdt.clone(),
+                        Side::Buy,
+                        Activation::Immediate,
+                        cheapest_price,
+                        TimeInForce::ImmediateOrCancel,
+                        Quantity::OfBase(order_quantity),
                         tag,
-                    }),
+                    ),
                     RecoveryPolicy::with_default_response(ActionErrorResponse::Stop).on_error(
                         ActionErrorCause::TemporaryCexRejection,
                         ActionErrorResponse::Retry { max_retries: 3 },
