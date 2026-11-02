@@ -1,7 +1,8 @@
 //! Networks within a blockchain.
 
-use crate::errors::{StockTrekError, ValueError};
+use crate::errors::{StockTrekError, StockTrekResult, ValueError};
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::ops::Deref;
 use std::str::FromStr;
 
@@ -12,36 +13,36 @@ pub struct Network {
     chain_id: Option<ChainId>,
 }
 
-/// Well-known network identifiers.
+/// Identifier for a network on a blockchain.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[non_exhaustive]
-pub enum NetworkId {
-    /// The production network.
-    Mainnet,
-    /// A test network.
-    Testnet,
-    /// Any other named network.
-    Other(String),
+#[serde(try_from = "String", into = "String")]
+pub struct NetworkId(Cow<'static, str>);
+
+fn validate_network_id(value: &str) -> Result<(), StockTrekError> {
+    if value.trim().is_empty() {
+        return Err(StockTrekError::Value(ValueError::IncorrectType {
+            expected: "NetworkId".into(),
+            found: value.into(),
+        }));
+    }
+    Ok(())
 }
 
-impl From<&str> for NetworkId {
-    fn from(value: &str) -> Self {
-        match value {
-            "mainnet" => NetworkId::Mainnet,
-            "testnet" => NetworkId::Testnet,
-            name => NetworkId::Other(name.to_string()),
-        }
+impl TryFrom<&str> for NetworkId {
+    type Error = StockTrekError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        validate_network_id(value)?;
+        Ok(Self(Cow::Owned(value.to_string())))
     }
 }
 
-impl From<String> for NetworkId {
-    fn from(value: String) -> Self {
-        match value.as_str() {
-            "mainnet" => NetworkId::Mainnet,
-            "testnet" => NetworkId::Testnet,
-            _ => NetworkId::Other(value),
-        }
+impl TryFrom<String> for NetworkId {
+    type Error = StockTrekError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        validate_network_id(&value)?;
+        Ok(Self(Cow::Owned(value)))
     }
 }
 
@@ -49,36 +50,36 @@ impl FromStr for NetworkId {
     type Err = StockTrekError;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
-        if value.is_empty() {
-            return Err(StockTrekError::Value(ValueError::NotFound {
-                name: "NetworkId".into(),
-                key: value.into(),
-            }));
-        }
-        Ok(Self::from(value))
+        Self::try_from(value)
     }
 }
 
-#[allow(missing_docs)]
+#[allow(missing_docs, non_upper_case_globals)]
 impl NetworkId {
-    pub fn new(id: &str) -> Self {
-        Self::from(id)
+    pub const Mainnet: Self = Self(Cow::Borrowed("mainnet"));
+    pub const Testnet: Self = Self(Cow::Borrowed("testnet"));
+
+    pub fn new(id: &str) -> StockTrekResult<Self> {
+        Self::try_from(id)
+    }
+
+    pub const fn from_static(id: &'static str) -> Self {
+        assert!(!id.is_empty(), "network id must not be empty");
+        Self(Cow::Borrowed(id))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn Other(name: impl Into<String>) -> Self {
+        let name = name.into();
+        Self::try_from(name).expect("network id must not be empty or whitespace-only")
     }
 
     pub fn as_str(&self) -> &str {
-        match self {
-            NetworkId::Mainnet => "mainnet",
-            NetworkId::Testnet => "testnet",
-            NetworkId::Other(name) => name,
-        }
+        &self.0
     }
 
     pub fn into_inner(self) -> String {
-        match self {
-            NetworkId::Mainnet => "mainnet".to_string(),
-            NetworkId::Testnet => "testnet".to_string(),
-            NetworkId::Other(name) => name,
-        }
+        self.0.into_owned()
     }
 }
 
@@ -225,13 +226,63 @@ mod tests {
                 network_id.as_str().parse::<NetworkId>().unwrap(),
                 network_id
             );
-            assert_eq!(NetworkId::from(network_id.as_str()), network_id);
+            assert_eq!(NetworkId::new(network_id.as_str()).unwrap(), network_id);
         }
     }
 
     #[test]
-    fn empty_network_ids_and_invalid_chain_ids_are_rejected_when_parsed() {
-        assert!("".parse::<NetworkId>().is_err());
-        assert!("not-a-number".parse::<ChainId>().is_err());
+    fn mainnet_and_testnet_have_a_single_representation() {
+        assert_eq!(NetworkId::Other("mainnet"), NetworkId::Mainnet);
+        assert_eq!(NetworkId::Other("testnet"), NetworkId::Testnet);
+        assert_eq!(
+            serde_json::to_string(&NetworkId::Other("mainnet")).unwrap(),
+            serde_json::to_string(&NetworkId::Mainnet).unwrap()
+        );
+        assert_eq!(
+            serde_json::to_string(&NetworkId::Other("testnet")).unwrap(),
+            serde_json::to_string(&NetworkId::Testnet).unwrap()
+        );
+    }
+
+    #[test]
+    fn network_ids_serialize_as_plain_strings() {
+        assert_eq!(
+            serde_json::to_string(&NetworkId::Other("sepolia")).unwrap(),
+            "\"sepolia\""
+        );
+        assert_eq!(
+            serde_json::from_str::<NetworkId>("\"sepolia\"").unwrap(),
+            NetworkId::Other("sepolia")
+        );
+    }
+
+    #[test]
+    fn empty_and_whitespace_only_network_ids_are_rejected() {
+        for value in ["", " ", "\t\n"] {
+            assert!(NetworkId::new(value).is_err());
+            assert!(NetworkId::try_from(value).is_err());
+            assert!(value.parse::<NetworkId>().is_err());
+        }
+    }
+
+    #[test]
+    fn invalid_network_id_values_have_consistent_error_semantics() {
+        let error = NetworkId::new("").unwrap_err();
+        assert!(matches!(
+            error,
+            StockTrekError::Value(ValueError::IncorrectType { .. })
+        ));
+
+        let error = "not-a-number".parse::<ChainId>().unwrap_err();
+        assert!(matches!(
+            error,
+            StockTrekError::Value(ValueError::IncorrectType { .. })
+        ));
+    }
+
+    #[test]
+    fn network_ids_reject_empty_values_when_deserialized() {
+        assert!(serde_json::from_str::<NetworkId>("\"\"").is_err());
+        assert!(serde_json::from_str::<NetworkId>("\" \"").is_err());
     }
 }

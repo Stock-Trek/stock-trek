@@ -24,16 +24,28 @@ pub struct Blockchain {
 
 /// Unique identifier for a blockchain.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
 pub struct BlockchainId(String);
 
 /// Identifier for a blockchain family, such as EVM.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
 pub struct FamilyId(String);
+
+fn validate_identifier(name: &str, value: &str) -> StockTrekResult<()> {
+    if value.trim().is_empty() {
+        return Err(StockTrekError::Value(ValueError::IncorrectType {
+            expected: name.into(),
+            found: value.into(),
+        }));
+    }
+    Ok(())
+}
 
 #[allow(missing_docs)]
 impl BlockchainId {
-    pub fn new(id: &str) -> Self {
-        Self(id.to_string())
+    pub fn new(id: &str) -> StockTrekResult<Self> {
+        Self::try_from(id)
     }
 
     pub fn as_str(&self) -> &str {
@@ -47,8 +59,8 @@ impl BlockchainId {
 
 #[allow(missing_docs)]
 impl FamilyId {
-    pub fn new(id: &str) -> Self {
-        Self(id.to_string())
+    pub fn new(id: &str) -> StockTrekResult<Self> {
+        Self::try_from(id)
     }
 
     pub fn as_str(&self) -> &str {
@@ -60,15 +72,21 @@ impl FamilyId {
     }
 }
 
-impl From<&str> for BlockchainId {
-    fn from(value: &str) -> Self {
-        Self::new(value)
+impl TryFrom<&str> for BlockchainId {
+    type Error = StockTrekError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        validate_identifier("BlockchainId", value)?;
+        Ok(Self(value.to_string()))
     }
 }
 
-impl From<String> for BlockchainId {
-    fn from(value: String) -> Self {
-        Self(value)
+impl TryFrom<String> for BlockchainId {
+    type Error = StockTrekError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        validate_identifier("BlockchainId", &value)?;
+        Ok(Self(value))
     }
 }
 
@@ -76,25 +94,25 @@ impl FromStr for BlockchainId {
     type Err = StockTrekError;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
-        if value.is_empty() {
-            return Err(StockTrekError::Value(ValueError::NotFound {
-                name: "BlockchainId".into(),
-                key: value.into(),
-            }));
-        }
-        Ok(Self::new(value))
+        Self::try_from(value)
     }
 }
 
-impl From<&str> for FamilyId {
-    fn from(value: &str) -> Self {
-        Self::new(value)
+impl TryFrom<&str> for FamilyId {
+    type Error = StockTrekError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        validate_identifier("FamilyId", value)?;
+        Ok(Self(value.to_string()))
     }
 }
 
-impl From<String> for FamilyId {
-    fn from(value: String) -> Self {
-        Self(value)
+impl TryFrom<String> for FamilyId {
+    type Error = StockTrekError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        validate_identifier("FamilyId", &value)?;
+        Ok(Self(value))
     }
 }
 
@@ -102,13 +120,7 @@ impl FromStr for FamilyId {
     type Err = StockTrekError;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
-        if value.is_empty() {
-            return Err(StockTrekError::Value(ValueError::NotFound {
-                name: "FamilyId".into(),
-                key: value.into(),
-            }));
-        }
-        Ok(Self::new(value))
+        Self::try_from(value)
     }
 }
 
@@ -253,8 +265,8 @@ mod tests {
 
     fn blockchain(address_format: &str) -> StockTrekResult<Blockchain> {
         Blockchain::new(
-            BlockchainId::new("test"),
-            FamilyId::new("test"),
+            BlockchainId::new("test")?,
+            FamilyId::new("test")?,
             18,
             address_format,
         )
@@ -274,8 +286,30 @@ mod tests {
     }
 
     #[test]
-    fn empty_blockchain_ids_are_rejected_when_parsed() {
-        assert!("".parse::<BlockchainId>().is_err());
-        assert!("".parse::<FamilyId>().is_err());
+    fn empty_and_whitespace_only_identifiers_are_rejected() {
+        for value in ["", " ", "\t\n"] {
+            assert!(BlockchainId::new(value).is_err());
+            assert!(BlockchainId::try_from(value).is_err());
+            assert!(value.parse::<BlockchainId>().is_err());
+            assert!(FamilyId::new(value).is_err());
+            assert!(FamilyId::try_from(value).is_err());
+            assert!(value.parse::<FamilyId>().is_err());
+        }
+    }
+
+    #[test]
+    fn invalid_identifiers_are_reported_as_incorrect_types() {
+        let error = BlockchainId::new("").unwrap_err();
+
+        assert!(matches!(
+            error,
+            StockTrekError::Value(ValueError::IncorrectType { .. })
+        ));
+    }
+
+    #[test]
+    fn identifiers_reject_empty_values_when_deserialized() {
+        assert!(serde_json::from_str::<BlockchainId>("\"\"").is_err());
+        assert!(serde_json::from_str::<FamilyId>("\" \"").is_err());
     }
 }
