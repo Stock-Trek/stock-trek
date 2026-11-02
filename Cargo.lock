@@ -765,9 +765,9 @@ dependencies = [
 
 [[package]]
 name = "stock-trek-types"
-version = "0.5.0"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1a04ff0a5f894800f61e27d6872bab665bbad74ca7c0069f2e7d777d54fa525"
+checksum = "e43999008125ca20b1da83a3b94bab28b83d176255a107a6d92475bd439591bb"
 dependencies = [
  "rust_decimal",
  "serde",

@@ -27,6 +27,14 @@ fn portfolio_with(
 }
 
 fn limit_sell(quantity: Quantity<f64>, limit_price: f64) -> OrderRequest<AssetId, f64> {
+    limit_sell_with_tag(quantity, limit_price, Tag::new("tag"))
+}
+
+fn limit_sell_with_tag(
+    quantity: Quantity<f64>,
+    limit_price: f64,
+    tag: Tag,
+) -> OrderRequest<AssetId, f64> {
     OrderRequest::Limit {
         base: AssetId::Bitcoin,
         quote: AssetId::TetherUSD,
@@ -35,8 +43,49 @@ fn limit_sell(quantity: Quantity<f64>, limit_price: f64) -> OrderRequest<AssetId
         limit_price,
         time_in_force: TimeInForce::GoodTillCancelled,
         quantity,
-        tag: Tag::new("tag"),
+        tag,
     }
+}
+
+fn determinism_portfolio(reverse: bool) -> Portfolio {
+    let mut entries = [("a", 1e16), ("b", 1.0), ("c", 1.0)];
+    if reverse {
+        entries.reverse();
+    }
+
+    let mut builder = PortfolioBuilder::new();
+    for (account, count) in entries {
+        builder
+            .asset_count(
+                CexId::Binance,
+                AccountId::new(account),
+                AssetId::Bitcoin,
+                count,
+            )
+            .pending_order(
+                CexId::Binance,
+                AccountId::new(account),
+                limit_sell_with_tag(Quantity::OfBase(count), 100.0, Tag::new(account)),
+                0.0,
+                0.0,
+            );
+    }
+    builder.build().unwrap()
+}
+
+#[test]
+fn totals_are_deterministic_across_insertion_order() {
+    let forward = determinism_portfolio(false);
+    let reverse = determinism_portfolio(true);
+
+    assert_eq!(
+        forward.asset_total(&AssetId::Bitcoin).to_bits(),
+        reverse.asset_total(&AssetId::Bitcoin).to_bits()
+    );
+    assert_eq!(
+        forward.asset_reserved(&AssetId::Bitcoin).to_bits(),
+        reverse.asset_reserved(&AssetId::Bitcoin).to_bits()
+    );
 }
 
 #[test]

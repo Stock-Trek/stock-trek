@@ -5,7 +5,7 @@ use crate::{
     },
     pending_order::PendingOrder,
 };
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use stock_trek_types::cex::{
     account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest, tag::Tag,
 };
@@ -13,19 +13,23 @@ use stock_trek_types::cex::{
 /// A snapshot of asset balances and pending orders across CEX accounts.
 #[derive(Debug, Clone, Default)]
 pub struct Portfolio {
-    portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>,
+    portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
 }
 
 /// Asset balances and pending orders for a single CEX account.
 #[derive(Debug, Clone, Default)]
 pub struct CexAccountPortfolio {
-    asset_counts: HashMap<AssetId, f64>,
-    pending_orders: HashMap<Tag, Vec<PendingOrder>>,
+    asset_counts: BTreeMap<AssetId, f64>,
+    pending_orders: BTreeMap<Tag, Vec<PendingOrder>>,
 }
 
 impl Portfolio {
     /// Creates a portfolio from CEX and account portfolios.
     pub fn new(portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>) -> Self {
+        let portfolios = portfolios
+            .into_iter()
+            .map(|(cex_id, accounts)| (cex_id, accounts.into_iter().collect()))
+            .collect();
         Self { portfolios }
     }
     /// Whether an account exists
@@ -103,13 +107,8 @@ impl Portfolio {
         self.cex_accounts()
             .flat_map(|(cex_id, account_id, portfolio)| {
                 portfolio
-                    .pending_orders
-                    .iter()
-                    .flat_map(move |(tag, orders)| {
-                        orders
-                            .iter()
-                            .map(move |order| (cex_id, account_id, tag, order))
-                    })
+                    .pending_orders_iter()
+                    .map(move |(tag, order)| (cex_id, account_id, tag, order))
             })
     }
 
@@ -199,20 +198,22 @@ impl CexAccountPortfolio {
         for count in asset_counts.values() {
             Self::validate_asset_count("CexAccountPortfolio::new", "asset balance", *count)?;
         }
+        let asset_counts = asset_counts.into_iter().collect();
+        let pending_orders = pending_orders.into_iter().collect();
         Ok(Self {
             asset_counts,
             pending_orders,
         })
     }
 
-    /// Returns all asset balances (available and reserved) keyed by asset.
-    pub fn asset_counts(&self) -> &HashMap<AssetId, f64> {
-        &self.asset_counts
+    /// Iterates over all asset balances keyed by asset.
+    pub fn asset_counts(&self) -> impl Iterator<Item = (&AssetId, &f64)> {
+        self.asset_counts.iter()
     }
 
     /// Iterates over all asset balances keyed by asset.
     pub fn assets(&self) -> impl Iterator<Item = (&AssetId, &f64)> {
-        self.asset_counts.iter()
+        self.asset_counts()
     }
 
     /// Returns the total balance (available and reserved) of an asset.
@@ -222,9 +223,9 @@ impl CexAccountPortfolio {
         self.asset_counts.get(asset_id).copied().unwrap_or(0.0)
     }
 
-    /// Returns all pending orders grouped by tag.
-    pub fn pending_orders(&self) -> &HashMap<Tag, Vec<PendingOrder>> {
-        &self.pending_orders
+    /// Iterates over all pending orders grouped by tag.
+    pub fn pending_orders(&self) -> impl Iterator<Item = (&Tag, &Vec<PendingOrder>)> {
+        self.pending_orders.iter()
     }
 
     /// Returns the pending orders with the given tag, if any.
@@ -263,7 +264,7 @@ impl CexAccountPortfolio {
 /// Builder for constructing a [`Portfolio`].
 #[derive(Debug, Clone, Default)]
 pub struct PortfolioBuilder {
-    portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>,
+    portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
     error: Option<StockTrekError>,
 }
 
@@ -339,7 +340,9 @@ impl PortfolioBuilder {
         if let Some(error) = self.error {
             return Err(error);
         }
-        Ok(Portfolio::new(self.portfolios))
+        Ok(Portfolio {
+            portfolios: self.portfolios,
+        })
     }
 
     fn record_error(&mut self, error: StockTrekError) {
