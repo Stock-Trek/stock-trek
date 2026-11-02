@@ -14,8 +14,9 @@ pub struct PendingOrder {
 impl PendingOrder {
     /// Creates a pending order from its order request and filled quantities.
     ///
-    /// Returns an error when the order request is invalid or when either filled
-    /// quantity is negative or not finite.
+    /// Returns an error when the order request is invalid, when either filled
+    /// quantity is negative or not finite, or when an amount the order reserves
+    /// (such as the notional of a limit buy) would not be finite.
     pub fn new(
         order_request: OrderRequest<AssetId, f64>,
         filled_base_quantity: f64,
@@ -67,9 +68,21 @@ impl PendingOrder {
                 match quantity {
                     Quantity::OfBase(value) => {
                         Validation::positive(function, "base quantity", *value)?;
+                        let reserved_quote_quantity = value * limit_price;
+                        Validation::finite(
+                            function,
+                            "reserved quote quantity",
+                            reserved_quote_quantity,
+                        )?;
                     }
                     Quantity::OfQuote(value) => {
                         Validation::positive(function, "quote quantity", *value)?;
+                        let reserved_base_quantity = value / limit_price;
+                        Validation::finite(
+                            function,
+                            "reserved base quantity",
+                            reserved_base_quantity,
+                        )?;
                     }
                 }
                 Self::validate_activation(function, activation)?;
@@ -106,7 +119,7 @@ impl PendingOrder {
             | Activation::Trailing {
                 activation_price, ..
             } => {
-                Validation::finite(function, "activation price", *activation_price)?;
+                Validation::positive(function, "activation price", *activation_price)?;
             }
         }
         Ok(())
@@ -209,12 +222,54 @@ mod tests {
     #[test]
     fn rejects_non_finite_activation_prices() {
         for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-            let price_triggered = OrderRequest::Limit {
+            assert!(activation_price_triggered(value).is_err());
+            assert!(trailing_activation_price(value).is_err());
+        }
+    }
+
+    #[test]
+    fn rejects_non_positive_activation_prices() {
+        for value in [0.0, -1.0] {
+            assert!(activation_price_triggered(value).is_err());
+            assert!(trailing_activation_price(value).is_err());
+        }
+    }
+
+    #[test]
+    fn rejects_non_finite_reservation_amounts_derived_from_the_limit_price() {
+        let limit_buy_with_overflowing_notional = OrderRequest::Limit {
+            base: AssetId::Bitcoin,
+            quote: AssetId::TetherUSD,
+            side: Side::Buy,
+            activation: Activation::Immediate,
+            limit_price: f64::MAX,
+            time_in_force: TimeInForce::GoodTillCancelled,
+            quantity: Quantity::OfBase(f64::MAX),
+            tag: Tag::new("tag"),
+        };
+        assert!(PendingOrder::new(limit_buy_with_overflowing_notional, 0.0, 0.0).is_err());
+
+        let limit_sell_with_overflowing_base_quantity = OrderRequest::Limit {
+            base: AssetId::Bitcoin,
+            quote: AssetId::TetherUSD,
+            side: Side::Sell,
+            activation: Activation::Immediate,
+            limit_price: 1.0e-300,
+            time_in_force: TimeInForce::GoodTillCancelled,
+            quantity: Quantity::OfQuote(f64::MAX),
+            tag: Tag::new("tag"),
+        };
+        assert!(PendingOrder::new(limit_sell_with_overflowing_base_quantity, 0.0, 0.0).is_err());
+    }
+
+    fn activation_price_triggered(activation_price: f64) -> StockTrekResult<PendingOrder> {
+        PendingOrder::new(
+            OrderRequest::Limit {
                 base: AssetId::Bitcoin,
                 quote: AssetId::TetherUSD,
                 side: Side::Sell,
                 activation: Activation::PriceTriggered {
-                    activation_price: value,
+                    activation_price,
                     basis: PriceBasis::Last,
                     direction: TriggerDirection::Above,
                     mode: TriggerMode::Touch,
@@ -223,15 +278,20 @@ mod tests {
                 time_in_force: TimeInForce::GoodTillCancelled,
                 quantity: Quantity::OfBase(1.0),
                 tag: Tag::new("tag"),
-            };
-            assert!(PendingOrder::new(price_triggered, 0.0, 0.0).is_err());
+            },
+            0.0,
+            0.0,
+        )
+    }
 
-            let trailing = OrderRequest::Limit {
+    fn trailing_activation_price(activation_price: f64) -> StockTrekResult<PendingOrder> {
+        PendingOrder::new(
+            OrderRequest::Limit {
                 base: AssetId::Bitcoin,
                 quote: AssetId::TetherUSD,
                 side: Side::Sell,
                 activation: Activation::Trailing {
-                    activation_price: value,
+                    activation_price,
                     basis: PriceBasis::Last,
                     callback_rate_bps: 100,
                     direction: TriggerDirection::Below,
@@ -240,8 +300,9 @@ mod tests {
                 time_in_force: TimeInForce::GoodTillCancelled,
                 quantity: Quantity::OfBase(1.0),
                 tag: Tag::new("tag"),
-            };
-            assert!(PendingOrder::new(trailing, 0.0, 0.0).is_err());
-        }
+            },
+            0.0,
+            0.0,
+        )
     }
 }

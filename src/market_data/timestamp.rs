@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
-use std::{fmt, num::TryFromIntError, ops::Add, ops::Sub, str::FromStr};
+use std::{fmt, num::TryFromIntError, str::FromStr};
 
 /// A timestamp expressed as milliseconds since the Unix epoch.
 ///
-/// The `+` and `-` operators saturate at the representable bounds. Use
+/// Arithmetic operators are deliberately not implemented, because silently
+/// saturating or wrapping at the representable bounds would hide bugs. Use
 /// [`Self::checked_add`], [`Self::checked_sub`], [`Self::saturating_add`], or
 /// [`Self::saturating_sub`] when the overflow behaviour should be explicit.
 #[derive(
@@ -100,22 +101,6 @@ impl fmt::Display for TimestampMillis {
     }
 }
 
-impl Add for TimestampMillis {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        self.saturating_add(rhs)
-    }
-}
-
-impl Sub for TimestampMillis {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        self.saturating_sub(rhs)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -197,15 +182,5 @@ mod tests {
         assert_eq!(max.saturating_add(one), max);
         assert_eq!(zero.saturating_add(one), one);
         assert_eq!(max.saturating_sub(one), TimestampMillis::new(u64::MAX - 1));
-    }
-
-    #[test]
-    fn operators_saturate_instead_of_panicking_or_wrapping() {
-        let zero = TimestampMillis::new(0);
-        let one = TimestampMillis::new(1);
-        let max = TimestampMillis::new(u64::MAX);
-
-        assert_eq!(zero - one, zero);
-        assert_eq!(max + one, max);
     }
 }

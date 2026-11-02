@@ -78,7 +78,7 @@ fn bounds_for_returns_containing_bounds() {
 
             if !is_calendar_window(window) {
                 let window_millis = window.millis_upper_bound().unwrap();
-                assert_eq!((upper - lower).as_millis(), window_millis);
+                assert_eq!(upper.checked_sub(lower).unwrap().as_millis(), window_millis);
                 assert_eq!(lower.as_millis() % window_millis, 0);
             }
         }
@@ -194,11 +194,21 @@ fn bounds_for_month_windows_handle_leap_years() {
     let days_millis = u64::from(24 * MILLIS_PER_HOUR);
 
     assert_eq!(
-        (february_2024.upper() - february_2024.lower()).as_millis() / days_millis,
+        february_2024
+            .upper()
+            .checked_sub(february_2024.lower())
+            .unwrap()
+            .as_millis()
+            / days_millis,
         29
     );
     assert_eq!(
-        (february_2023.upper() - february_2023.lower()).as_millis() / days_millis,
+        february_2023
+            .upper()
+            .checked_sub(february_2023.lower())
+            .unwrap()
+            .as_millis()
+            / days_millis,
         28
     );
 }

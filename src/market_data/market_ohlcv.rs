@@ -9,6 +9,10 @@ use serde::{Deserialize, Serialize};
 /// `volume` is denominated in the base asset, while `quote_volume` is
 /// denominated in the quote asset. Values are validated when the candle data
 /// is created or deserialized.
+///
+/// Unlike [`MarketQuote`](crate::market_data::market_quote::MarketQuote),
+/// prices are allowed to be zero. This intentionally supports empty candles
+/// for markets that reported no trades during the candle period.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(try_from = "MarketOhlcvData")]
 pub struct MarketOhlcv {
@@ -27,6 +31,11 @@ impl MarketOhlcv {
     /// Returns an error for non-finite or negative values, negative volumes,
     /// or prices that are inconsistent with the high and low. The VWAP must
     /// also be between the low and high.
+    ///
+    /// Prices of zero are accepted so that empty candles with no trades can
+    /// be represented. Quotes from a live order book are modelled by
+    /// [`MarketQuote`](crate::market_data::market_quote::MarketQuote), which
+    /// requires strictly positive prices instead.
     pub fn new(
         open: f64,
         high: f64,
