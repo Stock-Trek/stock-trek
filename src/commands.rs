@@ -13,29 +13,21 @@ use strum::Display;
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
+#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum Command {
     /// Executes one of two commands based on a condition.
     If {
-        /// The condition to evaluate.
         condition: Condition,
-        /// The command to execute when the condition is true.
         if_true: Box<Command>,
-        /// The command to execute when the condition is false.
         if_false: Box<Command>,
     },
     /// Executes a list of commands in order.
-    List {
-        /// The commands to execute.
-        commands: Vec<Command>,
-    },
+    List { commands: Vec<Command> },
     /// Does nothing.
     NoOp,
     /// Enqueues a list of actions.
-    Plan {
-        /// The actions to enqueue.
-        actions: Vec<RecoverableAction>,
-    },
+    Plan { actions: Vec<RecoverableAction> },
 }
 
 impl Command {
@@ -100,8 +92,8 @@ impl HasRequiredCapabilities for Command {
 #[derive(Debug, Clone, Default)]
 pub struct CommandFactory;
 
+#[allow(missing_docs)]
 impl CommandFactory {
-    /// Creates a command that conditionally executes one of two commands.
     pub fn if_else(&self, condition: Condition, if_true: Command, if_false: Command) -> Command {
         Command::If {
             condition,
@@ -109,15 +101,12 @@ impl CommandFactory {
             if_false: Box::new(if_false),
         }
     }
-    /// Creates a command that executes a list of commands in order.
     pub fn list(&self, commands: Vec<Command>) -> Command {
         Command::List { commands }
     }
-    /// Creates a command that does nothing.
     pub fn no_op(&self) -> Command {
         Command::NoOp
     }
-    /// Creates a command that enqueues a list of actions.
     pub fn plan(&self, actions: Vec<RecoverableAction>) -> Command {
         Command::Plan { actions }
     }

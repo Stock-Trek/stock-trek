@@ -11,8 +11,8 @@ pub struct AssetOnChain {
     identifier: AssetKind,
 }
 
+#[allow(missing_docs)]
 impl AssetOnChain {
-    /// Creates an asset on the given blockchain and network.
     pub fn new(blockchain: Blockchain, network: Network, identifier: AssetKind) -> Self {
         Self {
             blockchain,
@@ -21,17 +21,14 @@ impl AssetOnChain {
         }
     }
 
-    /// Returns the blockchain the asset is deployed on.
     pub fn blockchain(&self) -> &Blockchain {
         &self.blockchain
     }
 
-    /// Returns the network the asset is deployed on.
     pub fn network(&self) -> &Network {
         &self.network
     }
 
-    /// Returns the asset identifier.
     pub fn identifier(&self) -> &AssetKind {
         &self.identifier
     }

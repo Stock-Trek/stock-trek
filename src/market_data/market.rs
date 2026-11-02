@@ -14,42 +14,36 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Market data for a single trading pair on a CEX.
+///
+/// The increment and notional fields describe exchange constraints. Ticks,
+/// rolling candles, aligned candles, and the order book hold the recent market
+/// history.
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Market {
-    /// The minimum increment for the base asset quantity.
     pub base_increment: f64,
-    /// The minimum increment for the quote asset price.
     pub quote_increment: f64,
-    /// The minimum notional value for an order.
     pub minimum_notional: f64,
-    /// Recent market ticks.
     pub ticks: MarketTicks,
-    /// Candles for fixed-length rolling windows.
     pub rolling: MarketRollingWindow,
-    /// Candles for aligned windows.
     pub aligned: MarketAlignedWindow,
-    /// The current order book.
     pub order_book: MarketOrderBook,
 }
 
 /// Builder for constructing a [`Market`].
+///
+/// New markets start empty. Add ticks, candles, and order book quotes before
+/// calling [`MarketBuilder::build`].
+#[allow(missing_docs)]
 #[derive(Debug, Clone)]
 pub struct MarketBuilder {
-    /// The minimum increment for the base asset quantity.
     pub base_increment: f64,
-    /// The minimum increment for the quote asset price.
     pub quote_increment: f64,
-    /// The minimum notional value for an order.
     pub minimum_notional: f64,
-    /// Ticks to include in the market.
     pub ticks: Vec<MarketTick>,
-    /// Rolling-window candles to include in the market.
     pub rolling: HashMap<RollingWindow, MarketCandle>,
-    /// Aligned-window candles to include in the market.
     pub aligned: HashMap<AlignedWindow, Vec<MarketCandle>>,
-    /// Order book ask quotes.
     pub order_book_asks: Vec<MarketQuote>,
-    /// Order book bid quotes.
     pub order_book_bids: Vec<MarketQuote>,
 }
 

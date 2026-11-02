@@ -7,93 +7,57 @@ use std::str::FromStr;
 use strum::{EnumCount, EnumIter, FromRepr};
 
 /// A fixed-length rolling time window.
+///
+/// Variants are named after their length, so `Minutes5` is five minutes and
+/// `Days7` is seven days. The short labels returned by [`Self::label`] are used
+/// when the window is displayed or serialized.
 #[derive(
     Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash, EnumCount, EnumIter, FromRepr,
 )]
+#[allow(missing_docs)]
 #[non_exhaustive]
 #[repr(u8)]
 pub enum RollingWindow {
-    /// A one-second window.
     Seconds1,
-    /// A five-second window.
     Seconds5,
-    /// A ten-second window.
     Seconds10,
-    /// A fifteen-second window.
     Seconds15,
-    /// A thirty-second window.
     Seconds30,
-    /// A sixty-second window.
     Seconds60,
-    /// A one-minute window.
     Minutes1,
-    /// A two-minute window.
     Minutes2,
-    /// A three-minute window.
     Minutes3,
-    /// A five-minute window.
     Minutes5,
-    /// A ten-minute window.
     Minutes10,
-    /// A fifteen-minute window.
     Minutes15,
-    /// A thirty-minute window.
     Minutes30,
-    /// A forty-five-minute window.
     Minutes45,
-    /// A sixty-minute window.
     Minutes60,
-    /// A ninety-minute window.
     Minutes90,
-    /// A one-hour window.
     Hours1,
-    /// A two-hour window.
     Hours2,
-    /// A three-hour window.
     Hours3,
-    /// A four-hour window.
     Hours4,
-    /// A six-hour window.
     Hours6,
-    /// An eight-hour window.
     Hours8,
-    /// A twelve-hour window.
     Hours12,
-    /// A twenty-four-hour window.
     Hours24,
-    /// A one-day window.
     Days1,
-    /// A two-day window.
     Days2,
-    /// A three-day window.
     Days3,
-    /// A seven-day window.
     Days7,
-    /// A fourteen-day window.
     Days14,
-    /// A thirty-day window.
     Days30,
-    /// A forty-five-day window.
     Days45,
-    /// A sixty-day window.
     Days60,
-    /// A ninety-day window.
     Days90,
-    /// A one-hundred-eighty-day window.
     Days180,
-    /// A three-hundred-sixty-day window.
     Days360,
-    /// A one-week window.
     Weeks1,
-    /// A two-week window.
     Weeks2,
-    /// A four-week window.
     Weeks4,
-    /// A ten-week window.
     Weeks10,
-    /// A twenty-week window.
     Weeks20,
-    /// A forty-week window.
     Weeks40,
 }
 

@@ -8,8 +8,8 @@ use stock_trek_types::cex::{
 #[derive(Debug, Clone, Default)]
 pub struct OrderFactory;
 
+#[allow(missing_docs)]
 impl OrderFactory {
-    /// Creates a limit order request.
     #[allow(clippy::too_many_arguments)]
     pub fn limit(
         &self,
@@ -33,7 +33,6 @@ impl OrderFactory {
             tag,
         }
     }
-    /// Creates a market buy order request using a quote-asset quantity.
     pub fn market_buy(
         &self,
         base: AssetIdValue,
@@ -50,7 +49,6 @@ impl OrderFactory {
             tag,
         }
     }
-    /// Creates a market sell order request using a base-asset quantity.
     pub fn market_sell(
         &self,
         base: AssetIdValue,

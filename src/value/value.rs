@@ -13,18 +13,13 @@ use strum::Display;
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
+#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum AccountIdValue {
     /// A literal account identifier.
-    Literal {
-        /// The account identifier.
-        literal: AccountId,
-    },
+    Literal { literal: AccountId },
     /// An account identifier read from a signal.
-    Signal {
-        /// The signal key containing the account identifier.
-        signal: SignalKey<AccountId>,
-    },
+    Signal { signal: SignalKey<AccountId> },
 }
 
 impl AccountIdValue {
@@ -42,18 +37,13 @@ impl AccountIdValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
+#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum CexIdValue {
     /// A literal CEX identifier.
-    Literal {
-        /// The CEX identifier.
-        literal: CexId,
-    },
+    Literal { literal: CexId },
     /// A CEX identifier read from a signal.
-    Signal {
-        /// The signal key containing the CEX identifier.
-        signal: SignalKey<CexId>,
-    },
+    Signal { signal: SignalKey<CexId> },
 }
 
 impl CexIdValue {
@@ -71,18 +61,13 @@ impl CexIdValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
+#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum AssetIdValue {
     /// A literal asset identifier.
-    Literal {
-        /// The asset identifier.
-        literal: AssetId,
-    },
+    Literal { literal: AssetId },
     /// An asset identifier read from a signal.
-    Signal {
-        /// The signal key containing the asset identifier.
-        signal: SignalKey<AssetId>,
-    },
+    Signal { signal: SignalKey<AssetId> },
 }
 
 impl AssetIdValue {
@@ -100,18 +85,13 @@ impl AssetIdValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
+#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum FlagValue {
     /// A literal boolean flag.
-    Literal {
-        /// The boolean value.
-        literal: bool,
-    },
+    Literal { literal: bool },
     /// A boolean flag read from a signal.
-    Signal {
-        /// The signal key containing the flag.
-        signal: SignalKey<bool>,
-    },
+    Signal { signal: SignalKey<bool> },
 }
 
 impl FlagValue {
@@ -129,97 +109,61 @@ impl FlagValue {
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[serde(tag = "type")]
+#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum NumberValue {
     /// A literal number.
-    Literal {
-        /// The numeric value.
-        literal: f64,
-    },
+    Literal { literal: f64 },
     /// A number read from a signal.
-    Signal {
-        /// The signal key containing the number.
-        signal: SignalKey<f64>,
-    },
+    Signal { signal: SignalKey<f64> },
     /// The total number of pending orders.
     PendingOrders,
     /// The number of pending orders with a specific tag.
-    PendingOrdersWithTag {
-        /// The tag to count.
-        tag: Tag,
-    },
+    PendingOrdersWithTag { tag: Tag },
     /// The number of pending orders in a CEX account.
     PendingOrdersInCexAccount {
-        /// The CEX containing the account.
         cex_id_value: CexIdValue,
-        /// The account to inspect.
         account_id_value: AccountIdValue,
     },
     /// The number of pending orders with a specific tag in a CEX account.
     PendingOrdersInCexAccountWithTag {
-        /// The CEX containing the account.
         cex_id_value: CexIdValue,
-        /// The account to inspect.
         account_id_value: AccountIdValue,
-        /// The tag to count.
         tag: Tag,
     },
     /// The total amount of an asset.
-    AssetTotal {
-        /// The asset to sum.
-        asset_id_value: AssetIdValue,
-    },
+    AssetTotal { asset_id_value: AssetIdValue },
     /// The total amount of an asset in a CEX account.
     AssetTotalInCexAccount {
-        /// The asset to sum.
         asset_id_value: AssetIdValue,
-        /// The CEX containing the account.
         cex_id_value: CexIdValue,
-        /// The account to inspect.
         account_id_value: AccountIdValue,
     },
     /// The available amount of an asset.
-    AssetAvailable {
-        /// The asset to inspect.
-        asset_id_value: AssetIdValue,
-    },
+    AssetAvailable { asset_id_value: AssetIdValue },
     /// The available amount of an asset in a CEX account.
     AssetAvailableInCexAccount {
-        /// The asset to inspect.
         asset_id_value: AssetIdValue,
-        /// The CEX containing the account.
         cex_id_value: CexIdValue,
-        /// The account to inspect.
         account_id_value: AccountIdValue,
     },
     /// The reserved amount of an asset.
-    AssetReserved {
-        /// The asset to inspect.
-        asset_id_value: AssetIdValue,
-    },
+    AssetReserved { asset_id_value: AssetIdValue },
     /// The reserved amount of an asset in a CEX account.
     AssetReservedInCexAccount {
-        /// The asset to inspect.
         asset_id_value: AssetIdValue,
-        /// The CEX containing the account.
         cex_id_value: CexIdValue,
-        /// The account to inspect.
         account_id_value: AccountIdValue,
     },
     /// A binary calculation.
     BinaryCalculation {
-        /// The left-hand value.
         left: Box<NumberValue>,
-        /// The operator to apply.
         operator: BinaryOperator,
-        /// The right-hand value.
         right: Box<NumberValue>,
     },
     /// A unary calculation.
     UnaryCalculation {
-        /// The operator to apply.
         operator: UnaryOperator,
-        /// The value to operate on.
         number: Box<NumberValue>,
     },
 }

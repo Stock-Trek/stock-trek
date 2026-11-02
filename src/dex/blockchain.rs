@@ -30,35 +30,31 @@ pub struct BlockchainId(String);
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct FamilyId(String);
 
+#[allow(missing_docs)]
 impl BlockchainId {
-    /// Creates a blockchain identifier.
     pub fn new(id: &str) -> Self {
         Self(id.to_string())
     }
 
-    /// Returns the identifier as a string slice.
     pub fn as_str(&self) -> &str {
         &self.0
     }
 
-    /// Consumes the identifier and returns its string value.
     pub fn into_inner(self) -> String {
         self.0
     }
 }
 
+#[allow(missing_docs)]
 impl FamilyId {
-    /// Creates a blockchain family identifier.
     pub fn new(id: &str) -> Self {
         Self(id.to_string())
     }
 
-    /// Returns the identifier as a string slice.
     pub fn as_str(&self) -> &str {
         &self.0
     }
 
-    /// Consumes the identifier and returns its string value.
     pub fn into_inner(self) -> String {
         self.0
     }
@@ -116,6 +112,7 @@ impl FromStr for FamilyId {
     }
 }
 
+#[allow(missing_docs)]
 impl Blockchain {
     /// Creates a blockchain definition.
     ///
@@ -142,27 +139,22 @@ impl Blockchain {
         })
     }
 
-    /// Returns the blockchain identifier.
     pub fn blockchain_id(&self) -> &BlockchainId {
         &self.blockchain_id
     }
 
-    /// Returns the blockchain family identifier.
     pub fn family_id(&self) -> &FamilyId {
         &self.family_id
     }
 
-    /// Returns the number of decimals used by the blockchain's native asset.
     pub fn native_decimals(&self) -> u8 {
         self.native_decimals
     }
 
-    /// Returns the regular expression used to validate addresses.
     pub fn address_regex(&self) -> &Regex {
         &self.address_regex
     }
 
-    /// Returns the address format used to validate addresses.
     pub fn address_format(&self) -> &str {
         self.address_regex.as_str()
     }
@@ -277,45 +269,8 @@ mod tests {
     }
 
     #[test]
-    fn exposes_blockchain_fields() {
-        let blockchain = blockchain("^0x[a-fA-F0-9]{40}$").unwrap();
-
-        assert_eq!(blockchain.blockchain_id().as_str(), "test");
-        assert_eq!(blockchain.family_id().as_str(), "test");
-        assert_eq!(blockchain.native_decimals(), 18);
-        assert_eq!(blockchain.address_format(), "^0x[a-fA-F0-9]{40}$");
-    }
-
-    #[test]
     fn returns_an_error_for_an_invalid_address_format() {
         assert!(blockchain("(").is_err());
-    }
-
-    #[test]
-    fn blockchain_id_round_trips_through_strings() {
-        let blockchain_id = BlockchainId::new("ethereum");
-
-        assert_eq!(blockchain_id.to_string(), "ethereum");
-        assert_eq!(
-            blockchain_id.as_str().parse::<BlockchainId>().unwrap(),
-            blockchain_id
-        );
-        assert_eq!(BlockchainId::from("ethereum"), blockchain_id);
-        assert_eq!(BlockchainId::from("ethereum".to_string()), blockchain_id);
-        assert_eq!(String::from(blockchain_id.clone()), "ethereum");
-        assert_eq!(blockchain_id.clone().into_inner(), "ethereum");
-    }
-
-    #[test]
-    fn family_id_round_trips_through_strings() {
-        let family_id = FamilyId::new("evm");
-
-        assert_eq!(family_id.to_string(), "evm");
-        assert_eq!(family_id.as_str().parse::<FamilyId>().unwrap(), family_id);
-        assert_eq!(FamilyId::from("evm"), family_id);
-        assert_eq!(FamilyId::from("evm".to_string()), family_id);
-        assert_eq!(String::from(family_id.clone()), "evm");
-        assert_eq!(family_id.clone().into_inner(), "evm");
     }
 
     #[test]

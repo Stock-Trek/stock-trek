@@ -2,11 +2,13 @@ use crate::market_data::market_quote::{MarketQuote, PriceQuantity};
 use serde::{Deserialize, Deserializer, Serialize};
 
 /// The current bids and asks for a market.
+///
+/// Bids are kept from highest to lowest price and asks from lowest to highest
+/// price, regardless of the order in which they are supplied.
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketOrderBook {
-    /// The bid quotes, ordered from highest to lowest price.
     pub bids: Vec<MarketQuote>,
-    /// The ask quotes, ordered from lowest to highest price.
     pub asks: Vec<MarketQuote>,
 }
 
@@ -20,11 +22,11 @@ impl MarketOrderBook {
         asks.sort_by(|a, b| a.price.total_cmp(&b.price));
         Self { bids, asks }
     }
-    /// Returns the bids as price/quantity pairs.
+    /// Returns bids as `(price, quantity)` pairs.
     pub fn bid_price_quantities(&self) -> Vec<PriceQuantity> {
         Self::to_price_quantities(&self.bids)
     }
-    /// Returns the asks as price/quantity pairs.
+    /// Returns asks as `(price, quantity)` pairs.
     pub fn ask_price_quantities(&self) -> Vec<PriceQuantity> {
         Self::to_price_quantities(&self.asks)
     }

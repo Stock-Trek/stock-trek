@@ -19,56 +19,38 @@ use strum::Display;
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
 #[strum(serialize_all = "snake_case")]
+#[allow(missing_docs)]
 #[non_exhaustive]
 pub enum Condition {
     /// Compares two numeric values.
     Compare {
-        /// The left-hand value.
         left: Box<NumberValue>,
-        /// The ordering to test for.
         #[serde(with = "OrderingSerde")]
         comparison: Ordering,
-        /// The right-hand value.
         right: Box<NumberValue>,
     },
     /// Tests whether a CEX account exists.
     HasCexAccount {
-        /// The CEX containing the account.
         cex_id: CexId,
-        /// The account to look for.
         account_id: AccountId,
     },
     /// Negates another condition.
-    Not {
-        /// The condition to negate.
-        condition: Box<Condition>,
-    },
+    Not { condition: Box<Condition> },
     /// Tests whether the portfolio owns any of an asset.
-    OwnsAsset {
-        /// The asset to look for.
-        asset_id: AssetId,
-    },
+    OwnsAsset { asset_id: AssetId },
     /// Tests whether a CEX account owns any of an asset.
     OwnsAssetInCexAccount {
-        /// The CEX containing the account.
         cex_id: CexId,
-        /// The account to inspect.
         account_id: AccountId,
-        /// The asset to look for.
         asset_id: AssetId,
     },
     /// Applies a quantity requirement to a list of conditions.
     QuantityOf {
-        /// The quantity requirement to apply.
         quantity_of: QuantityOf,
-        /// The conditions to evaluate.
         conditions: Vec<Condition>,
     },
     /// Tests the value of a boolean signal.
-    Signal {
-        /// The signal key to read.
-        signal: SignalKey<bool>,
-    },
+    Signal { signal: SignalKey<bool> },
 }
 
 impl Condition {
@@ -163,8 +145,8 @@ pub enum QuantityOf {
 #[derive(Debug, Clone, Default)]
 pub struct ConditionFactory;
 
+#[allow(missing_docs)]
 impl ConditionFactory {
-    /// Creates a condition comparing two numeric values.
     pub fn compare(
         &self,
         left: NumberValue,
@@ -177,21 +159,17 @@ impl ConditionFactory {
             right: Box::new(right),
         }
     }
-    /// Creates a condition testing whether a CEX account exists.
     pub fn has_cex_account(&self, cex_id: CexId, account_id: AccountId) -> Condition {
         Condition::HasCexAccount { cex_id, account_id }
     }
-    /// Creates a condition that negates another condition.
     pub fn not(&self, condition: Condition) -> Condition {
         Condition::Not {
             condition: Box::new(condition),
         }
     }
-    /// Creates a condition testing whether the portfolio owns any of an asset.
     pub fn owns_asset(&self, asset_id: AssetId) -> Condition {
         Condition::OwnsAsset { asset_id }
     }
-    /// Creates a condition testing whether a CEX account owns any of an asset.
     pub fn owns_asset_in_cex_account(
         &self,
         cex_id: CexId,
@@ -204,14 +182,12 @@ impl ConditionFactory {
             asset_id,
         }
     }
-    /// Creates a condition applying a quantity requirement to a list of conditions.
     pub fn quantity_of(&self, quantity_of: QuantityOf, conditions: Vec<Condition>) -> Condition {
         Condition::QuantityOf {
             quantity_of,
             conditions,
         }
     }
-    /// Creates a condition testing a boolean signal.
     pub fn signal(&self, flag: &SignalKey<bool>) -> Condition {
         Condition::Signal {
             signal: flag.clone(),

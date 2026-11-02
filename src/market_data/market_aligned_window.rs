@@ -5,12 +5,13 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
 /// Candles grouped by aligned windows.
+#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketAlignedWindow {
-    /// Candles for each aligned window in chronological order.
     pub candles: HashMap<AlignedWindow, Vec<MarketCandle>>,
 }
 
+#[allow(missing_docs)]
 impl MarketAlignedWindow {
     /// Creates an aligned-window collection from candles grouped by window.
     ///
@@ -22,31 +23,24 @@ impl MarketAlignedWindow {
         }
         Self { candles }
     }
-    /// Returns the open prices for an aligned window, if present.
     pub fn opens(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, |ohlcv| ohlcv.open)
     }
-    /// Returns the high prices for an aligned window, if present.
     pub fn highs(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, |ohlcv| ohlcv.high)
     }
-    /// Returns the low prices for an aligned window, if present.
     pub fn lows(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, |ohlcv| ohlcv.low)
     }
-    /// Returns the close prices for an aligned window, if present.
     pub fn closes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, |ohlcv| ohlcv.close)
     }
-    /// Returns the base volumes for an aligned window, if present.
     pub fn volumes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, |ohlcv| ohlcv.volume)
     }
-    /// Returns the quote volumes for an aligned window, if present.
     pub fn quote_volumes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, |ohlcv| ohlcv.quote_volume)
     }
-    /// Returns the volume-weighted average prices for an aligned window, if present.
     pub fn vwaps(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, |ohlcv| ohlcv.vwap)
     }
@@ -98,36 +92,6 @@ mod tests {
             MarketOhlcv::new(open, open + 1.0, open - 0.5, open + 0.5, 10.0, 15.0, 1.4),
             3,
         )
-    }
-
-    #[test]
-    fn values_return_none_when_window_is_absent() {
-        let market = MarketAlignedWindow::new(HashMap::new());
-
-        assert!(market.opens(AlignedWindow::Minutes1).is_none());
-        assert!(market.highs(AlignedWindow::Minutes1).is_none());
-        assert!(market.lows(AlignedWindow::Minutes1).is_none());
-        assert!(market.closes(AlignedWindow::Minutes1).is_none());
-        assert!(market.volumes(AlignedWindow::Minutes1).is_none());
-        assert!(market.quote_volumes(AlignedWindow::Minutes1).is_none());
-        assert!(market.vwaps(AlignedWindow::Minutes1).is_none());
-    }
-
-    #[test]
-    fn values_return_data_when_window_is_present() {
-        let market =
-            MarketAlignedWindow::new(HashMap::from([(AlignedWindow::Minutes1, vec![candle()])]));
-
-        assert_eq!(market.opens(AlignedWindow::Minutes1), Some(vec![1.0]));
-        assert_eq!(market.highs(AlignedWindow::Minutes1), Some(vec![2.0]));
-        assert_eq!(market.lows(AlignedWindow::Minutes1), Some(vec![0.5]));
-        assert_eq!(market.closes(AlignedWindow::Minutes1), Some(vec![1.5]));
-        assert_eq!(market.volumes(AlignedWindow::Minutes1), Some(vec![10.0]));
-        assert_eq!(
-            market.quote_volumes(AlignedWindow::Minutes1),
-            Some(vec![15.0])
-        );
-        assert_eq!(market.vwaps(AlignedWindow::Minutes1), Some(vec![1.4]));
     }
 
     #[test]

@@ -21,16 +21,14 @@ pub struct LiteralValuesFactory;
 #[derive(Debug, Clone, Default)]
 pub struct SignalValuesFactory;
 
+#[allow(missing_docs)]
 impl PortfolioValuesFactory {
-    /// Creates a value for the total number of pending orders.
     pub fn pending_orders(&self) -> NumberValue {
         NumberValue::PendingOrders
     }
-    /// Creates a value for the number of pending orders with a tag.
     pub fn pending_orders_with_tag(&self, tag: Tag) -> NumberValue {
         NumberValue::PendingOrdersWithTag { tag }
     }
-    /// Creates a value for the number of pending orders in a CEX account.
     pub fn pending_orders_in_cex_account(
         &self,
         cex_id_value: CexIdValue,
@@ -41,7 +39,6 @@ impl PortfolioValuesFactory {
             account_id_value,
         }
     }
-    /// Creates a value for the number of pending orders with a tag in a CEX account.
     pub fn pending_orders_in_cex_account_with_tag(
         &self,
         cex_id_value: CexIdValue,
@@ -54,11 +51,9 @@ impl PortfolioValuesFactory {
             tag,
         }
     }
-    /// Creates a value for the total amount of an asset.
     pub fn asset_total(&self, asset_id_value: AssetIdValue) -> NumberValue {
         NumberValue::AssetTotal { asset_id_value }
     }
-    /// Creates a value for the total amount of an asset in a CEX account.
     pub fn asset_total_in_cex_account(
         &self,
         cex_id_value: CexIdValue,
@@ -71,11 +66,9 @@ impl PortfolioValuesFactory {
             account_id_value,
         }
     }
-    /// Creates a value for the available amount of an asset.
     pub fn asset_available(&self, asset_id_value: AssetIdValue) -> NumberValue {
         NumberValue::AssetAvailable { asset_id_value }
     }
-    /// Creates a value for the available amount of an asset in a CEX account.
     pub fn asset_available_in_cex_account(
         &self,
         cex_id_value: CexIdValue,
@@ -88,11 +81,9 @@ impl PortfolioValuesFactory {
             account_id_value,
         }
     }
-    /// Creates a value for the reserved amount of an asset.
     pub fn asset_reserved(&self, asset_id_value: AssetIdValue) -> NumberValue {
         NumberValue::AssetReserved { asset_id_value }
     }
-    /// Creates a value for the reserved amount of an asset in a CEX account.
     pub fn asset_reserved_in_cex_account(
         &self,
         cex_id_value: CexIdValue,
@@ -107,8 +98,8 @@ impl PortfolioValuesFactory {
     }
 }
 
+#[allow(missing_docs)]
 impl CalculationValuesFactory {
-    /// Creates a binary calculation value.
     pub fn binary(
         &self,
         left: NumberValue,
@@ -121,7 +112,6 @@ impl CalculationValuesFactory {
             right: Box::new(right),
         }
     }
-    /// Creates a unary calculation value.
     pub fn unary(&self, operator: UnaryOperator, number: NumberValue) -> NumberValue {
         NumberValue::UnaryCalculation {
             number: Box::new(number),
@@ -130,55 +120,47 @@ impl CalculationValuesFactory {
     }
 }
 
+#[allow(missing_docs)]
 impl LiteralValuesFactory {
-    /// Creates a literal CEX identifier.
     pub fn cex_id(&self, literal: CexId) -> CexIdValue {
         CexIdValue::Literal { literal }
     }
-    /// Creates a literal account identifier.
     pub fn account_id(&self, literal: AccountId) -> AccountIdValue {
         AccountIdValue::Literal { literal }
     }
-    /// Creates a literal asset identifier.
     pub fn asset_id(&self, literal: AssetId) -> AssetIdValue {
         AssetIdValue::Literal { literal }
     }
-    /// Creates a literal boolean flag.
     pub fn flag(&self, literal: bool) -> FlagValue {
         FlagValue::Literal { literal }
     }
-    /// Creates a literal number.
     pub fn number(&self, literal: f64) -> NumberValue {
         NumberValue::Literal { literal }
     }
 }
 
+#[allow(missing_docs)]
 impl SignalValuesFactory {
-    /// Creates a CEX identifier value read from a signal.
     pub fn cex_id(&self, key: &SignalKey<CexId>) -> CexIdValue {
         CexIdValue::Signal {
             signal: key.clone(),
         }
     }
-    /// Creates an account identifier value read from a signal.
     pub fn account_id(&self, key: &SignalKey<AccountId>) -> AccountIdValue {
         AccountIdValue::Signal {
             signal: key.clone(),
         }
     }
-    /// Creates an asset identifier value read from a signal.
     pub fn asset_id(&self, key: &SignalKey<AssetId>) -> AssetIdValue {
         AssetIdValue::Signal {
             signal: key.clone(),
         }
     }
-    /// Creates a boolean flag value read from a signal.
     pub fn flag(&self, key: &SignalKey<bool>) -> FlagValue {
         FlagValue::Signal {
             signal: key.clone(),
         }
     }
-    /// Creates a numeric value read from a signal.
     pub fn number(&self, key: &SignalKey<f64>) -> NumberValue {
         NumberValue::Signal {
             signal: key.clone(),
