@@ -34,8 +34,9 @@ mod cex;
 mod commands;
 mod conditions;
 /// Decentralised exchange (DEX) types.
+#[allow(unused)]
 #[cfg(feature = "dex")]
-pub mod dex;
+mod dex;
 mod error;
 mod market_data;
 mod pending_order;
