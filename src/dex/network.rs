@@ -17,58 +17,64 @@ pub struct Network {
 
 /// Identifier for a network on a blockchain.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[non_exhaustive]
 #[serde(try_from = "String", into = "String")]
-pub enum NetworkId {
+pub struct NetworkId(std::borrow::Cow<'static, str>);
+
+#[allow(missing_docs)]
+impl NetworkId {
     /// The main network of a blockchain.
-    Mainnet,
+    pub const MAINNET: Self = Self(std::borrow::Cow::Borrowed("mainnet"));
+
     /// A test network of a blockchain.
-    Testnet,
-    /// An arbitrary network identified by its name.
-    Other(String),
+    pub const TESTNET: Self = Self(std::borrow::Cow::Borrowed("testnet"));
+
+    /// The main network of a blockchain.
+    #[allow(non_upper_case_globals)]
+    pub const Mainnet: Self = Self::MAINNET;
+
+    /// A test network of a blockchain.
+    #[allow(non_upper_case_globals)]
+    pub const Testnet: Self = Self::TESTNET;
 }
 
 impl NetworkId {
     fn from_string(value: String) -> Self {
-        match Self::canonical(&value) {
-            Some(network_id) => network_id,
-            None => Self::Other(value),
-        }
+        Self(std::borrow::Cow::Owned(value.trim().to_string()))
     }
 
-    /// Creates a network identifier from a static string.
+    /// Creates an arbitrary network identifier by name.
+    ///
+    /// Leading and trailing whitespace is trimmed. The canonical names
+    /// `mainnet` and `testnet` compare equal to [`Self::MAINNET`] and
+    /// [`Self::TESTNET`] respectively.
     ///
     /// # Errors
     ///
-    /// Returns an error if `id` is empty or whitespace-only.
-    pub fn from_static(id: &'static str) -> StockTrekResult<Self> {
-        Self::try_from(id)
+    /// Returns an error if `name` is empty or whitespace-only.
+    pub fn other(name: impl Into<String>) -> StockTrekResult<Self> {
+        Self::try_from(name.into())
+    }
+
+    /// Creates an arbitrary network identifier by name.
+    ///
+    /// This is an alias for [`Self::other`].
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `name` is empty or whitespace-only.
+    #[allow(non_snake_case)]
+    pub fn Other(name: impl Into<String>) -> StockTrekResult<Self> {
+        Self::other(name)
     }
 
     /// Returns the identifier as a string slice.
     pub fn as_str(&self) -> &str {
-        match self {
-            Self::Mainnet => "mainnet",
-            Self::Testnet => "testnet",
-            Self::Other(id) => id,
-        }
+        &self.0
     }
 
     /// Consumes the identifier and returns its owned string value.
     pub fn into_inner(self) -> String {
-        match self {
-            Self::Mainnet => "mainnet".to_string(),
-            Self::Testnet => "testnet".to_string(),
-            Self::Other(id) => id,
-        }
-    }
-
-    fn canonical(value: &str) -> Option<Self> {
-        match value {
-            "mainnet" => Some(Self::Mainnet),
-            "testnet" => Some(Self::Testnet),
-            _ => None,
-        }
+        self.0.into_owned()
     }
 }
 
@@ -172,51 +178,85 @@ mod tests {
     #[test]
     fn network_id_round_trips_through_strings() {
         for network_id in [
-            NetworkId::Mainnet,
-            NetworkId::Testnet,
-            NetworkId::Other("devnet".to_string()),
+            NetworkId::MAINNET,
+            NetworkId::TESTNET,
+            NetworkId::other("devnet").unwrap(),
         ] {
             assert_eq!(
                 network_id.as_str().parse::<NetworkId>().unwrap(),
                 network_id
             );
             assert_eq!(NetworkId::new(network_id.as_str()).unwrap(), network_id);
+
+            let serialized = serde_json::to_string(&network_id).unwrap();
+            assert_eq!(
+                serde_json::from_str::<NetworkId>(&serialized).unwrap(),
+                network_id
+            );
         }
     }
 
     #[test]
+    fn legacy_network_id_constants_alias_the_primary_constants() {
+        assert_eq!(NetworkId::Mainnet, NetworkId::MAINNET);
+        assert_eq!(NetworkId::Testnet, NetworkId::TESTNET);
+    }
+
+    #[test]
     fn mainnet_and_testnet_have_a_single_representation() {
-        assert_eq!(NetworkId::new("mainnet").unwrap(), NetworkId::Mainnet);
-        assert_eq!(NetworkId::new("testnet").unwrap(), NetworkId::Testnet);
+        assert_eq!(NetworkId::new("mainnet").unwrap(), NetworkId::MAINNET);
+        assert_eq!(NetworkId::new("testnet").unwrap(), NetworkId::TESTNET);
+        assert_eq!(NetworkId::Other("mainnet").unwrap(), NetworkId::MAINNET);
+        assert_eq!(NetworkId::Other("testnet").unwrap(), NetworkId::TESTNET);
         assert_eq!(
             serde_json::to_string(&NetworkId::new("mainnet").unwrap()).unwrap(),
-            serde_json::to_string(&NetworkId::Mainnet).unwrap()
+            serde_json::to_string(&NetworkId::MAINNET).unwrap()
         );
         assert_eq!(
             serde_json::to_string(&NetworkId::new("testnet").unwrap()).unwrap(),
-            serde_json::to_string(&NetworkId::Testnet).unwrap()
+            serde_json::to_string(&NetworkId::TESTNET).unwrap()
+        );
+    }
+
+    #[test]
+    fn network_names_are_trimmed_and_canonicalized() {
+        assert_eq!(NetworkId::new(" mainnet ").unwrap(), NetworkId::MAINNET);
+        assert_eq!(
+            NetworkId::new("\tsepolia\n").unwrap(),
+            NetworkId::other("sepolia").unwrap()
+        );
+        assert_eq!(
+            serde_json::from_str::<NetworkId>("\" mainnet \"").unwrap(),
+            NetworkId::MAINNET
+        );
+
+        let network_id = NetworkId::new(" sepolia ").unwrap();
+        let serialized = serde_json::to_string(&network_id).unwrap();
+        assert_eq!(serialized, "\"sepolia\"");
+        assert_eq!(
+            serde_json::from_str::<NetworkId>(&serialized).unwrap(),
+            network_id
         );
     }
 
     #[test]
     fn network_ids_serialize_as_plain_strings() {
-        assert_eq!(
-            serde_json::to_string(&NetworkId::Other("sepolia".to_string())).unwrap(),
-            "\"sepolia\""
-        );
+        let sepolia = NetworkId::other("sepolia").unwrap();
+        assert_eq!(serde_json::to_string(&sepolia).unwrap(), "\"sepolia\"");
         assert_eq!(
             serde_json::from_str::<NetworkId>("\"sepolia\"").unwrap(),
-            NetworkId::Other("sepolia".to_string())
+            sepolia
         );
     }
 
     #[test]
     fn empty_and_whitespace_only_network_ids_are_rejected() {
-        for value in ["", " ", "\t\n"] {
+        for value in ["", " ", "\t\n", "\u{a0}"] {
             assert!(NetworkId::new(value).is_err());
             assert!(NetworkId::try_from(value).is_err());
-            assert!(NetworkId::from_static(value).is_err());
             assert!(value.parse::<NetworkId>().is_err());
+            assert!(NetworkId::other(value).is_err());
+            assert!(NetworkId::Other(value).is_err());
         }
     }
 
@@ -237,7 +277,8 @@ mod tests {
 
     #[test]
     fn network_ids_reject_empty_values_when_deserialized() {
-        assert!(serde_json::from_str::<NetworkId>("\"\"").is_err());
-        assert!(serde_json::from_str::<NetworkId>("\" \"").is_err());
+        for value in ["\"\"", "\" \"", "\"\t\n\""] {
+            assert!(serde_json::from_str::<NetworkId>(value).is_err());
+        }
     }
 }
