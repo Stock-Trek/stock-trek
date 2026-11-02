@@ -1,5 +1,7 @@
 use super::*;
-use stock_trek_types::cex::{activation::Activation, time_in_force::TimeInForce};
+use stock_trek_types::cex::{
+    activation::Activation, quantity::Quantity, side::Side, time_in_force::TimeInForce,
+};
 
 fn portfolio_with(
     order_request: OrderRequest<AssetId, f64>,
