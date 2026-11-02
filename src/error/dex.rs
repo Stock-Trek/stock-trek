@@ -10,6 +10,13 @@ pub enum DexError {
         /// Details about the invalid address format.
         message: String,
     },
+    /// A contract address did not match the blockchain's address format.
+    InvalidContractAddress {
+        /// The identifier of the blockchain.
+        blockchain_id: String,
+        /// The invalid contract address.
+        address: String,
+    },
 }
 
 impl fmt::Display for DexError {
@@ -22,6 +29,14 @@ impl fmt::Display for DexError {
                 f,
                 "Invalid address format for blockchain '{}': {}",
                 blockchain_id, message
+            ),
+            DexError::InvalidContractAddress {
+                blockchain_id,
+                address,
+            } => write!(
+                f,
+                "Invalid contract address '{}' for blockchain '{}'",
+                address, blockchain_id
             ),
         }
     }
