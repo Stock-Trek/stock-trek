@@ -94,7 +94,7 @@ impl Algorithm for CostAveraging {
                     Ordering::Greater,
                     cheapest_price.clone(),
                 ),
-                c.commands.plan(vec![c.actions.send_order_request(
+                c.commands.plan(vec![c.actions.place_order(
                     cex.clone(),
                     account.clone(),
                     c.orders.limit(

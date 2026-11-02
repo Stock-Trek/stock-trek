@@ -16,8 +16,8 @@ use strum::Display;
 #[non_exhaustive]
 /// An action that an algorithm may request during strategy evaluation.
 pub enum Action {
-    /// Sends an order request to a CEX account.
-    SendOrderRequest {
+    /// Places an order in a CEX account.
+    PlaceOrder {
         /// The CEX on which the order should be placed.
         cex_id_value: CexIdValue,
         /// The account that should place the order.
@@ -51,7 +51,7 @@ pub enum Action {
 impl Resolvable<ResolvedAction> for Action {
     fn try_resolve(&self, c: &ResolvedContext) -> StockTrekResult<ResolvedAction> {
         match self {
-            Action::SendOrderRequest {
+            Action::PlaceOrder {
                 cex_id_value,
                 account_id_value,
                 order_request,
@@ -85,7 +85,7 @@ impl Resolvable<ResolvedAction> for Action {
 impl HasRequiredCapabilities for Action {
     fn required_capabilities(&self) -> Vec<CexCapability> {
         match self {
-            Action::SendOrderRequest { order_request, .. } => order_request.required_capabilities(),
+            Action::PlaceOrder { order_request, .. } => order_request.required_capabilities(),
             Action::CancelAllOrders { .. }
             | Action::CancelAllOrdersInCex { .. }
             | Action::CancelAllOrdersInCexAccount { .. } => vec![],
