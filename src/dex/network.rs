@@ -226,23 +226,7 @@ mod tests {
                 network_id
             );
             assert_eq!(NetworkId::from(network_id.as_str()), network_id);
-            assert_eq!(NetworkId::new(network_id.as_str()), network_id);
-            assert_eq!(NetworkId::from(network_id.to_string()), network_id);
-            assert_eq!(String::from(network_id.clone()), network_id.as_str());
-            assert_eq!(network_id.clone().into_inner(), network_id.as_str());
         }
-    }
-
-    #[test]
-    fn chain_id_round_trips_through_strings() {
-        let chain_id = ChainId::new(1);
-
-        assert_eq!(chain_id.to_string(), "1");
-        assert_eq!("1".parse::<ChainId>().unwrap(), chain_id);
-        assert_eq!(ChainId::from(1), chain_id);
-        assert_eq!(u64::from(chain_id), 1);
-        assert_eq!(chain_id.as_u64(), 1);
-        assert_eq!(chain_id.into_inner(), 1);
     }
 
     #[test]

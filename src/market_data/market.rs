@@ -16,8 +16,8 @@ use std::collections::HashMap;
 /// Market data for a single trading pair on a CEX.
 ///
 /// The increment and notional fields describe exchange constraints. Ticks,
-/// rolling candles, calendar-aligned candles, and the order book hold the
-/// recent market history.
+/// rolling candles, aligned candles, and the order book hold the recent market
+/// history.
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Market {

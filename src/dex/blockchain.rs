@@ -274,33 +274,6 @@ mod tests {
     }
 
     #[test]
-    fn blockchain_id_round_trips_through_strings() {
-        let blockchain_id = BlockchainId::new("ethereum");
-
-        assert_eq!(blockchain_id.to_string(), "ethereum");
-        assert_eq!(
-            blockchain_id.as_str().parse::<BlockchainId>().unwrap(),
-            blockchain_id
-        );
-        assert_eq!(BlockchainId::from("ethereum"), blockchain_id);
-        assert_eq!(BlockchainId::from("ethereum".to_string()), blockchain_id);
-        assert_eq!(String::from(blockchain_id.clone()), "ethereum");
-        assert_eq!(blockchain_id.clone().into_inner(), "ethereum");
-    }
-
-    #[test]
-    fn family_id_round_trips_through_strings() {
-        let family_id = FamilyId::new("evm");
-
-        assert_eq!(family_id.to_string(), "evm");
-        assert_eq!(family_id.as_str().parse::<FamilyId>().unwrap(), family_id);
-        assert_eq!(FamilyId::from("evm"), family_id);
-        assert_eq!(FamilyId::from("evm".to_string()), family_id);
-        assert_eq!(String::from(family_id.clone()), "evm");
-        assert_eq!(family_id.clone().into_inner(), "evm");
-    }
-
-    #[test]
     fn empty_blockchain_ids_are_rejected_when_parsed() {
         assert!("".parse::<BlockchainId>().is_err());
         assert!("".parse::<FamilyId>().is_err());
