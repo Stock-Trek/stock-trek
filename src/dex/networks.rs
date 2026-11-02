@@ -67,7 +67,7 @@ macro_rules! define_evm_network {
                 network: NetworkName,
                 asset_kind: crate::dex::asset_kind::AssetKind,
             ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-                super::evm_asset_on_chain($blockchain, network, asset_kind)
+                super::AssetOnChain::evm($blockchain, network, asset_kind)
             }
         }
     };
@@ -98,7 +98,7 @@ macro_rules! define_network {
                 network: NetworkName,
                 asset_kind: crate::dex::asset_kind::AssetKind,
             ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-                let blockchain = super::blockchain(
+                let blockchain = super::Blockchain::from_ids(
                     $blockchain,
                     super::$family_id,
                     $native_decimals,
@@ -336,35 +336,34 @@ define_network! {
     }
 }
 
-fn blockchain(
-    blockchain_id: &str,
-    family_id: &str,
-    native_decimals: u8,
-    address_format: &str,
-) -> StockTrekResult<Blockchain> {
-    Blockchain::new(
-        BlockchainId::new(blockchain_id)?,
-        FamilyId::new(family_id)?,
-        native_decimals,
-        address_format,
-    )
+impl Blockchain {
+    fn from_ids(
+        blockchain_id: &str,
+        family_id: &str,
+        native_decimals: u8,
+        address_format: &str,
+    ) -> StockTrekResult<Self> {
+        Self::new(
+            BlockchainId::new(blockchain_id)?,
+            FamilyId::new(family_id)?,
+            native_decimals,
+            address_format,
+        )
+    }
+
+    fn evm(blockchain_name: &str) -> StockTrekResult<Self> {
+        Self::from_ids(blockchain_name, FAMILY_ID_EVM, 18, "^0x[a-fA-F0-9]{40}$")
+    }
 }
 
-fn evm_blockchain(blockchain_name: &str) -> StockTrekResult<Blockchain> {
-    Blockchain::new(
-        BlockchainId::new(blockchain_name)?,
-        FamilyId::new(FAMILY_ID_EVM)?,
-        18,
-        "^0x[a-fA-F0-9]{40}$",
-    )
-}
-
-fn evm_asset_on_chain(
-    blockchain_name: &str,
-    network: impl Into<NetworkId> + Into<u64> + Copy,
-    asset_kind: AssetKind,
-) -> StockTrekResult<AssetOnChain> {
-    let blockchain = evm_blockchain(blockchain_name)?;
-    let network = Network::new(network.into(), Some(ChainId::new(network.into())));
-    Ok(AssetOnChain::new(blockchain, network, asset_kind))
+impl AssetOnChain {
+    fn evm(
+        blockchain_name: &str,
+        network: impl Into<NetworkId> + Into<u64> + Copy,
+        asset_kind: AssetKind,
+    ) -> StockTrekResult<Self> {
+        let blockchain = Blockchain::evm(blockchain_name)?;
+        let network = Network::new(network.into(), Some(ChainId::new(network.into())));
+        Ok(Self::new(blockchain, network, asset_kind))
+    }
 }

@@ -32,18 +32,18 @@ pub struct BlockchainId(String);
 #[serde(try_from = "String", into = "String")]
 pub struct FamilyId(String);
 
-fn validate_identifier(name: &str, value: &str) -> StockTrekResult<()> {
-    if value.trim().is_empty() {
-        return Err(StockTrekError::Value(ValueError::IncorrectType {
-            expected: name.into(),
-            found: value.into(),
-        }));
-    }
-    Ok(())
-}
-
 #[allow(missing_docs)]
 impl BlockchainId {
+    fn validate(value: &str) -> StockTrekResult<()> {
+        if value.trim().is_empty() {
+            return Err(StockTrekError::Value(ValueError::IncorrectType {
+                expected: "BlockchainId".into(),
+                found: value.into(),
+            }));
+        }
+        Ok(())
+    }
+
     pub fn new(id: &str) -> StockTrekResult<Self> {
         Self::try_from(id)
     }
@@ -59,6 +59,16 @@ impl BlockchainId {
 
 #[allow(missing_docs)]
 impl FamilyId {
+    fn validate(value: &str) -> StockTrekResult<()> {
+        if value.trim().is_empty() {
+            return Err(StockTrekError::Value(ValueError::IncorrectType {
+                expected: "FamilyId".into(),
+                found: value.into(),
+            }));
+        }
+        Ok(())
+    }
+
     pub fn new(id: &str) -> StockTrekResult<Self> {
         Self::try_from(id)
     }
@@ -76,7 +86,7 @@ impl TryFrom<&str> for BlockchainId {
     type Error = StockTrekError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        validate_identifier("BlockchainId", value)?;
+        Self::validate(value)?;
         Ok(Self(value.to_string()))
     }
 }
@@ -85,7 +95,7 @@ impl TryFrom<String> for BlockchainId {
     type Error = StockTrekError;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        validate_identifier("BlockchainId", &value)?;
+        Self::validate(&value)?;
         Ok(Self(value))
     }
 }
@@ -102,7 +112,7 @@ impl TryFrom<&str> for FamilyId {
     type Error = StockTrekError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        validate_identifier("FamilyId", value)?;
+        Self::validate(value)?;
         Ok(Self(value.to_string()))
     }
 }
@@ -111,7 +121,7 @@ impl TryFrom<String> for FamilyId {
     type Error = StockTrekError;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        validate_identifier("FamilyId", &value)?;
+        Self::validate(&value)?;
         Ok(Self(value))
     }
 }

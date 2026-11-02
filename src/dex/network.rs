@@ -18,21 +18,11 @@ pub struct Network {
 #[serde(try_from = "String", into = "String")]
 pub struct NetworkId(Cow<'static, str>);
 
-fn validate_network_id(value: &str) -> Result<(), StockTrekError> {
-    if value.trim().is_empty() {
-        return Err(StockTrekError::Value(ValueError::IncorrectType {
-            expected: "NetworkId".into(),
-            found: value.into(),
-        }));
-    }
-    Ok(())
-}
-
 impl TryFrom<&str> for NetworkId {
     type Error = StockTrekError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        validate_network_id(value)?;
+        Self::validate(value)?;
         Ok(Self(Cow::Owned(value.to_string())))
     }
 }
@@ -41,7 +31,7 @@ impl TryFrom<String> for NetworkId {
     type Error = StockTrekError;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        validate_network_id(&value)?;
+        Self::validate(&value)?;
         Ok(Self(Cow::Owned(value)))
     }
 }
@@ -58,6 +48,16 @@ impl FromStr for NetworkId {
 impl NetworkId {
     pub const Mainnet: Self = Self(Cow::Borrowed("mainnet"));
     pub const Testnet: Self = Self(Cow::Borrowed("testnet"));
+
+    fn validate(value: &str) -> Result<(), StockTrekError> {
+        if value.trim().is_empty() {
+            return Err(StockTrekError::Value(ValueError::IncorrectType {
+                expected: "NetworkId".into(),
+                found: value.into(),
+            }));
+        }
+        Ok(())
+    }
 
     pub fn new(id: &str) -> StockTrekResult<Self> {
         Self::try_from(id)
