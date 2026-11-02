@@ -2,9 +2,9 @@ use super::*;
 use stock_trek_types::cex::{activation::Activation, time_in_force::TimeInForce};
 
 fn portfolio_with(
-    order_request: OrderRequest<AssetId, Decimal>,
-    filled_base_quantity: Decimal,
-    filled_quote_quantity: Decimal,
+    order_request: OrderRequest<AssetId, f64>,
+    filled_base_quantity: f64,
+    filled_quote_quantity: f64,
 ) -> Portfolio {
     let mut builder = PortfolioBuilder::new();
     builder
@@ -12,7 +12,7 @@ fn portfolio_with(
             CexId::Binance,
             AccountId::new("account"),
             AssetId::Bitcoin,
-            Decimal::from(100),
+            100.0,
         )
         .pending_order(
             CexId::Binance,
@@ -24,7 +24,7 @@ fn portfolio_with(
     builder.build()
 }
 
-fn limit_sell(quantity: Quantity<Decimal>, limit_price: Decimal) -> OrderRequest<AssetId, Decimal> {
+fn limit_sell(quantity: Quantity<f64>, limit_price: f64) -> OrderRequest<AssetId, f64> {
     OrderRequest::Limit {
         base: AssetId::Bitcoin,
         quote: AssetId::TetherUSD,
@@ -39,13 +39,9 @@ fn limit_sell(quantity: Quantity<Decimal>, limit_price: Decimal) -> OrderRequest
 
 #[test]
 fn reserved_quantity_is_clamped_when_filled_exceeds_ordered() {
-    let portfolio = portfolio_with(
-        limit_sell(Quantity::OfBase(Decimal::from(10)), Decimal::from(100)),
-        Decimal::from(15),
-        Decimal::ZERO,
-    );
+    let portfolio = portfolio_with(limit_sell(Quantity::OfBase(10.0), 100.0), 15.0, 0.0);
 
-    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), Decimal::ZERO);
+    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 0.0);
     assert_eq!(
         portfolio.asset_available(&AssetId::Bitcoin),
         portfolio.asset_total(&AssetId::Bitcoin)
@@ -54,27 +50,16 @@ fn reserved_quantity_is_clamped_when_filled_exceeds_ordered() {
 
 #[test]
 fn zero_price_quote_limited_sell_reserves_nothing() {
-    let portfolio = portfolio_with(
-        limit_sell(Quantity::OfQuote(Decimal::from(1_000)), Decimal::ZERO),
-        Decimal::ZERO,
-        Decimal::ZERO,
-    );
+    let portfolio = portfolio_with(limit_sell(Quantity::OfQuote(1_000.0), 0.0), 0.0, 0.0);
 
-    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), Decimal::ZERO);
+    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 0.0);
 }
 
 #[test]
 fn partial_fill_reserves_remaining_quantity() {
-    let portfolio = portfolio_with(
-        limit_sell(Quantity::OfBase(Decimal::from(10)), Decimal::from(100)),
-        Decimal::from(4),
-        Decimal::ZERO,
-    );
+    let portfolio = portfolio_with(limit_sell(Quantity::OfBase(10.0), 100.0), 4.0, 0.0);
 
-    assert_eq!(
-        portfolio.asset_reserved(&AssetId::Bitcoin),
-        Decimal::from(6)
-    );
+    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 6.0);
 }
 
 #[test]
@@ -83,43 +68,36 @@ fn market_orders_reserve_quantities_are_clamped() {
         base: AssetId::Bitcoin,
         quote: AssetId::TetherUSD,
         activation: Activation::Immediate,
-        quote_quantity: Decimal::from(100),
+        quote_quantity: 100.0,
         tag: Tag::new("tag"),
     };
-    let portfolio = portfolio_with(market_buy, Decimal::ZERO, Decimal::from(150));
-    assert_eq!(portfolio.asset_reserved(&AssetId::TetherUSD), Decimal::ZERO);
+    let portfolio = portfolio_with(market_buy, 0.0, 150.0);
+    assert_eq!(portfolio.asset_reserved(&AssetId::TetherUSD), 0.0);
 
     let market_sell = OrderRequest::MarketSell {
         base: AssetId::Bitcoin,
         quote: AssetId::TetherUSD,
         activation: Activation::Immediate,
-        base_quantity: Decimal::from(10),
+        base_quantity: 10.0,
         tag: Tag::new("tag"),
     };
-    let portfolio = portfolio_with(market_sell, Decimal::from(15), Decimal::ZERO);
-    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), Decimal::ZERO);
+    let portfolio = portfolio_with(market_sell, 15.0, 0.0);
+    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 0.0);
 }
 
 #[test]
 fn asset_available_is_clamped_when_reservations_exceed_balance() {
-    let portfolio = portfolio_with(
-        limit_sell(Quantity::OfBase(Decimal::from(150)), Decimal::from(100)),
-        Decimal::ZERO,
-        Decimal::ZERO,
-    );
+    let portfolio = portfolio_with(limit_sell(Quantity::OfBase(150.0), 100.0), 0.0, 0.0);
 
-    assert_eq!(
-        portfolio.asset_reserved(&AssetId::Bitcoin),
-        Decimal::from(150)
-    );
-    assert_eq!(portfolio.asset_available(&AssetId::Bitcoin), Decimal::ZERO);
+    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 150.0);
+    assert_eq!(portfolio.asset_available(&AssetId::Bitcoin), 0.0);
     assert_eq!(
         portfolio.asset_available_in_cex_account(
             &CexId::Binance,
             &AccountId::new("account"),
             &AssetId::Bitcoin,
         ),
-        Decimal::ZERO
+        0.0
     );
 }
 
@@ -129,9 +107,9 @@ fn pending_orders_are_grouped_by_the_order_request_tag() {
     builder.pending_order(
         CexId::Binance,
         AccountId::new("account"),
-        limit_sell(Quantity::OfBase(Decimal::from(10)), Decimal::from(100)),
-        Decimal::ZERO,
-        Decimal::ZERO,
+        limit_sell(Quantity::OfBase(10.0), 100.0),
+        0.0,
+        0.0,
     );
     let portfolio = builder.build();
 
