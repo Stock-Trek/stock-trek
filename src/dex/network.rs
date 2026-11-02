@@ -1,6 +1,8 @@
 //! Networks within a blockchain.
 
+use crate::errors::{StockTrekError, ValueError};
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 /// A network on a blockchain.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,13 +30,54 @@ impl From<&str> for NetworkId {
     }
 }
 
+impl FromStr for NetworkId {
+    type Err = StockTrekError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "mainnet" => Ok(NetworkId::Mainnet),
+            "testnet" => Ok(NetworkId::Testnet),
+            "" => Err(StockTrekError::Value(ValueError::NotFound {
+                name: "NetworkId".into(),
+                key: value.into(),
+            })),
+            name => Ok(NetworkId::Other(name.to_string())),
+        }
+    }
+}
+
+impl NetworkId {
+    /// Returns the network identifier as a string slice.
+    pub fn as_str(&self) -> &str {
+        match self {
+            NetworkId::Mainnet => "mainnet",
+            NetworkId::Testnet => "testnet",
+            NetworkId::Other(name) => name,
+        }
+    }
+}
+
 impl std::fmt::Display for NetworkId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            NetworkId::Mainnet => write!(f, "mainnet"),
-            NetworkId::Testnet => write!(f, "testnet"),
-            NetworkId::Other(name) => write!(f, "{}", name),
-        }
+        f.write_str(self.as_str())
+    }
+}
+
+impl AsRef<str> for NetworkId {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl PartialEq<str> for NetworkId {
+    fn eq(&self, other: &str) -> bool {
+        self.as_str() == other
+    }
+}
+
+impl PartialEq<&str> for NetworkId {
+    fn eq(&self, other: &&str) -> bool {
+        self.as_str() == *other
     }
 }
 
@@ -47,6 +90,27 @@ impl ChainId {
     pub fn new(id: u64) -> Self {
         Self(id)
     }
+
+    /// Returns the numeric chain identifier.
+    pub fn value(&self) -> u64 {
+        self.0
+    }
+
+    /// Returns the numeric chain identifier.
+    pub fn get(&self) -> u64 {
+        self.value()
+    }
+
+    /// Consumes the chain identifier and returns its numeric value.
+    pub fn into_inner(self) -> u64 {
+        self.0
+    }
+}
+
+impl From<ChainId> for u64 {
+    fn from(value: ChainId) -> Self {
+        value.into_inner()
+    }
 }
 
 impl Network {
@@ -55,6 +119,54 @@ impl Network {
         Self {
             network_id,
             chain_id,
+        }
+    }
+
+    /// Returns the network identifier.
+    pub fn network_id(&self) -> &NetworkId {
+        &self.network_id
+    }
+
+    /// Returns the network's numeric chain identifier, if it has one.
+    pub fn chain_id(&self) -> Option<ChainId> {
+        self.chain_id
+    }
+
+    /// Returns the network identifier.
+    pub fn id(&self) -> &NetworkId {
+        self.network_id()
+    }
+
+    /// Returns the network's numeric chain identifier, if it has one.
+    pub fn chain(&self) -> Option<ChainId> {
+        self.chain_id()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn exposes_network_fields() {
+        let network = Network::new(NetworkId::Mainnet, Some(ChainId::new(1)));
+
+        assert_eq!(network.network_id(), &NetworkId::Mainnet);
+        assert_eq!(network.chain_id(), Some(ChainId::new(1)));
+        assert_eq!(network.chain_id().unwrap().value(), 1);
+    }
+
+    #[test]
+    fn network_id_round_trips_through_strings() {
+        for network_id in [
+            NetworkId::Mainnet,
+            NetworkId::Testnet,
+            NetworkId::Other("devnet".to_string()),
+        ] {
+            assert_eq!(
+                network_id.as_str().parse::<NetworkId>().unwrap(),
+                network_id
+            );
         }
     }
 }

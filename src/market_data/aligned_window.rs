@@ -4,6 +4,7 @@ use crate::{
 };
 use chrono::{DateTime, Datelike, Months, TimeZone, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::str::FromStr;
 use strum::{EnumCount, EnumIter, FromRepr};
 
 /// A window aligned to fixed or calendar boundaries.
@@ -271,50 +272,50 @@ impl AlignedWindow {
     }
 
     /// Returns the short label for the window, such as `1h` or `7d`.
-    pub fn label(self) -> String {
+    pub fn label(self) -> &'static str {
         match self {
-            AlignedWindow::Seconds1 => "1s".to_string(),
-            AlignedWindow::Seconds5 => "5s".to_string(),
-            AlignedWindow::Seconds10 => "10s".to_string(),
-            AlignedWindow::Seconds15 => "15s".to_string(),
-            AlignedWindow::Seconds30 => "30s".to_string(),
-            AlignedWindow::Seconds60 => "60s".to_string(),
-            AlignedWindow::Minutes1 => "1m".to_string(),
-            AlignedWindow::Minutes2 => "2m".to_string(),
-            AlignedWindow::Minutes3 => "3m".to_string(),
-            AlignedWindow::Minutes5 => "5m".to_string(),
-            AlignedWindow::Minutes10 => "10m".to_string(),
-            AlignedWindow::Minutes15 => "15m".to_string(),
-            AlignedWindow::Minutes30 => "30m".to_string(),
-            AlignedWindow::Minutes60 => "60m".to_string(),
-            AlignedWindow::Hours1 => "1h".to_string(),
-            AlignedWindow::Hours2 => "2h".to_string(),
-            AlignedWindow::Hours3 => "3h".to_string(),
-            AlignedWindow::Hours4 => "4h".to_string(),
-            AlignedWindow::Hours6 => "6h".to_string(),
-            AlignedWindow::Hours8 => "8h".to_string(),
-            AlignedWindow::Hours12 => "12h".to_string(),
-            AlignedWindow::Hours24 => "24h".to_string(),
-            AlignedWindow::Days1 => "1d".to_string(),
-            AlignedWindow::Days7 => "7d".to_string(),
-            AlignedWindow::Weeks1 => "1w".to_string(),
-            AlignedWindow::Weeks2 => "2w".to_string(),
-            AlignedWindow::Weeks4 => "4w".to_string(),
-            AlignedWindow::Months1 => "1mo".to_string(),
-            AlignedWindow::Months2 => "2mo".to_string(),
-            AlignedWindow::Months3 => "3mo".to_string(),
-            AlignedWindow::Months4 => "4mo".to_string(),
-            AlignedWindow::Months6 => "6mo".to_string(),
-            AlignedWindow::Months12 => "12mo".to_string(),
-            AlignedWindow::Years1 => "1y".to_string(),
-            AlignedWindow::Years2 => "2y".to_string(),
+            AlignedWindow::Seconds1 => "1s",
+            AlignedWindow::Seconds5 => "5s",
+            AlignedWindow::Seconds10 => "10s",
+            AlignedWindow::Seconds15 => "15s",
+            AlignedWindow::Seconds30 => "30s",
+            AlignedWindow::Seconds60 => "60s",
+            AlignedWindow::Minutes1 => "1m",
+            AlignedWindow::Minutes2 => "2m",
+            AlignedWindow::Minutes3 => "3m",
+            AlignedWindow::Minutes5 => "5m",
+            AlignedWindow::Minutes10 => "10m",
+            AlignedWindow::Minutes15 => "15m",
+            AlignedWindow::Minutes30 => "30m",
+            AlignedWindow::Minutes60 => "60m",
+            AlignedWindow::Hours1 => "1h",
+            AlignedWindow::Hours2 => "2h",
+            AlignedWindow::Hours3 => "3h",
+            AlignedWindow::Hours4 => "4h",
+            AlignedWindow::Hours6 => "6h",
+            AlignedWindow::Hours8 => "8h",
+            AlignedWindow::Hours12 => "12h",
+            AlignedWindow::Hours24 => "24h",
+            AlignedWindow::Days1 => "1d",
+            AlignedWindow::Days7 => "7d",
+            AlignedWindow::Weeks1 => "1w",
+            AlignedWindow::Weeks2 => "2w",
+            AlignedWindow::Weeks4 => "4w",
+            AlignedWindow::Months1 => "1mo",
+            AlignedWindow::Months2 => "2mo",
+            AlignedWindow::Months3 => "3mo",
+            AlignedWindow::Months4 => "4mo",
+            AlignedWindow::Months6 => "6mo",
+            AlignedWindow::Months12 => "12mo",
+            AlignedWindow::Years1 => "1y",
+            AlignedWindow::Years2 => "2y",
         }
     }
 }
 
 impl std::fmt::Display for AlignedWindow {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.label())
+        f.write_str(self.label())
     }
 }
 
@@ -323,7 +324,7 @@ impl Serialize for AlignedWindow {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.label())
+        serializer.serialize_str(self.label())
     }
 }
 
@@ -382,6 +383,14 @@ impl TryFrom<&str> for AlignedWindow {
                 key: value.into(),
             })),
         }
+    }
+}
+
+impl FromStr for AlignedWindow {
+    type Err = StockTrekError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
     }
 }
 

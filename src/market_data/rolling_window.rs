@@ -3,6 +3,7 @@ use crate::{
     market_data::millis::*,
 };
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::str::FromStr;
 use strum::{EnumCount, EnumIter, FromRepr};
 
 /// A fixed-length rolling time window.
@@ -155,56 +156,56 @@ impl RollingWindow {
     }
 
     /// Returns the short label for the window, such as `1h` or `7d`.
-    pub fn label(self) -> String {
+    pub fn label(self) -> &'static str {
         match self {
-            RollingWindow::Seconds1 => "1s".to_string(),
-            RollingWindow::Seconds5 => "5s".to_string(),
-            RollingWindow::Seconds10 => "10s".to_string(),
-            RollingWindow::Seconds15 => "15s".to_string(),
-            RollingWindow::Seconds30 => "30s".to_string(),
-            RollingWindow::Seconds60 => "60s".to_string(),
-            RollingWindow::Minutes1 => "1m".to_string(),
-            RollingWindow::Minutes2 => "2m".to_string(),
-            RollingWindow::Minutes3 => "3m".to_string(),
-            RollingWindow::Minutes5 => "5m".to_string(),
-            RollingWindow::Minutes10 => "10m".to_string(),
-            RollingWindow::Minutes15 => "15m".to_string(),
-            RollingWindow::Minutes30 => "30m".to_string(),
-            RollingWindow::Minutes45 => "45m".to_string(),
-            RollingWindow::Minutes60 => "60m".to_string(),
-            RollingWindow::Minutes90 => "90m".to_string(),
-            RollingWindow::Hours1 => "1h".to_string(),
-            RollingWindow::Hours2 => "2h".to_string(),
-            RollingWindow::Hours3 => "3h".to_string(),
-            RollingWindow::Hours4 => "4h".to_string(),
-            RollingWindow::Hours6 => "6h".to_string(),
-            RollingWindow::Hours8 => "8h".to_string(),
-            RollingWindow::Hours12 => "12h".to_string(),
-            RollingWindow::Hours24 => "24h".to_string(),
-            RollingWindow::Days1 => "1d".to_string(),
-            RollingWindow::Days2 => "2d".to_string(),
-            RollingWindow::Days3 => "3d".to_string(),
-            RollingWindow::Days7 => "7d".to_string(),
-            RollingWindow::Days14 => "14d".to_string(),
-            RollingWindow::Days30 => "30d".to_string(),
-            RollingWindow::Days45 => "45d".to_string(),
-            RollingWindow::Days60 => "60d".to_string(),
-            RollingWindow::Days90 => "90d".to_string(),
-            RollingWindow::Days180 => "180d".to_string(),
-            RollingWindow::Days360 => "360d".to_string(),
-            RollingWindow::Weeks1 => "1w".to_string(),
-            RollingWindow::Weeks2 => "2w".to_string(),
-            RollingWindow::Weeks4 => "4w".to_string(),
-            RollingWindow::Weeks10 => "10w".to_string(),
-            RollingWindow::Weeks20 => "20w".to_string(),
-            RollingWindow::Weeks40 => "40w".to_string(),
+            RollingWindow::Seconds1 => "1s",
+            RollingWindow::Seconds5 => "5s",
+            RollingWindow::Seconds10 => "10s",
+            RollingWindow::Seconds15 => "15s",
+            RollingWindow::Seconds30 => "30s",
+            RollingWindow::Seconds60 => "60s",
+            RollingWindow::Minutes1 => "1m",
+            RollingWindow::Minutes2 => "2m",
+            RollingWindow::Minutes3 => "3m",
+            RollingWindow::Minutes5 => "5m",
+            RollingWindow::Minutes10 => "10m",
+            RollingWindow::Minutes15 => "15m",
+            RollingWindow::Minutes30 => "30m",
+            RollingWindow::Minutes45 => "45m",
+            RollingWindow::Minutes60 => "60m",
+            RollingWindow::Minutes90 => "90m",
+            RollingWindow::Hours1 => "1h",
+            RollingWindow::Hours2 => "2h",
+            RollingWindow::Hours3 => "3h",
+            RollingWindow::Hours4 => "4h",
+            RollingWindow::Hours6 => "6h",
+            RollingWindow::Hours8 => "8h",
+            RollingWindow::Hours12 => "12h",
+            RollingWindow::Hours24 => "24h",
+            RollingWindow::Days1 => "1d",
+            RollingWindow::Days2 => "2d",
+            RollingWindow::Days3 => "3d",
+            RollingWindow::Days7 => "7d",
+            RollingWindow::Days14 => "14d",
+            RollingWindow::Days30 => "30d",
+            RollingWindow::Days45 => "45d",
+            RollingWindow::Days60 => "60d",
+            RollingWindow::Days90 => "90d",
+            RollingWindow::Days180 => "180d",
+            RollingWindow::Days360 => "360d",
+            RollingWindow::Weeks1 => "1w",
+            RollingWindow::Weeks2 => "2w",
+            RollingWindow::Weeks4 => "4w",
+            RollingWindow::Weeks10 => "10w",
+            RollingWindow::Weeks20 => "20w",
+            RollingWindow::Weeks40 => "40w",
         }
     }
 }
 
 impl std::fmt::Display for RollingWindow {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.label())
+        f.write_str(self.label())
     }
 }
 
@@ -213,7 +214,7 @@ impl Serialize for RollingWindow {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.label())
+        serializer.serialize_str(self.label())
     }
 }
 
@@ -278,6 +279,14 @@ impl TryFrom<&str> for RollingWindow {
                 key: value.into(),
             })),
         }
+    }
+}
+
+impl FromStr for RollingWindow {
+    type Err = StockTrekError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
     }
 }
 

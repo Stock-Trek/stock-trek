@@ -63,6 +63,7 @@ macro_rules! window_tests {
                     <$window>::try_from(window.to_string().as_str()).unwrap(),
                     window
                 );
+                assert_eq!(window.to_string().parse::<$window>().unwrap(), window);
             }
         }
 

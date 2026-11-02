@@ -20,4 +20,24 @@ impl AssetOnChain {
             identifier,
         }
     }
+
+    /// Returns the blockchain the asset is deployed on.
+    pub fn blockchain(&self) -> &Blockchain {
+        &self.blockchain
+    }
+
+    /// Returns the network the asset is deployed on.
+    pub fn network(&self) -> &Network {
+        &self.network
+    }
+
+    /// Returns the asset identifier.
+    pub fn identifier(&self) -> &AssetKind {
+        &self.identifier
+    }
+
+    /// Returns the kind of asset this is.
+    pub fn asset_kind(&self) -> &AssetKind {
+        &self.identifier
+    }
 }
