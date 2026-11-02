@@ -65,13 +65,7 @@ impl Portfolio {
             } if asset_id == base => {
                 let base_quantity = match quantity {
                     Quantity::OfBase(base_quantity) => *base_quantity,
-                    Quantity::OfQuote(quote_quantity) => {
-                        if *limit_price == 0.0 {
-                            0.0
-                        } else {
-                            *quote_quantity / limit_price
-                        }
-                    }
+                    Quantity::OfQuote(quote_quantity) => *quote_quantity / limit_price,
                 };
                 Self::remaining_quantity(base_quantity, pending_order.filled_base_quantity())
             }

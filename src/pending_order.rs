@@ -1,5 +1,7 @@
 use crate::{error::result::StockTrekResult, validation::Validation};
-use stock_trek_types::cex::{asset_id::AssetId, order_request::OrderRequest};
+use stock_trek_types::cex::{
+    activation::Activation, asset_id::AssetId, order_request::OrderRequest, quantity::Quantity,
+};
 
 /// An order with the quantities that have already been filled.
 #[derive(Debug, Clone)]
@@ -12,12 +14,14 @@ pub struct PendingOrder {
 impl PendingOrder {
     /// Creates a pending order from its order request and filled quantities.
     ///
-    /// Returns an error when either filled quantity is negative or not finite.
+    /// Returns an error when the order request is invalid or when either filled
+    /// quantity is negative or not finite.
     pub fn new(
         order_request: OrderRequest<AssetId, f64>,
         filled_base_quantity: f64,
         filled_quote_quantity: f64,
     ) -> StockTrekResult<Self> {
+        validate_order_request(&order_request)?;
         Validation::non_negative(
             "PendingOrder::new",
             "filled base quantity",
@@ -51,25 +55,88 @@ impl PendingOrder {
     }
 }
 
+fn validate_order_request(order_request: &OrderRequest<AssetId, f64>) -> StockTrekResult<()> {
+    let function = "PendingOrder::new";
+    match order_request {
+        OrderRequest::Limit {
+            activation,
+            limit_price,
+            quantity,
+            ..
+        } => {
+            Validation::positive(function, "limit price", *limit_price)?;
+            match quantity {
+                Quantity::OfBase(value) => {
+                    Validation::positive(function, "base quantity", *value)?;
+                }
+                Quantity::OfQuote(value) => {
+                    Validation::positive(function, "quote quantity", *value)?;
+                }
+            }
+            validate_activation(function, activation)?;
+        }
+        OrderRequest::MarketBuy {
+            activation,
+            quote_quantity,
+            ..
+        } => {
+            Validation::positive(function, "quote quantity", *quote_quantity)?;
+            validate_activation(function, activation)?;
+        }
+        OrderRequest::MarketSell {
+            activation,
+            base_quantity,
+            ..
+        } => {
+            Validation::positive(function, "base quantity", *base_quantity)?;
+            validate_activation(function, activation)?;
+        }
+    }
+    Ok(())
+}
+
+fn validate_activation(
+    function: &'static str,
+    activation: &Activation<f64>,
+) -> StockTrekResult<()> {
+    match activation {
+        Activation::Immediate => {}
+        Activation::PriceTriggered {
+            activation_price, ..
+        }
+        | Activation::Trailing {
+            activation_price, ..
+        } => {
+            Validation::finite(function, "activation price", *activation_price)?;
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use stock_trek_types::cex::{
-        activation::Activation, asset_id::AssetId, order_request::OrderRequest, side::Side,
-        tag::Tag, time_in_force::TimeInForce,
+        activation::Activation, asset_id::AssetId, order_request::OrderRequest,
+        price_basis::PriceBasis, side::Side, tag::Tag, time_in_force::TimeInForce,
+        trigger_direction::TriggerDirection, trigger_mode::TriggerMode,
     };
 
-    fn order_request() -> OrderRequest<AssetId, f64> {
+    fn limit_sell(quantity: Quantity<f64>, limit_price: f64) -> OrderRequest<AssetId, f64> {
         OrderRequest::Limit {
             base: AssetId::Bitcoin,
             quote: AssetId::TetherUSD,
             side: Side::Sell,
             activation: Activation::Immediate,
-            limit_price: 100.0,
+            limit_price,
             time_in_force: TimeInForce::GoodTillCancelled,
-            quantity: stock_trek_types::cex::quantity::Quantity::OfBase(1.0),
+            quantity,
             tag: Tag::new("tag"),
         }
+    }
+
+    fn order_request() -> OrderRequest<AssetId, f64> {
+        limit_sell(Quantity::OfBase(1.0), 100.0)
     }
 
     #[test]
@@ -91,6 +158,90 @@ mod tests {
         for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
             assert!(PendingOrder::new(order_request(), value, 0.0).is_err());
             assert!(PendingOrder::new(order_request(), 0.0, value).is_err());
+        }
+    }
+
+    #[test]
+    fn rejects_non_positive_limit_prices() {
+        for value in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert!(PendingOrder::new(limit_sell(Quantity::OfBase(1.0), value), 0.0, 0.0).is_err());
+            assert!(
+                PendingOrder::new(limit_sell(Quantity::OfQuote(100.0), value), 0.0, 0.0).is_err()
+            );
+        }
+    }
+
+    #[test]
+    fn rejects_non_positive_limit_quantities() {
+        for value in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert!(
+                PendingOrder::new(limit_sell(Quantity::OfBase(value), 100.0), 0.0, 0.0).is_err()
+            );
+            assert!(
+                PendingOrder::new(limit_sell(Quantity::OfQuote(value), 100.0), 0.0, 0.0).is_err()
+            );
+        }
+    }
+
+    #[test]
+    fn rejects_non_positive_market_order_quantities() {
+        for value in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let market_buy = OrderRequest::MarketBuy {
+                base: AssetId::Bitcoin,
+                quote: AssetId::TetherUSD,
+                activation: Activation::Immediate,
+                quote_quantity: value,
+                tag: Tag::new("tag"),
+            };
+            assert!(PendingOrder::new(market_buy, 0.0, 0.0).is_err());
+
+            let market_sell = OrderRequest::MarketSell {
+                base: AssetId::Bitcoin,
+                quote: AssetId::TetherUSD,
+                activation: Activation::Immediate,
+                base_quantity: value,
+                tag: Tag::new("tag"),
+            };
+            assert!(PendingOrder::new(market_sell, 0.0, 0.0).is_err());
+        }
+    }
+
+    #[test]
+    fn rejects_non_finite_activation_prices() {
+        for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let price_triggered = OrderRequest::Limit {
+                base: AssetId::Bitcoin,
+                quote: AssetId::TetherUSD,
+                side: Side::Sell,
+                activation: Activation::PriceTriggered {
+                    activation_price: value,
+                    basis: PriceBasis::Last,
+                    direction: TriggerDirection::Above,
+                    mode: TriggerMode::Touch,
+                },
+                limit_price: 100.0,
+                time_in_force: TimeInForce::GoodTillCancelled,
+                quantity: Quantity::OfBase(1.0),
+                tag: Tag::new("tag"),
+            };
+            assert!(PendingOrder::new(price_triggered, 0.0, 0.0).is_err());
+
+            let trailing = OrderRequest::Limit {
+                base: AssetId::Bitcoin,
+                quote: AssetId::TetherUSD,
+                side: Side::Sell,
+                activation: Activation::Trailing {
+                    activation_price: value,
+                    basis: PriceBasis::Last,
+                    callback_rate_bps: 100,
+                    direction: TriggerDirection::Below,
+                },
+                limit_price: 100.0,
+                time_in_force: TimeInForce::GoodTillCancelled,
+                quantity: Quantity::OfBase(1.0),
+                tag: Tag::new("tag"),
+            };
+            assert!(PendingOrder::new(trailing, 0.0, 0.0).is_err());
         }
     }
 }
