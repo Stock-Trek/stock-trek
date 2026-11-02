@@ -12,8 +12,8 @@ use stock_trek_types::cex::{order_request::OrderRequest, tag::Tag};
 pub struct ActionFactory;
 
 impl ActionFactory {
-    /// Creates an action that sends an order request using the given recovery policy.
-    pub fn send_order_request(
+    /// Creates an action that places an order using the given recovery policy.
+    pub fn place_order(
         &self,
         cex_id_value: CexIdValue,
         account_id_value: AccountIdValue,
@@ -21,7 +21,7 @@ impl ActionFactory {
         recovery_policy: RecoveryPolicy,
     ) -> RecoverableAction {
         RecoverableAction::new(
-            Action::SendOrderRequest {
+            Action::PlaceOrder {
                 cex_id_value,
                 account_id_value,
                 order_request: Box::new(order_request),
