@@ -21,7 +21,7 @@ impl PendingOrder {
         filled_base_quantity: f64,
         filled_quote_quantity: f64,
     ) -> StockTrekResult<Self> {
-        validate_order_request(&order_request)?;
+        Self::validate_order_request(&order_request)?;
         Validation::non_negative(
             "PendingOrder::new",
             "filled base quantity",
@@ -53,64 +53,64 @@ impl PendingOrder {
     pub fn filled_quote_quantity(&self) -> f64 {
         self.filled_quote_quantity
     }
-}
 
-fn validate_order_request(order_request: &OrderRequest<AssetId, f64>) -> StockTrekResult<()> {
-    let function = "PendingOrder::new";
-    match order_request {
-        OrderRequest::Limit {
-            activation,
-            limit_price,
-            quantity,
-            ..
-        } => {
-            Validation::positive(function, "limit price", *limit_price)?;
-            match quantity {
-                Quantity::OfBase(value) => {
-                    Validation::positive(function, "base quantity", *value)?;
+    fn validate_order_request(order_request: &OrderRequest<AssetId, f64>) -> StockTrekResult<()> {
+        let function = "PendingOrder::new";
+        match order_request {
+            OrderRequest::Limit {
+                activation,
+                limit_price,
+                quantity,
+                ..
+            } => {
+                Validation::positive(function, "limit price", *limit_price)?;
+                match quantity {
+                    Quantity::OfBase(value) => {
+                        Validation::positive(function, "base quantity", *value)?;
+                    }
+                    Quantity::OfQuote(value) => {
+                        Validation::positive(function, "quote quantity", *value)?;
+                    }
                 }
-                Quantity::OfQuote(value) => {
-                    Validation::positive(function, "quote quantity", *value)?;
-                }
+                Self::validate_activation(function, activation)?;
             }
-            validate_activation(function, activation)?;
+            OrderRequest::MarketBuy {
+                activation,
+                quote_quantity,
+                ..
+            } => {
+                Validation::positive(function, "quote quantity", *quote_quantity)?;
+                Self::validate_activation(function, activation)?;
+            }
+            OrderRequest::MarketSell {
+                activation,
+                base_quantity,
+                ..
+            } => {
+                Validation::positive(function, "base quantity", *base_quantity)?;
+                Self::validate_activation(function, activation)?;
+            }
         }
-        OrderRequest::MarketBuy {
-            activation,
-            quote_quantity,
-            ..
-        } => {
-            Validation::positive(function, "quote quantity", *quote_quantity)?;
-            validate_activation(function, activation)?;
-        }
-        OrderRequest::MarketSell {
-            activation,
-            base_quantity,
-            ..
-        } => {
-            Validation::positive(function, "base quantity", *base_quantity)?;
-            validate_activation(function, activation)?;
-        }
+        Ok(())
     }
-    Ok(())
-}
 
-fn validate_activation(
-    function: &'static str,
-    activation: &Activation<f64>,
-) -> StockTrekResult<()> {
-    match activation {
-        Activation::Immediate => {}
-        Activation::PriceTriggered {
-            activation_price, ..
+    fn validate_activation(
+        function: &'static str,
+        activation: &Activation<f64>,
+    ) -> StockTrekResult<()> {
+        match activation {
+            Activation::Immediate => {}
+            Activation::PriceTriggered {
+                activation_price, ..
+            }
+            | Activation::Trailing {
+                activation_price, ..
+            } => {
+                Validation::finite(function, "activation price", *activation_price)?;
+            }
         }
-        | Activation::Trailing {
-            activation_price, ..
-        } => {
-            Validation::finite(function, "activation price", *activation_price)?;
-        }
+        Ok(())
     }
-    Ok(())
 }
 
 #[cfg(test)]
