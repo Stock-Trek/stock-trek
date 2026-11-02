@@ -13,13 +13,21 @@ use super::string_id::string_id_funcs;
 
 /// A blockchain, its family, and its address format.
 #[serde_as]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Blockchain {
     blockchain_id: BlockchainId,
     family_id: FamilyId,
     native_decimals: u8,
     #[serde_as(as = "DisplayFromStr")]
     address_regex: Regex,
+}
+
+#[derive(Deserialize)]
+struct BlockchainRepr {
+    blockchain_id: BlockchainId,
+    family_id: FamilyId,
+    native_decimals: u8,
+    address_regex: String,
 }
 
 /// Unique identifier for a blockchain.
@@ -126,6 +134,22 @@ impl Blockchain {
     }
 }
 
+impl<'de> Deserialize<'de> for Blockchain {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let repr = BlockchainRepr::deserialize(deserializer)?;
+        Self::new(
+            repr.blockchain_id,
+            repr.family_id,
+            repr.native_decimals,
+            &repr.address_regex,
+        )
+        .map_err(serde::de::Error::custom)
+    }
+}
+
 impl std::fmt::Display for Blockchain {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}({})", self.blockchain_id, self.family_id)
@@ -189,6 +213,37 @@ mod tests {
     fn identifiers_reject_empty_values_when_deserialized() {
         assert!(serde_json::from_str::<BlockchainId>("\"\"").is_err());
         assert!(serde_json::from_str::<FamilyId>("\" \"").is_err());
+    }
+
+    #[test]
+    fn rejects_invalid_address_formats_when_deserializing() {
+        for address_regex in [".*", "0x[a-fA-F0-9]{40}", "^0x[a-fA-F0-9]{40}", "("] {
+            let json = serde_json::json!({
+                "blockchain_id": "test",
+                "family_id": "test",
+                "native_decimals": 18,
+                "address_regex": address_regex,
+            });
+
+            assert!(
+                serde_json::from_value::<Blockchain>(json).is_err(),
+                "accepted invalid address format {address_regex:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn deserializes_an_anchored_address_format() {
+        let json = serde_json::json!({
+            "blockchain_id": "test",
+            "family_id": "test",
+            "native_decimals": 18,
+            "address_regex": "^0x[a-fA-F0-9]{40}$",
+        });
+        let blockchain: Blockchain = serde_json::from_value(json).unwrap();
+
+        assert!(blockchain.is_valid_address("0x0000000000000000000000000000000000000000"));
+        assert!(!blockchain.is_valid_address("anything"));
     }
 
     #[test]

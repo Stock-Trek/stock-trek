@@ -150,6 +150,27 @@ mod tests {
     }
 
     #[test]
+    fn rejects_an_invalid_blockchain_address_format_when_deserializing() {
+        let json = serde_json::json!({
+            "blockchain": {
+                "blockchain_id": "ethereum",
+                "family_id": "evm",
+                "native_decimals": 18,
+                "address_regex": ".*"
+            },
+            "network": {
+                "network_id": "mainnet",
+                "chain_id": 1
+            },
+            "identifier": {
+                "contract": "anything"
+            }
+        });
+
+        assert!(serde_json::from_value::<AssetOnChain>(json).is_err());
+    }
+
+    #[test]
     fn round_trips_a_contract_asset_with_a_valid_address() {
         let address = "0x0000000000000000000000000000000000000000";
         let asset = AssetOnChain::new(
