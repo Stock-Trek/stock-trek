@@ -1,7 +1,6 @@
 use crate::{
-    cex::capability::HasRequiredCapabilities,
+    cex::{capability::HasRequiredCapabilities, cex_metadata::MarketMetadata},
     error::{numeric::NumericError, result::StockTrekResult},
-    market_data::market::Market,
     numeric::{Notional, Price, Quantity as ExactQuantity, decimal_from_calc, quantize},
     preferences::Preferences,
     resolvable::{Resolvable, ResolvableInCex},
@@ -33,7 +32,7 @@ impl ResolvableInCex<OrderRequest<AssetId, Decimal>> for OrderRequest<AssetIdVal
             } => {
                 let base = base.asset_id(c)?;
                 let quote = quote.asset_id(c)?;
-                let market = c.market(cex_id, &base, &quote)?;
+                let market = c.market_metadata(cex_id, &base, &quote)?;
                 let limit_price = resolve_price(c, limit_price, market, &c.preferences)?;
                 let activation = resolve_activation(c, activation, market, &c.preferences)?;
                 let quantity = resolve_quantity(c, quantity, market, &c.preferences)?;
@@ -64,7 +63,7 @@ impl ResolvableInCex<OrderRequest<AssetId, Decimal>> for OrderRequest<AssetIdVal
             } => {
                 let base = base.asset_id(c)?;
                 let quote = quote.asset_id(c)?;
-                let market = c.market(cex_id, &base, &quote)?;
+                let market = c.market_metadata(cex_id, &base, &quote)?;
                 let activation = resolve_activation(c, activation, market, &c.preferences)?;
                 let quote_quantity = resolve_quantity_value(
                     c,
@@ -90,7 +89,7 @@ impl ResolvableInCex<OrderRequest<AssetId, Decimal>> for OrderRequest<AssetIdVal
             } => {
                 let base = base.asset_id(c)?;
                 let quote = quote.asset_id(c)?;
-                let market = c.market(cex_id, &base, &quote)?;
+                let market = c.market_metadata(cex_id, &base, &quote)?;
                 let activation = resolve_activation(c, activation, market, &c.preferences)?;
                 let base_quantity = resolve_quantity_value(
                     c,
@@ -98,9 +97,6 @@ impl ResolvableInCex<OrderRequest<AssetId, Decimal>> for OrderRequest<AssetIdVal
                     market.base_increment,
                     &c.preferences,
                 )?;
-                if let Some(notional) = market_sell_notional(market, base_quantity.to_decimal())? {
-                    validate_minimum_notional(market, notional)?;
-                }
                 Ok(OrderRequest::MarketSell {
                     base,
                     quote,
@@ -116,7 +112,7 @@ impl ResolvableInCex<OrderRequest<AssetId, Decimal>> for OrderRequest<AssetIdVal
 fn resolve_price(
     c: &ResolvedContext,
     value: &NumberValue,
-    market: &Market,
+    market: &MarketMetadata,
     preferences: &Preferences,
 ) -> StockTrekResult<Price> {
     Price::try_from_calc_quantized(
@@ -129,7 +125,7 @@ fn resolve_price(
 fn resolve_quantity(
     c: &ResolvedContext,
     quantity: &Quantity<NumberValue>,
-    market: &Market,
+    market: &MarketMetadata,
     preferences: &Preferences,
 ) -> StockTrekResult<Quantity<Decimal>> {
     let quantity = quantity.try_resolve(c)?;
@@ -169,7 +165,7 @@ fn quantize_quantity(
 fn resolve_activation(
     c: &ResolvedContext,
     activation: &Activation<NumberValue>,
-    market: &Market,
+    market: &MarketMetadata,
     preferences: &Preferences,
 ) -> StockTrekResult<Activation<Decimal>> {
     let activation = activation.try_resolve(c)?;
@@ -211,7 +207,7 @@ fn resolve_activation(
 fn quantize_activation_price(
     activation_price: Decimal,
     direction: TriggerDirection,
-    market: &Market,
+    market: &MarketMetadata,
     preferences: &Preferences,
 ) -> StockTrekResult<Decimal> {
     let rounding = match direction {
@@ -223,21 +219,7 @@ fn quantize_activation_price(
     Ok(Price::try_from_decimal(quantized)?.to_decimal())
 }
 
-fn market_sell_notional(
-    market: &Market,
-    base_quantity: Decimal,
-) -> StockTrekResult<Option<Decimal>> {
-    let Some(tick) = market.ticks.ticks.last() else {
-        return Ok(None);
-    };
-    let price = decimal_from_calc("last price", tick.last.price)?;
-    if price <= Decimal::ZERO {
-        return Ok(None);
-    }
-    checked_mul(base_quantity, price, "market sell notional").map(Some)
-}
-
-fn validate_minimum_notional(market: &Market, actual: Decimal) -> StockTrekResult<()> {
+fn validate_minimum_notional(market: &MarketMetadata, actual: Decimal) -> StockTrekResult<()> {
     if market.minimum_notional <= 0.0 {
         return Ok(());
     }
@@ -276,8 +258,10 @@ impl<A, N> HasRequiredCapabilities for OrderRequest<A, N> {
 mod tests {
     use super::*;
     use crate::{
-        market_data::market::MarketBuilder, portfolio::Portfolio, preferences::Preferences,
-        signal::signals::Signals, signal_context::SignalContextBuilder,
+        cex::cex_metadata::{CexMetadataBuilder, MarketMetadata},
+        portfolio::Portfolio,
+        preferences::Preferences,
+        signal::signals::Signals,
     };
     use rust_decimal::RoundingStrategy;
     use std::collections::HashMap;
@@ -309,23 +293,20 @@ mod tests {
         }
     }
 
-    fn context(
-        market: crate::market_data::market::Market,
-        preferences: Preferences,
-    ) -> ResolvedContext {
-        let mut markets = SignalContextBuilder::new();
-        markets.cex_market(CexId::Binance, AssetId::Bitcoin, AssetId::TetherUSD, market);
+    fn context(market: MarketMetadata, preferences: Preferences) -> ResolvedContext {
+        let mut metadata = CexMetadataBuilder::new();
+        metadata.cex_market(CexId::Binance, AssetId::Bitcoin, AssetId::TetherUSD, market);
         ResolvedContext::new(
             Box::new(|_, _| Ok(())),
             Portfolio::new(HashMap::new()),
             Signals::new(),
             preferences,
-            markets.build(),
+            metadata.build(),
         )
     }
 
-    fn market(minimum_notional: f64) -> crate::market_data::market::Market {
-        MarketBuilder::new(0.001, 0.01, minimum_notional).build()
+    fn market(minimum_notional: f64) -> MarketMetadata {
+        MarketMetadata::new(0.001, 0.01, minimum_notional)
     }
 
     fn literal(value: f64) -> NumberValue {

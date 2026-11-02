@@ -223,8 +223,8 @@ impl ConditionFactory {
 mod tests {
     use super::*;
     use crate::{
-        portfolio::Portfolio, preferences::Preferences, signal::signals::Signals,
-        signal_context::SignalContext,
+        cex::cex_metadata::CexMetadata, portfolio::Portfolio, preferences::Preferences,
+        signal::signals::Signals,
     };
     use rust_decimal::RoundingStrategy;
     use std::collections::HashMap;
@@ -251,7 +251,7 @@ mod tests {
             portfolio: Portfolio::new(HashMap::new()),
             signals: Signals::new(),
             preferences: preferences(),
-            markets: SignalContext::new(HashMap::new()),
+            cex_metadata: CexMetadata::default(),
         }
     }
 

@@ -1,11 +1,10 @@
 use crate::{
     Portfolio,
     action::{recoverable_action::RecoveryPolicy, resolved_action::ResolvedAction},
+    cex::cex_metadata::{CexMetadata, MarketMetadata},
     error::{result::StockTrekResult, value::ValueError},
-    market_data::market::Market,
     preferences::Preferences,
     signal::signals::Signals,
-    signal_context::SignalContext,
 };
 use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
@@ -19,8 +18,9 @@ pub struct ResolvedContext {
     pub signals: Signals,
     /// The preferences used to quantize resolved order values.
     pub preferences: Preferences,
-    /// The market data used to resolve order increments and minimum notionals.
-    pub markets: SignalContext,
+    /// The static CEX metadata used to resolve order increments and minimum
+    /// notionals.
+    pub cex_metadata: CexMetadata,
 }
 
 /// Callback type for enqueuing a resolved action with a recovery policy.
@@ -28,39 +28,49 @@ pub type EnqueueActionFn = Box<dyn FnMut(&ResolvedAction, &RecoveryPolicy) -> St
 
 impl ResolvedContext {
     /// Creates a resolved context from an action callback, portfolio, signals,
-    /// preferences, and market data.
+    /// preferences, and CEX metadata.
     pub fn new(
         enqueue_action: EnqueueActionFn,
         portfolio: Portfolio,
         signals: Signals,
         preferences: Preferences,
-        markets: SignalContext,
+        cex_metadata: CexMetadata,
     ) -> Self {
         Self {
             enqueue_action,
             portfolio,
             signals,
             preferences,
-            markets,
+            cex_metadata,
         }
     }
 
-    /// Returns the market for a trading pair on a specific CEX.
+    /// Returns the market metadata for a trading pair on a specific CEX.
+    pub fn market_metadata(
+        &self,
+        cex_id: &CexId,
+        base: &AssetId,
+        quote: &AssetId,
+    ) -> StockTrekResult<&MarketMetadata> {
+        self.cex_metadata
+            .cex_market_for(cex_id, base, quote)
+            .ok_or_else(|| {
+                ValueError::NotFound {
+                    name: "Market metadata".into(),
+                    key: format!("{cex_id} {base}/{quote}"),
+                }
+                .into()
+            })
+    }
+
+    /// Returns the market metadata for a trading pair on a specific CEX.
     pub fn market(
         &self,
         cex_id: &CexId,
         base: &AssetId,
         quote: &AssetId,
-    ) -> StockTrekResult<&Market> {
-        self.markets
-            .cex_market_for(cex_id, base, quote)
-            .ok_or_else(|| {
-                ValueError::NotFound {
-                    name: "Market".into(),
-                    key: format!("{cex_id} {base}/{quote}"),
-                }
-                .into()
-            })
+    ) -> StockTrekResult<&MarketMetadata> {
+        self.market_metadata(cex_id, base, quote)
     }
 }
 

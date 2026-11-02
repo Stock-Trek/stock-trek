@@ -31,7 +31,10 @@ mod util;
 mod value;
 
 pub use algorithm::Algorithm;
-pub use cex::order_factory::OrderFactory;
+pub use cex::{
+    cex_metadata::{CexMarketMetadata, CexMetadata, CexMetadataBuilder, MarketMetadata},
+    order_factory::OrderFactory,
+};
 pub use commands::{Command, CommandFactory};
 pub use conditions::{Condition, ConditionFactory, QuantityOf};
 /// Alias for the exact numeric boundary module.
@@ -75,6 +78,9 @@ pub mod errors {
 
 /// Market data types and time window helpers.
 pub mod markets {
+    pub use crate::cex::cex_metadata::{
+        CexMarketMetadata, CexMetadata, CexMetadataBuilder, MarketMetadata,
+    };
     pub use crate::market_data::{
         aligned_window::{AlignedTimestampBounds, AlignedWindow},
         market::Market,
@@ -109,6 +115,9 @@ pub mod signals {
 
 /// Shared CEX and asset types.
 pub mod types {
+    pub use crate::cex::cex_metadata::{
+        CexMarketMetadata, CexMetadata, CexMetadataBuilder, MarketMetadata,
+    };
     pub use stock_trek_types::cex::{
         account_id::AccountId,
         activation::Activation,
@@ -146,7 +155,8 @@ pub mod values {
 /// Commonly used imports for writing algorithms.
 pub mod prelude {
     pub use super::{
-        Algorithm, Command, Preferences, RoundingStrategy, StrategyContext,
+        Algorithm, CexMarketMetadata, CexMetadata, CexMetadataBuilder, Command, MarketMetadata,
+        Preferences, RoundingStrategy, StrategyContext,
         actions::{ActionErrorCause, ActionErrorResponse, RecoveryPolicy},
         errors::{DexError, StatsError, StockTrekError, StockTrekResult, ValueError},
         pending_order::PendingOrder,
