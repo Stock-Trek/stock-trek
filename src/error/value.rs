@@ -17,13 +17,6 @@ pub enum ValueError {
         /// The type that was found.
         found: String,
     },
-    /// Two values that were expected to be equal were not.
-    ValuesNotEqual {
-        /// The first value.
-        a: String,
-        /// The second value.
-        b: String,
-    },
 }
 
 impl fmt::Display for ValueError {
@@ -34,9 +27,6 @@ impl fmt::Display for ValueError {
             }
             ValueError::IncorrectType { expected, found } => {
                 write!(f, "Expected type '{}' but found '{}'", expected, found)
-            }
-            ValueError::ValuesNotEqual { a, b } => {
-                write!(f, "Values were '{}' and '{}' but expected equal", a, b)
             }
         }
     }
