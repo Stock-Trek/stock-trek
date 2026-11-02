@@ -25,10 +25,7 @@ impl Portfolio {
     }
     /// Whether an account exists
     pub fn has_cex_account(&self, cex_id: &CexId, account_id: &AccountId) -> bool {
-        self.portfolios
-            .get(cex_id)
-            .map(|map| map.contains_key(account_id))
-            .unwrap_or_default()
+        self.cex_account(cex_id, account_id).is_some()
     }
 
     /// Iterates over every CEX account and its portfolio.
@@ -66,6 +63,30 @@ impl Portfolio {
         self.portfolios
             .get(cex_id)
             .and_then(|accounts| accounts.get(account_id))
+    }
+
+    /// Iterates over every asset balance with its CEX, account, and asset.
+    ///
+    /// Each item is `(cex_id, account_id, asset_id, count)`, where `count`
+    /// includes both available and reserved amounts.
+    pub fn assets_iter(&self) -> impl Iterator<Item = (&CexId, &AccountId, &AssetId, &f64)> {
+        self.cex_accounts()
+            .flat_map(|(cex_id, account_id, portfolio)| {
+                portfolio
+                    .assets()
+                    .map(move |(asset_id, count)| (cex_id, account_id, asset_id, count))
+            })
+    }
+
+    /// Iterates over the asset balances in a specific CEX account.
+    pub fn assets_in_cex_account_iter(
+        &self,
+        cex_id: &CexId,
+        account_id: &AccountId,
+    ) -> impl Iterator<Item = (&AssetId, &f64)> {
+        self.cex_account(cex_id, account_id)
+            .into_iter()
+            .flat_map(|portfolio| portfolio.assets())
     }
 
     /// Iterates over every pending order with its CEX, account, and tag.
@@ -113,21 +134,13 @@ impl Portfolio {
 
     /// Total number of pending orders across all CEXes and accounts.
     pub fn pending_orders_count(&self) -> usize {
-        self.portfolios
-            .values()
-            .flat_map(|account_map| account_map.values())
-            .flat_map(|portfolio| portfolio.pending_orders.values())
-            .map(|orders| orders.len())
-            .sum()
+        self.pending_orders_iter().count()
     }
     /// Number of pending orders with the given `tag` across all accounts.
     pub fn pending_orders_with_tag_count(&self, tag: &Tag) -> usize {
-        self.portfolios
-            .values()
-            .flat_map(|account_map| account_map.values())
-            .filter_map(|portfolio| portfolio.pending_orders.get(tag))
-            .map(|orders| orders.len())
-            .sum()
+        self.pending_orders_iter()
+            .filter(|(_, _, order_tag, _)| *order_tag == tag)
+            .count()
     }
     /// Number of pending orders in a specific CEX account.
     pub fn pending_orders_in_cex_account_count(
@@ -135,17 +148,8 @@ impl Portfolio {
         cex_id: &CexId,
         account_id: &AccountId,
     ) -> usize {
-        self.portfolios
-            .get(cex_id)
-            .and_then(|accounts| accounts.get(account_id))
-            .map(|portfolio| {
-                portfolio
-                    .pending_orders
-                    .values()
-                    .map(|orders| orders.len())
-                    .sum()
-            })
-            .unwrap_or(0)
+        self.pending_orders_in_cex_account_iter(cex_id, account_id)
+            .count()
     }
     /// Number of pending orders with the given `tag` in a specific CEX account.
     pub fn pending_orders_in_cex_account_with_tag_count(
@@ -154,21 +158,15 @@ impl Portfolio {
         account_id: &AccountId,
         tag: &Tag,
     ) -> usize {
-        self.portfolios
-            .get(cex_id)
-            .and_then(|accounts| accounts.get(account_id))
-            .and_then(|portfolio| portfolio.pending_orders.get(tag))
-            .map(|orders| orders.len())
-            .unwrap_or(0)
+        self.pending_orders_in_cex_account_with_tag_iter(cex_id, account_id, tag)
+            .count()
     }
 
     /// Total `asset_id` held across **all** accounts (counts available and reserved).
     pub fn asset_total(&self, asset_id: &AssetId) -> f64 {
-        self.portfolios
-            .values()
-            .flat_map(|accounts| accounts.values())
-            .flat_map(|account| account.asset_counts.get(asset_id))
-            .copied()
+        self.assets_iter()
+            .filter(|(_, _, id, _)| *id == asset_id)
+            .map(|(_, _, _, count)| *count)
             .sum()
     }
     /// `asset_id` held in a **specific** CEX account (counts available and reserved).
@@ -178,12 +176,10 @@ impl Portfolio {
         account_id: &AccountId,
         asset_id: &AssetId,
     ) -> f64 {
-        self.portfolios
-            .get(cex_id)
-            .and_then(|accounts| accounts.get(account_id))
-            .and_then(|account| account.asset_counts.get(asset_id))
-            .copied()
-            .unwrap_or(0.0)
+        self.assets_in_cex_account_iter(cex_id, account_id)
+            .filter(|(id, _)| *id == asset_id)
+            .map(|(_, count)| *count)
+            .sum()
     }
     /// Total available (free) amount of `asset_id` across all accounts (total - reserved).
     ///
@@ -209,17 +205,11 @@ impl Portfolio {
     }
     /// Total amount of `asset_id` reserved (locked in unfilled pending orders) across all accounts.
     pub fn asset_reserved(&self, asset_id: &AssetId) -> f64 {
-        let mut total = 0.0;
-        for accounts in self.portfolios.values() {
-            for account in accounts.values() {
-                for pending_orders in account.pending_orders.values() {
-                    for pending_order in pending_orders {
-                        total += self.reserved_quantity_for_pending_order(pending_order, asset_id);
-                    }
-                }
-            }
-        }
-        total
+        self.pending_orders_iter()
+            .map(|(_, _, _, pending_order)| {
+                self.reserved_quantity_for_pending_order(pending_order, asset_id)
+            })
+            .sum()
     }
     /// Amount of `asset_id` reserved (locked in unfilled pending orders) in a specific CEX account.
     pub fn asset_reserved_in_cex_account(
@@ -228,20 +218,11 @@ impl Portfolio {
         account_id: &AccountId,
         asset_id: &AssetId,
     ) -> f64 {
-        self.portfolios
-            .get(cex_id)
-            .and_then(|accounts| accounts.get(account_id))
-            .map(|portfolio| {
-                portfolio
-                    .pending_orders
-                    .values()
-                    .flatten()
-                    .map(|pending_order| {
-                        self.reserved_quantity_for_pending_order(pending_order, asset_id)
-                    })
-                    .sum::<f64>()
+        self.pending_orders_in_cex_account_iter(cex_id, account_id)
+            .map(|(_, pending_order)| {
+                self.reserved_quantity_for_pending_order(pending_order, asset_id)
             })
-            .unwrap_or(0.0)
+            .sum()
     }
 
     fn reserved_quantity_for_pending_order(
