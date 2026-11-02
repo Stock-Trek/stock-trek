@@ -2,6 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::{fmt, num::TryFromIntError, ops::Add, ops::Sub, str::FromStr};
 
 /// A timestamp expressed as milliseconds since the Unix epoch.
+///
+/// The `+` and `-` operators saturate at the representable bounds. Use
+/// [`Self::checked_add`], [`Self::checked_sub`], [`Self::saturating_add`], or
+/// [`Self::saturating_sub`] when the overflow behaviour should be explicit.
 #[derive(
     Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
 )]
@@ -24,13 +28,33 @@ impl TimestampMillis {
         self.0
     }
 
-    /// Returns the difference between two timestamps, or `None` if `rhs` is
-    /// later than `self`.
+    /// Adds `rhs` milliseconds, returning `None` on overflow.
+    pub const fn checked_add(self, rhs: Self) -> Option<Self> {
+        match self.0.checked_add(rhs.0) {
+            Some(millis) => Some(Self::new(millis)),
+            None => None,
+        }
+    }
+
+    /// Subtracts `rhs` milliseconds, returning `None` if the result would be
+    /// negative.
     pub const fn checked_sub(self, rhs: Self) -> Option<Self> {
         match self.0.checked_sub(rhs.0) {
             Some(millis) => Some(Self::new(millis)),
             None => None,
         }
+    }
+
+    /// Adds `rhs` milliseconds, saturating at the maximum representable
+    /// timestamp.
+    pub const fn saturating_add(self, rhs: Self) -> Self {
+        Self::new(self.0.saturating_add(rhs.0))
+    }
+
+    /// Subtracts `rhs` milliseconds, saturating at zero if the result would be
+    /// negative.
+    pub const fn saturating_sub(self, rhs: Self) -> Self {
+        Self::new(self.0.saturating_sub(rhs.0))
     }
 }
 
@@ -80,7 +104,7 @@ impl Add for TimestampMillis {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Self::new(self.0 + rhs.0)
+        self.saturating_add(rhs)
     }
 }
 
@@ -88,7 +112,7 @@ impl Sub for TimestampMillis {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Self::new(self.0 - rhs.0)
+        self.saturating_sub(rhs)
     }
 }
 
@@ -144,12 +168,44 @@ mod tests {
         let lower = TimestampMillis::new(1_000);
         let upper = TimestampMillis::new(2_000);
 
-        assert_eq!(upper - lower, TimestampMillis::new(1_000));
-        assert_eq!(
-            lower + TimestampMillis::new(500),
-            TimestampMillis::new(1_500)
-        );
         assert_eq!(upper.checked_sub(lower), Some(TimestampMillis::new(1_000)));
+        assert_eq!(
+            lower.checked_add(TimestampMillis::new(500)),
+            Some(TimestampMillis::new(1_500))
+        );
         assert_eq!(lower.checked_sub(upper), None);
+    }
+
+    #[test]
+    fn checked_arithmetic_reports_overflow_and_underflow() {
+        let zero = TimestampMillis::new(0);
+        let one = TimestampMillis::new(1);
+        let max = TimestampMillis::new(u64::MAX);
+
+        assert_eq!(one.checked_sub(one), Some(zero));
+        assert_eq!(zero.checked_sub(one), None);
+        assert_eq!(max.checked_add(one), None);
+    }
+
+    #[test]
+    fn saturating_arithmetic_clamps_to_bounds() {
+        let zero = TimestampMillis::new(0);
+        let one = TimestampMillis::new(1);
+        let max = TimestampMillis::new(u64::MAX);
+
+        assert_eq!(zero.saturating_sub(one), zero);
+        assert_eq!(max.saturating_add(one), max);
+        assert_eq!(zero.saturating_add(one), one);
+        assert_eq!(max.saturating_sub(one), TimestampMillis::new(u64::MAX - 1));
+    }
+
+    #[test]
+    fn operators_saturate_instead_of_panicking_or_wrapping() {
+        let zero = TimestampMillis::new(0);
+        let one = TimestampMillis::new(1);
+        let max = TimestampMillis::new(u64::MAX);
+
+        assert_eq!(zero - one, zero);
+        assert_eq!(max + one, max);
     }
 }

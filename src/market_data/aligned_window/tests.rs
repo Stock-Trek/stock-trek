@@ -156,7 +156,9 @@ fn bounds_for_month_windows_follow_calendar_boundaries() {
 
 #[test]
 fn bounds_for_month_windows_include_window_boundaries() {
-    let last_millis_of_february = millis_at(2024, 2, 29, 23, 59, 59) + TimestampMillis::new(999);
+    let last_millis_of_february = millis_at(2024, 2, 29, 23, 59, 59)
+        .checked_add(TimestampMillis::new(999))
+        .unwrap();
     let expected = timestamps(
         millis_at(2024, 2, 1, 0, 0, 0),
         millis_at(2024, 3, 1, 0, 0, 0),
