@@ -9,7 +9,6 @@ pub struct PendingOrder {
     filled_quote_quantity: f64,
 }
 
-#[allow(missing_docs)]
 impl PendingOrder {
     /// Creates a pending order from its order request and filled quantities.
     ///

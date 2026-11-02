@@ -5,16 +5,21 @@ use std::fmt;
 pub type StockTrekResult<T> = Result<T, StockTrekError>;
 
 /// Errors returned by stock-trek operations.
+///
+/// Each variant wraps the error type of one subsystem: blockchain identifier
+/// and address validation ([`DexError`]), numeric domain and validation
+/// failures ([`DomainError`]), arithmetic evaluation ([`StatsError`]), and
+/// signal lookups and type conversions ([`ValueError`]).
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum StockTrekError {
-    /// A DEX error.
+    /// A blockchain address or identifier was rejected.
     Dex(DexError),
     /// An input was outside the domain of the operation.
     Domain(DomainError),
-    /// A statistics or numeric error.
+    /// A numeric calculation failed, for example a division by zero.
     Stats(StatsError),
-    /// A value resolution error.
+    /// A signal value was missing or had an unexpected type.
     Value(ValueError),
 }
 

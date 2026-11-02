@@ -8,10 +8,11 @@ use stock_trek_types::cex::capability::CexCapability;
 use strum::Display;
 
 /// An action paired with the policy used to recover from errors.
-#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoverableAction {
+    /// The action to enqueue.
     pub action: Action,
+    /// The responses applied when the action errors.
     pub recovery_policy: RecoveryPolicy,
 }
 
@@ -38,10 +39,14 @@ impl HasRequiredCapabilities for RecoverableAction {
 }
 
 /// Defines how an action should respond to different error causes.
-#[allow(missing_docs)]
+///
+/// `on_error` takes precedence over `default_response` for the causes it
+/// lists; every other cause falls back to `default_response`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoveryPolicy {
+    /// The response used for error causes not listed in `on_error`.
     pub default_response: ActionErrorResponse,
+    /// Per-cause responses, taking precedence over `default_response`.
     pub on_error: BTreeMap<ActionErrorCause, ActionErrorResponse>,
 }
 

@@ -8,11 +8,15 @@ use crate::{
 use stock_trek_types::cex::{order_request::OrderRequest, tag::Tag};
 
 /// Factory for constructing actions.
+///
+/// Available as the `actions` field of a [`StrategyContext`].
+///
+/// [`StrategyContext`]: crate::StrategyContext
 #[derive(Debug, Clone, Default)]
 pub struct ActionFactory;
 
-#[allow(missing_docs)]
 impl ActionFactory {
+    /// Places an order in a CEX account.
     pub fn place_order(
         &self,
         cex_id_value: CexIdValue,
@@ -29,9 +33,13 @@ impl ActionFactory {
             recovery_policy,
         )
     }
+    /// Cancels every open order across all CEX accounts.
+    ///
+    /// With `cancel_all_orders_with_tag`, only orders carrying `tag`.
     pub fn cancel_all_orders(&self, recovery_policy: RecoveryPolicy) -> RecoverableAction {
         RecoverableAction::new(Action::CancelAllOrders { tag: None }, recovery_policy)
     }
+    /// Cancels every open order carrying `tag`, across all CEX accounts.
     pub fn cancel_all_orders_with_tag(
         &self,
         tag: Tag,
@@ -39,6 +47,9 @@ impl ActionFactory {
     ) -> RecoverableAction {
         RecoverableAction::new(Action::CancelAllOrders { tag: Some(tag) }, recovery_policy)
     }
+    /// Cancels every open order on a CEX.
+    ///
+    /// With `cancel_all_orders_in_cex_with_tag`, only orders carrying `tag`.
     pub fn cancel_all_orders_in_cex(
         &self,
         cex_id_value: CexIdValue,
@@ -52,6 +63,7 @@ impl ActionFactory {
             recovery_policy,
         )
     }
+    /// Cancels every open order carrying `tag` on a CEX.
     pub fn cancel_all_orders_in_cex_with_tag(
         &self,
         cex_id_value: CexIdValue,
@@ -66,6 +78,10 @@ impl ActionFactory {
             recovery_policy,
         )
     }
+    /// Cancels every open order in a CEX account.
+    ///
+    /// With `cancel_all_orders_in_cex_account_with_tag`, only orders carrying
+    /// `tag`.
     pub fn cancel_all_orders_in_cex_account(
         &self,
         cex_id_value: CexIdValue,
@@ -81,6 +97,7 @@ impl ActionFactory {
             recovery_policy,
         )
     }
+    /// Cancels every open order carrying `tag` in a CEX account.
     pub fn cancel_all_orders_in_cex_account_with_tag(
         &self,
         cex_id_value: CexIdValue,

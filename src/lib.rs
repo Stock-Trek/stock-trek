@@ -1,7 +1,27 @@
-//! Stock Trek time-series analysis.
+//! Write trading algorithms that run on [stock-trek.com](https://stock-trek.com).
 //!
-//! This crate provides the core types and building blocks for writing trading
-//! algorithms that run on [stock-trek.com](https://stock-trek.com).
+//! An algorithm is a struct implementing [`Algorithm`] and registered with the
+//! `#[register_algorithm(default)]` annotation. The platform runs it in two
+//! phases:
+//!
+//! 1. [`Algorithm::signals`] runs on every evaluation. It turns the market
+//!    data in a [`SignalContext`](crate::signals::SignalContext) into a
+//!    [`Signals`](crate::signals::Signals) map that the strategy phase can
+//!    read by key.
+//! 2. [`Algorithm::strategy`] runs exactly once. It builds a [`Command`]
+//!    tree from the factories on a [`StrategyContext`]. The platform then
+//!    interprets that tree on every evaluation, resolving deferred values
+//!    against the latest [`Signals`](crate::signals::Signals) and
+//!    [`Portfolio`] and enqueueing the resulting [`actions::Action`]s for
+//!    execution.
+//!
+//! Because the strategy phase runs once, every value it uses must be
+//! produced by a factory (eg. `c.conditions.signal(MY_KEY)`) rather than
+//! read directly, so it can be re-evaluated each time the command tree runs.
+//!
+//! The [`prelude`] module gathers the types needed by most algorithms, and a
+//! complete cost-averaging algorithm is maintained in
+//! [`examples/cost_averaging.rs`](https://github.com/Stock-Trek/stock-trek/blob/master/examples/cost_averaging.rs).
 
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]

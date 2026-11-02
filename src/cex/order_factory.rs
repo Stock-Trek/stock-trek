@@ -5,11 +5,15 @@ use stock_trek_types::cex::{
 };
 
 /// Factory for constructing CEX order requests.
+///
+/// Available as the `orders` field of a [`StrategyContext`].
+///
+/// [`StrategyContext`]: crate::StrategyContext
 #[derive(Debug, Clone, Default)]
 pub struct OrderFactory;
 
-#[allow(missing_docs)]
 impl OrderFactory {
+    /// A limit order, activated as specified, for the given trading pair.
     #[allow(clippy::too_many_arguments)]
     pub fn limit(
         &self,
@@ -33,6 +37,7 @@ impl OrderFactory {
             tag,
         }
     }
+    /// A market order that buys with the given quote-currency quantity.
     pub fn market_buy(
         &self,
         base: AssetIdValue,
@@ -49,6 +54,7 @@ impl OrderFactory {
             tag,
         }
     }
+    /// A market order that sells the given base-asset quantity.
     pub fn market_sell(
         &self,
         base: AssetIdValue,

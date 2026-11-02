@@ -8,6 +8,11 @@ use std::{fmt::Display, marker::PhantomData};
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId};
 
 /// A typed key used to read and write a signal value.
+///
+/// Keys are created required, via [`Self::new_required`], or optional, via
+/// [`Self::new_optional`] with a default. Reading an optional key yields the
+/// default when the signal was not written this evaluation; reading a
+/// required key errors instead.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignalKey<T> {
     key: String,
@@ -25,7 +30,6 @@ where
     }
 }
 
-#[allow(missing_docs)]
 impl<T> SignalKey<T>
 where
     T: Clone + SignalKeyType + Into<SignalValue> + TryFrom<SignalValue, Error = StockTrekError>,
@@ -46,9 +50,12 @@ where
             _phantom: PhantomData,
         }
     }
+    /// The name the signal is stored under.
     pub fn key(&self) -> &str {
         &self.key
     }
+    /// The value returned when the signal was not written, if the key is
+    /// optional.
     pub fn default(&self) -> Option<T> {
         self.default.clone()
     }

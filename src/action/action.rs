@@ -10,30 +10,45 @@ use serde::{Deserialize, Serialize};
 use stock_trek_types::cex::{capability::CexCapability, order_request::OrderRequest, tag::Tag};
 use strum::Display;
 
+/// An action that an algorithm may request during strategy evaluation.
+///
+/// Actions are enqueued by a [`crate::Command`] and executed after
+/// interpretation. CEX and account targets are [`CexIdValue`]s and
+/// [`AccountIdValue`]s so they can come from signals as well as literals.
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
-#[allow(missing_docs)]
 #[non_exhaustive]
-/// An action that an algorithm may request during strategy evaluation.
 pub enum Action {
     /// Places an order in a CEX account.
     PlaceOrder {
+        /// The CEX to place the order on.
         cex_id_value: CexIdValue,
+        /// The account to place the order in.
         account_id_value: AccountIdValue,
+        /// The order to place, with any quantity, price, and asset
+        /// identifier left unresolved.
         order_request: Box<OrderRequest<AssetIdValue, NumberValue>>,
     },
     /// Cancels all orders across all CEX accounts.
-    CancelAllOrders { tag: Option<Tag> },
+    CancelAllOrders {
+        /// When set, only orders carrying this tag are cancelled.
+        tag: Option<Tag>,
+    },
     /// Cancels all orders in a CEX.
     CancelAllOrdersInCex {
+        /// The CEX whose orders are cancelled.
         cex_id_value: CexIdValue,
+        /// When set, only orders carrying this tag are cancelled.
         tag: Option<Tag>,
     },
     /// Cancels all orders in a CEX account.
     CancelAllOrdersInCexAccount {
+        /// The CEX the account is on.
         cex_id_value: CexIdValue,
+        /// The account whose orders are cancelled.
         account_id_value: AccountIdValue,
+        /// When set, only orders carrying this tag are cancelled.
         tag: Option<Tag>,
     },
 }

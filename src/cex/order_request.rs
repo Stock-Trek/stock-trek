@@ -84,6 +84,9 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
 }
 
 impl<A, N> HasRequiredCapabilities for OrderRequest<A, N> {
+    /// Limit orders sized in the quote asset are only supported by some CEXes,
+    /// so they require the `QuoteQuantityOnLimitOrders` capability; every
+    /// other order request requires none.
     fn required_capabilities(&self) -> Vec<CexCapability> {
         match self {
             Self::Limit {
