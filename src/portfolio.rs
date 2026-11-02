@@ -6,6 +6,7 @@ use crate::{
     pending_order::PendingOrder,
 };
 use std::{
+    borrow::Borrow,
     cmp::Ordering,
     collections::{BTreeMap, HashMap},
 };
@@ -16,14 +17,14 @@ use stock_trek_types::cex::{
 /// A snapshot of asset balances and pending orders across CEX accounts.
 #[derive(Debug, Clone, Default)]
 pub struct Portfolio {
-    portfolios: BTreeMap<Ordered<CexId>, BTreeMap<Ordered<AccountId>, CexAccountPortfolio>>,
+    portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
 }
 
 /// Asset balances and pending orders for a single CEX account.
 #[derive(Debug, Clone, Default)]
 pub struct CexAccountPortfolio {
-    asset_counts: BTreeMap<Ordered<AssetId>, f64>,
-    pending_orders: BTreeMap<Ordered<Tag>, Vec<PendingOrder>>,
+    asset_counts: BTreeMap<AssetId, f64>,
+    pending_orders: BTreeMap<TagKey, Vec<PendingOrder>>,
 }
 
 impl Portfolio {
@@ -31,13 +32,7 @@ impl Portfolio {
     pub fn new(portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>) -> Self {
         let portfolios = portfolios
             .into_iter()
-            .map(|(cex_id, accounts)| {
-                let accounts = accounts
-                    .into_iter()
-                    .map(|(account_id, portfolio)| (Ordered::new(account_id), portfolio))
-                    .collect();
-                (Ordered::new(cex_id), accounts)
-            })
+            .map(|(cex_id, accounts)| (cex_id, accounts.into_iter().collect()))
             .collect();
         Self { portfolios }
     }
@@ -54,7 +49,7 @@ impl Portfolio {
         self.portfolios.iter().flat_map(|(cex_id, accounts)| {
             accounts
                 .iter()
-                .map(move |(account_id, portfolio)| (&cex_id.key, &account_id.key, portfolio))
+                .map(move |(account_id, portfolio)| (cex_id, account_id, portfolio))
         })
     }
 
@@ -67,9 +62,9 @@ impl Portfolio {
     /// Iterates over the account identifiers in a specific CEX.
     pub fn accounts_in_cex(&self, cex_id: &CexId) -> impl Iterator<Item = &AccountId> {
         self.portfolios
-            .get(&Ordered::new(*cex_id))
+            .get(cex_id)
             .into_iter()
-            .flat_map(|accounts| accounts.keys().map(|account_id| &account_id.key))
+            .flat_map(|accounts| accounts.keys())
     }
 
     /// Returns the portfolio for a specific CEX account, if it exists.
@@ -79,8 +74,8 @@ impl Portfolio {
         account_id: &AccountId,
     ) -> Option<&CexAccountPortfolio> {
         self.portfolios
-            .get(&Ordered::new(*cex_id))
-            .and_then(|accounts| accounts.get(&Ordered::new(account_id.clone())))
+            .get(cex_id)
+            .and_then(|accounts| accounts.get(account_id))
     }
 
     /// Iterates over every asset balance with its CEX, account, and asset.
@@ -196,67 +191,31 @@ impl Portfolio {
     }
 }
 
-/// A map key that provides a deterministic total order for identifiers that do
-/// not implement [`Ord`].
-#[derive(Debug, Clone)]
-struct Ordered<T> {
-    key: T,
-    sort_key: String,
-}
+/// A map key that provides a deterministic total order for tags.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct TagKey(Tag);
 
-impl<T: SortKey> Ordered<T> {
-    fn new(key: T) -> Self {
-        let sort_key = key.sort_key();
-        Self { key, sort_key }
+impl TagKey {
+    fn new(tag: Tag) -> Self {
+        Self(tag)
     }
 }
 
-impl<T> PartialEq for Ordered<T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.sort_key == other.sort_key
+impl Borrow<str> for TagKey {
+    fn borrow(&self) -> &str {
+        &self.0.0
     }
 }
 
-impl<T> Eq for Ordered<T> {}
-
-impl<T> PartialOrd for Ordered<T> {
+impl PartialOrd for TagKey {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<T> Ord for Ordered<T> {
+impl Ord for TagKey {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.sort_key.cmp(&other.sort_key)
-    }
-}
-
-/// Derives the string used to order map keys.
-trait SortKey {
-    fn sort_key(&self) -> String;
-}
-
-impl SortKey for CexId {
-    fn sort_key(&self) -> String {
-        self.to_string()
-    }
-}
-
-impl SortKey for AssetId {
-    fn sort_key(&self) -> String {
-        self.to_string()
-    }
-}
-
-impl SortKey for AccountId {
-    fn sort_key(&self) -> String {
-        self.0.clone()
-    }
-}
-
-impl SortKey for Tag {
-    fn sort_key(&self) -> String {
-        self.0.clone()
+        self.0.0.cmp(&other.0.0)
     }
 }
 
@@ -271,13 +230,10 @@ impl CexAccountPortfolio {
         for count in asset_counts.values() {
             Self::validate_asset_count("CexAccountPortfolio::new", "asset balance", *count)?;
         }
-        let asset_counts = asset_counts
-            .into_iter()
-            .map(|(asset_id, count)| (Ordered::new(asset_id), count))
-            .collect();
+        let asset_counts = asset_counts.into_iter().collect();
         let pending_orders = pending_orders
             .into_iter()
-            .map(|(tag, orders)| (Ordered::new(tag), orders))
+            .map(|(tag, orders)| (TagKey::new(tag), orders))
             .collect();
         Ok(Self {
             asset_counts,
@@ -287,9 +243,7 @@ impl CexAccountPortfolio {
 
     /// Iterates over all asset balances keyed by asset.
     pub fn asset_counts(&self) -> impl Iterator<Item = (&AssetId, &f64)> {
-        self.asset_counts
-            .iter()
-            .map(|(asset_id, count)| (&asset_id.key, count))
+        self.asset_counts.iter()
     }
 
     /// Iterates over all asset balances keyed by asset.
@@ -301,31 +255,26 @@ impl CexAccountPortfolio {
     ///
     /// Returns zero when the account does not hold the asset.
     pub fn asset_count(&self, asset_id: &AssetId) -> f64 {
-        self.asset_counts
-            .get(&Ordered::new(*asset_id))
-            .copied()
-            .unwrap_or(0.0)
+        self.asset_counts.get(asset_id).copied().unwrap_or(0.0)
     }
 
     /// Iterates over all pending orders grouped by tag.
     pub fn pending_orders(&self) -> impl Iterator<Item = (&Tag, &Vec<PendingOrder>)> {
         self.pending_orders
             .iter()
-            .map(|(tag, orders)| (&tag.key, orders))
+            .map(|(tag, orders)| (&tag.0, orders))
     }
 
     /// Returns the pending orders with the given tag, if any.
     pub fn pending_orders_with_tag(&self, tag: &Tag) -> Option<&[PendingOrder]> {
-        self.pending_orders
-            .get(&Ordered::new(tag.clone()))
-            .map(Vec::as_slice)
+        self.pending_orders.get(tag.0.as_str()).map(Vec::as_slice)
     }
 
     /// Iterates over every pending order together with its tag.
     pub fn pending_orders_iter(&self) -> impl Iterator<Item = (&Tag, &PendingOrder)> {
         self.pending_orders
             .iter()
-            .flat_map(|(tag, orders)| orders.iter().map(move |order| (&tag.key, order)))
+            .flat_map(|(tag, orders)| orders.iter().map(move |order| (&tag.0, order)))
     }
 
     fn validate_asset_count(
@@ -352,7 +301,7 @@ impl CexAccountPortfolio {
 /// Builder for constructing a [`Portfolio`].
 #[derive(Debug, Clone, Default)]
 pub struct PortfolioBuilder {
-    portfolios: BTreeMap<Ordered<CexId>, BTreeMap<Ordered<AccountId>, CexAccountPortfolio>>,
+    portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
     error: Option<StockTrekError>,
 }
 
@@ -379,12 +328,12 @@ impl PortfolioBuilder {
             return self;
         }
         self.portfolios
-            .entry(Ordered::new(cex_id))
+            .entry(cex_id)
             .or_default()
-            .entry(Ordered::new(account_id))
+            .entry(account_id)
             .or_default()
             .asset_counts
-            .insert(Ordered::new(asset_id), count);
+            .insert(asset_id, count);
         self
     }
 
@@ -409,12 +358,12 @@ impl PortfolioBuilder {
             };
         let tag = Self::order_request_tag(pending_order.order_request()).clone();
         self.portfolios
-            .entry(Ordered::new(cex_id))
+            .entry(cex_id)
             .or_default()
-            .entry(Ordered::new(account_id))
+            .entry(account_id)
             .or_default()
             .pending_orders
-            .entry(Ordered::new(tag))
+            .entry(TagKey::new(tag))
             .or_default()
             .push(pending_order);
         self
