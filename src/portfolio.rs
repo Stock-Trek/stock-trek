@@ -5,7 +5,7 @@ use crate::{
     },
     pending_order::PendingOrder,
 };
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 use stock_trek_types::cex::{
     account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest, tag::Tag,
 };
@@ -38,9 +38,8 @@ impl Portfolio {
     /// Each item is `(cex_id, account_id, account_portfolio)`. This is the
     /// primary way for an algorithm to discover which accounts it can use.
     pub fn cex_accounts(&self) -> impl Iterator<Item = (&CexId, &AccountId, &CexAccountPortfolio)> {
-        self.portfolios.iter().flat_map(|(cex_id, accounts)| {
-            accounts
-                .iter()
+        sorted_entries(&self.portfolios).flat_map(|(cex_id, accounts)| {
+            sorted_entries(accounts)
                 .map(move |(account_id, portfolio)| (cex_id, account_id, portfolio))
         })
     }
@@ -56,7 +55,7 @@ impl Portfolio {
         self.portfolios
             .get(cex_id)
             .into_iter()
-            .flat_map(|accounts| accounts.keys())
+            .flat_map(|accounts| sorted_entries(accounts).map(|(account_id, _)| account_id))
     }
 
     /// Returns the portfolio for a specific CEX account, if it exists.
@@ -188,6 +187,43 @@ impl Portfolio {
     }
 }
 
+trait PortfolioSortKey {
+    fn sort_key(&self) -> Cow<'_, str>;
+}
+
+impl PortfolioSortKey for CexId {
+    fn sort_key(&self) -> Cow<'_, str> {
+        Cow::Owned(self.to_string())
+    }
+}
+
+impl PortfolioSortKey for AssetId {
+    fn sort_key(&self) -> Cow<'_, str> {
+        Cow::Owned(self.to_string())
+    }
+}
+
+impl PortfolioSortKey for AccountId {
+    fn sort_key(&self) -> Cow<'_, str> {
+        Cow::Borrowed(&self.0)
+    }
+}
+
+impl PortfolioSortKey for Tag {
+    fn sort_key(&self) -> Cow<'_, str> {
+        Cow::Borrowed(&self.0)
+    }
+}
+
+fn sorted_entries<'a, K, V>(map: &'a HashMap<K, V>) -> impl Iterator<Item = (&'a K, &'a V)>
+where
+    K: PortfolioSortKey,
+{
+    let mut entries: Vec<_> = map.iter().collect();
+    entries.sort_by(|(left, _), (right, _)| left.sort_key().cmp(&right.sort_key()));
+    entries.into_iter()
+}
+
 impl CexAccountPortfolio {
     /// Creates an account portfolio from asset balances and pending orders.
     ///
@@ -212,7 +248,7 @@ impl CexAccountPortfolio {
 
     /// Iterates over all asset balances keyed by asset.
     pub fn assets(&self) -> impl Iterator<Item = (&AssetId, &f64)> {
-        self.asset_counts.iter()
+        sorted_entries(&self.asset_counts)
     }
 
     /// Returns the total balance (available and reserved) of an asset.
@@ -234,8 +270,7 @@ impl CexAccountPortfolio {
 
     /// Iterates over every pending order together with its tag.
     pub fn pending_orders_iter(&self) -> impl Iterator<Item = (&Tag, &PendingOrder)> {
-        self.pending_orders
-            .iter()
+        sorted_entries(&self.pending_orders)
             .flat_map(|(tag, orders)| orders.iter().map(move |order| (tag, order)))
     }
 
