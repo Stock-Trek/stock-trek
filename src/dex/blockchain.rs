@@ -3,13 +3,12 @@
 use crate::error::{
     dex::DexError,
     result::{StockTrekError, StockTrekResult},
-    value::ValueError,
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_with::{DisplayFromStr, serde_as};
-use std::ops::Deref;
-use std::str::FromStr;
+
+use super::string_id::define_string_id;
 
 /// A blockchain, its family, and its address format.
 #[serde_as]
@@ -22,116 +21,14 @@ pub struct Blockchain {
     address_regex: Regex,
 }
 
-/// Unique identifier for a blockchain.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(try_from = "String", into = "String")]
-pub struct BlockchainId(String);
-
-/// Identifier for a blockchain family, such as EVM.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(try_from = "String", into = "String")]
-pub struct FamilyId(String);
-
-#[allow(missing_docs)]
-impl BlockchainId {
-    fn validate(value: &str) -> StockTrekResult<()> {
-        if value.trim().is_empty() {
-            return Err(StockTrekError::Value(ValueError::IncorrectType {
-                expected: "BlockchainId".into(),
-                found: value.into(),
-            }));
-        }
-        Ok(())
-    }
-
-    pub fn new(id: &str) -> StockTrekResult<Self> {
-        Self::try_from(id)
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    pub fn into_inner(self) -> String {
-        self.0
-    }
+define_string_id! {
+    /// Unique identifier for a blockchain.
+    BlockchainId
 }
 
-#[allow(missing_docs)]
-impl FamilyId {
-    fn validate(value: &str) -> StockTrekResult<()> {
-        if value.trim().is_empty() {
-            return Err(StockTrekError::Value(ValueError::IncorrectType {
-                expected: "FamilyId".into(),
-                found: value.into(),
-            }));
-        }
-        Ok(())
-    }
-
-    pub fn new(id: &str) -> StockTrekResult<Self> {
-        Self::try_from(id)
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-impl TryFrom<&str> for BlockchainId {
-    type Error = StockTrekError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::validate(value)?;
-        Ok(Self(value.to_string()))
-    }
-}
-
-impl TryFrom<String> for BlockchainId {
-    type Error = StockTrekError;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::validate(&value)?;
-        Ok(Self(value))
-    }
-}
-
-impl FromStr for BlockchainId {
-    type Err = StockTrekError;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        Self::try_from(value)
-    }
-}
-
-impl TryFrom<&str> for FamilyId {
-    type Error = StockTrekError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::validate(value)?;
-        Ok(Self(value.to_string()))
-    }
-}
-
-impl TryFrom<String> for FamilyId {
-    type Error = StockTrekError;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::validate(&value)?;
-        Ok(Self(value))
-    }
-}
-
-impl FromStr for FamilyId {
-    type Err = StockTrekError;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        Self::try_from(value)
-    }
+define_string_id! {
+    /// Identifier for a blockchain family, such as EVM.
+    FamilyId
 }
 
 #[allow(missing_docs)]
@@ -226,85 +123,10 @@ impl std::fmt::Display for Blockchain {
     }
 }
 
-impl std::fmt::Display for BlockchainId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl std::fmt::Display for FamilyId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl AsRef<str> for BlockchainId {
-    fn as_ref(&self) -> &str {
-        self.as_str()
-    }
-}
-
-impl AsRef<str> for FamilyId {
-    fn as_ref(&self) -> &str {
-        self.as_str()
-    }
-}
-
-impl Deref for BlockchainId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        self.as_str()
-    }
-}
-
-impl Deref for FamilyId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        self.as_str()
-    }
-}
-
-impl PartialEq<str> for BlockchainId {
-    fn eq(&self, other: &str) -> bool {
-        self.as_str() == other
-    }
-}
-
-impl PartialEq<&str> for BlockchainId {
-    fn eq(&self, other: &&str) -> bool {
-        self.as_str() == *other
-    }
-}
-
-impl PartialEq<str> for FamilyId {
-    fn eq(&self, other: &str) -> bool {
-        self.as_str() == other
-    }
-}
-
-impl PartialEq<&str> for FamilyId {
-    fn eq(&self, other: &&str) -> bool {
-        self.as_str() == *other
-    }
-}
-
-impl From<BlockchainId> for String {
-    fn from(value: BlockchainId) -> Self {
-        value.into_inner()
-    }
-}
-
-impl From<FamilyId> for String {
-    fn from(value: FamilyId) -> Self {
-        value.into_inner()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error::value::ValueError;
 
     fn blockchain(address_format: &str) -> StockTrekResult<Blockchain> {
         Blockchain::new(
