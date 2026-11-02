@@ -145,7 +145,7 @@ mod tests {
     use stock_trek::{
         PortfolioBuilder, ResolvedContext,
         actions::ResolvedAction,
-        markets::{Market, MarketBuilder, TimestampMillis},
+        markets::{Market, MarketBuilder, MarketQuote, TimestampMillis},
         types::OrderRequest,
     };
 
@@ -156,9 +156,9 @@ mod tests {
         for (index, ask) in asks.iter().enumerate() {
             builder = builder.tick(
                 TimestampMillis::from(index as u64),
-                (ask - 1.0, 1.0),
-                (*ask, 1.0),
-                (*ask, 1.0),
+                MarketQuote::new(ask - 1.0, 1.0).unwrap(),
+                MarketQuote::new(*ask, 1.0).unwrap(),
+                MarketQuote::new(*ask, 1.0).unwrap(),
             );
         }
         builder.build().unwrap()
@@ -269,14 +269,8 @@ mod tests {
 
     #[test]
     fn rejects_non_finite_asks() {
-        let builder = MarketBuilder::new(0.000_001, 0.01, 0.000_1).tick(
-            TimestampMillis::new(0),
-            (0.0, 1.0),
-            (f64::NAN, 1.0),
-            (f64::NAN, 1.0),
-        );
-
-        assert!(builder.build().is_err());
+        assert!(MarketQuote::new(0.0, 1.0).is_err());
+        assert!(MarketQuote::new(f64::NAN, 1.0).is_err());
     }
 
     #[test]

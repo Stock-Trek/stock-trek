@@ -80,7 +80,7 @@ pub mod markets {
         market_candle::MarketCandle,
         market_ohlcv::MarketOhlcv,
         market_order_book::MarketOrderBook,
-        market_quote::{IntoMarketQuote, MarketQuote, TimedPriceQuantity},
+        market_quote::{MarketQuote, TimedPriceQuantity},
         market_rolling_window::MarketRollingWindow,
         market_tick::MarketTick,
         market_ticks::MarketTicks,

@@ -29,15 +29,15 @@ impl MarketTicks {
     pub fn latest(&self) -> Option<&MarketTick> {
         self.ticks.last()
     }
-    /// Returns `(timestamp, price, quantity)` for each tick's best bid.
+    /// Returns the timestamped price and quantity for each tick's best bid.
     pub fn bid_timed_price_quantities(&self) -> Vec<TimedPriceQuantity> {
         self.values(MarketTick::bid)
     }
-    /// Returns `(timestamp, price, quantity)` for each tick's best ask.
+    /// Returns the timestamped price and quantity for each tick's best ask.
     pub fn ask_timed_price_quantities(&self) -> Vec<TimedPriceQuantity> {
         self.values(MarketTick::ask)
     }
-    /// Returns `(timestamp, price, quantity)` for each tick's last trade.
+    /// Returns the timestamped price and quantity for each tick's last trade.
     pub fn last_timed_price_quantities(&self) -> Vec<TimedPriceQuantity> {
         self.values(MarketTick::last)
     }
@@ -45,11 +45,11 @@ impl MarketTicks {
     fn values(&self, to_quote: impl Fn(&MarketTick) -> &MarketQuote) -> Vec<TimedPriceQuantity> {
         self.ticks
             .iter()
-            .map(|tick| Self::to_tick_tuple(tick, &to_quote))
+            .map(|tick| Self::to_timed_price_quantity(tick, &to_quote))
             .collect()
     }
 
-    fn to_tick_tuple(
+    fn to_timed_price_quantity(
         tick: &MarketTick,
         to_quote: impl Fn(&MarketTick) -> &MarketQuote,
     ) -> TimedPriceQuantity {
@@ -92,6 +92,10 @@ mod tests {
         )
     }
 
+    fn timed(timestamp_millis: u64, price: f64, quantity: f64) -> TimedPriceQuantity {
+        TimedPriceQuantity::new(TimestampMillis::new(timestamp_millis), price, quantity).unwrap()
+    }
+
     #[test]
     fn ticks_are_sorted_chronologically() {
         let ticks = MarketTicks::new(vec![
@@ -103,9 +107,9 @@ mod tests {
         assert_eq!(
             ticks.bid_timed_price_quantities(),
             vec![
-                (TimestampMillis::new(1), 100.0, 2.0),
-                (TimestampMillis::new(2), 101.0, 2.0),
-                (TimestampMillis::new(3), 103.0, 2.0)
+                timed(1, 100.0, 2.0),
+                timed(2, 101.0, 2.0),
+                timed(3, 103.0, 2.0)
             ]
         );
     }
@@ -118,7 +122,7 @@ mod tests {
 
         assert_eq!(
             deserialized.bid_timed_price_quantities(),
-            vec![(TimestampMillis::new(1), 100.0, 2.0)]
+            vec![timed(1, 100.0, 2.0)]
         );
     }
 
@@ -144,10 +148,7 @@ mod tests {
 
         assert_eq!(
             deserialized.bid_timed_price_quantities(),
-            vec![
-                (TimestampMillis::new(1), 100.0, 2.0),
-                (TimestampMillis::new(3), 103.0, 2.0)
-            ]
+            vec![timed(1, 100.0, 2.0), timed(3, 103.0, 2.0)]
         );
     }
 }

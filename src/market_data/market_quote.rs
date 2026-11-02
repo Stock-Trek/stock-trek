@@ -44,50 +44,9 @@ impl MarketQuote {
         self.quantity
     }
 
-    /// Returns the price and quantity quote.
-    pub fn to_price_quantity(&self) -> MarketQuote {
-        self.clone()
-    }
-
     /// Converts the quote to a timestamped price and quantity pair.
     pub fn to_timed_price_quantity(&self, timestamp: TimestampMillis) -> TimedPriceQuantity {
         TimedPriceQuantity::from_quote(timestamp, self.clone())
-    }
-}
-
-impl PartialEq<(f64, f64)> for MarketQuote {
-    fn eq(&self, other: &(f64, f64)) -> bool {
-        self.price == other.0 && self.quantity == other.1
-    }
-}
-
-impl PartialEq<MarketQuote> for (f64, f64) {
-    fn eq(&self, other: &MarketQuote) -> bool {
-        self.0 == other.price && self.1 == other.quantity
-    }
-}
-
-impl From<MarketQuote> for (f64, f64) {
-    fn from(quote: MarketQuote) -> Self {
-        (quote.price, quote.quantity)
-    }
-}
-
-/// A value that can be converted into a validated [`MarketQuote`].
-pub trait IntoMarketQuote {
-    /// Converts the value into a validated quote.
-    fn into_market_quote(self) -> StockTrekResult<MarketQuote>;
-}
-
-impl IntoMarketQuote for MarketQuote {
-    fn into_market_quote(self) -> StockTrekResult<MarketQuote> {
-        Ok(self)
-    }
-}
-
-impl IntoMarketQuote for (f64, f64) {
-    fn into_market_quote(self) -> StockTrekResult<MarketQuote> {
-        MarketQuote::new(self.0, self.1)
     }
 }
 
@@ -153,18 +112,6 @@ impl TryFrom<TimedPriceQuantityData> for TimedPriceQuantity {
     }
 }
 
-impl PartialEq<(TimestampMillis, f64, f64)> for TimedPriceQuantity {
-    fn eq(&self, other: &(TimestampMillis, f64, f64)) -> bool {
-        self.timestamp_millis == other.0 && self.price() == other.1 && self.quantity() == other.2
-    }
-}
-
-impl PartialEq<TimedPriceQuantity> for (TimestampMillis, f64, f64) {
-    fn eq(&self, other: &TimedPriceQuantity) -> bool {
-        self.0 == other.timestamp_millis && self.1 == other.price() && self.2 == other.quantity()
-    }
-}
-
 #[derive(Deserialize)]
 struct MarketQuoteData {
     price: f64,
@@ -189,7 +136,6 @@ mod tests {
 
         assert_eq!(quote.price(), 100.0);
         assert_eq!(quote.quantity(), 1.5);
-        assert_eq!(quote.to_price_quantity(), (100.0, 1.5));
     }
 
     #[test]

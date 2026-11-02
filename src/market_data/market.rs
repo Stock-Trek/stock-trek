@@ -1,16 +1,10 @@
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
     market_data::{
-        aligned_window::AlignedWindow,
-        market_aligned_window::MarketAlignedWindow,
-        market_candle::MarketCandle,
-        market_order_book::MarketOrderBook,
-        market_quote::{IntoMarketQuote, MarketQuote},
-        market_rolling_window::MarketRollingWindow,
-        market_tick::MarketTick,
-        market_ticks::MarketTicks,
-        rolling_window::RollingWindow,
-        timestamp::TimestampMillis,
+        aligned_window::AlignedWindow, market_aligned_window::MarketAlignedWindow,
+        market_candle::MarketCandle, market_order_book::MarketOrderBook, market_quote::MarketQuote,
+        market_rolling_window::MarketRollingWindow, market_tick::MarketTick,
+        market_ticks::MarketTicks, rolling_window::RollingWindow, timestamp::TimestampMillis,
         validation::Validation,
     },
 };
@@ -189,28 +183,15 @@ impl MarketBuilder {
     }
 
     /// Adds a market tick with the given bid, ask, and last quotes.
-    ///
-    /// Each quote may be provided as a validated [`MarketQuote`] or as a
-    /// `(price, quantity)` pair, which is validated before it is added.
     pub fn tick(
         mut self,
         timestamp_millis: TimestampMillis,
-        bid: impl IntoMarketQuote,
-        ask: impl IntoMarketQuote,
-        last: impl IntoMarketQuote,
+        bid: MarketQuote,
+        ask: MarketQuote,
+        last: MarketQuote,
     ) -> Self {
-        let tick = bid.into_market_quote().and_then(|bid| {
-            Ok(MarketTick::new(
-                timestamp_millis,
-                bid,
-                ask.into_market_quote()?,
-                last.into_market_quote()?,
-            ))
-        });
-        match tick {
-            Ok(tick) => self.ticks.push(tick),
-            Err(error) => self.record_error(error),
-        }
+        self.ticks
+            .push(MarketTick::new(timestamp_millis, bid, ask, last));
         self
     }
     /// Sets the candle for a fixed-length rolling window.
@@ -307,9 +288,9 @@ mod tests {
         let market = MarketBuilder::new(0.000_001, 0.01, 1.0)
             .tick(
                 TimestampMillis::new(1),
-                (100.0, 1.0),
-                (101.0, 2.0),
-                (100.5, 3.0),
+                MarketQuote::new(100.0, 1.0).unwrap(),
+                MarketQuote::new(101.0, 2.0).unwrap(),
+                MarketQuote::new(100.5, 3.0).unwrap(),
             )
             .rolling_set_candle(RollingWindow::Minutes1, candle(1_000))
             .aligned_push_candle(AlignedWindow::Minutes1, candle(1_000))
@@ -340,33 +321,6 @@ mod tests {
     }
 
     #[test]
-    fn accepts_quotes_or_pairs_when_building_ticks() {
-        let market = MarketBuilder::new(0.000_001, 0.01, 1.0)
-            .tick(
-                TimestampMillis::new(1),
-                MarketQuote::new(100.0, 1.0).unwrap(),
-                (101.0, 2.0),
-                MarketQuote::new(100.5, 3.0).unwrap(),
-            )
-            .build()
-            .unwrap();
-
-        assert_eq!(market.ticks().ticks().len(), 1);
-    }
-
-    #[test]
-    fn rejects_invalid_tick_quotes() {
-        let builder = MarketBuilder::new(0.000_001, 0.01, 1.0).tick(
-            TimestampMillis::new(1),
-            (f64::NAN, 1.0),
-            (101.0, 1.0),
-            (100.0, 1.0),
-        );
-
-        assert!(builder.build().is_err());
-    }
-
-    #[test]
     fn rejects_invalid_order_book_quotes() {
         let builder = MarketBuilder::new(0.000_001, 0.01, 1.0)
             .order_book_bid(f64::NAN, 1.0)
@@ -387,10 +341,7 @@ mod tests {
         let deserialized: Market = serde_json::from_str(&json).unwrap();
 
         assert_eq!(deserialized.base_increment(), market.base_increment());
-        assert_eq!(
-            deserialized.order_book().bid_price_quantities(),
-            vec![(100.0, 1.0)]
-        );
+        assert_eq!(deserialized.order_book().bids(), market.order_book().bids());
     }
 
     #[test]

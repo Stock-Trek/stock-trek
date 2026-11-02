@@ -27,10 +27,8 @@ impl MarketRollingWindow {
     }
 
     /// Returns the OHLCV values for a rolling window, if present.
-    pub fn ohlcv(&self, window: RollingWindow) -> Option<MarketOhlcv> {
-        self.candles
-            .get(&window)
-            .map(|candle| candle.ohlcv().clone())
+    pub fn ohlcv(&self, window: RollingWindow) -> Option<&MarketOhlcv> {
+        self.candles.get(&window).map(MarketCandle::ohlcv)
     }
 }
 
@@ -59,7 +57,7 @@ mod tests {
 
         assert_eq!(
             deserialized.ohlcv(RollingWindow::Minutes1),
-            Some(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap())
+            Some(&MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap())
         );
     }
 }
