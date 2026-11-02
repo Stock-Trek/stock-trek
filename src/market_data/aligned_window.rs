@@ -29,7 +29,6 @@ pub enum AlignedWindow {
     Seconds10,
     Seconds15,
     Seconds30,
-    Seconds60,
     Minutes1,
     Minutes2,
     Minutes3,
@@ -37,7 +36,6 @@ pub enum AlignedWindow {
     Minutes10,
     Minutes15,
     Minutes30,
-    Minutes60,
     Hours1,
     Hours2,
     Hours3,
@@ -45,9 +43,7 @@ pub enum AlignedWindow {
     Hours6,
     Hours8,
     Hours12,
-    Hours24,
     Days1,
-    Days7,
     Weeks1,
     Weeks2,
     Weeks4,
@@ -56,7 +52,6 @@ pub enum AlignedWindow {
     Months3,
     Months4,
     Months6,
-    Months12,
     Years1,
     Years2,
 }
@@ -182,7 +177,6 @@ impl AlignedWindow {
             AlignedWindow::Seconds10 => 10 * MILLIS_PER_SECOND,
             AlignedWindow::Seconds15 => 15 * MILLIS_PER_SECOND,
             AlignedWindow::Seconds30 => 30 * MILLIS_PER_SECOND,
-            AlignedWindow::Seconds60 => 60 * MILLIS_PER_SECOND,
             AlignedWindow::Minutes1 => MILLIS_PER_MINUTE,
             AlignedWindow::Minutes2 => 2 * MILLIS_PER_MINUTE,
             AlignedWindow::Minutes3 => 3 * MILLIS_PER_MINUTE,
@@ -190,7 +184,6 @@ impl AlignedWindow {
             AlignedWindow::Minutes10 => 10 * MILLIS_PER_MINUTE,
             AlignedWindow::Minutes15 => 15 * MILLIS_PER_MINUTE,
             AlignedWindow::Minutes30 => 30 * MILLIS_PER_MINUTE,
-            AlignedWindow::Minutes60 => 60 * MILLIS_PER_MINUTE,
             AlignedWindow::Hours1 => MILLIS_PER_HOUR,
             AlignedWindow::Hours2 => 2 * MILLIS_PER_HOUR,
             AlignedWindow::Hours3 => 3 * MILLIS_PER_HOUR,
@@ -198,9 +191,7 @@ impl AlignedWindow {
             AlignedWindow::Hours6 => 6 * MILLIS_PER_HOUR,
             AlignedWindow::Hours8 => 8 * MILLIS_PER_HOUR,
             AlignedWindow::Hours12 => 12 * MILLIS_PER_HOUR,
-            AlignedWindow::Hours24 => 24 * MILLIS_PER_HOUR,
             AlignedWindow::Days1 => MILLIS_PER_DAY,
-            AlignedWindow::Days7 => 7 * MILLIS_PER_DAY,
             AlignedWindow::Weeks1 => MILLIS_PER_WEEK,
             AlignedWindow::Weeks2 => 2 * MILLIS_PER_WEEK,
             AlignedWindow::Weeks4 => 4 * MILLIS_PER_WEEK,
@@ -209,7 +200,6 @@ impl AlignedWindow {
             | AlignedWindow::Months3
             | AlignedWindow::Months4
             | AlignedWindow::Months6
-            | AlignedWindow::Months12
             | AlignedWindow::Years1
             | AlignedWindow::Years2 => return None,
         };
@@ -228,7 +218,7 @@ impl AlignedWindow {
             AlignedWindow::Months3 => Some(3 * MILLIS_PER_MONTH_UPPER_BOUND),
             AlignedWindow::Months4 => Some(4 * MILLIS_PER_MONTH_UPPER_BOUND),
             AlignedWindow::Months6 => Some(6 * MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Months12 | AlignedWindow::Years1 => Some(MILLIS_PER_YEAR_UPPER_BOUND),
+            AlignedWindow::Years1 => Some(MILLIS_PER_YEAR_UPPER_BOUND),
             AlignedWindow::Years2 => Some(2 * MILLIS_PER_YEAR_UPPER_BOUND),
             _ => {
                 unreachable!("only calendar based windows lack an exact millisecond length")
@@ -244,7 +234,7 @@ impl AlignedWindow {
             AlignedWindow::Months3 => Some(3),
             AlignedWindow::Months4 => Some(4),
             AlignedWindow::Months6 => Some(6),
-            AlignedWindow::Months12 | AlignedWindow::Years1 => Some(12),
+            AlignedWindow::Years1 => Some(12),
             AlignedWindow::Years2 => Some(24),
             _ => None,
         }
@@ -258,7 +248,6 @@ impl AlignedWindow {
             AlignedWindow::Seconds10 => "10s",
             AlignedWindow::Seconds15 => "15s",
             AlignedWindow::Seconds30 => "30s",
-            AlignedWindow::Seconds60 => "60s",
             AlignedWindow::Minutes1 => "1m",
             AlignedWindow::Minutes2 => "2m",
             AlignedWindow::Minutes3 => "3m",
@@ -266,7 +255,6 @@ impl AlignedWindow {
             AlignedWindow::Minutes10 => "10m",
             AlignedWindow::Minutes15 => "15m",
             AlignedWindow::Minutes30 => "30m",
-            AlignedWindow::Minutes60 => "60m",
             AlignedWindow::Hours1 => "1h",
             AlignedWindow::Hours2 => "2h",
             AlignedWindow::Hours3 => "3h",
@@ -274,9 +262,7 @@ impl AlignedWindow {
             AlignedWindow::Hours6 => "6h",
             AlignedWindow::Hours8 => "8h",
             AlignedWindow::Hours12 => "12h",
-            AlignedWindow::Hours24 => "24h",
             AlignedWindow::Days1 => "1d",
-            AlignedWindow::Days7 => "7d",
             AlignedWindow::Weeks1 => "1w",
             AlignedWindow::Weeks2 => "2w",
             AlignedWindow::Weeks4 => "4w",
@@ -285,7 +271,6 @@ impl AlignedWindow {
             AlignedWindow::Months3 => "3mo",
             AlignedWindow::Months4 => "4mo",
             AlignedWindow::Months6 => "6mo",
-            AlignedWindow::Months12 => "12mo",
             AlignedWindow::Years1 => "1y",
             AlignedWindow::Years2 => "2y",
         }
@@ -327,7 +312,6 @@ impl TryFrom<&str> for AlignedWindow {
             "10s" => Ok(AlignedWindow::Seconds10),
             "15s" => Ok(AlignedWindow::Seconds15),
             "30s" => Ok(AlignedWindow::Seconds30),
-            "60s" => Ok(AlignedWindow::Seconds60),
             "1m" => Ok(AlignedWindow::Minutes1),
             "2m" => Ok(AlignedWindow::Minutes2),
             "3m" => Ok(AlignedWindow::Minutes3),
@@ -335,7 +319,6 @@ impl TryFrom<&str> for AlignedWindow {
             "10m" => Ok(AlignedWindow::Minutes10),
             "15m" => Ok(AlignedWindow::Minutes15),
             "30m" => Ok(AlignedWindow::Minutes30),
-            "60m" => Ok(AlignedWindow::Minutes60),
             "1h" => Ok(AlignedWindow::Hours1),
             "2h" => Ok(AlignedWindow::Hours2),
             "3h" => Ok(AlignedWindow::Hours3),
@@ -343,9 +326,7 @@ impl TryFrom<&str> for AlignedWindow {
             "6h" => Ok(AlignedWindow::Hours6),
             "8h" => Ok(AlignedWindow::Hours8),
             "12h" => Ok(AlignedWindow::Hours12),
-            "24h" => Ok(AlignedWindow::Hours24),
             "1d" => Ok(AlignedWindow::Days1),
-            "7d" => Ok(AlignedWindow::Days7),
             "1w" => Ok(AlignedWindow::Weeks1),
             "2w" => Ok(AlignedWindow::Weeks2),
             "4w" => Ok(AlignedWindow::Weeks4),
@@ -354,7 +335,6 @@ impl TryFrom<&str> for AlignedWindow {
             "3mo" => Ok(AlignedWindow::Months3),
             "4mo" => Ok(AlignedWindow::Months4),
             "6mo" => Ok(AlignedWindow::Months6),
-            "12mo" => Ok(AlignedWindow::Months12),
             "1y" => Ok(AlignedWindow::Years1),
             "2y" => Ok(AlignedWindow::Years2),
             _ => Err(StockTrekError::Value(ValueError::IncorrectType {

@@ -40,7 +40,6 @@ fn is_calendar_window(window: AlignedWindow) -> bool {
             | AlignedWindow::Months3
             | AlignedWindow::Months4
             | AlignedWindow::Months6
-            | AlignedWindow::Months12
             | AlignedWindow::Years1
             | AlignedWindow::Years2
     )
@@ -132,13 +131,6 @@ fn bounds_for_month_windows_follow_calendar_boundaries() {
         )
     );
     assert_eq!(
-        bounds_for(AlignedWindow::Months12, timestamp),
-        timestamps(
-            millis_at(2024, 1, 1, 0, 0, 0),
-            millis_at(2025, 1, 1, 0, 0, 0)
-        )
-    );
-    assert_eq!(
         bounds_for(AlignedWindow::Years1, timestamp),
         timestamps(
             millis_at(2024, 1, 1, 0, 0, 0),
@@ -200,11 +192,11 @@ fn millis_exact_returns_lengths_for_fixed_windows_only() {
     assert_eq!(AlignedWindow::Seconds1.millis_exact(), Some(1_000));
     assert_eq!(AlignedWindow::Minutes5.millis_exact(), Some(300_000));
     assert_eq!(
-        AlignedWindow::Hours24.millis_exact(),
+        AlignedWindow::Days1.millis_exact(),
         Some(u64::from(24 * MILLIS_PER_HOUR))
     );
     assert_eq!(
-        AlignedWindow::Days7.millis_exact(),
+        AlignedWindow::Weeks1.millis_exact(),
         Some(u64::from(7 * MILLIS_PER_DAY))
     );
     assert_eq!(
@@ -232,11 +224,7 @@ fn millis_upper_falls_back_for_calendar_windows() {
         Some(2 * MILLIS_PER_YEAR_UPPER_BOUND)
     );
     assert_eq!(
-        AlignedWindow::Months12.millis_upper_bound(),
-        AlignedWindow::Years1.millis_upper_bound()
-    );
-    assert_eq!(
-        AlignedWindow::Months12.millis_upper_bound(),
+        AlignedWindow::Years1.millis_upper_bound(),
         Some(MILLIS_PER_YEAR_UPPER_BOUND)
     );
 }
@@ -248,7 +236,6 @@ fn calendar_months_returns_months_for_calendar_windows_only() {
     assert_eq!(AlignedWindow::Months3.months_exact(), Some(3));
     assert_eq!(AlignedWindow::Months4.months_exact(), Some(4));
     assert_eq!(AlignedWindow::Months6.months_exact(), Some(6));
-    assert_eq!(AlignedWindow::Months12.months_exact(), Some(12));
     assert_eq!(AlignedWindow::Years1.months_exact(), Some(12));
     assert_eq!(AlignedWindow::Years2.months_exact(), Some(24));
 
@@ -260,7 +247,7 @@ fn calendar_months_returns_months_for_calendar_windows_only() {
 window_tests!(
     AlignedWindow,
     AlignedWindow::Seconds1 => "1s",
-    AlignedWindow::Hours24 => "24h",
+    AlignedWindow::Days1 => "1d",
     AlignedWindow::Months1 => "1mo",
     AlignedWindow::Years2 => "2y",
 );
