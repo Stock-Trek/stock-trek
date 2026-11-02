@@ -27,6 +27,7 @@ mod signal;
 mod signal_context;
 mod strategy_context;
 mod util;
+mod validation;
 mod value;
 
 pub use algorithm::Algorithm;

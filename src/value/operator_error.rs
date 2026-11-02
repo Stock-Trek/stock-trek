@@ -2,6 +2,7 @@ use crate::error::{
     result::{StockTrekError, StockTrekResult},
     stats::StatsError,
 };
+use crate::validation::Validation;
 
 /// Error helpers shared by the binary and unary operators.
 pub(super) struct OperatorError;
@@ -34,14 +35,9 @@ impl OperatorError {
         argument: &'static str,
         value: f64,
     ) -> StockTrekResult<()> {
-        if value.is_finite() {
-            Ok(())
-        } else {
-            Err(Self::domain_error(
-                function,
-                format!("{argument} {value} is not finite (NaN or infinity)"),
-            ))
-        }
+        Validation::Stats
+            .finite(function, argument, value)
+            .map(|_| ())
     }
 }
 

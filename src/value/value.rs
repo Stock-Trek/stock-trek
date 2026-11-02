@@ -1,7 +1,8 @@
 use crate::{
-    error::{result::StockTrekResult, stats::StatsError},
+    error::result::StockTrekResult,
     resolved_context::ResolvedContext,
     signal::key::SignalKey,
+    validation::Validation,
     value::{binary_operator::BinaryOperator, unary_operator::UnaryOperator},
 };
 use serde::{Deserialize, Serialize};
@@ -271,14 +272,6 @@ impl NumberValue {
         field: &'static str,
         value: f64,
     ) -> StockTrekResult<f64> {
-        if value.is_finite() {
-            Ok(value)
-        } else {
-            Err(StatsError::DomainError {
-                function,
-                message: format!("{field} {value} is not finite (NaN or infinity)"),
-            }
-            .into())
-        }
+        Validation::Stats.finite(function, field, value)
     }
 }

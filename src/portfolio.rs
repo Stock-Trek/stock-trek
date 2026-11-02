@@ -1,9 +1,7 @@
 use crate::{
-    error::{
-        result::{StockTrekError, StockTrekResult},
-        stats::StatsError,
-    },
+    error::result::{StockTrekError, StockTrekResult},
     pending_order::PendingOrder,
+    validation::Validation,
 };
 use std::collections::{BTreeMap, HashMap};
 use stock_trek_types::cex::{
@@ -196,7 +194,7 @@ impl CexAccountPortfolio {
         pending_orders: HashMap<Tag, Vec<PendingOrder>>,
     ) -> StockTrekResult<Self> {
         for count in asset_counts.values() {
-            Self::validate_asset_count("CexAccountPortfolio::new", "asset balance", *count)?;
+            Validation::Stats.non_negative("CexAccountPortfolio::new", "asset balance", *count)?;
         }
         let asset_counts = asset_counts.into_iter().collect();
         let pending_orders = pending_orders.into_iter().collect();
@@ -239,26 +237,6 @@ impl CexAccountPortfolio {
             .iter()
             .flat_map(|(tag, orders)| orders.iter().map(move |order| (tag, order)))
     }
-
-    fn validate_asset_count(
-        function: &'static str,
-        field: &'static str,
-        value: f64,
-    ) -> StockTrekResult<()> {
-        if !value.is_finite() {
-            return Err(StockTrekError::Stats(StatsError::DomainError {
-                function,
-                message: format!("{field} {value} is not finite (NaN or infinity)"),
-            }));
-        }
-        if value < 0.0 {
-            return Err(StockTrekError::Stats(StatsError::DomainError {
-                function,
-                message: format!("{field} {value} must be non-negative"),
-            }));
-        }
-        Ok(())
-    }
 }
 
 /// Builder for constructing a [`Portfolio`].
@@ -282,11 +260,9 @@ impl PortfolioBuilder {
         asset_id: AssetId,
         count: f64,
     ) -> &mut Self {
-        if let Err(error) = CexAccountPortfolio::validate_asset_count(
-            "PortfolioBuilder::asset_count",
-            "asset count",
-            count,
-        ) {
+        if let Err(error) =
+            Validation::Stats.non_negative("PortfolioBuilder::asset_count", "asset count", count)
+        {
             self.record_error(error);
             return self;
         }
