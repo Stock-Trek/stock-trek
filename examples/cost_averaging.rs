@@ -191,7 +191,7 @@ mod tests {
                 enqueued_actions.borrow_mut().push(action.clone());
                 Ok(())
             }),
-            portfolio.build(),
+            portfolio.build().unwrap(),
             signals,
         );
         algorithm

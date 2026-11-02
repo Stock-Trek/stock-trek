@@ -1,4 +1,10 @@
-use crate::pending_order::PendingOrder;
+use crate::{
+    error::{
+        result::{StockTrekError, StockTrekResult},
+        stats::StatsError,
+    },
+    pending_order::PendingOrder,
+};
 use std::collections::HashMap;
 use stock_trek_types::cex::{
     account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest,
@@ -292,14 +298,19 @@ impl Portfolio {
 
 impl CexAccountPortfolio {
     /// Creates an account portfolio from asset balances and pending orders.
+    ///
+    /// Returns an error when any asset balance is negative or not finite.
     pub fn new(
         asset_counts: HashMap<AssetId, f64>,
         pending_orders: HashMap<Tag, Vec<PendingOrder>>,
-    ) -> Self {
-        Self {
+    ) -> StockTrekResult<Self> {
+        for count in asset_counts.values() {
+            Self::validate_asset_count("CexAccountPortfolio::new", "asset balance", *count)?;
+        }
+        Ok(Self {
             asset_counts,
             pending_orders,
-        }
+        })
     }
 
     /// Returns all asset balances (available and reserved) keyed by asset.
@@ -335,12 +346,33 @@ impl CexAccountPortfolio {
             .iter()
             .flat_map(|(tag, orders)| orders.iter().map(move |order| (tag, order)))
     }
+
+    fn validate_asset_count(
+        function: &'static str,
+        field: &'static str,
+        value: f64,
+    ) -> StockTrekResult<()> {
+        if !value.is_finite() {
+            return Err(StockTrekError::Stats(StatsError::DomainError {
+                function,
+                message: format!("{field} {value} is not finite (NaN or infinity)"),
+            }));
+        }
+        if value < 0.0 {
+            return Err(StockTrekError::Stats(StatsError::DomainError {
+                function,
+                message: format!("{field} {value} must be non-negative"),
+            }));
+        }
+        Ok(())
+    }
 }
 
 /// Builder for constructing a [`Portfolio`].
 #[derive(Debug, Clone, Default)]
 pub struct PortfolioBuilder {
     portfolios: HashMap<CexId, HashMap<AccountId, CexAccountPortfolio>>,
+    error: Option<StockTrekError>,
 }
 
 impl PortfolioBuilder {
@@ -357,6 +389,14 @@ impl PortfolioBuilder {
         asset_id: AssetId,
         count: f64,
     ) -> &mut Self {
+        if let Err(error) = CexAccountPortfolio::validate_asset_count(
+            "PortfolioBuilder::asset_count",
+            "asset count",
+            count,
+        ) {
+            self.record_error(error);
+            return self;
+        }
         self.portfolios
             .entry(cex_id)
             .or_default()
@@ -378,7 +418,15 @@ impl PortfolioBuilder {
         filled_base_quantity: f64,
         filled_quote_quantity: f64,
     ) -> &mut Self {
-        let tag = Self::order_request_tag(&order_request).clone();
+        let pending_order =
+            match PendingOrder::new(order_request, filled_base_quantity, filled_quote_quantity) {
+                Ok(pending_order) => pending_order,
+                Err(error) => {
+                    self.record_error(error);
+                    return self;
+                }
+            };
+        let tag = Self::order_request_tag(pending_order.order_request()).clone();
         self.portfolios
             .entry(cex_id)
             .or_default()
@@ -387,17 +435,25 @@ impl PortfolioBuilder {
             .pending_orders
             .entry(tag)
             .or_default()
-            .push(PendingOrder::new(
-                order_request,
-                filled_base_quantity,
-                filled_quote_quantity,
-            ));
+            .push(pending_order);
         self
     }
 
     /// Builds the [`Portfolio`] from the collected data.
-    pub fn build(self) -> Portfolio {
-        Portfolio::new(self.portfolios)
+    ///
+    /// Returns an error when an asset count or pending order added to the
+    /// builder was invalid.
+    pub fn build(self) -> StockTrekResult<Portfolio> {
+        if let Some(error) = self.error {
+            return Err(error);
+        }
+        Ok(Portfolio::new(self.portfolios))
+    }
+
+    fn record_error(&mut self, error: StockTrekError) {
+        if self.error.is_none() {
+            self.error = Some(error);
+        }
     }
 
     fn order_request_tag(order_request: &OrderRequest<AssetId, f64>) -> &Tag {
