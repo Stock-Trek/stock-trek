@@ -13,10 +13,9 @@ use crate::{
 ///   the [`SignalContext`] into a [`Signals`] map.
 /// - [`Self::strategy`] runs exactly once, before the first evaluation, and
 ///   returns the [`Command`] tree that the platform interprets on every
-///   evaluation thereafter. Values read from signals or the portfolio inside
-///   the command tree are resolved anew on each interpretation, so the tree
-///   must be built from the [`StrategyContext`] factories rather than from
-///   values captured when the strategy phase runs.
+///   evaluation thereafter. Values are resolved anew on each interpretation, so
+///   must use [`StrategyContext`] factories (eg. `c.conditions.signal(MY_KEY)`)
+///   rather captured when the strategy phase runs.
 pub trait Algorithm: Send + Sync {
     /// A stable identifier for the algorithm, used in registration and when
     /// selecting among registered algorithms.
@@ -30,9 +29,8 @@ pub trait Algorithm: Send + Sync {
     /// Called on every evaluation, before the command tree is interpreted.
     /// Writing the same keys on every call keeps later reads predictable:
     /// required [`SignalKey`](crate::signals::SignalKey)s error when absent,
-    /// so a signal that is only
-    /// sometimes available should be paired with an optional key carrying a
-    /// default.
+    /// so a signal that is only sometimes available should use an optional
+    /// key carrying a default.
     fn signals(&self, c: &SignalContext) -> StockTrekResult<Signals>;
     /// Builds the command tree that defines the strategy to follow.
     ///

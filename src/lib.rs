@@ -6,8 +6,8 @@
 //!
 //! 1. [`Algorithm::signals`] runs on every evaluation. It turns the market
 //!    data in a [`SignalContext`](crate::signals::SignalContext) into a
-//!    [`Signals`](crate::signals::Signals) map that both phases can read by
-//!    key.
+//!    [`Signals`](crate::signals::Signals) map that the strategy phase can
+//!    read by key.
 //! 2. [`Algorithm::strategy`] runs exactly once. It builds a [`Command`]
 //!    tree from the factories on a [`StrategyContext`]. The platform then
 //!    interprets that tree on every evaluation, resolving deferred values
@@ -15,9 +15,9 @@
 //!    [`Portfolio`] and enqueueing the resulting [`actions::Action`]s for
 //!    execution.
 //!
-//! Because the strategy phase runs once, every value that depends on market
-//! data or the portfolio must be produced by a factory rather than read
-//! directly, so it can be re-evaluated each time the command tree runs.
+//! Because the strategy phase runs once, every value it uses must be
+//! produced by a factory (eg. `c.conditions.signal(MY_KEY)`) rather than
+//! read directly, so it can be re-evaluated each time the command tree runs.
 //!
 //! The [`prelude`] module gathers the types needed by most algorithms, and a
 //! complete cost-averaging algorithm is maintained in

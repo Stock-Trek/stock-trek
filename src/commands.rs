@@ -47,8 +47,7 @@ impl Command {
     ///
     /// Conditions are evaluated against the current portfolio and signals in
     /// `c`; enqueueing an action does not execute it, execution happens after
-    /// interpretation. The first error aborts the walk, leaving already
-    /// enqueued actions in place.
+    /// interpretation.
     pub fn execute(&self, c: &mut ResolvedContext) -> StockTrekResult<()> {
         match self {
             Command::If {
