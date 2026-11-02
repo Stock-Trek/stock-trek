@@ -152,6 +152,7 @@ impl Condition {
 #[derive(Debug, Display, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
+#[non_exhaustive]
 pub enum QuantityOf {
     /// All conditions must be true.
     All,

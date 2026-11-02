@@ -175,8 +175,7 @@ mod tests {
     ) -> Vec<ResolvedAction> {
         let actions = Rc::new(RefCell::new(Vec::new()));
         let enqueued_actions = Rc::clone(&actions);
-        let mut portfolio = PortfolioBuilder::new();
-        portfolio.asset_count(
+        let portfolio = PortfolioBuilder::new().asset_count(
             CexId::Binance,
             AccountId::new(CEX_ACCOUNT_ID),
             AssetId::TetherUSD,

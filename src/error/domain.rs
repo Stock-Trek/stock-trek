@@ -4,9 +4,9 @@ use std::fmt;
 #[derive(Debug, Clone)]
 pub struct DomainError {
     /// The function that produced the error.
-    pub(crate) function: &'static str,
+    pub function: &'static str,
     /// Details about the failed operation.
-    pub(crate) message: String,
+    pub message: String,
 }
 
 impl DomainError {

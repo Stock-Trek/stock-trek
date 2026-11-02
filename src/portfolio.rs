@@ -250,13 +250,14 @@ impl PortfolioBuilder {
     }
 
     /// Sets the balance of an asset in a CEX account.
+    #[must_use]
     pub fn asset_count(
-        &mut self,
+        mut self,
         cex_id: CexId,
         account_id: AccountId,
         asset_id: AssetId,
         count: f64,
-    ) -> &mut Self {
+    ) -> Self {
         if let Err(error) =
             Validation::non_negative("PortfolioBuilder::asset_count", "asset count", count)
         {
@@ -276,14 +277,15 @@ impl PortfolioBuilder {
     /// Adds a pending order to a CEX account.
     ///
     /// The order is grouped under the tag embedded in `order_request`.
+    #[must_use]
     pub fn pending_order(
-        &mut self,
+        mut self,
         cex_id: CexId,
         account_id: AccountId,
         order_request: OrderRequest<AssetId, f64>,
         filled_base_quantity: f64,
         filled_quote_quantity: f64,
-    ) -> &mut Self {
+    ) -> Self {
         let pending_order =
             match PendingOrder::new(order_request, filled_base_quantity, filled_quote_quantity) {
                 Ok(pending_order) => pending_order,

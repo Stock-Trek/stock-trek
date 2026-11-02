@@ -42,8 +42,8 @@ macro_rules! string_id_funcs {
             /// # Errors
             ///
             /// Returns an error if the value is empty or whitespace-only.
-            pub fn new(id: &str) -> crate::error::result::StockTrekResult<Self> {
-                Self::try_from(id)
+            pub fn new(id: impl Into<String>) -> crate::error::result::StockTrekResult<Self> {
+                Self::try_from(id.into())
             }
         }
 

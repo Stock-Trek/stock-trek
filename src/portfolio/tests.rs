@@ -8,8 +8,7 @@ fn portfolio_with(
     filled_base_quantity: f64,
     filled_quote_quantity: f64,
 ) -> Portfolio {
-    let mut builder = PortfolioBuilder::new();
-    builder
+    PortfolioBuilder::new()
         .asset_count(
             CexId::Binance,
             AccountId::new("account"),
@@ -22,8 +21,9 @@ fn portfolio_with(
             order_request,
             filled_base_quantity,
             filled_quote_quantity,
-        );
-    builder.build().unwrap()
+        )
+        .build()
+        .unwrap()
 }
 
 fn limit_sell(quantity: Quantity<f64>, limit_price: f64) -> OrderRequest<AssetId, f64> {
@@ -55,7 +55,7 @@ fn determinism_portfolio(reverse: bool) -> Portfolio {
 
     let mut builder = PortfolioBuilder::new();
     for (account, count) in entries {
-        builder
+        builder = builder
             .asset_count(
                 CexId::Binance,
                 AccountId::new(account),
@@ -92,12 +92,12 @@ fn totals_are_deterministic_across_insertion_order() {
 fn asset_iterators_report_balances_for_each_account() {
     let account_a = AccountId::new("a");
     let account_b = AccountId::new("b");
-    let mut builder = PortfolioBuilder::new();
-    builder
+    let portfolio = PortfolioBuilder::new()
         .asset_count(CexId::Binance, account_a.clone(), AssetId::Bitcoin, 2.0)
         .asset_count(CexId::Binance, account_a.clone(), AssetId::TetherUSD, 3.0)
-        .asset_count(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 4.0);
-    let portfolio = builder.build().unwrap();
+        .asset_count(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 4.0)
+        .build()
+        .unwrap();
 
     let balances: std::collections::HashMap<_, _> = portfolio
         .assets_iter()
@@ -137,8 +137,7 @@ fn asset_iterators_report_balances_for_each_account() {
 fn pending_order_count_helpers_agree_with_their_iterators() {
     let account_a = AccountId::new("a");
     let account_b = AccountId::new("b");
-    let mut builder = PortfolioBuilder::new();
-    builder
+    let portfolio = PortfolioBuilder::new()
         .pending_order(
             CexId::Binance,
             account_a.clone(),
@@ -152,8 +151,9 @@ fn pending_order_count_helpers_agree_with_their_iterators() {
             limit_sell(Quantity::OfBase(1.0), 100.0),
             0.0,
             0.0,
-        );
-    let portfolio = builder.build().unwrap();
+        )
+        .build()
+        .unwrap();
 
     assert_eq!(portfolio.pending_orders_count(), 2);
     assert_eq!(portfolio.pending_orders_with_tag_count(&Tag::new("tag")), 2);
@@ -233,15 +233,16 @@ fn asset_available_is_clamped_when_reservations_exceed_balance() {
 
 #[test]
 fn pending_orders_are_grouped_by_the_order_request_tag() {
-    let mut builder = PortfolioBuilder::new();
-    builder.pending_order(
-        CexId::Binance,
-        AccountId::new("account"),
-        limit_sell(Quantity::OfBase(10.0), 100.0),
-        0.0,
-        0.0,
-    );
-    let portfolio = builder.build().unwrap();
+    let portfolio = PortfolioBuilder::new()
+        .pending_order(
+            CexId::Binance,
+            AccountId::new("account"),
+            limit_sell(Quantity::OfBase(10.0), 100.0),
+            0.0,
+            0.0,
+        )
+        .build()
+        .unwrap();
 
     assert_eq!(
         portfolio.pending_orders_in_cex_account_with_tag_count(
@@ -283,8 +284,7 @@ fn cex_account_portfolio_accepts_non_negative_asset_balances() {
 
 #[test]
 fn portfolio_builder_rejects_invalid_asset_counts() {
-    let mut builder = PortfolioBuilder::new();
-    builder.asset_count(
+    let builder = PortfolioBuilder::new().asset_count(
         CexId::Binance,
         AccountId::new("account"),
         AssetId::Bitcoin,
@@ -296,8 +296,7 @@ fn portfolio_builder_rejects_invalid_asset_counts() {
 
 #[test]
 fn portfolio_builder_rejects_invalid_pending_orders() {
-    let mut builder = PortfolioBuilder::new();
-    builder.pending_order(
+    let builder = PortfolioBuilder::new().pending_order(
         CexId::Binance,
         AccountId::new("account"),
         limit_sell(Quantity::OfBase(1.0), 100.0),

@@ -59,6 +59,7 @@ impl RecoveryPolicy {
         }
     }
     /// Maps a specific error cause to a response.
+    #[must_use]
     pub fn on_error(mut self, cause: ActionErrorCause, response: ActionErrorResponse) -> Self {
         self.on_error.insert(cause, response);
         self
@@ -71,6 +72,7 @@ impl RecoveryPolicy {
 )]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
+#[non_exhaustive]
 pub enum ActionErrorCause {
     /// The CEX permanently rejected the action.
     PermanentCexRejection,
@@ -86,6 +88,7 @@ pub enum ActionErrorCause {
 #[derive(Debug, Display, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
+#[non_exhaustive]
 pub enum ActionErrorResponse {
     /// Stops processing the current plan.
     Stop,
