@@ -1,6 +1,6 @@
 use crate::{
     error::result::StockTrekResult, resolvable::Resolvable, resolved_context::ResolvedContext,
-    validation::Validation, value::value::NumberValue,
+    validation::Validation, value::value_types::NumberValue,
 };
 use stock_trek_types::cex::activation::Activation;
 
@@ -46,7 +46,6 @@ impl Resolvable<Activation<f64>> for Activation<NumberValue> {
 mod tests {
     use super::*;
     use crate::{portfolio::Portfolio, signal::signals::Signals};
-    use std::collections::HashMap;
     use stock_trek_types::cex::{
         price_basis::PriceBasis, trigger_direction::TriggerDirection, trigger_mode::TriggerMode,
     };
@@ -54,7 +53,7 @@ mod tests {
     fn context() -> ResolvedContext {
         ResolvedContext {
             enqueue_action: Box::new(|_, _| Ok(())),
-            portfolio: Portfolio::new(HashMap::new()),
+            portfolio: Portfolio::default(),
             signals: Signals::new(),
         }
     }

@@ -4,7 +4,7 @@ use crate::{
     error::result::StockTrekResult,
     resolvable::Resolvable,
     resolved_context::ResolvedContext,
-    value::value::{AccountIdValue, AssetIdValue, CexIdValue, NumberValue},
+    value::value_types::{AccountIdValue, AssetIdValue, CexIdValue, NumberValue},
 };
 use serde::{Deserialize, Serialize};
 use stock_trek_types::cex::{capability::CexCapability, order_request::OrderRequest, tag::Tag};

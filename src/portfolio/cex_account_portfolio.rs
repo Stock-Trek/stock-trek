@@ -1,5 +1,5 @@
 use crate::{error::result::StockTrekResult, pending_order::PendingOrder, validation::Validation};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use stock_trek_types::cex::{asset_id::AssetId, tag::Tag};
 
 /// Asset balances and pending orders for a single CEX account.
@@ -12,19 +12,21 @@ pub struct CexAccountPortfolio {
 impl CexAccountPortfolio {
     /// Creates an account portfolio from asset balances and pending orders.
     ///
-    /// Returns an error when any asset balance is negative or not finite.
-    pub fn new(
-        asset_counts: HashMap<AssetId, f64>,
-        pending_orders: HashMap<Tag, Vec<PendingOrder>>,
-    ) -> StockTrekResult<Self> {
-        for count in asset_counts.values() {
-            Validation::non_negative("CexAccountPortfolio::new", "asset balance", *count)?;
+    /// Both arguments accept any iterator of key/value pairs. Returns an error
+    /// when any asset balance is negative or not finite.
+    pub fn new<A, P>(asset_counts: A, pending_orders: P) -> StockTrekResult<Self>
+    where
+        A: IntoIterator<Item = (AssetId, f64)>,
+        P: IntoIterator<Item = (Tag, Vec<PendingOrder>)>,
+    {
+        let mut balances = BTreeMap::new();
+        for (asset_id, count) in asset_counts {
+            Validation::non_negative("CexAccountPortfolio::new", "asset balance", count)?;
+            balances.insert(asset_id, count);
         }
-        let asset_counts = asset_counts.into_iter().collect();
-        let pending_orders = pending_orders.into_iter().collect();
         Ok(Self {
-            asset_counts,
-            pending_orders,
+            asset_counts: balances,
+            pending_orders: pending_orders.into_iter().collect(),
         })
     }
 

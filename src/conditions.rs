@@ -6,7 +6,7 @@ use crate::{
     resolved_context::ResolvedContext,
     signal::key::SignalKey,
     util::serde_ordering::OrderingSerde,
-    value::value::NumberValue,
+    value::value_types::NumberValue,
 };
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -231,12 +231,11 @@ impl ConditionFactory {
 mod tests {
     use super::*;
     use crate::{portfolio::Portfolio, signal::signals::Signals};
-    use std::collections::HashMap;
 
     fn context() -> ResolvedContext {
         ResolvedContext {
             enqueue_action: Box::new(|_, _| Ok(())),
-            portfolio: Portfolio::new(HashMap::new()),
+            portfolio: Portfolio::default(),
             signals: Signals::new(),
         }
     }

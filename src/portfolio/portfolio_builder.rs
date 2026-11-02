@@ -1,19 +1,17 @@
 use super::{CexAccountPortfolio, Portfolio};
-use crate::{
-    error::result::{StockTrekError, StockTrekResult},
-    pending_order::PendingOrder,
-    validation::Validation,
-};
+use crate::{error::result::StockTrekResult, pending_order::PendingOrder, validation::Validation};
 use std::collections::BTreeMap;
 use stock_trek_types::cex::{
     account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest, tag::Tag,
 };
 
 /// Builder for constructing a [`Portfolio`].
+///
+/// Invalid asset counts and pending orders are rejected immediately by the
+/// method that adds them, so an invalid builder can never be constructed.
 #[derive(Debug, Clone, Default)]
 pub struct PortfolioBuilder {
     portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
-    error: Option<StockTrekError>,
 }
 
 impl PortfolioBuilder {
@@ -23,52 +21,44 @@ impl PortfolioBuilder {
     }
 
     /// Sets the balance of an asset in a CEX account.
-    #[must_use]
+    ///
+    /// Returns an error when `count` is negative or not finite.
     pub fn asset_count(
-        mut self,
+        self,
         cex_id: CexId,
         account_id: AccountId,
         asset_id: AssetId,
         count: f64,
-    ) -> Self {
-        if let Err(error) =
-            Validation::non_negative("PortfolioBuilder::asset_count", "asset count", count)
-        {
-            self.record_error(error);
-            return self;
-        }
-        self.portfolios
+    ) -> StockTrekResult<Self> {
+        Validation::non_negative("PortfolioBuilder::asset_count", "asset count", count)?;
+        let mut portfolios = self.portfolios;
+        portfolios
             .entry(cex_id)
             .or_default()
             .entry(account_id)
             .or_default()
             .asset_counts
             .insert(asset_id, count);
-        self
+        Ok(Self { portfolios })
     }
 
     /// Adds a pending order to a CEX account.
     ///
-    /// The order is grouped under the tag embedded in `order_request`.
-    #[must_use]
+    /// The order is grouped under the tag embedded in `order_request`. Returns
+    /// an error when the pending order is invalid.
     pub fn pending_order(
-        mut self,
+        self,
         cex_id: CexId,
         account_id: AccountId,
         order_request: OrderRequest<AssetId, f64>,
         filled_base_quantity: f64,
         filled_quote_quantity: f64,
-    ) -> Self {
+    ) -> StockTrekResult<Self> {
         let pending_order =
-            match PendingOrder::new(order_request, filled_base_quantity, filled_quote_quantity) {
-                Ok(pending_order) => pending_order,
-                Err(error) => {
-                    self.record_error(error);
-                    return self;
-                }
-            };
+            PendingOrder::new(order_request, filled_base_quantity, filled_quote_quantity)?;
         let tag = Self::order_request_tag(pending_order.order_request()).clone();
-        self.portfolios
+        let mut portfolios = self.portfolios;
+        portfolios
             .entry(cex_id)
             .or_default()
             .entry(account_id)
@@ -77,25 +67,13 @@ impl PortfolioBuilder {
             .entry(tag)
             .or_default()
             .push(pending_order);
-        self
+        Ok(Self { portfolios })
     }
 
     /// Builds the [`Portfolio`] from the collected data.
-    ///
-    /// Returns an error when an asset count or pending order added to the
-    /// builder was invalid.
-    pub fn build(self) -> StockTrekResult<Portfolio> {
-        if let Some(error) = self.error {
-            return Err(error);
-        }
-        Ok(Portfolio {
+    pub fn build(self) -> Portfolio {
+        Portfolio {
             portfolios: self.portfolios,
-        })
-    }
-
-    fn record_error(&mut self, error: StockTrekError) {
-        if self.error.is_none() {
-            self.error = Some(error);
         }
     }
 

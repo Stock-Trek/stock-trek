@@ -55,7 +55,7 @@ pub use cex::order_factory::OrderFactory;
 pub use commands::{Command, CommandFactory};
 pub use conditions::{Condition, ConditionFactory, QuantityOf};
 pub use pending_order::PendingOrder;
-pub use portfolio::{CexAccountPortfolio, Portfolio, PortfolioBuilder};
+pub use portfolio::{CexAccountPortfolio, Portfolio, PortfolioBuilder, PortfolioEntry};
 pub use preferences::Preferences;
 pub use resolved_context::{EnqueueActionFn, ResolvedContext};
 pub use rust_decimal::RoundingStrategy;
@@ -66,8 +66,8 @@ pub use traitreg::register as register_algorithm;
 /// Types for actions that can be enqueued by an algorithm.
 pub mod actions {
     pub use crate::action::{
-        action::Action,
         action_factory::ActionFactory,
+        action_type::Action,
         recoverable_action::{
             ActionErrorCause, ActionErrorResponse, RecoverableAction, RecoveryPolicy,
         },
@@ -153,7 +153,7 @@ pub mod values {
     pub use crate::value::{
         binary_operator::BinaryOperator,
         unary_operator::UnaryOperator,
-        value::{AccountIdValue, AssetIdValue, CexIdValue, FlagValue, NumberValue},
+        value_types::{AccountIdValue, AssetIdValue, CexIdValue, FlagValue, NumberValue},
         values_factory::{
             CalculationValuesFactory, LiteralValuesFactory, PortfolioValuesFactory,
             SignalValuesFactory,

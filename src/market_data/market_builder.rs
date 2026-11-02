@@ -1,6 +1,6 @@
 use super::market::Market;
 use crate::{
-    error::result::{StockTrekError, StockTrekResult},
+    error::result::StockTrekResult,
     market_data::{
         aligned_window::AlignedWindow, market_aligned_window::MarketAlignedWindow,
         market_candle::MarketCandle, market_order_book::MarketOrderBook, market_quote::MarketQuote,
@@ -13,7 +13,8 @@ use std::collections::BTreeMap;
 /// Builder for constructing a [`Market`].
 ///
 /// New markets start empty. Add ticks, candles, and order book quotes before
-/// calling [`MarketBuilder::build`].
+/// calling [`MarketBuilder::build`]. Invalid parameters and order book quotes
+/// are rejected immediately by the method that receives them.
 #[derive(Debug, Clone)]
 pub struct MarketBuilder {
     base_increment: f64,
@@ -24,13 +25,25 @@ pub struct MarketBuilder {
     aligned: BTreeMap<AlignedWindow, Vec<MarketCandle>>,
     order_book_asks: Vec<MarketQuote>,
     order_book_bids: Vec<MarketQuote>,
-    error: Option<StockTrekError>,
 }
 
 impl MarketBuilder {
     /// Creates a builder with the market's trading increments and minimum notional.
-    pub fn new(base_increment: f64, quote_increment: f64, minimum_notional: f64) -> Self {
-        Self {
+    ///
+    /// Returns an error unless the increments are finite and positive and the
+    /// minimum notional is finite and non-negative.
+    pub fn new(
+        base_increment: f64,
+        quote_increment: f64,
+        minimum_notional: f64,
+    ) -> StockTrekResult<Self> {
+        Market::validate_parameters(
+            "MarketBuilder::new",
+            base_increment,
+            quote_increment,
+            minimum_notional,
+        )?;
+        Ok(Self {
             base_increment,
             quote_increment,
             minimum_notional,
@@ -39,8 +52,7 @@ impl MarketBuilder {
             aligned: BTreeMap::new(),
             order_book_bids: Vec::new(),
             order_book_asks: Vec::new(),
-            error: None,
-        }
+        })
     }
 
     /// Adds a market tick with the given bid, ask, and last quotes.
@@ -69,52 +81,31 @@ impl MarketBuilder {
         self
     }
     /// Adds a bid quote to the order book.
-    #[must_use]
-    pub fn order_book_bid(mut self, price: f64, quantity: f64) -> Self {
-        match MarketQuote::new(price, quantity) {
-            Ok(quote) => self.order_book_bids.push(quote),
-            Err(error) => self.record_error(error),
-        }
-        self
+    ///
+    /// Returns an error unless both values are finite and positive.
+    pub fn order_book_bid(mut self, price: f64, quantity: f64) -> StockTrekResult<Self> {
+        self.order_book_bids
+            .push(MarketQuote::new(price, quantity)?);
+        Ok(self)
     }
     /// Adds an ask quote to the order book.
-    #[must_use]
-    pub fn order_book_ask(mut self, price: f64, quantity: f64) -> Self {
-        match MarketQuote::new(price, quantity) {
-            Ok(quote) => self.order_book_asks.push(quote),
-            Err(error) => self.record_error(error),
-        }
-        self
+    ///
+    /// Returns an error unless both values are finite and positive.
+    pub fn order_book_ask(mut self, price: f64, quantity: f64) -> StockTrekResult<Self> {
+        self.order_book_asks
+            .push(MarketQuote::new(price, quantity)?);
+        Ok(self)
     }
     /// Builds the [`Market`] from the collected data.
-    ///
-    /// Returns an error if the increments, minimum notional, ticks, or order
-    /// book contain invalid values.
-    pub fn build(self) -> StockTrekResult<Market> {
-        if let Some(error) = self.error {
-            return Err(error);
-        }
-        Market::validate_parameters(
-            "MarketBuilder::build",
-            self.base_increment,
-            self.quote_increment,
-            self.minimum_notional,
-        )?;
-        let order_book = MarketOrderBook::new(self.order_book_bids, self.order_book_asks);
-        Ok(Market {
+    pub fn build(self) -> Market {
+        Market {
             base_increment: self.base_increment,
             quote_increment: self.quote_increment,
             minimum_notional: self.minimum_notional,
             ticks: MarketTicks::new(self.ticks),
             rolling: MarketRollingWindow::new(self.rolling),
             aligned: MarketAlignedWindow::new(self.aligned),
-            order_book,
-        })
-    }
-
-    fn record_error(&mut self, error: StockTrekError) {
-        if self.error.is_none() {
-            self.error = Some(error);
+            order_book: MarketOrderBook::new(self.order_book_bids, self.order_book_asks),
         }
     }
 }
