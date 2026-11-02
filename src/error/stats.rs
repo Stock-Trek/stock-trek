@@ -2,6 +2,7 @@ use std::fmt;
 
 /// Errors produced by numeric and statistical operations.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum StatsError {
     /// A division by zero was attempted.
     DivisionByZero {
