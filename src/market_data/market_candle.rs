@@ -179,10 +179,7 @@ mod tests {
         )
         .unwrap_err();
 
-        assert!(matches!(
-            error,
-            StockTrekError::Domain(_)
-        ));
+        assert!(matches!(error, StockTrekError::Domain(_)));
     }
 
     #[test]
@@ -197,10 +194,7 @@ mod tests {
         )
         .unwrap_err();
 
-        assert!(matches!(
-            error,
-            StockTrekError::Domain(_)
-        ));
+        assert!(matches!(error, StockTrekError::Domain(_)));
     }
 
     #[test]
