@@ -33,11 +33,13 @@ chrono = "0.4"
 regex = { version = "1", optional = true }
 rust_decimal = "1"
 serde = "1"
-serde_json = {version = "1", features = ["float_roundtrip"] }
 serde_with = { version = "3", optional = true }
 stock-trek-types = { version = "0.5", features = ["serde"] }
 strum = { version = "0.28", features = ["derive"] }
 traitreg = "0.4"
+
+[dev-dependencies]
+serde_json = { version = "1", features = ["float_roundtrip"] }
 
 [lints.clippy]
 module_inception = "allow"
