@@ -70,7 +70,7 @@ impl Algorithm for CostAveraging {
         if let Some((cheapest_cex, cheapest_ask)) = cheapest_market {
             signals.write(&self.key_cex, cheapest_cex);
             signals.write(&self.key_market_exists, true);
-            signals.write(&self.key_cheapest_price, cheapest_ask / SATOSHI_SCALE);
+            signals.write(&self.key_cheapest_price, cheapest_ask);
         }
         Ok(signals)
     }
@@ -130,7 +130,7 @@ mod tests {
     use stock_trek::markets::{Market, MarketBuilder};
 
     fn market(asks: &[f64]) -> Market {
-        let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0);
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.000_1);
         for (index, ask) in asks.iter().enumerate() {
             builder.tick(index as u64, (ask - 1.0, 1.0), (*ask, 1.0), (*ask, 1.0));
         }
@@ -168,10 +168,7 @@ mod tests {
             .unwrap();
 
         assert!(latest.read(&algorithm.key_market_exists).unwrap());
-        assert_eq!(
-            latest.read(&algorithm.key_cheapest_price).unwrap(),
-            200.0 / SATOSHI_SCALE
-        );
+        assert_eq!(latest.read(&algorithm.key_cheapest_price).unwrap(), 200.0);
         assert!(!empty.read(&algorithm.key_market_exists).unwrap());
     }
 
