@@ -1,10 +1,7 @@
 //! Networks within a blockchain.
 
 use crate::dex::string_id::string_id_funcs;
-use crate::error::{
-    result::{StockTrekError, StockTrekResult},
-    value::ValueError,
-};
+use crate::error::{result::StockTrekError, value::ValueError};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
@@ -26,21 +23,6 @@ impl NetworkId {
 
     /// A test network of a blockchain.
     pub const TESTNET: Self = Self(std::borrow::Cow::Borrowed("testnet"));
-}
-
-impl NetworkId {
-    /// Creates an arbitrary network identifier by name.
-    ///
-    /// Leading and trailing whitespace is trimmed. The canonical names
-    /// `mainnet` and `testnet` compare equal to [`Self::MAINNET`] and
-    /// [`Self::TESTNET`] respectively.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if `name` is empty or whitespace-only.
-    pub fn other(name: impl Into<String>) -> StockTrekResult<Self> {
-        Self::try_from(name.into())
-    }
 }
 
 string_id_funcs!(NetworkId);
@@ -141,7 +123,7 @@ mod tests {
         for network_id in [
             NetworkId::MAINNET,
             NetworkId::TESTNET,
-            NetworkId::other("devnet").unwrap(),
+            NetworkId::new("devnet").unwrap(),
         ] {
             assert_eq!(
                 network_id.as_str().parse::<NetworkId>().unwrap(),
@@ -161,8 +143,8 @@ mod tests {
     fn mainnet_and_testnet_have_a_single_representation() {
         assert_eq!(NetworkId::new("mainnet").unwrap(), NetworkId::MAINNET);
         assert_eq!(NetworkId::new("testnet").unwrap(), NetworkId::TESTNET);
-        assert_eq!(NetworkId::other("mainnet").unwrap(), NetworkId::MAINNET);
-        assert_eq!(NetworkId::other("testnet").unwrap(), NetworkId::TESTNET);
+        assert_eq!(NetworkId::new("mainnet").unwrap(), NetworkId::MAINNET);
+        assert_eq!(NetworkId::new("testnet").unwrap(), NetworkId::TESTNET);
         assert_eq!(
             serde_json::to_string(&NetworkId::new("mainnet").unwrap()).unwrap(),
             serde_json::to_string(&NetworkId::MAINNET).unwrap()
@@ -178,7 +160,7 @@ mod tests {
         assert_eq!(NetworkId::new(" mainnet ").unwrap(), NetworkId::MAINNET);
         assert_eq!(
             NetworkId::new("\tsepolia\n").unwrap(),
-            NetworkId::other("sepolia").unwrap()
+            NetworkId::new("sepolia").unwrap()
         );
         assert_eq!(
             serde_json::from_str::<NetworkId>("\" mainnet \"").unwrap(),
@@ -196,7 +178,7 @@ mod tests {
 
     #[test]
     fn network_ids_serialize_as_plain_strings() {
-        let sepolia = NetworkId::other("sepolia").unwrap();
+        let sepolia = NetworkId::new("sepolia").unwrap();
         assert_eq!(serde_json::to_string(&sepolia).unwrap(), "\"sepolia\"");
         assert_eq!(
             serde_json::from_str::<NetworkId>("\"sepolia\"").unwrap(),
@@ -210,7 +192,7 @@ mod tests {
             assert!(NetworkId::new(value).is_err());
             assert!(NetworkId::try_from(value).is_err());
             assert!(value.parse::<NetworkId>().is_err());
-            assert!(NetworkId::other(value).is_err());
+            assert!(NetworkId::try_from(value.to_string()).is_err());
         }
     }
 

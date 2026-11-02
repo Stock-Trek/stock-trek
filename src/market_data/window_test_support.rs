@@ -3,6 +3,9 @@ use chrono::{DateTime, Duration, Months, Utc};
 
 /// Test-only arithmetic helpers for the window enums.
 pub(crate) trait CheckedWindow {
+    /// Returns the fixed window length in milliseconds, when it has one.
+    fn fixed_millis(&self) -> Option<u64>;
+
     /// Adds the window length to a UTC date and time.
     fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>>;
 
@@ -11,18 +14,26 @@ pub(crate) trait CheckedWindow {
 }
 
 impl CheckedWindow for RollingWindow {
+    fn fixed_millis(&self) -> Option<u64> {
+        Some(self.millis_exact())
+    }
+
     fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        let millis = i64::try_from(self.millis_exact()?).ok()?;
+        let millis = i64::try_from(self.millis_exact()).ok()?;
         date_time.checked_add_signed(Duration::milliseconds(millis))
     }
 
     fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        let millis = i64::try_from(self.millis_exact()?).ok()?;
+        let millis = i64::try_from(self.millis_exact()).ok()?;
         date_time.checked_sub_signed(Duration::milliseconds(millis))
     }
 }
 
 impl CheckedWindow for AlignedWindow {
+    fn fixed_millis(&self) -> Option<u64> {
+        self.millis_exact()
+    }
+
     fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
         if let Some(millis) = self.millis_exact() {
             let millis = i64::try_from(millis).ok()?;
@@ -91,7 +102,7 @@ macro_rules! window_tests {
                 chrono::DateTime::from_timestamp_millis(1_700_000_000_123).unwrap();
 
             for window in
-                <$window as ::strum::IntoEnumIterator>::iter().filter(|window| window.millis_exact().is_some())
+                <$window as ::strum::IntoEnumIterator>::iter().filter(|window| window.fixed_millis().is_some())
             {
                 let added = window.checked_add(date_time).unwrap();
                 let subtracted = window.checked_sub(date_time).unwrap();
@@ -100,7 +111,7 @@ macro_rules! window_tests {
 
                 assert_eq!(forward, backward, "{window} is not symmetric");
                 assert_eq!(
-                    i64::try_from(window.millis_exact().unwrap()).unwrap(),
+                    i64::try_from(window.fixed_millis().unwrap()).unwrap(),
                     forward,
                     "{window} does not advance by its own length"
                 );

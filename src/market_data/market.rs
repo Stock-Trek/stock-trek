@@ -144,6 +144,7 @@ impl MarketBuilder {
     }
 
     /// Adds a market tick with the given bid, ask, and last quotes.
+    #[must_use]
     pub fn tick(
         mut self,
         timestamp_millis: TimestampMillis,
@@ -156,16 +157,19 @@ impl MarketBuilder {
         self
     }
     /// Sets the candle for a fixed-length rolling window.
+    #[must_use]
     pub fn rolling_set_candle(mut self, window: RollingWindow, candle: MarketCandle) -> Self {
         self.rolling.insert(window, candle);
         self
     }
     /// Appends a candle to an aligned window.
+    #[must_use]
     pub fn aligned_push_candle(mut self, window: AlignedWindow, candle: MarketCandle) -> Self {
         self.aligned.entry(window).or_default().push(candle);
         self
     }
     /// Adds a bid quote to the order book.
+    #[must_use]
     pub fn order_book_bid(mut self, price: f64, quantity: f64) -> Self {
         match MarketQuote::new(price, quantity) {
             Ok(quote) => self.order_book_bids.push(quote),
@@ -174,6 +178,7 @@ impl MarketBuilder {
         self
     }
     /// Adds an ask quote to the order book.
+    #[must_use]
     pub fn order_book_ask(mut self, price: f64, quantity: f64) -> Self {
         match MarketQuote::new(price, quantity) {
             Ok(quote) => self.order_book_asks.push(quote),
