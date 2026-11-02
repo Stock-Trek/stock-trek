@@ -1,6 +1,6 @@
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
-    market_data::validation,
+    market_data::validation::Validation,
 };
 use serde::{Deserialize, Serialize};
 
@@ -65,25 +65,25 @@ impl MarketOhlcv {
             ("close", close),
             ("vwap", vwap),
         ] {
-            validation::non_negative(function, field, value)?;
+            Validation::non_negative(function, field, value)?;
         }
-        validation::non_negative(function, "volume", volume)?;
-        validation::non_negative(function, "quote volume", quote_volume)?;
+        Validation::non_negative(function, "volume", volume)?;
+        Validation::non_negative(function, "quote volume", quote_volume)?;
 
         if high < low {
-            return Err(validation::error(
+            return Err(Validation::error(
                 function,
                 format!("high {high} must not be below low {low}"),
             ));
         }
         if open < low || open > high {
-            return Err(validation::error(
+            return Err(Validation::error(
                 function,
                 format!("open {open} must be between low {low} and high {high}"),
             ));
         }
         if close < low || close > high {
-            return Err(validation::error(
+            return Err(Validation::error(
                 function,
                 format!("close {close} must be between low {low} and high {high}"),
             ));

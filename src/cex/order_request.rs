@@ -1,5 +1,5 @@
 use crate::{
-    cex::{capability::HasRequiredCapabilities, order_quantity::positive_quantity},
+    cex::{capability::HasRequiredCapabilities, order_quantity::QuantityValidation},
     error::result::StockTrekResult,
     resolvable::Resolvable,
     resolved_context::ResolvedContext,
@@ -27,7 +27,7 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
                     quote: quote.asset_id(c)?,
                     side: *side,
                     activation: activation.try_resolve(c)?,
-                    limit_price: positive_quantity(
+                    limit_price: QuantityValidation::positive(
                         "OrderRequest::Limit",
                         "limit price",
                         limit_price.number(c)?,
@@ -49,7 +49,7 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
                     base: base.asset_id(c)?,
                     quote: quote.asset_id(c)?,
                     activation: activation.try_resolve(c)?,
-                    quote_quantity: positive_quantity(
+                    quote_quantity: QuantityValidation::positive(
                         "OrderRequest::MarketBuy",
                         "quote quantity",
                         quote_quantity.number(c)?,
@@ -69,7 +69,7 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
                     base: base.asset_id(c)?,
                     quote: quote.asset_id(c)?,
                     activation: activation.try_resolve(c)?,
-                    base_quantity: positive_quantity(
+                    base_quantity: QuantityValidation::positive(
                         "OrderRequest::MarketSell",
                         "base quantity",
                         base_quantity.number(c)?,

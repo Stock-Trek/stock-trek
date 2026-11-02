@@ -12,12 +12,12 @@ use stock_trek_types::cex::quantity::Quantity;
 impl Resolvable<Quantity<f64>> for Quantity<NumberValue> {
     fn try_resolve(&self, context: &ResolvedContext) -> StockTrekResult<Quantity<f64>> {
         match self {
-            Quantity::OfBase(q) => Ok(Quantity::OfBase(positive_quantity(
+            Quantity::OfBase(q) => Ok(Quantity::OfBase(QuantityValidation::positive(
                 "Quantity::OfBase",
                 "base quantity",
                 q.number(context)?,
             )?)),
-            Quantity::OfQuote(q) => Ok(Quantity::OfQuote(positive_quantity(
+            Quantity::OfQuote(q) => Ok(Quantity::OfQuote(QuantityValidation::positive(
                 "Quantity::OfQuote",
                 "quote quantity",
                 q.number(context)?,
@@ -26,24 +26,28 @@ impl Resolvable<Quantity<f64>> for Quantity<NumberValue> {
     }
 }
 
-pub(crate) fn positive_quantity(
-    function: &'static str,
-    field: &'static str,
-    value: f64,
-) -> StockTrekResult<f64> {
-    if !value.is_finite() {
-        return Err(StockTrekError::Stats(StatsError::DomainError {
-            function,
-            message: format!("{field} {value} is not finite (NaN or infinity)"),
-        }));
+pub(crate) struct QuantityValidation;
+
+impl QuantityValidation {
+    pub(crate) fn positive(
+        function: &'static str,
+        field: &'static str,
+        value: f64,
+    ) -> StockTrekResult<f64> {
+        if !value.is_finite() {
+            return Err(StockTrekError::Stats(StatsError::DomainError {
+                function,
+                message: format!("{field} {value} is not finite (NaN or infinity)"),
+            }));
+        }
+        if value <= 0.0 {
+            return Err(StockTrekError::Stats(StatsError::DomainError {
+                function,
+                message: format!("{field} {value} must be positive"),
+            }));
+        }
+        Ok(value)
     }
-    if value <= 0.0 {
-        return Err(StockTrekError::Stats(StatsError::DomainError {
-            function,
-            message: format!("{field} {value} must be positive"),
-        }));
-    }
-    Ok(value)
 }
 
 #[cfg(test)]

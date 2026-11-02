@@ -172,9 +172,11 @@ impl NumberValue {
     /// Resolves the number against the resolved context.
     pub fn number(&self, c: &ResolvedContext) -> StockTrekResult<f64> {
         match self {
-            Self::Literal { literal } => finite_number("NumberValue::Literal", "literal", *literal),
+            Self::Literal { literal } => {
+                Self::finite_number("NumberValue::Literal", "literal", *literal)
+            }
             Self::Signal { signal } => {
-                finite_number("NumberValue::Signal", "signal value", signal.read(c)?)
+                Self::finite_number("NumberValue::Signal", "signal value", signal.read(c)?)
             }
             Self::PendingOrders => Ok(c.portfolio.pending_orders_count() as f64),
             Self::PendingOrdersWithTag { tag } => {
@@ -263,16 +265,20 @@ impl NumberValue {
             }
         }
     }
-}
 
-fn finite_number(function: &'static str, field: &'static str, value: f64) -> StockTrekResult<f64> {
-    if value.is_finite() {
-        Ok(value)
-    } else {
-        Err(StatsError::DomainError {
-            function,
-            message: format!("{field} {value} is not finite (NaN or infinity)"),
+    fn finite_number(
+        function: &'static str,
+        field: &'static str,
+        value: f64,
+    ) -> StockTrekResult<f64> {
+        if value.is_finite() {
+            Ok(value)
+        } else {
+            Err(StatsError::DomainError {
+                function,
+                message: format!("{field} {value} is not finite (NaN or infinity)"),
+            }
+            .into())
         }
-        .into())
     }
 }
