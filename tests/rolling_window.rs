@@ -1,5 +1,7 @@
-use super::*;
-use crate::market_data::window_test_support::{CheckedWindow, window_tests};
+mod common;
+
+use common::{CheckedWindow, window_tests};
+use stock_trek::markets::RollingWindow;
 
 window_tests!(
     RollingWindow,

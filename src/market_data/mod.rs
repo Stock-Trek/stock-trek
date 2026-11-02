@@ -12,6 +12,3 @@ pub mod millis;
 pub mod rolling_window;
 pub mod timestamp;
 mod window_label;
-
-#[cfg(test)]
-mod window_test_support;
