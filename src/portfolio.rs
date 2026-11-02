@@ -5,11 +5,7 @@ use crate::{
     },
     pending_order::PendingOrder,
 };
-use std::{
-    borrow::Borrow,
-    cmp::Ordering,
-    collections::{BTreeMap, HashMap},
-};
+use std::collections::{BTreeMap, HashMap};
 use stock_trek_types::cex::{
     account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest, tag::Tag,
 };
@@ -24,7 +20,7 @@ pub struct Portfolio {
 #[derive(Debug, Clone, Default)]
 pub struct CexAccountPortfolio {
     asset_counts: BTreeMap<AssetId, f64>,
-    pending_orders: BTreeMap<TagKey, Vec<PendingOrder>>,
+    pending_orders: BTreeMap<Tag, Vec<PendingOrder>>,
 }
 
 impl Portfolio {
@@ -191,34 +187,6 @@ impl Portfolio {
     }
 }
 
-/// A map key that provides a deterministic total order for tags.
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct TagKey(Tag);
-
-impl TagKey {
-    fn new(tag: Tag) -> Self {
-        Self(tag)
-    }
-}
-
-impl Borrow<str> for TagKey {
-    fn borrow(&self) -> &str {
-        &self.0.0
-    }
-}
-
-impl PartialOrd for TagKey {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for TagKey {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.0.0.cmp(&other.0.0)
-    }
-}
-
 impl CexAccountPortfolio {
     /// Creates an account portfolio from asset balances and pending orders.
     ///
@@ -231,10 +199,7 @@ impl CexAccountPortfolio {
             Self::validate_asset_count("CexAccountPortfolio::new", "asset balance", *count)?;
         }
         let asset_counts = asset_counts.into_iter().collect();
-        let pending_orders = pending_orders
-            .into_iter()
-            .map(|(tag, orders)| (TagKey::new(tag), orders))
-            .collect();
+        let pending_orders = pending_orders.into_iter().collect();
         Ok(Self {
             asset_counts,
             pending_orders,
@@ -260,21 +225,19 @@ impl CexAccountPortfolio {
 
     /// Iterates over all pending orders grouped by tag.
     pub fn pending_orders(&self) -> impl Iterator<Item = (&Tag, &Vec<PendingOrder>)> {
-        self.pending_orders
-            .iter()
-            .map(|(tag, orders)| (&tag.0, orders))
+        self.pending_orders.iter()
     }
 
     /// Returns the pending orders with the given tag, if any.
     pub fn pending_orders_with_tag(&self, tag: &Tag) -> Option<&[PendingOrder]> {
-        self.pending_orders.get(tag.0.as_str()).map(Vec::as_slice)
+        self.pending_orders.get(tag).map(Vec::as_slice)
     }
 
     /// Iterates over every pending order together with its tag.
     pub fn pending_orders_iter(&self) -> impl Iterator<Item = (&Tag, &PendingOrder)> {
         self.pending_orders
             .iter()
-            .flat_map(|(tag, orders)| orders.iter().map(move |order| (&tag.0, order)))
+            .flat_map(|(tag, orders)| orders.iter().map(move |order| (tag, order)))
     }
 
     fn validate_asset_count(
@@ -363,7 +326,7 @@ impl PortfolioBuilder {
             .entry(account_id)
             .or_default()
             .pending_orders
-            .entry(TagKey::new(tag))
+            .entry(tag)
             .or_default()
             .push(pending_order);
         self
