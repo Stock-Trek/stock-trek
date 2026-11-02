@@ -57,8 +57,8 @@ impl Algorithm for CostAveraging {
     }
     fn signals(&self, c: &SignalContext) -> StockTrekResult<Signals> {
         let mut signals = Signals::new();
-        signals.write(&self.key_order_quantity, ORDER_QUANTITY);
-        signals.write(&self.key_account, AccountId::new(CEX_ACCOUNT_ID));
+        signals.write(&self.key_order_quantity, ORDER_QUANTITY)?;
+        signals.write(&self.key_account, AccountId::new(CEX_ACCOUNT_ID))?;
 
         let cheapest_market = c
             .cex_markets_for(AssetId::Bitcoin, AssetId::TetherUSD)
@@ -69,9 +69,9 @@ impl Algorithm for CostAveraging {
             .min_by(|(_, a_price), (_, b_price)| a_price.total_cmp(b_price));
 
         if let Some((cheapest_cex, cheapest_ask)) = cheapest_market {
-            signals.write(&self.key_cex, cheapest_cex);
-            signals.write(&self.key_market_exists, true);
-            signals.write(&self.key_cheapest_price, cheapest_ask);
+            signals.write(&self.key_cex, cheapest_cex)?;
+            signals.write(&self.key_market_exists, true)?;
+            signals.write(&self.key_cheapest_price, cheapest_ask)?;
         }
         Ok(signals)
     }
