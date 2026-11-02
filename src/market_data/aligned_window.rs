@@ -288,13 +288,6 @@ impl AlignedWindow {
     /// return an upper bound based on the longest possible month or year.
     pub fn millis_upper_bound(&self) -> Option<u64> {
         match self {
-            AlignedWindow::Months1 => Some(MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Months2 => Some(2 * MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Months3 => Some(3 * MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Months4 => Some(4 * MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Months6 => Some(6 * MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Years1 => Some(MILLIS_PER_YEAR_UPPER_BOUND),
-            AlignedWindow::Years2 => Some(2 * MILLIS_PER_YEAR_UPPER_BOUND),
             AlignedWindow::Seconds1
             | AlignedWindow::Seconds5
             | AlignedWindow::Seconds10
@@ -318,6 +311,13 @@ impl AlignedWindow {
             | AlignedWindow::Weeks1
             | AlignedWindow::Weeks2
             | AlignedWindow::Weeks4 => self.millis_exact(),
+            AlignedWindow::Months1 => Some(MILLIS_PER_MONTH_UPPER_BOUND),
+            AlignedWindow::Months2 => Some(2 * MILLIS_PER_MONTH_UPPER_BOUND),
+            AlignedWindow::Months3 => Some(3 * MILLIS_PER_MONTH_UPPER_BOUND),
+            AlignedWindow::Months4 => Some(4 * MILLIS_PER_MONTH_UPPER_BOUND),
+            AlignedWindow::Months6 => Some(6 * MILLIS_PER_MONTH_UPPER_BOUND),
+            AlignedWindow::Years1 => Some(MILLIS_PER_YEAR_UPPER_BOUND),
+            AlignedWindow::Years2 => Some(2 * MILLIS_PER_YEAR_UPPER_BOUND),
         }
     }
 }
