@@ -1,18 +1,12 @@
+use super::CexAccountPortfolio;
 use crate::pending_order::PendingOrder;
 use std::collections::{BTreeMap, HashMap};
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId, tag::Tag};
 
-mod cex_account_portfolio;
-mod portfolio_builder;
-mod reservation;
-
-pub use cex_account_portfolio::CexAccountPortfolio;
-pub use portfolio_builder::PortfolioBuilder;
-
 /// A snapshot of asset balances and pending orders across CEX accounts.
 #[derive(Debug, Clone, Default)]
 pub struct Portfolio {
-    portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
+    pub(super) portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
 }
 
 impl Portfolio {
@@ -178,6 +172,3 @@ impl Portfolio {
             .sum()
     }
 }
-
-#[cfg(test)]
-mod tests;
