@@ -32,25 +32,25 @@ impl MarketAlignedWindow {
         self.candles.get(&window).map(Vec::as_slice)
     }
     pub fn opens(&self, window: AlignedWindow) -> Option<Vec<f64>> {
-        self.values(window, |ohlcv| ohlcv.open)
+        self.values(window, MarketOhlcv::open)
     }
     pub fn highs(&self, window: AlignedWindow) -> Option<Vec<f64>> {
-        self.values(window, |ohlcv| ohlcv.high)
+        self.values(window, MarketOhlcv::high)
     }
     pub fn lows(&self, window: AlignedWindow) -> Option<Vec<f64>> {
-        self.values(window, |ohlcv| ohlcv.low)
+        self.values(window, MarketOhlcv::low)
     }
     pub fn closes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
-        self.values(window, |ohlcv| ohlcv.close)
+        self.values(window, MarketOhlcv::close)
     }
     pub fn volumes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
-        self.values(window, |ohlcv| ohlcv.volume)
+        self.values(window, MarketOhlcv::volume)
     }
     pub fn quote_volumes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
-        self.values(window, |ohlcv| ohlcv.quote_volume)
+        self.values(window, MarketOhlcv::quote_volume)
     }
     pub fn vwaps(&self, window: AlignedWindow) -> Option<Vec<f64>> {
-        self.values(window, |ohlcv| ohlcv.vwap)
+        self.values(window, MarketOhlcv::vwap)
     }
 
     fn values(

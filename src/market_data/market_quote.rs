@@ -7,14 +7,28 @@ pub type PriceQuantity = (f64, f64);
 pub type TimedPriceQuantity = (TimestampMillis, f64, f64);
 
 /// A price and quantity quote from a market.
-#[allow(missing_docs)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketQuote {
-    pub price: f64,
-    pub quantity: f64,
+    price: f64,
+    quantity: f64,
 }
 
 impl MarketQuote {
+    /// Creates a quote from its price and quantity.
+    pub fn new(price: f64, quantity: f64) -> Self {
+        Self { price, quantity }
+    }
+
+    /// Returns the quoted price.
+    pub fn price(&self) -> f64 {
+        self.price
+    }
+
+    /// Returns the quoted quantity.
+    pub fn quantity(&self) -> f64 {
+        self.quantity
+    }
+
     /// Converts the quote to a price/quantity pair.
     pub fn to_price_quantity(&self) -> PriceQuantity {
         (self.price, self.quantity)

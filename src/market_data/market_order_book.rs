@@ -17,8 +17,8 @@ impl MarketOrderBook {
     /// Bids are sorted from highest to lowest price and asks from lowest to
     /// highest price.
     pub fn new(mut bids: Vec<MarketQuote>, mut asks: Vec<MarketQuote>) -> Self {
-        bids.sort_by(|a, b| b.price.total_cmp(&a.price));
-        asks.sort_by(|a, b| a.price.total_cmp(&b.price));
+        bids.sort_by(|a, b| b.price().total_cmp(&a.price()));
+        asks.sort_by(|a, b| a.price().total_cmp(&b.price()));
         Self { bids, asks }
     }
     /// Returns bids ordered from highest to lowest price.
@@ -65,14 +65,8 @@ mod tests {
 
     fn order_book() -> MarketOrderBook {
         MarketOrderBook::new(
-            vec![MarketQuote {
-                price: 100.0,
-                quantity: 1.5,
-            }],
-            vec![MarketQuote {
-                price: 101.0,
-                quantity: 2.5,
-            }],
+            vec![MarketQuote::new(100.0, 1.5)],
+            vec![MarketQuote::new(101.0, 2.5)],
         )
     }
 
@@ -80,32 +74,14 @@ mod tests {
     fn bids_and_asks_are_sorted_by_price() {
         let order_book = MarketOrderBook::new(
             vec![
-                MarketQuote {
-                    price: 99.0,
-                    quantity: 1.0,
-                },
-                MarketQuote {
-                    price: 101.0,
-                    quantity: 2.0,
-                },
-                MarketQuote {
-                    price: 100.0,
-                    quantity: 3.0,
-                },
+                MarketQuote::new(99.0, 1.0),
+                MarketQuote::new(101.0, 2.0),
+                MarketQuote::new(100.0, 3.0),
             ],
             vec![
-                MarketQuote {
-                    price: 103.0,
-                    quantity: 1.0,
-                },
-                MarketQuote {
-                    price: 102.0,
-                    quantity: 2.0,
-                },
-                MarketQuote {
-                    price: 104.0,
-                    quantity: 3.0,
-                },
+                MarketQuote::new(103.0, 1.0),
+                MarketQuote::new(102.0, 2.0),
+                MarketQuote::new(104.0, 3.0),
             ],
         );
 
@@ -126,11 +102,11 @@ mod tests {
         let deserialized: MarketOrderBook = serde_json::from_str(&json).unwrap();
 
         assert_eq!(deserialized.bids.len(), 1);
-        assert_eq!(deserialized.bids[0].price, 100.0);
-        assert_eq!(deserialized.bids[0].quantity, 1.5);
+        assert_eq!(deserialized.bids[0].price(), 100.0);
+        assert_eq!(deserialized.bids[0].quantity(), 1.5);
         assert_eq!(deserialized.asks.len(), 1);
-        assert_eq!(deserialized.asks[0].price, 101.0);
-        assert_eq!(deserialized.asks[0].quantity, 2.5);
+        assert_eq!(deserialized.asks[0].price(), 101.0);
+        assert_eq!(deserialized.asks[0].quantity(), 2.5);
         assert_eq!(deserialized.bid_price_quantities(), vec![(100.0, 1.5)]);
         assert_eq!(deserialized.ask_price_quantities(), vec![(101.0, 2.5)]);
     }

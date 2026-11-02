@@ -34,13 +34,13 @@ impl MarketRollingWindow {
     pub fn ohlcv(&self, window: RollingWindow) -> Option<Ohlcv> {
         let ohlcv = self.candles.get(&window)?.ohlcv();
         Some((
-            ohlcv.open,
-            ohlcv.high,
-            ohlcv.low,
-            ohlcv.close,
-            ohlcv.volume,
-            ohlcv.quote_volume,
-            ohlcv.vwap,
+            ohlcv.open(),
+            ohlcv.high(),
+            ohlcv.low(),
+            ohlcv.close(),
+            ohlcv.volume(),
+            ohlcv.quote_volume(),
+            ohlcv.vwap(),
         ))
     }
 

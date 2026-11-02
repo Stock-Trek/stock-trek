@@ -18,7 +18,7 @@ impl MarketTicks {
     ///
     /// Ticks are sorted into chronological order.
     pub fn new(mut ticks: Vec<MarketTick>) -> Self {
-        ticks.sort_by_key(|tick| tick.timestamp_millis);
+        ticks.sort_by_key(|tick| tick.timestamp_millis());
         Self { ticks }
     }
     /// Returns all ticks in chronological order.
@@ -31,15 +31,15 @@ impl MarketTicks {
     }
     /// Returns `(timestamp, price, quantity)` for each tick's best bid.
     pub fn bid_timed_price_quantities(&self) -> Vec<TimedPriceQuantity> {
-        self.values(|tick| &tick.bid)
+        self.values(MarketTick::bid)
     }
     /// Returns `(timestamp, price, quantity)` for each tick's best ask.
     pub fn ask_timed_price_quantities(&self) -> Vec<TimedPriceQuantity> {
-        self.values(|tick| &tick.ask)
+        self.values(MarketTick::ask)
     }
     /// Returns `(timestamp, price, quantity)` for each tick's last trade.
     pub fn last_timed_price_quantities(&self) -> Vec<TimedPriceQuantity> {
-        self.values(|tick| &tick.last)
+        self.values(MarketTick::last)
     }
 
     fn values(&self, to_quote: impl Fn(&MarketTick) -> &MarketQuote) -> Vec<TimedPriceQuantity> {
@@ -53,7 +53,7 @@ impl MarketTicks {
         tick: &MarketTick,
         to_quote: impl Fn(&MarketTick) -> &MarketQuote,
     ) -> TimedPriceQuantity {
-        let timestamp = tick.timestamp_millis;
+        let timestamp = tick.timestamp_millis();
         let quote = to_quote(tick);
         quote.to_timed_price_quantity(timestamp)
     }
@@ -84,21 +84,12 @@ mod tests {
     }
 
     fn tick_with_timestamp(timestamp_millis: u64, price: f64) -> MarketTick {
-        MarketTick {
-            timestamp_millis: TimestampMillis::new(timestamp_millis),
-            bid: MarketQuote {
-                price,
-                quantity: 2.0,
-            },
-            ask: MarketQuote {
-                price: price + 1.0,
-                quantity: 3.0,
-            },
-            last: MarketQuote {
-                price: price + 0.5,
-                quantity: 4.0,
-            },
-        }
+        MarketTick::new(
+            TimestampMillis::new(timestamp_millis),
+            MarketQuote::new(price, 2.0),
+            MarketQuote::new(price + 1.0, 3.0),
+            MarketQuote::new(price + 0.5, 4.0),
+        )
     }
 
     #[test]
