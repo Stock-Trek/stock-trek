@@ -77,6 +77,7 @@ impl<'de> Deserialize<'de> for MarketTicks {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::market_data::timestamp::TimestampMillis;
 
     fn tick(price: f64) -> MarketTick {
         tick_with_timestamp(1, price)
@@ -84,7 +85,7 @@ mod tests {
 
     fn tick_with_timestamp(timestamp_millis: u64, price: f64) -> MarketTick {
         MarketTick {
-            timestamp_millis,
+            timestamp_millis: TimestampMillis::new(timestamp_millis),
             bid: MarketQuote {
                 price,
                 quantity: 2.0,
@@ -110,7 +111,11 @@ mod tests {
 
         assert_eq!(
             ticks.bid_timed_price_quantities(),
-            vec![(1, 100.0, 2.0), (2, 101.0, 2.0), (3, 103.0, 2.0)]
+            vec![
+                (TimestampMillis::new(1), 100.0, 2.0),
+                (TimestampMillis::new(2), 101.0, 2.0),
+                (TimestampMillis::new(3), 103.0, 2.0)
+            ]
         );
     }
 
@@ -122,7 +127,7 @@ mod tests {
 
         assert_eq!(
             deserialized.bid_timed_price_quantities(),
-            vec![(1, 100.0, 2.0)]
+            vec![(TimestampMillis::new(1), 100.0, 2.0)]
         );
     }
 
@@ -148,7 +153,10 @@ mod tests {
 
         assert_eq!(
             deserialized.bid_timed_price_quantities(),
-            vec![(1, 100.0, 2.0), (3, 103.0, 2.0)]
+            vec![
+                (TimestampMillis::new(1), 100.0, 2.0),
+                (TimestampMillis::new(3), 103.0, 2.0)
+            ]
         );
     }
 }

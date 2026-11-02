@@ -86,6 +86,7 @@ impl<'de> Deserialize<'de> for MarketAlignedWindow {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::market_data::timestamp::TimestampMillis;
 
     fn candle() -> MarketCandle {
         candle_at(0, 1.0)
@@ -93,9 +94,9 @@ mod tests {
 
     fn candle_at(start_time_millis_inc: u64, open: f64) -> MarketCandle {
         MarketCandle::new(
-            start_time_millis_inc,
-            start_time_millis_inc + 1,
-            1,
+            TimestampMillis::new(start_time_millis_inc),
+            TimestampMillis::new(start_time_millis_inc + 1),
+            TimestampMillis::new(1),
             true,
             MarketOhlcv::new(open, open + 1.0, open - 0.5, open + 0.5, 10.0, 15.0, 1.4),
             3,

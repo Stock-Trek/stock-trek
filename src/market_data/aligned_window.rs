@@ -105,13 +105,17 @@ impl AlignedWindow {
         timestamp: TimestampMillis,
         exact_millis: u64,
     ) -> StockTrekResult<AlignedTimestampBounds> {
-        let lower_millis = timestamp.div_euclid(exact_millis) * exact_millis;
+        let timestamp_millis = timestamp.as_millis();
+        let lower_millis = timestamp_millis.div_euclid(exact_millis) * exact_millis;
         let upper_millis = lower_millis.checked_add(exact_millis).ok_or_else(|| {
             Self::bounds_error(format!(
                 "upper bound for timestamp {timestamp} could not be represented"
             ))
         })?;
-        Ok(AlignedTimestampBounds::new(lower_millis, upper_millis))
+        Ok(AlignedTimestampBounds::new(
+            TimestampMillis::new(lower_millis),
+            TimestampMillis::new(upper_millis),
+        ))
     }
 
     fn calendar_bounds(
@@ -119,7 +123,7 @@ impl AlignedWindow {
         timestamp: TimestampMillis,
         exact_months: u32,
     ) -> StockTrekResult<AlignedTimestampBounds> {
-        let timestamp_i64 = i64::try_from(timestamp).map_err(|_| {
+        let timestamp_i64 = i64::try_from(timestamp.as_millis()).map_err(|_| {
             Self::bounds_error(format!(
                 "timestamp {timestamp} is not representable as a UTC date"
             ))

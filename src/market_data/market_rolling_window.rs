@@ -55,12 +55,13 @@ impl MarketRollingWindow {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::market_data::timestamp::TimestampMillis;
 
     fn candle() -> MarketCandle {
         MarketCandle::new(
-            0,
-            1,
-            1,
+            TimestampMillis::new(0),
+            TimestampMillis::new(1),
+            TimestampMillis::new(1),
             true,
             MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4),
             3,
