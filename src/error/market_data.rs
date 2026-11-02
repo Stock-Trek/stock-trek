@@ -2,6 +2,7 @@ use std::fmt;
 
 /// Errors produced while working with market data.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum MarketDataError {
     /// A market-data value was outside the domain of the operation.
     DomainError {

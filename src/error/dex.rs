@@ -2,6 +2,7 @@ use std::fmt;
 
 /// Errors produced while working with decentralised exchange types.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum DexError {
     /// A blockchain address format was not a valid regular expression.
     InvalidAddressFormat {

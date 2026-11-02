@@ -8,6 +8,7 @@ pub type StockTrekResult<T> = Result<T, StockTrekError>;
 
 /// Errors returned by stock-trek operations.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum StockTrekError {
     /// A DEX error.
     Dex(DexError),
