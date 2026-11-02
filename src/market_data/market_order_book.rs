@@ -1,6 +1,6 @@
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
-    market_data::market_quote::{MarketQuote, PriceQuantity},
+    market_data::market_quote::MarketQuote,
 };
 use serde::{Deserialize, Serialize};
 
@@ -45,18 +45,6 @@ impl MarketOrderBook {
     pub fn asks(&self) -> &[MarketQuote] {
         &self.asks
     }
-    /// Returns bids as `(price, quantity)` pairs.
-    pub fn bid_price_quantities(&self) -> Vec<PriceQuantity> {
-        Self::to_price_quantities(&self.bids)
-    }
-    /// Returns asks as `(price, quantity)` pairs.
-    pub fn ask_price_quantities(&self) -> Vec<PriceQuantity> {
-        Self::to_price_quantities(&self.asks)
-    }
-
-    fn to_price_quantities(vec: &[MarketQuote]) -> Vec<PriceQuantity> {
-        vec.iter().map(|quote| quote.to_price_quantity()).collect()
-    }
 }
 
 #[derive(Deserialize)]
@@ -85,6 +73,10 @@ mod tests {
         .unwrap()
     }
 
+    fn quote(price: f64, quantity: f64) -> MarketQuote {
+        MarketQuote::new(price, quantity).unwrap()
+    }
+
     #[test]
     fn bids_and_asks_are_sorted_by_price() {
         let order_book = MarketOrderBook::new(
@@ -102,12 +94,12 @@ mod tests {
         .unwrap();
 
         assert_eq!(
-            order_book.bid_price_quantities(),
-            vec![(101.0, 2.0), (100.0, 3.0), (99.0, 1.0)]
+            order_book.bids(),
+            [quote(101.0, 2.0), quote(100.0, 3.0), quote(99.0, 1.0)]
         );
         assert_eq!(
-            order_book.ask_price_quantities(),
-            vec![(102.0, 2.0), (103.0, 1.0), (104.0, 3.0)]
+            order_book.asks(),
+            [quote(102.0, 2.0), quote(103.0, 1.0), quote(104.0, 3.0)]
         );
     }
 
@@ -123,8 +115,8 @@ mod tests {
         assert_eq!(deserialized.asks.len(), 1);
         assert_eq!(deserialized.asks[0].price(), 101.0);
         assert_eq!(deserialized.asks[0].quantity(), 2.5);
-        assert_eq!(deserialized.bid_price_quantities(), vec![(100.0, 1.5)]);
-        assert_eq!(deserialized.ask_price_quantities(), vec![(101.0, 2.5)]);
+        assert_eq!(deserialized.bids, [quote(100.0, 1.5)]);
+        assert_eq!(deserialized.asks, [quote(101.0, 2.5)]);
     }
 
     #[test]
@@ -135,14 +127,8 @@ mod tests {
         }"#;
         let deserialized: MarketOrderBook = serde_json::from_str(json).unwrap();
 
-        assert_eq!(
-            deserialized.bid_price_quantities(),
-            vec![(101.0, 2.0), (99.0, 1.0)]
-        );
-        assert_eq!(
-            deserialized.ask_price_quantities(),
-            vec![(102.0, 2.0), (103.0, 1.0)]
-        );
+        assert_eq!(deserialized.bids(), [quote(101.0, 2.0), quote(99.0, 1.0)]);
+        assert_eq!(deserialized.asks(), [quote(102.0, 2.0), quote(103.0, 1.0)]);
     }
 
     #[test]

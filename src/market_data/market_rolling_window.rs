@@ -4,9 +4,6 @@ use crate::market_data::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// An OHLCV tuple: open, high, low, close, volume, quote volume, and VWAP.
-pub type Ohlcv = (f64, f64, f64, f64, f64, f64, f64);
-
 /// Candles for fixed-length rolling windows.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketRollingWindow {
@@ -29,26 +26,9 @@ impl MarketRollingWindow {
         &self.candles
     }
 
-    /// Returns `(open, high, low, close, volume, quote volume, VWAP)` for a
-    /// rolling window, if present.
-    pub fn ohlcv(&self, window: RollingWindow) -> Option<Ohlcv> {
-        let ohlcv = self.candles.get(&window)?.ohlcv();
-        Some((
-            ohlcv.open(),
-            ohlcv.high(),
-            ohlcv.low(),
-            ohlcv.close(),
-            ohlcv.volume(),
-            ohlcv.quote_volume(),
-            ohlcv.vwap(),
-        ))
-    }
-
-    /// Returns the OHLCV values as a [`MarketOhlcv`] struct, if present.
-    pub fn ohlcv_struct(&self, window: RollingWindow) -> Option<MarketOhlcv> {
-        self.candles
-            .get(&window)
-            .map(|candle| candle.ohlcv().clone())
+    /// Returns the OHLCV values for a rolling window, if present.
+    pub fn ohlcv(&self, window: RollingWindow) -> Option<&MarketOhlcv> {
+        self.candles.get(&window).map(MarketCandle::ohlcv)
     }
 }
 
@@ -77,11 +57,7 @@ mod tests {
 
         assert_eq!(
             deserialized.ohlcv(RollingWindow::Minutes1),
-            Some((1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4))
-        );
-        assert_eq!(
-            deserialized.ohlcv_struct(RollingWindow::Minutes1),
-            Some(MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap())
+            Some(&MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap())
         );
     }
 }
