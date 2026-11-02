@@ -11,13 +11,6 @@ pub enum StatsError {
         /// Details about the failed operation.
         detail: String,
     },
-    /// An input was outside the domain of the operation.
-    DomainError {
-        /// The function that produced the error.
-        function: &'static str,
-        /// Details about the failed operation.
-        message: String,
-    },
     /// Two values could not be compared.
     IncomparableValues {
         /// The left-hand value.
@@ -32,9 +25,6 @@ impl fmt::Display for StatsError {
         match self {
             StatsError::DivisionByZero { function, detail } => {
                 write!(f, "Division by zero in '{}': {}", function, detail)
-            }
-            StatsError::DomainError { function, message } => {
-                write!(f, "Domain error in '{}': {}", function, message)
             }
             StatsError::IncomparableValues { left, right } => {
                 write!(f, "Incomparable values {} and {} (NaN?)", left, right)

@@ -272,6 +272,6 @@ impl NumberValue {
         field: &'static str,
         value: f64,
     ) -> StockTrekResult<f64> {
-        Validation::Stats.finite(function, field, value)
+        Validation::finite(function, field, value)
     }
 }

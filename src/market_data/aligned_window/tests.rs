@@ -276,9 +276,7 @@ fn timestamp_bounds_reject_lower_above_upper() {
 
     assert!(matches!(
         result,
-        Err(StockTrekError::MarketData(
-            MarketDataError::DomainError { .. }
-        ))
+        Err(StockTrekError::Domain(_))
     ));
 }
 

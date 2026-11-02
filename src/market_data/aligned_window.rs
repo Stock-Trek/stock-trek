@@ -1,9 +1,7 @@
 use crate::{
-    error::{
-        market_data::MarketDataError,
-        result::{StockTrekError, StockTrekResult},
-    },
+    error::result::{StockTrekError, StockTrekResult},
     market_data::{millis::*, timestamp::TimestampMillis, window_label::window_label_funcs},
+    validation::Validation,
 };
 use serde::{Deserialize, Serialize};
 use strum::{EnumCount, EnumIter, FromRepr};
@@ -122,10 +120,7 @@ impl AlignedTimestampBounds {
     }
 
     fn error(message: String) -> StockTrekError {
-        StockTrekError::MarketData(MarketDataError::DomainError {
-            function: "AlignedTimestampBounds::new",
-            message,
-        })
+        Validation::error("AlignedTimestampBounds::new", message)
     }
 }
 
@@ -183,10 +178,7 @@ impl AlignedWindow {
     }
 
     fn bounds_error(message: String) -> StockTrekError {
-        StockTrekError::MarketData(MarketDataError::DomainError {
-            function: "AlignedWindow::bounds_for",
-            message,
-        })
+        Validation::error("AlignedWindow::bounds_for", message)
     }
 
     /// Returns the exact window length in milliseconds for fixed-length windows.

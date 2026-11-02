@@ -28,7 +28,7 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
                     quote: quote.asset_id(c)?,
                     side: *side,
                     activation: activation.try_resolve(c)?,
-                    limit_price: Validation::Stats.positive(
+                    limit_price: Validation::positive(
                         "OrderRequest::Limit",
                         "limit price",
                         limit_price.number(c)?,
@@ -50,7 +50,7 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
                     base: base.asset_id(c)?,
                     quote: quote.asset_id(c)?,
                     activation: activation.try_resolve(c)?,
-                    quote_quantity: Validation::Stats.positive(
+                    quote_quantity: Validation::positive(
                         "OrderRequest::MarketBuy",
                         "quote quantity",
                         quote_quantity.number(c)?,
@@ -70,7 +70,7 @@ impl Resolvable<OrderRequest<AssetId, f64>> for OrderRequest<AssetIdValue, Numbe
                     base: base.asset_id(c)?,
                     quote: quote.asset_id(c)?,
                     activation: activation.try_resolve(c)?,
-                    base_quantity: Validation::Stats.positive(
+                    base_quantity: Validation::positive(
                         "OrderRequest::MarketSell",
                         "base quantity",
                         base_quantity.number(c)?,

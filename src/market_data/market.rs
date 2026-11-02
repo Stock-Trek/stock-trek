@@ -35,9 +35,9 @@ impl Market {
         quote_increment: f64,
         minimum_notional: f64,
     ) -> StockTrekResult<()> {
-        Validation::MarketData.positive(function, "base increment", base_increment)?;
-        Validation::MarketData.positive(function, "quote increment", quote_increment)?;
-        Validation::MarketData.non_negative(function, "minimum notional", minimum_notional)?;
+        Validation::positive(function, "base increment", base_increment)?;
+        Validation::positive(function, "quote increment", quote_increment)?;
+        Validation::non_negative(function, "minimum notional", minimum_notional)?;
         Ok(())
     }
 

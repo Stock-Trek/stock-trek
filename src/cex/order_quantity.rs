@@ -7,12 +7,12 @@ use stock_trek_types::cex::quantity::Quantity;
 impl Resolvable<Quantity<f64>> for Quantity<NumberValue> {
     fn try_resolve(&self, context: &ResolvedContext) -> StockTrekResult<Quantity<f64>> {
         match self {
-            Quantity::OfBase(q) => Ok(Quantity::OfBase(Validation::Stats.positive(
+            Quantity::OfBase(q) => Ok(Quantity::OfBase(Validation::positive(
                 "Quantity::OfBase",
                 "base quantity",
                 q.number(context)?,
             )?)),
-            Quantity::OfQuote(q) => Ok(Quantity::OfQuote(Validation::Stats.positive(
+            Quantity::OfQuote(q) => Ok(Quantity::OfQuote(Validation::positive(
                 "Quantity::OfQuote",
                 "quote quantity",
                 q.number(context)?,

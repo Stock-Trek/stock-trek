@@ -194,7 +194,7 @@ impl CexAccountPortfolio {
         pending_orders: HashMap<Tag, Vec<PendingOrder>>,
     ) -> StockTrekResult<Self> {
         for count in asset_counts.values() {
-            Validation::Stats.non_negative("CexAccountPortfolio::new", "asset balance", *count)?;
+            Validation::non_negative("CexAccountPortfolio::new", "asset balance", *count)?;
         }
         let asset_counts = asset_counts.into_iter().collect();
         let pending_orders = pending_orders.into_iter().collect();
@@ -261,7 +261,7 @@ impl PortfolioBuilder {
         count: f64,
     ) -> &mut Self {
         if let Err(error) =
-            Validation::Stats.non_negative("PortfolioBuilder::asset_count", "asset count", count)
+            Validation::non_negative("PortfolioBuilder::asset_count", "asset count", count)
         {
             self.record_error(error);
             return self;

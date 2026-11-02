@@ -65,23 +65,25 @@ impl MarketOhlcv {
             ("close", close),
             ("vwap", vwap),
         ] {
-            Validation::MarketData.non_negative(function, field, value)?;
+            Validation::non_negative(function, field, value)?;
         }
-        Validation::MarketData.non_negative(function, "volume", volume)?;
-        Validation::MarketData.non_negative(function, "quote volume", quote_volume)?;
+        Validation::non_negative(function, "volume", volume)?;
+        Validation::non_negative(function, "quote volume", quote_volume)?;
 
         if high < low {
-            return Err(Validation::MarketData
-                .error(function, format!("high {high} must not be below low {low}")));
+            return Err(Validation::error(
+                function,
+                format!("high {high} must not be below low {low}"),
+            ));
         }
         if open < low || open > high {
-            return Err(Validation::MarketData.error(
+            return Err(Validation::error(
                 function,
                 format!("open {open} must be between low {low} and high {high}"),
             ));
         }
         if close < low || close > high {
-            return Err(Validation::MarketData.error(
+            return Err(Validation::error(
                 function,
                 format!("close {close} must be between low {low} and high {high}"),
             ));

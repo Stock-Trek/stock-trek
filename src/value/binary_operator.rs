@@ -1,5 +1,6 @@
 use super::operator_error::{OperatorError, domain_check};
 use crate::error::result::StockTrekResult;
+use crate::validation::Validation;
 use serde::{Deserialize, Serialize};
 use strum::{Display, IntoStaticStr};
 
@@ -33,8 +34,8 @@ impl BinaryOperator {
     /// Applies the operator to `left` and `right`.
     pub fn calculate(self, left: f64, right: f64) -> StockTrekResult<f64> {
         let function: &'static str = self.into();
-        OperatorError::check_finite(function, "left operand", left)?;
-        OperatorError::check_finite(function, "right operand", right)?;
+        Validation::finite(function, "left operand", left)?;
+        Validation::finite(function, "right operand", right)?;
 
         let calculation_result = match self {
             BinaryOperator::Add => left + right,
@@ -87,7 +88,7 @@ impl BinaryOperator {
             BinaryOperator::Mul => left * right,
             BinaryOperator::Sub => left - right,
         };
-        OperatorError::check_finite(function, "result", calculation_result)?;
+        Validation::finite(function, "result", calculation_result)?;
         Ok(calculation_result)
     }
 }

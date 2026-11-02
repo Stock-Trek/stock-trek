@@ -19,12 +19,12 @@ impl PendingOrder {
         filled_base_quantity: f64,
         filled_quote_quantity: f64,
     ) -> StockTrekResult<Self> {
-        Validation::Stats.non_negative(
+        Validation::non_negative(
             "PendingOrder::new",
             "filled base quantity",
             filled_base_quantity,
         )?;
-        Validation::Stats.non_negative(
+        Validation::non_negative(
             "PendingOrder::new",
             "filled quote quantity",
             filled_quote_quantity,
