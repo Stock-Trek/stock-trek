@@ -5,7 +5,7 @@ use crate::{
         market_aligned_window::MarketAlignedWindow,
         market_candle::MarketCandle,
         market_order_book::MarketOrderBook,
-        market_quote::{MarketQuote, PriceQuantity},
+        market_quote::{IntoMarketQuote, MarketQuote},
         market_rolling_window::MarketRollingWindow,
         market_tick::MarketTick,
         market_ticks::MarketTicks,
@@ -188,20 +188,23 @@ impl MarketBuilder {
         &self.order_book_asks
     }
 
-    /// Adds a market tick with the given bid, ask, and last price/quantity pairs.
+    /// Adds a market tick with the given bid, ask, and last quotes.
+    ///
+    /// Each quote may be provided as a validated [`MarketQuote`] or as a
+    /// `(price, quantity)` pair, which is validated before it is added.
     pub fn tick(
         mut self,
         timestamp_millis: TimestampMillis,
-        bid: PriceQuantity,
-        ask: PriceQuantity,
-        last: PriceQuantity,
+        bid: impl IntoMarketQuote,
+        ask: impl IntoMarketQuote,
+        last: impl IntoMarketQuote,
     ) -> Self {
-        let tick = MarketQuote::new(bid.0, bid.1).and_then(|bid| {
+        let tick = bid.into_market_quote().and_then(|bid| {
             Ok(MarketTick::new(
                 timestamp_millis,
                 bid,
-                MarketQuote::new(ask.0, ask.1)?,
-                MarketQuote::new(last.0, last.1)?,
+                ask.into_market_quote()?,
+                last.into_market_quote()?,
             ))
         });
         match tick {
@@ -334,6 +337,21 @@ mod tests {
         for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -1.0] {
             assert!(MarketBuilder::new(0.000_001, 0.01, value).build().is_err());
         }
+    }
+
+    #[test]
+    fn accepts_quotes_or_pairs_when_building_ticks() {
+        let market = MarketBuilder::new(0.000_001, 0.01, 1.0)
+            .tick(
+                TimestampMillis::new(1),
+                MarketQuote::new(100.0, 1.0).unwrap(),
+                (101.0, 2.0),
+                MarketQuote::new(100.5, 3.0).unwrap(),
+            )
+            .build()
+            .unwrap();
+
+        assert_eq!(market.ticks().ticks().len(), 1);
     }
 
     #[test]

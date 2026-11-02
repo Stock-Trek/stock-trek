@@ -1,6 +1,6 @@
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
-    market_data::market_quote::{MarketQuote, PriceQuantity},
+    market_data::market_quote::MarketQuote,
 };
 use serde::{Deserialize, Serialize};
 
@@ -45,17 +45,13 @@ impl MarketOrderBook {
     pub fn asks(&self) -> &[MarketQuote] {
         &self.asks
     }
-    /// Returns bids as `(price, quantity)` pairs.
-    pub fn bid_price_quantities(&self) -> Vec<PriceQuantity> {
-        Self::to_price_quantities(&self.bids)
+    /// Returns a copy of the bids ordered from highest to lowest price.
+    pub fn bid_price_quantities(&self) -> Vec<MarketQuote> {
+        self.bids.clone()
     }
-    /// Returns asks as `(price, quantity)` pairs.
-    pub fn ask_price_quantities(&self) -> Vec<PriceQuantity> {
-        Self::to_price_quantities(&self.asks)
-    }
-
-    fn to_price_quantities(vec: &[MarketQuote]) -> Vec<PriceQuantity> {
-        vec.iter().map(|quote| quote.to_price_quantity()).collect()
+    /// Returns a copy of the asks ordered from lowest to highest price.
+    pub fn ask_price_quantities(&self) -> Vec<MarketQuote> {
+        self.asks.clone()
     }
 }
 

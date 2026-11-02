@@ -73,14 +73,6 @@ impl ChainId {
     pub fn value(&self) -> u64 {
         self.0
     }
-
-    pub fn as_u64(&self) -> u64 {
-        self.0
-    }
-
-    pub fn into_inner(self) -> u64 {
-        self.0
-    }
 }
 
 impl std::fmt::Display for ChainId {
@@ -128,7 +120,7 @@ impl From<u64> for ChainId {
 
 impl From<ChainId> for u64 {
     fn from(value: ChainId) -> Self {
-        value.into_inner()
+        value.value()
     }
 }
 

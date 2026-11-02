@@ -163,6 +163,30 @@ impl TryFrom<MarketOhlcvData> for MarketOhlcv {
     }
 }
 
+impl PartialEq<(f64, f64, f64, f64, f64, f64, f64)> for MarketOhlcv {
+    fn eq(&self, other: &(f64, f64, f64, f64, f64, f64, f64)) -> bool {
+        self.open == other.0
+            && self.high == other.1
+            && self.low == other.2
+            && self.close == other.3
+            && self.volume == other.4
+            && self.quote_volume == other.5
+            && self.vwap == other.6
+    }
+}
+
+impl PartialEq<MarketOhlcv> for (f64, f64, f64, f64, f64, f64, f64) {
+    fn eq(&self, other: &MarketOhlcv) -> bool {
+        self.0 == other.open
+            && self.1 == other.high
+            && self.2 == other.low
+            && self.3 == other.close
+            && self.4 == other.volume
+            && self.5 == other.quote_volume
+            && self.6 == other.vwap
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
