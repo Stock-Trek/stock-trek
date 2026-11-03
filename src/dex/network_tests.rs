@@ -5,6 +5,28 @@ use crate::error::{result::StockTrekError, value::ValueError};
 use crate::error::dex::DexError;
 
 #[test]
+fn network_new_accepts_valid_ids_and_chain_ids() {
+    let network = Network::new(NetworkId::MAINNET, Some(ChainId::new(1))).unwrap();
+    assert_eq!(network.network_id(), &NetworkId::MAINNET);
+    assert_eq!(network.chain_id(), Some(ChainId::new(1)));
+
+    let network = Network::new(NetworkId::new("sepolia").unwrap(), None).unwrap();
+    assert_eq!(network.network_id(), &NetworkId::new("sepolia").unwrap());
+    assert_eq!(network.chain_id(), None);
+}
+
+#[test]
+fn network_deserialization_rejects_invalid_network_ids() {
+    for network_id in ["", " ", "\t\n"] {
+        let json = serde_json::json!({
+            "network_id": network_id,
+            "chain_id": 1
+        });
+        assert!(serde_json::from_value::<Network>(json).is_err());
+    }
+}
+
+#[test]
 fn network_id_round_trips_through_strings() {
     for network_id in [
         NetworkId::MAINNET,

@@ -88,7 +88,7 @@ macro_rules! define_network {
                     $native_decimals,
                     $address_format,
                 )?;
-                let network = Network::new(NetworkId::try_from(network)?, None);
+                let network = Network::new(NetworkId::try_from(network)?, None)?;
                 crate::dex::asset_on_chain::AssetOnChain::new(blockchain, network, asset_kind)
             }
         }

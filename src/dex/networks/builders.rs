@@ -40,7 +40,7 @@ impl AssetOnChain {
     ) -> StockTrekResult<Self> {
         let blockchain = Blockchain::evm(blockchain_name)?;
         let network_id = network.try_into()?;
-        let network = Network::new(network_id, Some(chain_id));
+        let network = Network::new(network_id, Some(chain_id))?;
         Self::new(blockchain, network, asset_kind)
     }
 }

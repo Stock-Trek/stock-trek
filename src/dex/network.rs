@@ -1,13 +1,22 @@
 //! Networks within a blockchain.
 
 use crate::dex::string_id::string_id_funcs;
-use crate::error::{result::StockTrekError, value::ValueError};
+use crate::error::{
+    result::{StockTrekError, StockTrekResult},
+    value::ValueError,
+};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
 /// A network on a blockchain.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Network {
+    network_id: NetworkId,
+    chain_id: Option<ChainId>,
+}
+
+#[derive(Deserialize)]
+struct NetworkRepr {
     network_id: NetworkId,
     chain_id: Option<ChainId>,
 }
@@ -65,11 +74,16 @@ impl FromStr for ChainId {
 impl Network {
     /// Creates a network from its identifier and, for EVM-family chains, its
     /// chain id.
-    pub fn new(network_id: NetworkId, chain_id: Option<ChainId>) -> Self {
-        Self {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the network identifier is invalid.
+    pub fn new(network_id: NetworkId, chain_id: Option<ChainId>) -> StockTrekResult<Self> {
+        NetworkId::validate(network_id.as_str())?;
+        Ok(Self {
             network_id,
             chain_id,
-        }
+        })
     }
 
     /// The identifier of the network.
@@ -80,5 +94,15 @@ impl Network {
     /// The chain id, present only for networks on EVM-family chains.
     pub fn chain_id(&self) -> Option<ChainId> {
         self.chain_id
+    }
+}
+
+impl<'de> Deserialize<'de> for Network {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let repr = NetworkRepr::deserialize(deserializer)?;
+        Self::new(repr.network_id, repr.chain_id).map_err(serde::de::Error::custom)
     }
 }
