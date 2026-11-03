@@ -170,7 +170,13 @@ pub mod prelude {
     pub use super::{
         Algorithm, Command, Preferences, RoundingStrategy, StrategyContext,
         actions::{ActionErrorCause, ActionErrorResponse, RecoveryPolicy},
+        conditions::{Condition, ConditionFactory, QuantityOf},
         errors::{DomainError, StatsError, StockTrekError, StockTrekResult, ValueError},
+        markets::{
+            AlignedTimestampBounds, AlignedWindow, Market, MarketAlignedWindow, MarketBuilder,
+            MarketCandle, MarketOhlcv, MarketOrderBook, MarketQuote, MarketRollingWindow,
+            MarketTick, MarketTicks, RollingWindow, TimedPriceQuantity, TimestampMillis, millis,
+        },
         pending_order::PendingOrder,
         portfolio::{CexAccountPortfolio, Portfolio},
         register_algorithm,
@@ -179,6 +185,11 @@ pub mod prelude {
         types::{
             AccountId, Activation, AssetId, CexId, CexPreferences, CexRoundingPreferences,
             Quantity, Side, Tag, TimeInForce,
+        },
+        values::{
+            AccountIdValue, AssetIdValue, BinaryOperator, CalculationValuesFactory, CexIdValue,
+            FlagValue, LiteralValuesFactory, NumberValue, PortfolioValuesFactory,
+            SignalValuesFactory, UnaryOperator,
         },
     };
 }
