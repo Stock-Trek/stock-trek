@@ -5,10 +5,10 @@ use common::window::{CheckedWindow, window_tests};
 use stock_trek::{
     errors::StockTrekError,
     markets::{
-        AlignedTimestampBounds, AlignedWindow, TimestampMillis,
+        AlignedTimestampBounds, AlignedWindow, TimestampMillis, WindowMillis,
         millis::{
-            MILLIS_PER_DAY, MILLIS_PER_HOUR, MILLIS_PER_MONTH_UPPER_BOUND, MILLIS_PER_WEEK,
-            MILLIS_PER_YEAR_UPPER_BOUND,
+            MILLIS_PER_DAY, MILLIS_PER_HOUR, MILLIS_PER_MONTH_UPPER_BOUND, MILLIS_PER_SECOND,
+            MILLIS_PER_WEEK, MILLIS_PER_YEAR_UPPER_BOUND,
         },
     },
 };
@@ -64,7 +64,7 @@ fn bounds_for_returns_containing_bounds() {
             assert!(timestamp < upper);
 
             if window.months_exact().is_none() {
-                let window_millis = window.millis_upper_bound().unwrap();
+                let window_millis = window.millis().upper_bound();
                 assert_eq!(upper.checked_sub(lower).unwrap().as_millis(), window_millis);
                 assert_eq!(lower.as_millis() % window_millis, 0);
             }
@@ -201,44 +201,47 @@ fn bounds_for_month_windows_handle_leap_years() {
 }
 
 #[test]
-fn millis_exact_returns_lengths_for_fixed_windows_only() {
-    assert_eq!(AlignedWindow::Seconds1.millis_exact(), Some(1_000));
-    assert_eq!(AlignedWindow::Minutes5.millis_exact(), Some(300_000));
+fn millis_returns_exact_for_fixed_windows_only() {
+    assert_eq!(AlignedWindow::Seconds1.millis(), WindowMillis::Exact(1_000));
     assert_eq!(
-        AlignedWindow::Days1.millis_exact(),
-        Some(24 * MILLIS_PER_HOUR)
+        AlignedWindow::Minutes5.millis(),
+        WindowMillis::Exact(300_000)
     );
     assert_eq!(
-        AlignedWindow::Weeks1.millis_exact(),
-        Some(7 * MILLIS_PER_DAY)
+        AlignedWindow::Days1.millis(),
+        WindowMillis::Exact(24 * MILLIS_PER_HOUR)
     );
     assert_eq!(
-        AlignedWindow::Weeks4.millis_exact(),
-        Some(4 * MILLIS_PER_WEEK)
+        AlignedWindow::Weeks1.millis(),
+        WindowMillis::Exact(7 * MILLIS_PER_DAY)
+    );
+    assert_eq!(
+        AlignedWindow::Weeks4.millis(),
+        WindowMillis::Exact(4 * MILLIS_PER_WEEK)
     );
 
     for window in AlignedWindow::iter().filter(|window| window.months_exact().is_some()) {
-        assert_eq!(window.millis_exact(), None);
+        assert_eq!(window.millis().exact(), None);
     }
 }
 
 #[test]
-fn millis_upper_falls_back_for_calendar_windows() {
+fn millis_upper_bound_falls_back_for_calendar_windows() {
     assert_eq!(
-        AlignedWindow::Seconds1.millis_upper_bound(),
-        AlignedWindow::Seconds1.millis_exact()
+        AlignedWindow::Seconds1.millis().upper_bound(),
+        MILLIS_PER_SECOND
     );
     assert_eq!(
-        AlignedWindow::Months1.millis_upper_bound(),
-        Some(MILLIS_PER_MONTH_UPPER_BOUND)
+        AlignedWindow::Months1.millis().upper_bound(),
+        MILLIS_PER_MONTH_UPPER_BOUND
     );
     assert_eq!(
-        AlignedWindow::Years2.millis_upper_bound(),
-        Some(2 * MILLIS_PER_YEAR_UPPER_BOUND)
+        AlignedWindow::Years2.millis().upper_bound(),
+        2 * MILLIS_PER_YEAR_UPPER_BOUND
     );
     assert_eq!(
-        AlignedWindow::Years1.millis_upper_bound(),
-        Some(MILLIS_PER_YEAR_UPPER_BOUND)
+        AlignedWindow::Years1.millis().upper_bound(),
+        MILLIS_PER_YEAR_UPPER_BOUND
     );
 }
 

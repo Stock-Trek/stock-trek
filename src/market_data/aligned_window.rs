@@ -110,7 +110,7 @@ impl AlignedWindow {
         &self,
         timestamp: TimestampMillis,
     ) -> StockTrekResult<AlignedTimestampBounds> {
-        if let Some(exact_millis) = self.millis_exact() {
+        if let Some(exact_millis) = self.millis().exact() {
             self.fixed_bounds(timestamp, exact_millis)
         } else if let Some(exact_months) = self.months_exact() {
             self.calendar_bounds(timestamp, exact_months)

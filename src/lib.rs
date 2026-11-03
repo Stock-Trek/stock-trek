@@ -95,6 +95,7 @@ pub mod errors {
 /// Market data types and time window helpers.
 pub mod markets {
     pub use crate::market_data::{
+        WindowMillis,
         aligned_window::{AlignedTimestampBounds, AlignedWindow},
         market::Market,
         market::MarketBuilder,
@@ -175,7 +176,8 @@ pub mod prelude {
         markets::{
             AlignedTimestampBounds, AlignedWindow, Market, MarketAlignedWindow, MarketBuilder,
             MarketCandle, MarketOhlcv, MarketOrderBook, MarketQuote, MarketRollingWindow,
-            MarketTick, MarketTicks, RollingWindow, TimedPriceQuantity, TimestampMillis, millis,
+            MarketTick, MarketTicks, RollingWindow, TimedPriceQuantity, TimestampMillis,
+            WindowMillis, millis,
         },
         pending_order::PendingOrder,
         portfolio::{CexAccountPortfolio, Portfolio},

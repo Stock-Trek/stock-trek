@@ -15,6 +15,8 @@ pub mod rolling_window;
 pub mod timestamp;
 mod window;
 
+pub use window::WindowMillis;
+
 #[cfg(test)]
 mod market_candle_tests;
 #[cfg(test)]

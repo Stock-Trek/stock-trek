@@ -2,6 +2,7 @@ use chrono::{Month, TimeZone, Utc};
 use std::collections::BTreeMap;
 use stock_trek::markets::{
     AlignedWindow, MarketAlignedWindow, MarketCandle, MarketOhlcv, RollingWindow, TimestampMillis,
+    WindowMillis,
 };
 
 fn millis_at(
@@ -668,7 +669,7 @@ fn every_aligned_constructor_covers_exactly_its_window() {
     for (market, window) in cases {
         let candles = market.candles_for(window).unwrap();
         assert_eq!(candles.len(), 1, "unexpected candles for {window}");
-        if let Some(exact_millis) = window.millis_exact() {
+        if let WindowMillis::Exact(exact_millis) = window.millis() {
             assert_eq!(
                 candles[0].duration_millis(),
                 exact_millis,
