@@ -193,65 +193,62 @@ impl MarketAlignedWindow {
     }
 
     aligned_window_constructor!(
-        /// Creates an aligned-window collection with candles for 1-second
-        /// windows.
+        /// Creates an aligned-window collection with candles for 1-second windows.
         seconds1, Seconds1, [year, month, day, hour, minute, second];
-        /// Creates an aligned-window collection with candles for 5-second
-        /// windows. The second must be a multiple of 5.
+        /// Creates an aligned-window collection with candles for 5-second windows.
+        /// The second must be a multiple of 5 between 0 and 55 inclusive.
         seconds5, Seconds5, [year, month, day, hour, minute, second];
-        /// Creates an aligned-window collection with candles for 10-second
-        /// windows. The second must be a multiple of 10.
+        /// Creates an aligned-window collection with candles for 10-second windows.
+        /// The second must be a multiple of 10 between 0 and 50 inclusive.
         seconds10, Seconds10, [year, month, day, hour, minute, second];
-        /// Creates an aligned-window collection with candles for 15-second
-        /// windows. The second must be 0, 15, 30, or 45.
+        /// Creates an aligned-window collection with candles for 15-second windows.
+        /// The second must be 0, 15, 30, or 45 inclusive.
         seconds15, Seconds15, [year, month, day, hour, minute, second];
-        /// Creates an aligned-window collection with candles for 30-second
-        /// windows. The second must be 0 or 30.
+        /// Creates an aligned-window collection with candles for 30-second windows.
+        /// The second must be 0 or 30.
         seconds30, Seconds30, [year, month, day, hour, minute, second];
     );
 
     aligned_window_constructor!(
-        /// Creates an aligned-window collection with candles for 1-minute
-        /// windows.
+        /// Creates an aligned-window collection with candles for 1-minute windows.
         minutes1, Minutes1, [year, month, day, hour, minute];
-        /// Creates an aligned-window collection with candles for 2-minute
-        /// windows. The minute must be even.
+        /// Creates an aligned-window collection with candles for 2-minute windows.
+        /// The minute must be even between 0 and 58 inclusive.
         minutes2, Minutes2, [year, month, day, hour, minute];
-        /// Creates an aligned-window collection with candles for 3-minute
-        /// windows. The minute must be a multiple of 3.
+        /// Creates an aligned-window collection with candles for 3-minute windows.
+        /// The minute must be a multiple of 3 between 0 and 57 inclusive.
         minutes3, Minutes3, [year, month, day, hour, minute];
-        /// Creates an aligned-window collection with candles for 5-minute
-        /// windows. The minute must be a multiple of 5.
+        /// Creates an aligned-window collection with candles for 5-minute windows.
+        /// The minute must be a multiple of 5 between 0 and 55 inclusive.
         minutes5, Minutes5, [year, month, day, hour, minute];
-        /// Creates an aligned-window collection with candles for 10-minute
-        /// windows. The minute must be a multiple of 10.
+        /// Creates an aligned-window collection with candles for 10-minute windows.
+        /// The minute must be a multiple of 10 between 0 and 50 inclusive.
         minutes10, Minutes10, [year, month, day, hour, minute];
-        /// Creates an aligned-window collection with candles for 15-minute
-        /// windows. The minute must be 0, 15, 30, or 45.
+        /// Creates an aligned-window collection with candles for 15-minute windows.
+        /// The minute must be 0, 15, 30, or 45.
         minutes15, Minutes15, [year, month, day, hour, minute];
-        /// Creates an aligned-window collection with candles for 30-minute
-        /// windows. The minute must be 0 or 30.
+        /// Creates an aligned-window collection with candles for 30-minute windows.
+        /// The minute must be 0 or 30.
         minutes30, Minutes30, [year, month, day, hour, minute];
     );
 
     aligned_window_constructor!(
-        /// Creates an aligned-window collection with candles for 1-hour
-        /// windows.
+        /// Creates an aligned-window collection with candles for 1-hour windows.
         hours1, Hours1, [year, month, day, hour];
-        /// Creates an aligned-window collection with candles for 2-hour
-        /// windows. The hour must be even.
+        /// Creates an aligned-window collection with candles for 2-hour windows.
+        /// The hour must be even between 0 and 22 inclusive.
         hours2, Hours2, [year, month, day, hour];
-        /// Creates an aligned-window collection with candles for 3-hour
-        /// windows. The hour must be a multiple of 3.
+        /// Creates an aligned-window collection with candles for 3-hour windows.
+        /// The hour must be a multiple of 3 between 0 and 21 inclusive.
         hours3, Hours3, [year, month, day, hour];
-        /// Creates an aligned-window collection with candles for 4-hour
-        /// windows. The hour must be a multiple of 4.
+        /// Creates an aligned-window collection with candles for 4-hour windows.
+        /// The hour must be a multiple of 4 between 0 and 20 inclusive.
         hours4, Hours4, [year, month, day, hour];
-        /// Creates an aligned-window collection with candles for 6-hour
-        /// windows. The hour must be a multiple of 6.
+        /// Creates an aligned-window collection with candles for 6-hour windows.
+        /// The hour must be a multiple of 6 between 0 and 18 inclusive.
         hours6, Hours6, [year, month, day, hour];
-        /// Creates an aligned-window collection with candles for 8-hour
-        /// windows. The hour must be a multiple of 8.
+        /// Creates an aligned-window collection with candles for 8-hour windows.
+        /// The hour must be a multiple of 8 between 0 and 16 inclusive.
         hours8, Hours8, [year, month, day, hour];
         /// Creates an aligned-window collection with candles for 12-hour
         /// windows. The hour must be 0 or 12.
@@ -259,55 +256,48 @@ impl MarketAlignedWindow {
     );
 
     aligned_window_constructor!(
-        /// Creates an aligned-window collection with candles for 1-day
-        /// windows. The date identifies the calendar day the first window
-        /// covers.
+        /// Creates an aligned-window collection with candles for 1-day windows.
+        /// The date identifies the calendar day the first window covers.
         days1, Days1, [year, month, day];
-        /// Creates an aligned-window collection with candles for 1-week
-        /// windows. The date identifies the calendar day the first window
-        /// covers.
+        /// Creates an aligned-window collection with candles for 1-week windows.
+        /// The date identifies the calendar day the first window covers.
         weeks1, Weeks1, [year, month, day];
-        /// Creates an aligned-window collection with candles for 2-week
-        /// windows. The date identifies the calendar day the first window
-        /// covers.
+        /// Creates an aligned-window collection with candles for 2-week windows.
+        /// The date identifies the calendar day the first window covers.
         weeks2, Weeks2, [year, month, day];
-        /// Creates an aligned-window collection with candles for 4-week
-        /// windows. The date identifies the calendar day the first window
-        /// covers.
+        /// Creates an aligned-window collection with candles for 4-week windows.
+        /// The date identifies the calendar day the first window covers.
         weeks4, Weeks4, [year, month, day];
     );
 
     aligned_window_constructor!(
-        /// Creates an aligned-window collection with candles for 1-month
-        /// windows. The month identifies the calendar month the first window
-        /// covers.
+        /// Creates an aligned-window collection with candles for 1-month windows.
+        /// The month identifies the calendar month the first window covers.
         months1, Months1, [year, month];
-        /// Creates an aligned-window collection with candles for 2-month
-        /// windows. The month must start the first window: 2-month windows
-        /// start in January, March, May, July, September, and November.
+        /// Creates an aligned-window collection with candles for 2-month windows.
+        /// The month must start the first window: 2-month windows start in
+        /// January, March, May, July, September, and November.
         months2, Months2, [year, month];
-        /// Creates an aligned-window collection with candles for 3-month
-        /// windows. The month must start the first window: 3-month windows
-        /// start in January, April, July, and October.
+        /// Creates an aligned-window collection with candles for 3-month windows.
+        /// The month must start the first window: 3-month windows start in
+        /// January, April, July, and October.
         months3, Months3, [year, month];
-        /// Creates an aligned-window collection with candles for 4-month
-        /// windows. The month must start the first window: 4-month windows
-        /// start in January, May, and September.
+        /// Creates an aligned-window collection with candles for 4-month windows.
+        /// The month must start the first window: 4-month windows start in
+        /// January, May, and September.
         months4, Months4, [year, month];
-        /// Creates an aligned-window collection with candles for 6-month
-        /// windows. The month must start the first window: 6-month windows
-        /// start in January and July.
+        /// Creates an aligned-window collection with candles for 6-month windows.
+        /// The month must start the first window: 6-month windows start in
+        /// January and July.
         months6, Months6, [year, month];
     );
 
     aligned_window_constructor!(
-        /// Creates an aligned-window collection with candles for 1-year
-        /// windows. The year identifies the calendar year the first window
-        /// covers.
+        /// Creates an aligned-window collection with candles for 1-year windows.
+        /// The year identifies the calendar year the first window covers.
         years1, Years1, [year];
-        /// Creates an aligned-window collection with candles for 2-year
-        /// windows. The year must start the first window: 2-year windows
-        /// start in even years.
+        /// Creates an aligned-window collection with candles for 2-year windows.
+        /// The year must start the first window: 2-year windows start in even years.
         years2, Years2, [year];
     );
 
