@@ -29,13 +29,17 @@ impl MarketAlignedWindow {
     /// Creates an aligned-window collection from candles grouped by window.
     ///
     /// Candles are sorted chronologically by start time. Returns an error when
-    /// the same window appears more than once or a window contains duplicate
-    /// candle intervals.
+    /// the same window appears more than once, a window contains duplicate
+    /// candle intervals, or a candle does not exactly cover its aligned
+    /// window.
     pub fn new(
         candles: impl IntoIterator<Item = (AlignedWindow, Vec<MarketCandle>)>,
     ) -> StockTrekResult<Self> {
         let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> = BTreeMap::new();
         for (window, window_candles) in candles {
+            for candle in &window_candles {
+                Self::validate_candle("MarketAlignedWindow::new", window, candle)?;
+            }
             Self::validate_intervals("MarketAlignedWindow::new", window, &window_candles)?;
             if candles_by_window.insert(window, window_candles).is_some() {
                 return Err(Validation::error(
@@ -167,6 +171,32 @@ impl MarketAlignedWindow {
         /// The year must start the first window: 2-year windows start in even years.
         years2, Years2, [year];
     );
+
+    pub(super) fn validate_candle(
+        function: &'static str,
+        window: AlignedWindow,
+        candle: &MarketCandle,
+    ) -> StockTrekResult<()> {
+        let start = candle.start_time_millis_inc();
+        let end = candle.end_time_millis_exc();
+        let bounds = window.bounds_for(start).map_err(|error| {
+            Validation::error(
+                function,
+                format!("could not determine the {window} window bounds at {start}: {error}"),
+            )
+        })?;
+        if start != bounds.lower() || end != bounds.upper() {
+            return Err(Validation::error(
+                function,
+                format!(
+                    "candle interval {start}..{end} does not match the {window} window bounds {}..{}",
+                    bounds.lower(),
+                    bounds.upper()
+                ),
+            ));
+        }
+        Ok(())
+    }
 
     pub(super) fn validate_intervals(
         function: &'static str,
