@@ -63,9 +63,10 @@ impl AlignedTimestampBounds {
     /// Returns an error when `lower` is greater than `upper`.
     pub fn new(lower: TimestampMillis, upper: TimestampMillis) -> StockTrekResult<Self> {
         if lower > upper {
-            return Err(Self::error(format!(
-                "lower bound {lower} must not be greater than upper bound {upper}"
-            )));
+            return Err(Validation::error(
+                "AlignedTimestampBounds::new",
+                format!("lower bound {lower} must not be greater than upper bound {upper}"),
+            ));
         }
         Ok(Self { lower, upper })
     }
@@ -78,10 +79,6 @@ impl AlignedTimestampBounds {
     /// Returns the exclusive upper bound.
     pub fn upper(&self) -> TimestampMillis {
         self.upper
-    }
-
-    fn error(message: String) -> StockTrekError {
-        Validation::error("AlignedTimestampBounds::new", message)
     }
 }
 
@@ -114,9 +111,10 @@ impl AlignedWindow {
         } else if let Some(exact_months) = self.months_exact() {
             self.calendar_bounds(timestamp, exact_months)
         } else {
-            Err(Self::bounds_error(format!(
-                "Could not calculate bounds for {self} at timestamp {timestamp}"
-            )))
+            Err(Validation::error(
+                "AlignedWindow::bounds_for",
+                format!("Could not calculate bounds for {self} at timestamp {timestamp}"),
+            ))
         }
     }
 
@@ -128,18 +126,15 @@ impl AlignedWindow {
         let timestamp_millis = timestamp.as_millis();
         let lower_millis = timestamp_millis.div_euclid(exact_millis) * exact_millis;
         let upper_millis = lower_millis.checked_add(exact_millis).ok_or_else(|| {
-            Self::bounds_error(format!(
-                "upper bound for timestamp {timestamp} could not be represented"
-            ))
+            Validation::error(
+                "AlignedWindow::bounds_for",
+                format!("upper bound for timestamp {timestamp} could not be represented"),
+            )
         })?;
         AlignedTimestampBounds::new(
             TimestampMillis::new(lower_millis),
             TimestampMillis::new(upper_millis),
         )
-    }
-
-    fn bounds_error(message: String) -> StockTrekError {
-        Validation::error("AlignedWindow::bounds_for", message)
     }
 
     fn calendar_bounds(
@@ -148,14 +143,16 @@ impl AlignedWindow {
         exact_months: u32,
     ) -> StockTrekResult<AlignedTimestampBounds> {
         let timestamp_i64 = i64::try_from(timestamp.as_millis()).map_err(|_| {
-            Self::bounds_error(format!(
-                "timestamp {timestamp} is not representable as a UTC date"
-            ))
+            Validation::error(
+                "AlignedWindow::bounds_for",
+                format!("timestamp {timestamp} is not representable as a UTC date"),
+            )
         })?;
         let date_time = DateTime::from_timestamp_millis(timestamp_i64).ok_or_else(|| {
-            Self::bounds_error(format!(
-                "timestamp {timestamp} is not representable as a UTC date"
-            ))
+            Validation::error(
+                "AlignedWindow::bounds_for",
+                format!("timestamp {timestamp} is not representable as a UTC date"),
+            )
         })?;
         let months_since_epoch = date_time.year() * 12 + date_time.month0() as i32;
         let months_per_window = exact_months as i32;
@@ -167,24 +164,36 @@ impl AlignedWindow {
             .with_ymd_and_hms(start_year, start_month, 1, 0, 0, 0)
             .single()
             .ok_or_else(|| {
-                Self::bounds_error(format!(
-                    "calendar window lower bound for {start_year}-{start_month:02} could not be represented"
-                ))
+                Validation::error(
+                    "AlignedWindow::bounds_for",
+                    format!(
+                        "calendar window lower bound for {start_year}-{start_month:02} could not be represented"
+                    ),
+                )
             })?;
         let upper = lower.checked_add_months(Months::new(exact_months)).ok_or_else(|| {
-            Self::bounds_error(format!(
-                "calendar window upper bound for {start_year}-{start_month:02} could not be represented"
-            ))
+            Validation::error(
+                "AlignedWindow::bounds_for",
+                format!(
+                    "calendar window upper bound for {start_year}-{start_month:02} could not be represented"
+                ),
+            )
         })?;
         let lower = TimestampMillis::try_from(lower.timestamp_millis()).map_err(|_| {
-            Self::bounds_error(format!(
-                "calendar window lower bound for {start_year}-{start_month:02} could not be represented as a timestamp"
-            ))
+            Validation::error(
+                "AlignedWindow::bounds_for",
+                format!(
+                    "calendar window lower bound for {start_year}-{start_month:02} could not be represented as a timestamp"
+                ),
+            )
         })?;
         let upper = TimestampMillis::try_from(upper.timestamp_millis()).map_err(|_| {
-            Self::bounds_error(format!(
-                "calendar window upper bound for {start_year}-{start_month:02} could not be represented as a timestamp"
-            ))
+            Validation::error(
+                "AlignedWindow::bounds_for",
+                format!(
+                    "calendar window upper bound for {start_year}-{start_month:02} could not be represented as a timestamp"
+                ),
+            )
         })?;
         AlignedTimestampBounds::new(lower, upper)
     }
