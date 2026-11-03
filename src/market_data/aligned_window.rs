@@ -279,7 +279,7 @@ impl AlignedWindow {
             | AlignedWindow::Years1
             | AlignedWindow::Years2 => return None,
         };
-        Some(u64::from(millis))
+        Some(millis)
     }
 
     /// Returns an upper bound on the window length in milliseconds.

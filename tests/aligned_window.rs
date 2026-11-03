@@ -4,15 +4,15 @@ use chrono::{TimeZone, Utc};
 use common::{CheckedWindow, window_tests};
 use stock_trek::{
     errors::StockTrekError,
-    markets::{AlignedTimestampBounds, AlignedWindow, TimestampMillis},
+    markets::{
+        AlignedTimestampBounds, AlignedWindow, TimestampMillis,
+        millis::{
+            MILLIS_PER_DAY, MILLIS_PER_HOUR, MILLIS_PER_MONTH_UPPER_BOUND, MILLIS_PER_WEEK,
+            MILLIS_PER_YEAR_UPPER_BOUND,
+        },
+    },
 };
 use strum::IntoEnumIterator;
-
-const MILLIS_PER_HOUR: u32 = 60 * 60 * 1_000;
-const MILLIS_PER_DAY: u32 = 24 * MILLIS_PER_HOUR;
-const MILLIS_PER_WEEK: u32 = 7 * MILLIS_PER_DAY;
-const MILLIS_PER_MONTH_UPPER_BOUND: u64 = 31 * MILLIS_PER_DAY as u64;
-const MILLIS_PER_YEAR_UPPER_BOUND: u64 = 366 * MILLIS_PER_DAY as u64;
 
 fn millis_at(
     year: i32,
@@ -191,7 +191,7 @@ fn bounds_for_month_windows_include_window_boundaries() {
 fn bounds_for_month_windows_handle_leap_years() {
     let february_2024 = bounds_for(AlignedWindow::Months1, millis_at(2024, 2, 15, 0, 0, 0));
     let february_2023 = bounds_for(AlignedWindow::Months1, millis_at(2023, 2, 15, 0, 0, 0));
-    let days_millis = u64::from(24 * MILLIS_PER_HOUR);
+    let days_millis = 24 * MILLIS_PER_HOUR;
 
     assert_eq!(
         february_2024
@@ -219,15 +219,15 @@ fn millis_exact_returns_lengths_for_fixed_windows_only() {
     assert_eq!(AlignedWindow::Minutes5.millis_exact(), Some(300_000));
     assert_eq!(
         AlignedWindow::Days1.millis_exact(),
-        Some(u64::from(24 * MILLIS_PER_HOUR))
+        Some(24 * MILLIS_PER_HOUR)
     );
     assert_eq!(
         AlignedWindow::Weeks1.millis_exact(),
-        Some(u64::from(7 * MILLIS_PER_DAY))
+        Some(7 * MILLIS_PER_DAY)
     );
     assert_eq!(
         AlignedWindow::Weeks4.millis_exact(),
-        Some(u64::from(4 * MILLIS_PER_WEEK))
+        Some(4 * MILLIS_PER_WEEK)
     );
 
     for window in AlignedWindow::iter().filter(|window| is_calendar_window(*window)) {
