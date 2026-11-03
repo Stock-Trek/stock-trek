@@ -44,19 +44,6 @@ fn timestamps(
     AlignedTimestampBounds::new(lower.into(), upper.into()).unwrap()
 }
 
-fn is_calendar_window(window: AlignedWindow) -> bool {
-    matches!(
-        window,
-        AlignedWindow::Months1
-            | AlignedWindow::Months2
-            | AlignedWindow::Months3
-            | AlignedWindow::Months4
-            | AlignedWindow::Months6
-            | AlignedWindow::Years1
-            | AlignedWindow::Years2
-    )
-}
-
 #[test]
 fn bounds_for_returns_containing_bounds() {
     let timestamps: [TimestampMillis; 5] = [
@@ -76,7 +63,7 @@ fn bounds_for_returns_containing_bounds() {
             assert!(lower <= timestamp);
             assert!(timestamp < upper);
 
-            if !is_calendar_window(window) {
+            if window.months_exact().is_none() {
                 let window_millis = window.millis_upper_bound().unwrap();
                 assert_eq!(upper.checked_sub(lower).unwrap().as_millis(), window_millis);
                 assert_eq!(lower.as_millis() % window_millis, 0);
@@ -230,7 +217,7 @@ fn millis_exact_returns_lengths_for_fixed_windows_only() {
         Some(4 * MILLIS_PER_WEEK)
     );
 
-    for window in AlignedWindow::iter().filter(|window| is_calendar_window(*window)) {
+    for window in AlignedWindow::iter().filter(|window| window.months_exact().is_some()) {
         assert_eq!(window.millis_exact(), None);
     }
 }
@@ -265,7 +252,7 @@ fn calendar_months_returns_months_for_calendar_windows_only() {
     assert_eq!(AlignedWindow::Years1.months_exact(), Some(12));
     assert_eq!(AlignedWindow::Years2.months_exact(), Some(24));
 
-    for window in AlignedWindow::iter().filter(|window| !is_calendar_window(*window)) {
+    for window in AlignedWindow::iter().filter(|window| window.months_exact().is_none()) {
         assert_eq!(window.months_exact(), None);
     }
 }
