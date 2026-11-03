@@ -114,15 +114,6 @@ impl MarketAlignedWindow {
         /// Creates an aligned-window collection with candles for 1-day windows.
         /// The date identifies the calendar day the first window covers.
         days1, Days1, [year, month, day];
-        /// Creates an aligned-window collection with candles for 1-week windows.
-        /// The date identifies the calendar day the first window covers.
-        weeks1, Weeks1, [year, month, day];
-        /// Creates an aligned-window collection with candles for 2-week windows.
-        /// The date identifies the calendar day the first window covers.
-        weeks2, Weeks2, [year, month, day];
-        /// Creates an aligned-window collection with candles for 4-week windows.
-        /// The date identifies the calendar day the first window covers.
-        weeks4, Weeks4, [year, month, day];
     );
 
     aligned_window_containing_constructor!(
