@@ -231,6 +231,14 @@ pub enum NumberValue {
 }
 
 impl NumberValue {
+    /// Creates a literal number value.
+    ///
+    /// Returns an error unless `literal` is finite.
+    pub fn new(literal: f64) -> StockTrekResult<Self> {
+        Validation::finite("NumberValue::new", "literal", literal)?;
+        Ok(Self::Literal { literal })
+    }
+
     /// Resolves the number against the resolved context.
     pub fn number(&self, c: &ResolvedContext) -> StockTrekResult<f64> {
         match self {
@@ -334,5 +342,27 @@ impl NumberValue {
         value: f64,
     ) -> StockTrekResult<f64> {
         Validation::finite(function, field, value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn literal_accepts_finite_numbers() {
+        for value in [0.0, -1.0, 1.5] {
+            assert!(matches!(
+                NumberValue::new(value).unwrap(),
+                NumberValue::Literal { literal } if literal == value
+            ));
+        }
+    }
+
+    #[test]
+    fn literal_rejects_non_finite_numbers() {
+        for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert!(NumberValue::new(value).is_err());
+        }
     }
 }

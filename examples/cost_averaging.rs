@@ -24,11 +24,15 @@ pub struct CostAveraging {
 impl Default for CostAveraging {
     fn default() -> Self {
         Self {
-            key_cex: SignalKey::new_required("CEX"),
-            key_account: SignalKey::new_required("ACCOUNT"),
-            key_market_exists: SignalKey::new_optional("MARKET_EXISTS", false),
-            key_cheapest_price: SignalKey::new_required("CHEAPEST_PRICE"),
-            key_order_quantity: SignalKey::new_required("ORDER_QUANTITY"),
+            key_cex: SignalKey::new_required("CEX").expect("signal key names are non-empty"),
+            key_account: SignalKey::new_required("ACCOUNT")
+                .expect("signal key names are non-empty"),
+            key_market_exists: SignalKey::new_optional("MARKET_EXISTS", false)
+                .expect("signal key names are non-empty"),
+            key_cheapest_price: SignalKey::new_required("CHEAPEST_PRICE")
+                .expect("signal key names are non-empty"),
+            key_order_quantity: SignalKey::new_required("ORDER_QUANTITY")
+                .expect("signal key names are non-empty"),
         }
     }
 }
@@ -90,7 +94,9 @@ impl Algorithm for CostAveraging {
         let required_quote = c.calculations.binary(
             notional,
             BinaryOperator::Mul,
-            c.literals.number(1.0 + FEE_BUFFER_RATE),
+            c.literals
+                .number(1.0 + FEE_BUFFER_RATE)
+                .expect("the fee buffer rate is finite"),
         );
         let available_quote =
             c.portfolio

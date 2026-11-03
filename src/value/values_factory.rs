@@ -1,4 +1,5 @@
 use crate::{
+    error::result::StockTrekResult,
     signal::key::SignalKey,
     value::{
         binary_operator::BinaryOperator,
@@ -172,8 +173,10 @@ impl LiteralValuesFactory {
         FlagValue::Literal { literal }
     }
     /// A value that always evaluates to the number.
-    pub fn number(&self, literal: f64) -> NumberValue {
-        NumberValue::Literal { literal }
+    ///
+    /// Returns an error unless `literal` is finite.
+    pub fn number(&self, literal: f64) -> StockTrekResult<NumberValue> {
+        NumberValue::new(literal)
     }
 }
 

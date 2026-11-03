@@ -102,18 +102,18 @@ mod tests {
 
     #[test]
     fn missing_signal_error_uses_key_type_name() {
-        let number = SignalKey::<f64>::new_required("missing_number");
+        let number = SignalKey::<f64>::new_required("missing_number").unwrap();
         assert_eq!(missing_name(&number), "Number");
 
-        let flag = SignalKey::<bool>::new_required("missing_flag");
+        let flag = SignalKey::<bool>::new_required("missing_flag").unwrap();
         assert_eq!(missing_name(&flag), "Flag");
     }
 
     #[test]
     fn serializes_signal_values_in_key_order() {
         let mut signals = Signals::new();
-        let z = SignalKey::<f64>::new_required("z");
-        let a = SignalKey::<f64>::new_required("a");
+        let z = SignalKey::<f64>::new_required("z").unwrap();
+        let a = SignalKey::<f64>::new_required("a").unwrap();
         signals.write(&z, 2.0).unwrap();
         signals.write(&a, 1.0).unwrap();
 
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn write_rejects_non_finite_numbers() {
         let mut signals = Signals::new();
-        let key = SignalKey::<f64>::new_required("number");
+        let key = SignalKey::<f64>::new_required("number").unwrap();
         signals.write(&key, 1.0).unwrap();
 
         for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
@@ -140,7 +140,7 @@ mod tests {
     #[test]
     fn read_rejects_a_non_finite_stored_value() {
         let mut signals = Signals::new();
-        let key = SignalKey::<f64>::new_required("number");
+        let key = SignalKey::<f64>::new_required("number").unwrap();
         signals
             .signal_values
             .insert(key.key().to_string(), SignalValue::Number(f64::NAN));
@@ -149,15 +149,13 @@ mod tests {
     }
 
     #[test]
-    fn read_rejects_a_non_finite_optional_default() {
-        let key = SignalKey::<f64>::new_optional("number", f64::INFINITY);
-
-        assert!(Signals::new().read(&key).is_err());
+    fn rejects_a_non_finite_optional_default_when_the_key_is_created() {
+        assert!(SignalKey::<f64>::new_optional("number", f64::INFINITY).is_err());
     }
 
     #[test]
     fn read_accepts_a_finite_optional_default() {
-        let key = SignalKey::<f64>::new_optional("number", 1.0);
+        let key = SignalKey::<f64>::new_optional("number", 1.0).unwrap();
 
         assert_eq!(Signals::new().read(&key).unwrap(), 1.0);
     }
