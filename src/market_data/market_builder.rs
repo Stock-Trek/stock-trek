@@ -223,12 +223,7 @@ impl MarketBuilder {
                 Some(self.minimum_notional),
             )?;
         }
-        if let (Some(highest_bid), Some(lowest_ask)) = (
-            Self::highest_price(&self.order_book_bids),
-            Self::lowest_price(&self.order_book_asks),
-        ) {
-            Validation::bid_below_ask(function, highest_bid, lowest_ask)?;
-        }
+        let order_book = MarketOrderBook::new(self.order_book_bids, self.order_book_asks)?;
 
         Ok(Market {
             base_increment: self.base_increment,
@@ -239,7 +234,7 @@ impl MarketBuilder {
                 candles: self.rolling,
             },
             aligned: MarketAlignedWindow::from_map(self.aligned),
-            order_book: MarketOrderBook::new(self.order_book_bids, self.order_book_asks),
+            order_book,
         })
     }
 
@@ -298,13 +293,5 @@ impl MarketBuilder {
         let tolerance = (INCREMENT_TOLERANCE_ULPS * f64::EPSILON * steps.abs())
             .clamp(INCREMENT_TOLERANCE, MAX_INCREMENT_TOLERANCE);
         (steps - steps.round()).abs() <= tolerance
-    }
-
-    fn lowest_price(quotes: &[MarketQuote]) -> Option<f64> {
-        quotes.iter().map(MarketQuote::price).min_by(f64::total_cmp)
-    }
-
-    fn highest_price(quotes: &[MarketQuote]) -> Option<f64> {
-        quotes.iter().map(MarketQuote::price).max_by(f64::total_cmp)
     }
 }
