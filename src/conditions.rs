@@ -118,6 +118,14 @@ impl Condition {
                     }
                     Ok(true)
                 }
+                QuantityOf::AtLeastOne => {
+                    for condition in conditions {
+                        if condition.test(c)? {
+                            return Ok(true);
+                        }
+                    }
+                    Ok(false)
+                }
                 QuantityOf::Partial => {
                     let mut has_true = false;
                     let mut has_false = false;
@@ -156,6 +164,8 @@ impl Condition {
 pub enum QuantityOf {
     /// All conditions must be true.
     All,
+    /// At least one condition must be true.
+    AtLeastOne,
     /// At least one and not all conditions must be true.
     Partial,
     /// No conditions may be true.
@@ -326,6 +336,13 @@ mod tests {
     }
 
     #[test]
+    fn quantity_of_at_least_one_short_circuits_after_true() {
+        let conditions = vec![literal_condition(true), failing_condition()];
+
+        assert!(quantity_of(QuantityOf::AtLeastOne, conditions).unwrap());
+    }
+
+    #[test]
     fn quantity_of_partial_short_circuits_after_true_and_false() {
         let conditions = vec![
             literal_condition(true),
@@ -346,6 +363,7 @@ mod tests {
     fn quantity_of_propagates_errors_when_the_result_is_not_determined() {
         assert!(quantity_of(QuantityOf::All, vec![failing_condition()]).is_err());
         assert!(quantity_of(QuantityOf::None, vec![failing_condition()]).is_err());
+        assert!(quantity_of(QuantityOf::AtLeastOne, vec![failing_condition()]).is_err());
         assert!(quantity_of(QuantityOf::Partial, vec![failing_condition()]).is_err());
     }
 
@@ -365,6 +383,28 @@ mod tests {
             )
             .unwrap()
         );
+        assert!(
+            quantity_of(
+                QuantityOf::AtLeastOne,
+                vec![literal_condition(true), literal_condition(false)]
+            )
+            .unwrap()
+        );
+        assert!(
+            quantity_of(
+                QuantityOf::AtLeastOne,
+                vec![literal_condition(true), literal_condition(true)]
+            )
+            .unwrap()
+        );
+        assert!(
+            !quantity_of(
+                QuantityOf::AtLeastOne,
+                vec![literal_condition(false), literal_condition(false)]
+            )
+            .unwrap()
+        );
+        assert!(!quantity_of(QuantityOf::AtLeastOne, vec![]).unwrap());
         assert!(
             quantity_of(
                 QuantityOf::Partial,
