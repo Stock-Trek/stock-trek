@@ -47,16 +47,11 @@ impl SignalContext {
             })
     }
     /// Returns the market for a base/quote pair on a specific CEX.
-    pub fn cex_market_for(
-        &self,
-        cex_id: &CexId,
-        base: &AssetId,
-        quote: &AssetId,
-    ) -> Option<&Market> {
+    pub fn cex_market_for(&self, cex_id: CexId, base: AssetId, quote: AssetId) -> Option<&Market> {
         self.cex_market_data
-            .get(cex_id)
-            .and_then(|m| m.markets_by_base.get(base))
-            .and_then(|m| m.markets_by_quote.get(quote))
+            .get(&cex_id)
+            .and_then(|m| m.markets_by_base.get(&base))
+            .and_then(|m| m.markets_by_quote.get(&quote))
     }
 }
 
@@ -201,17 +196,17 @@ mod tests {
 
         assert!(
             context
-                .cex_market_for(&CexId::Binance, &AssetId::Bitcoin, &AssetId::TetherUSD)
+                .cex_market_for(CexId::Binance, AssetId::Bitcoin, AssetId::TetherUSD)
                 .is_some()
         );
         assert!(
             context
-                .cex_market_for(&CexId::Binance, &AssetId::Ethereum, &AssetId::TetherUSD)
+                .cex_market_for(CexId::Binance, AssetId::Ethereum, AssetId::TetherUSD)
                 .is_some()
         );
         assert!(
             context
-                .cex_market_for(&CexId::Binance, &AssetId::Bitcoin, &AssetId::USDCoin)
+                .cex_market_for(CexId::Binance, AssetId::Bitcoin, AssetId::USDCoin)
                 .is_none()
         );
         assert_eq!(
