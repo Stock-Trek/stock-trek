@@ -12,7 +12,7 @@ fn portfolio_with(
     filled_quote_quantity: f64,
 ) -> Portfolio {
     let mut builder = PortfolioBuilder::new();
-    builder.asset_count(
+    builder.asset_total(
         CexId::Binance,
         AccountId::new("account"),
         AssetId::Bitcoin,
@@ -57,7 +57,7 @@ fn determinism_portfolio(reverse: bool) -> Portfolio {
 
     let mut builder = PortfolioBuilder::new();
     for (account, count) in entries {
-        builder.asset_count(
+        builder.asset_total(
             CexId::Binance,
             AccountId::new(account),
             AssetId::Bitcoin,
@@ -94,15 +94,15 @@ fn asset_iterators_report_balances_for_each_account() {
     let account_a = AccountId::new("a");
     let account_b = AccountId::new("b");
     let mut builder = PortfolioBuilder::new();
-    builder.asset_count(CexId::Binance, account_a.clone(), AssetId::Bitcoin, 2.0);
-    builder.asset_count(CexId::Binance, account_a.clone(), AssetId::TetherUSD, 3.0);
-    builder.asset_count(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 4.0);
+    builder.asset_total(CexId::Binance, account_a.clone(), AssetId::Bitcoin, 2.0);
+    builder.asset_total(CexId::Binance, account_a.clone(), AssetId::TetherUSD, 3.0);
+    builder.asset_total(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 4.0);
     let portfolio = builder.build().unwrap();
 
     let balances: std::collections::HashMap<_, _> = portfolio
         .assets_iter()
-        .map(|(cex_id, account_id, asset_id, count)| {
-            ((*cex_id, account_id.clone(), *asset_id), *count)
+        .map(|(cex_id, account_id, asset_id, total)| {
+            ((*cex_id, account_id.clone(), *asset_id), *total)
         })
         .collect();
 
@@ -127,7 +127,10 @@ fn asset_iterators_report_balances_for_each_account() {
         2
     );
     assert_eq!(
-        portfolio.asset_total_in_cex_account(&CexId::Binance, &account_b, &AssetId::Bitcoin,),
+        portfolio
+            .cex_account(&CexId::Binance, &account_b)
+            .unwrap()
+            .asset_total(&AssetId::Bitcoin),
         4.0
     );
     assert_eq!(portfolio.asset_total(&AssetId::Bitcoin), 6.0);
@@ -242,7 +245,7 @@ fn asset_available_clamps_reservations_per_account() {
     let account_a = AccountId::new("a");
     let account_b = AccountId::new("b");
     let mut builder = PortfolioBuilder::new();
-    builder.asset_count(CexId::Binance, account_a.clone(), AssetId::Bitcoin, 100.0);
+    builder.asset_total(CexId::Binance, account_a.clone(), AssetId::Bitcoin, 100.0);
     builder.pending_order(
         CexId::Binance,
         account_a.clone(),
@@ -250,7 +253,7 @@ fn asset_available_clamps_reservations_per_account() {
         0.0,
         0.0,
     );
-    builder.asset_count(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 100.0);
+    builder.asset_total(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 100.0);
     let portfolio = builder.build().unwrap();
 
     assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 150.0);
@@ -303,22 +306,22 @@ fn pending_orders_are_grouped_by_the_order_request_tag() {
 #[test]
 fn cex_account_portfolio_rejects_invalid_asset_balances() {
     for count in [-1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-        let asset_counts = std::collections::HashMap::from([(AssetId::Bitcoin, count)]);
+        let asset_totals = std::collections::HashMap::from([(AssetId::Bitcoin, count)]);
         let pending_orders = std::iter::empty::<(Tag, Vec<crate::pending_order::PendingOrder>)>();
-        assert!(CexAccountPortfolio::new(asset_counts, pending_orders).is_err());
+        assert!(CexAccountPortfolio::new(asset_totals, pending_orders).is_err());
     }
 }
 
 #[test]
 fn cex_account_portfolio_accepts_non_negative_asset_balances() {
-    let asset_counts =
+    let asset_totals =
         std::collections::HashMap::from([(AssetId::Bitcoin, 0.0), (AssetId::TetherUSD, 100.0)]);
 
     let pending_orders = std::iter::empty::<(Tag, Vec<crate::pending_order::PendingOrder>)>();
-    let portfolio = CexAccountPortfolio::new(asset_counts, pending_orders).unwrap();
+    let portfolio = CexAccountPortfolio::new(asset_totals, pending_orders).unwrap();
 
-    assert_eq!(portfolio.asset_count(&AssetId::Bitcoin), 0.0);
-    assert_eq!(portfolio.asset_count(&AssetId::TetherUSD), 100.0);
+    assert_eq!(portfolio.asset_total(&AssetId::Bitcoin), 0.0);
+    assert_eq!(portfolio.asset_total(&AssetId::TetherUSD), 100.0);
 }
 
 #[test]
@@ -374,9 +377,9 @@ fn cex_account_portfolio_rejects_duplicate_assets_and_pending_order_tags() {
 }
 
 #[test]
-fn portfolio_builder_rejects_invalid_asset_counts() {
+fn portfolio_builder_rejects_invalid_asset_totals() {
     let mut builder = PortfolioBuilder::new();
-    builder.asset_count(
+    builder.asset_total(
         CexId::Binance,
         AccountId::new("account"),
         AssetId::Bitcoin,
@@ -401,15 +404,15 @@ fn portfolio_builder_rejects_invalid_pending_orders() {
 }
 
 #[test]
-fn portfolio_builder_rejects_an_invalid_asset_count_next_to_a_valid_one() {
+fn portfolio_builder_rejects_an_invalid_asset_total_next_to_a_valid_one() {
     let mut builder = PortfolioBuilder::new();
-    builder.asset_count(
+    builder.asset_total(
         CexId::Binance,
         AccountId::new("account"),
         AssetId::Bitcoin,
         -1.0,
     );
-    builder.asset_count(
+    builder.asset_total(
         CexId::Binance,
         AccountId::new("other"),
         AssetId::Bitcoin,

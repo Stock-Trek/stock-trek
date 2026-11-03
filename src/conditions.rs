@@ -104,8 +104,8 @@ impl Condition {
                 asset_id,
             } => Ok(c
                 .portfolio
-                .asset_total_in_cex_account(cex_id, account_id, asset_id)
-                > 0.0),
+                .cex_account(cex_id, account_id)
+                .is_some_and(|portfolio| portfolio.asset_total(asset_id) > 0.0)),
             Condition::QuantityOf {
                 quantity_of,
                 conditions,

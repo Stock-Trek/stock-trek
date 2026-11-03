@@ -16,14 +16,14 @@ struct PendingOrderData {
 /// The data collected for a single CEX account by a [`PortfolioBuilder`].
 #[derive(Debug, Clone, Default)]
 struct CexAccountPortfolioData {
-    asset_counts: BTreeMap<AssetId, f64>,
+    asset_totals: BTreeMap<AssetId, f64>,
     pending_orders: BTreeMap<Tag, Vec<PendingOrderData>>,
 }
 
 /// Builder for constructing a [`Portfolio`].
 ///
 /// Setter methods only collect data. All validation happens at build time:
-/// [`PortfolioBuilder::build`] rejects invalid asset counts and invalid
+/// [`PortfolioBuilder::build`] rejects invalid asset totals and invalid
 /// pending orders.
 #[derive(Debug, Clone, Default)]
 pub struct PortfolioBuilder {
@@ -36,23 +36,23 @@ impl PortfolioBuilder {
         Self::default()
     }
 
-    /// Sets the balance of an asset in a CEX account.
+    /// Sets the total of an asset in a CEX account.
     ///
-    /// The count is validated when [`PortfolioBuilder::build`] is called.
-    pub fn asset_count(
+    /// The total is validated when [`PortfolioBuilder::build`] is called.
+    pub fn asset_total(
         &mut self,
         cex_id: CexId,
         account_id: AccountId,
         asset_id: AssetId,
-        count: f64,
+        total: f64,
     ) -> &mut Self {
         self.portfolios
             .entry(cex_id)
             .or_default()
             .entry(account_id)
             .or_default()
-            .asset_counts
-            .insert(asset_id, count);
+            .asset_totals
+            .insert(asset_id, total);
         self
     }
 
@@ -91,7 +91,7 @@ impl PortfolioBuilder {
 
     /// Builds the [`Portfolio`] from the collected data.
     ///
-    /// Returns an error when an asset count is negative or not finite, or when
+    /// Returns an error when an asset total is negative or not finite, or when
     /// a pending order is invalid.
     pub fn build(self) -> StockTrekResult<Portfolio> {
         let mut accounts = Vec::new();
@@ -117,7 +117,7 @@ impl PortfolioBuilder {
                 accounts.push((
                     cex_id,
                     account_id,
-                    CexAccountPortfolio::new(data.asset_counts, pending_orders)?,
+                    CexAccountPortfolio::new(data.asset_totals, pending_orders)?,
                 ));
             }
         }
