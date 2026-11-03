@@ -9,9 +9,10 @@ fn evm_networks_register_expected_chain_and_network_ids() {
     macro_rules! check {
         ($module:ident, $blockchain:literal, [$($variant:ident => ($chain_id:literal, $network_id:expr)),+ $(,)?]) => {
             $(
-                assert_eq!(u64::from($module::NetworkName::$variant), $chain_id);
+                let network_name = $module::NetworkName::$variant;
+                assert_eq!(network_name.chain_id(), ChainId::new($chain_id));
 
-                let network_id: NetworkId = $module::NetworkName::$variant.try_into().unwrap();
+                let network_id: NetworkId = network_name.try_into().unwrap();
                 assert_eq!(network_id, $network_id);
 
                 let asset = $module::asset_on_chain(

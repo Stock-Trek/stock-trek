@@ -29,7 +29,7 @@ macro_rules! define_evm_network {
         }
     ) => {
         pub mod $module {
-            use crate::dex::network::NetworkId;
+            use crate::dex::network::{ChainId, NetworkId};
             use crate::error::result::StockTrekResult;
             use serde::{Deserialize, Serialize};
             use strum::Display;
@@ -38,10 +38,11 @@ macro_rules! define_evm_network {
                 $($variant => $network_id,)+
             }
 
-            impl From<NetworkName> for u64 {
-                fn from(value: NetworkName) -> Self {
-                    match value {
-                        $(NetworkName::$variant => $chain_id,)+
+            impl NetworkName {
+                /// The EVM chain id for this network.
+                pub fn chain_id(self) -> ChainId {
+                    match self {
+                        $(NetworkName::$variant => ChainId::new($chain_id),)+
                     }
                 }
             }
@@ -50,7 +51,7 @@ macro_rules! define_evm_network {
                 network: NetworkName,
                 asset_kind: crate::dex::asset_kind::AssetKind,
             ) -> StockTrekResult<crate::dex::asset_on_chain::AssetOnChain> {
-                super::AssetOnChain::evm($blockchain, network, asset_kind)
+                super::AssetOnChain::evm($blockchain, network, network.chain_id(), asset_kind)
             }
         }
     };

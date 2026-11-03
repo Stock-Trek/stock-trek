@@ -62,18 +62,6 @@ impl FromStr for ChainId {
     }
 }
 
-impl PartialEq<u64> for ChainId {
-    fn eq(&self, other: &u64) -> bool {
-        self.0 == *other
-    }
-}
-
-impl PartialEq<ChainId> for u64 {
-    fn eq(&self, other: &ChainId) -> bool {
-        *self == other.0
-    }
-}
-
 impl Network {
     /// Creates a network from its identifier and, for EVM-family chains, its
     /// chain id.
