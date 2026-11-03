@@ -246,6 +246,42 @@ fn asset_available_is_clamped_when_reservations_exceed_balance() {
 }
 
 #[test]
+fn asset_available_clamps_reservations_per_account() {
+    let account_a = AccountId::new("a");
+    let account_b = AccountId::new("b");
+    let portfolio = PortfolioBuilder::new()
+        .asset_count(CexId::Binance, account_a.clone(), AssetId::Bitcoin, 100.0)
+        .unwrap()
+        .pending_order(
+            CexId::Binance,
+            account_a.clone(),
+            limit_sell(Quantity::OfBase(150.0), 100.0),
+            0.0,
+            0.0,
+        )
+        .unwrap()
+        .asset_count(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 100.0)
+        .unwrap()
+        .build();
+
+    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 150.0);
+    assert_eq!(portfolio.asset_available(&AssetId::Bitcoin), 100.0);
+    assert_eq!(
+        portfolio.asset_available(&AssetId::Bitcoin),
+        portfolio
+            .cex_accounts()
+            .map(
+                |(cex_id, account_id, _)| portfolio.asset_available_in_cex_account(
+                    cex_id,
+                    account_id,
+                    &AssetId::Bitcoin
+                )
+            )
+            .sum::<f64>()
+    );
+}
+
+#[test]
 fn pending_orders_are_grouped_by_the_order_request_tag() {
     let portfolio = PortfolioBuilder::new()
         .pending_order(
