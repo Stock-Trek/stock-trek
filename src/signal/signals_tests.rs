@@ -29,35 +29,23 @@ fn signal_keys_compare_by_name_and_default() {
 
     assert_eq!(a, b);
     assert_ne!(a, c);
-    assert_ne!(a, SignalKey::<f64>::new_optional("a", 1.0));
+    assert_ne!(a, SignalKey::<f64>::new_optional("a", 1.0).unwrap());
     assert_eq!(
-        SignalKey::<f64>::new_optional("a", 1.0),
-        SignalKey::<f64>::new_optional("a", 1.0)
+        SignalKey::<f64>::new_optional("a", 1.0).unwrap(),
+        SignalKey::<f64>::new_optional("a", 1.0).unwrap()
     );
     assert_ne!(
-        SignalKey::<f64>::new_optional("a", 1.0),
-        SignalKey::<f64>::new_optional("a", 2.0)
+        SignalKey::<f64>::new_optional("a", 1.0).unwrap(),
+        SignalKey::<f64>::new_optional("a", 2.0).unwrap()
     );
-}
-
-#[test]
-fn signal_keys_are_eq_and_hash_for_nan_defaults() {
-    let a = SignalKey::<f64>::new_optional("number", f64::NAN);
-    let b = SignalKey::<f64>::new_optional("number", f64::NAN);
-
-    assert_eq!(a, b);
-
-    let mut keys = HashSet::new();
-    keys.insert(a);
-    assert!(keys.contains(&b));
 }
 
 #[test]
 fn signal_keys_hash_zero_defaults_consistently() {
     let mut keys = HashSet::new();
-    keys.insert(SignalKey::<f64>::new_optional("number", 0.0));
+    keys.insert(SignalKey::<f64>::new_optional("number", 0.0).unwrap());
 
-    assert!(keys.contains(&SignalKey::<f64>::new_optional("number", -0.0)));
+    assert!(keys.contains(&SignalKey::<f64>::new_optional("number", -0.0).unwrap()));
 }
 
 #[test]
@@ -65,7 +53,7 @@ fn iterates_over_stored_signals_in_key_order() {
     let mut signals = Signals::new();
     let z = SignalKey::<f64>::new_required("z");
     let a = SignalKey::<bool>::new_required("a");
-    let m = SignalKey::<f64>::new_optional("m", 3.0);
+    let m = SignalKey::<f64>::new_optional("m", 3.0).unwrap();
     signals.write(&z, 2.0).unwrap();
     signals.write(&a, true).unwrap();
     signals.write(&m, 1.0).unwrap();
