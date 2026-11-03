@@ -62,6 +62,22 @@ impl Validation {
             ))
         }
     }
+
+    /// Returns `()` when the bid price is below the ask price.
+    pub(crate) fn bid_below_ask(
+        function: &'static str,
+        bid_price: f64,
+        ask_price: f64,
+    ) -> StockTrekResult<()> {
+        if bid_price < ask_price {
+            Ok(())
+        } else {
+            Err(Self::error(
+                function,
+                format!("bid price {bid_price} must be below ask price {ask_price}"),
+            ))
+        }
+    }
 }
 
 #[cfg(test)]
@@ -89,6 +105,14 @@ mod tests {
         assert_eq!(Validation::non_negative("test", "value", 0.0).unwrap(), 0.0);
         for value in [-1.0, f64::NAN, f64::INFINITY] {
             assert!(Validation::non_negative("test", "value", value).is_err());
+        }
+    }
+
+    #[test]
+    fn bid_below_ask_rejects_crossed_and_equal_prices() {
+        assert!(Validation::bid_below_ask("test", 99.0, 100.0).is_ok());
+        for (bid_price, ask_price) in [(100.0, 100.0), (101.0, 100.0)] {
+            assert!(Validation::bid_below_ask("test", bid_price, ask_price).is_err());
         }
     }
 

@@ -84,6 +84,7 @@ mod tests {
             MarketQuote::new(price + 1.0, 3.0).unwrap(),
             MarketQuote::new(price + 0.5, 4.0).unwrap(),
         )
+        .unwrap()
     }
 
     fn timed(timestamp_millis: u64, price: f64, quantity: f64) -> TimedPriceQuantity {

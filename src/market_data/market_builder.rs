@@ -100,10 +100,10 @@ impl MarketBuilder {
             self.quote_increment,
             None,
         )?;
-        Self::validate_bid_and_ask(function, bid.price(), ask.price())?;
+        Validation::bid_below_ask(function, bid.price(), ask.price())?;
 
         self.ticks
-            .push(MarketTick::new(timestamp_millis, bid, ask, last));
+            .push(MarketTick::new(timestamp_millis, bid, ask, last)?);
         Ok(self)
     }
 
@@ -189,7 +189,7 @@ impl MarketBuilder {
             Some(self.minimum_notional),
         )?;
         if let Some(lowest_ask) = Self::lowest_price(&self.order_book_asks) {
-            Self::validate_bid_and_ask(function, quote.price(), lowest_ask)?;
+            Validation::bid_below_ask(function, quote.price(), lowest_ask)?;
         }
 
         self.order_book_bids.push(quote);
@@ -211,7 +211,7 @@ impl MarketBuilder {
             Some(self.minimum_notional),
         )?;
         if let Some(highest_bid) = Self::highest_price(&self.order_book_bids) {
-            Self::validate_bid_and_ask(function, highest_bid, quote.price())?;
+            Validation::bid_below_ask(function, highest_bid, quote.price())?;
         }
 
         self.order_book_asks.push(quote);
@@ -288,20 +288,6 @@ impl MarketBuilder {
         let tolerance = (INCREMENT_TOLERANCE_ULPS * f64::EPSILON * steps.abs())
             .clamp(INCREMENT_TOLERANCE, MAX_INCREMENT_TOLERANCE);
         (steps - steps.round()).abs() <= tolerance
-    }
-
-    fn validate_bid_and_ask(
-        function: &'static str,
-        bid_price: f64,
-        ask_price: f64,
-    ) -> StockTrekResult<()> {
-        if bid_price >= ask_price {
-            return Err(Validation::error(
-                function,
-                format!("bid price {bid_price} must be below ask price {ask_price}"),
-            ));
-        }
-        Ok(())
     }
 
     fn lowest_price(quotes: &[MarketQuote]) -> Option<f64> {
