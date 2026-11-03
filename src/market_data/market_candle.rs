@@ -40,7 +40,7 @@ impl MarketCandle {
         let end_time_millis_exc = start_time_millis_inc
             .checked_add(TimestampMillis::new(window_millis))
             .ok_or_else(|| {
-                Self::error(
+                Validation::error(
                     "MarketCandle::new",
                     format!(
                         "start time {start_time_millis_inc} plus the {window} window duration {window_millis} ms overflows the timestamp range"
@@ -66,7 +66,7 @@ impl MarketCandle {
         end_time_millis_exc
             .checked_sub(start_time_millis_inc)
             .ok_or_else(|| {
-                Self::error(
+                Validation::error(
                     "MarketCandle::from_interval",
                     format!(
                         "end time {end_time_millis_exc} precedes start time {start_time_millis_inc}"
@@ -81,10 +81,6 @@ impl MarketCandle {
             ohlcv,
             trade_count,
         })
-    }
-
-    fn error(function: &'static str, message: String) -> StockTrekError {
-        Validation::error(function, message)
     }
 
     /// Returns the inclusive start time of the candle.
