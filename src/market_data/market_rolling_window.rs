@@ -62,6 +62,24 @@ impl MarketRollingWindow {
     pub fn ohlcv(&self, window: RollingWindow) -> Option<&MarketOhlcv> {
         self.candles.get(&window).map(MarketCandle::ohlcv)
     }
+
+    pub(super) fn validate_candle_duration(
+        function: &'static str,
+        window: RollingWindow,
+        candle: &MarketCandle,
+    ) -> StockTrekResult<()> {
+        let expected_duration = window.millis_exact();
+        let actual_duration = candle.duration_millis();
+        if actual_duration != expected_duration {
+            return Err(Validation::error(
+                function,
+                format!(
+                    "candle duration {actual_duration} ms does not match the {window} window duration {expected_duration} ms"
+                ),
+            ));
+        }
+        Ok(())
+    }
 }
 
 impl<'de> Deserialize<'de> for MarketRollingWindow {
@@ -76,13 +94,8 @@ impl<'de> Deserialize<'de> for MarketRollingWindow {
 
         let data = MarketRollingWindowData::deserialize(deserializer)?;
         for (window, candle) in &data.candles {
-            let expected_duration = window.millis_exact();
-            let actual_duration = candle.duration_millis();
-            if actual_duration != expected_duration {
-                return Err(serde::de::Error::custom(format!(
-                    "candle duration {actual_duration} ms does not match the {window} window duration {expected_duration} ms"
-                )));
-            }
+            Self::validate_candle_duration("MarketRollingWindow::deserialize", *window, candle)
+                .map_err(serde::de::Error::custom)?;
         }
         Ok(Self {
             candles: data.candles,
