@@ -433,8 +433,7 @@ impl MarketAlignedWindow {
     pub fn quote_volumes(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::quote_volume)
     }
-    /// The volume-weighted average price of each candle in the window,
-    /// chronologically.
+    /// The volume-weighted average price of each candle in the window, chronologically.
     pub fn vwaps(&self, window: AlignedWindow) -> Option<Vec<f64>> {
         self.values(window, MarketOhlcv::vwap)
     }
