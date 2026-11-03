@@ -1,12 +1,6 @@
 use crate::{
-    error::{
-        result::{StockTrekError, StockTrekResult},
-        stats::StatsError,
-    },
-    resolved_context::ResolvedContext,
-    signal::key::SignalKey,
-    util::serde_ordering::OrderingSerde,
-    value::value_types::NumberValue,
+    error::result::StockTrekResult, resolved_context::ResolvedContext, signal::key::SignalKey,
+    util::serde_ordering::OrderingSerde, value::value_types::NumberValue,
 };
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -81,14 +75,12 @@ impl Condition {
             } => {
                 let left_value = left.number(c)?;
                 let right_value = right.number(c)?;
-                let ordering = left_value.partial_cmp(&right_value);
-                match ordering {
-                    Some(ordering) => Ok(ordering == *comparison),
-                    None => Err(StockTrekError::Stats(StatsError::IncomparableValues {
-                        left: left_value,
-                        right: right_value,
-                    })),
-                }
+                let matches = match comparison {
+                    Ordering::Less => left_value < right_value,
+                    Ordering::Equal => left_value == right_value,
+                    Ordering::Greater => left_value > right_value,
+                };
+                Ok(matches)
             }
             Condition::HasCexAccount { cex_id, account_id } => {
                 Ok(c.portfolio.has_cex_account(cex_id, account_id))
