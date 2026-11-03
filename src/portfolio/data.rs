@@ -185,4 +185,17 @@ impl Portfolio {
             .map(|(_, _, _, total)| *total)
             .sum()
     }
+
+    /// Total `asset_id` held in a specific CEX account (counts available and reserved).
+    ///
+    /// Returns zero when the account does not exist.
+    pub fn asset_total_in_cex_account(
+        &self,
+        cex_id: &CexId,
+        account_id: &AccountId,
+        asset_id: &AssetId,
+    ) -> f64 {
+        self.cex_account(cex_id, account_id)
+            .map_or(0.0, |portfolio| portfolio.asset_total(asset_id))
+    }
 }
