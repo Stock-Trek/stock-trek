@@ -29,7 +29,8 @@ impl Portfolio {
         asset_id: &AssetId,
     ) -> f64 {
         Self::available_quantity(
-            self.asset_total_in_cex_account(cex_id, account_id, asset_id),
+            self.cex_account(cex_id, account_id)
+                .map_or(0.0, |portfolio| portfolio.asset_total(asset_id)),
             self.asset_reserved_in_cex_account(cex_id, account_id, asset_id),
         )
     }

@@ -280,7 +280,8 @@ impl NumberValue {
                 let account_id = account_id_value.account_id(c)?;
                 let asset_id = asset_id_value.asset_id(c)?;
                 Ok(c.portfolio
-                    .asset_total_in_cex_account(&cex_id, &account_id, &asset_id))
+                    .cex_account(&cex_id, &account_id)
+                    .map_or(0.0, |portfolio| portfolio.asset_total(&asset_id)))
             }
             Self::AssetAvailable { asset_id_value } => {
                 let asset_id = asset_id_value.asset_id(c)?;

@@ -88,14 +88,14 @@ impl Portfolio {
 
     /// Iterates over every asset balance with its CEX, account, and asset.
     ///
-    /// Each item is `(cex_id, account_id, asset_id, count)`, where `count`
+    /// Each item is `(cex_id, account_id, asset_id, total)`, where `total`
     /// includes both available and reserved amounts.
     pub fn assets_iter(&self) -> impl Iterator<Item = (&CexId, &AccountId, &AssetId, &f64)> {
         self.cex_accounts()
             .flat_map(|(cex_id, account_id, portfolio)| {
                 portfolio
-                    .asset_counts()
-                    .map(move |(asset_id, count)| (cex_id, account_id, asset_id, count))
+                    .asset_totals()
+                    .map(move |(asset_id, total)| (cex_id, account_id, asset_id, total))
             })
     }
 
@@ -107,7 +107,7 @@ impl Portfolio {
     ) -> impl Iterator<Item = (&AssetId, &f64)> {
         self.cex_account(cex_id, account_id)
             .into_iter()
-            .flat_map(|portfolio| portfolio.asset_counts())
+            .flat_map(|portfolio| portfolio.asset_totals())
     }
 
     /// Iterates over every pending order with its CEX, account, and tag.
@@ -182,19 +182,7 @@ impl Portfolio {
     pub fn asset_total(&self, asset_id: &AssetId) -> f64 {
         self.assets_iter()
             .filter(|(_, _, id, _)| *id == asset_id)
-            .map(|(_, _, _, count)| *count)
-            .sum()
-    }
-    /// `asset_id` held in a **specific** CEX account (counts available and reserved).
-    pub fn asset_total_in_cex_account(
-        &self,
-        cex_id: &CexId,
-        account_id: &AccountId,
-        asset_id: &AssetId,
-    ) -> f64 {
-        self.assets_in_cex_account_iter(cex_id, account_id)
-            .filter(|(id, _)| *id == asset_id)
-            .map(|(_, count)| *count)
+            .map(|(_, _, _, total)| *total)
             .sum()
     }
 }

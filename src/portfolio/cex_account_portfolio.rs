@@ -5,7 +5,7 @@ use stock_trek_types::cex::{asset_id::AssetId, tag::Tag};
 /// Asset balances and pending orders for a single CEX account.
 #[derive(Debug, Clone, Default)]
 pub struct CexAccountPortfolio {
-    pub(super) asset_counts: BTreeMap<AssetId, f64>,
+    pub(super) asset_totals: BTreeMap<AssetId, f64>,
     pub(super) pending_orders: BTreeMap<Tag, Vec<PendingOrder>>,
 }
 
@@ -17,15 +17,15 @@ impl CexAccountPortfolio {
     /// negative or not finite, when a pending-order tag appears more than once,
     /// or when a pending order's tag does not match the key of the group it is
     /// listed under.
-    pub fn new<A, P>(asset_counts: A, pending_orders: P) -> StockTrekResult<Self>
+    pub fn new<A, P>(asset_totals: A, pending_orders: P) -> StockTrekResult<Self>
     where
         A: IntoIterator<Item = (AssetId, f64)>,
         P: IntoIterator<Item = (Tag, Vec<PendingOrder>)>,
     {
         let mut balances = BTreeMap::new();
-        for (asset_id, count) in asset_counts {
-            Validation::non_negative("CexAccountPortfolio::new", "asset balance", count)?;
-            if balances.insert(asset_id, count).is_some() {
+        for (asset_id, total) in asset_totals {
+            Validation::non_negative("CexAccountPortfolio::new", "asset balance", total)?;
+            if balances.insert(asset_id, total).is_some() {
                 return Err(Validation::error(
                     "CexAccountPortfolio::new",
                     format!("duplicate asset balance for asset {asset_id}"),
@@ -54,21 +54,21 @@ impl CexAccountPortfolio {
         }
 
         Ok(Self {
-            asset_counts: balances,
+            asset_totals: balances,
             pending_orders: orders_by_tag,
         })
     }
 
-    /// Iterates over all asset balances keyed by asset.
-    pub fn asset_counts(&self) -> impl Iterator<Item = (&AssetId, &f64)> {
-        self.asset_counts.iter()
+    /// Iterates over all asset totals keyed by asset.
+    pub fn asset_totals(&self) -> impl Iterator<Item = (&AssetId, &f64)> {
+        self.asset_totals.iter()
     }
 
     /// Returns the total balance (available and reserved) of an asset.
     ///
     /// Returns zero when the account does not hold the asset.
-    pub fn asset_count(&self, asset_id: &AssetId) -> f64 {
-        self.asset_counts.get(asset_id).copied().unwrap_or(0.0)
+    pub fn asset_total(&self, asset_id: &AssetId) -> f64 {
+        self.asset_totals.get(asset_id).copied().unwrap_or(0.0)
     }
 
     /// Iterates over all pending orders grouped by tag.

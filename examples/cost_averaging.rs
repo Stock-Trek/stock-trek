@@ -176,7 +176,7 @@ mod tests {
         let actions = Rc::new(RefCell::new(Vec::new()));
         let enqueued_actions = Rc::clone(&actions);
         let mut portfolio = PortfolioBuilder::new();
-        portfolio.asset_count(
+        portfolio.asset_total(
             CexId::Binance,
             AccountId::new(CEX_ACCOUNT_ID),
             AssetId::TetherUSD,
