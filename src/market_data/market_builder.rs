@@ -164,26 +164,7 @@ impl MarketBuilder {
 
         for (window, candles) in &self.aligned {
             for candle in candles {
-                let start = candle.start_time_millis_inc();
-                let end = candle.end_time_millis_exc();
-                let bounds = window.bounds_for(start).map_err(|error| {
-                    Validation::error(
-                        function,
-                        format!(
-                            "could not determine the {window} window bounds at {start}: {error}"
-                        ),
-                    )
-                })?;
-                if start != bounds.lower() || end != bounds.upper() {
-                    return Err(Validation::error(
-                        function,
-                        format!(
-                            "candle interval {start}..{end} does not match the {window} window bounds {}..{}",
-                            bounds.lower(),
-                            bounds.upper()
-                        ),
-                    ));
-                }
+                MarketAlignedWindow::validate_candle(function, *window, candle)?;
             }
             MarketAlignedWindow::validate_intervals(function, *window, candles)?;
         }

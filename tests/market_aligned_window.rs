@@ -48,11 +48,22 @@ fn candle_at(start_time_millis_inc: u64, open: f64) -> MarketCandle {
     .unwrap()
 }
 
+fn candle_from_interval(start_time_millis_inc: u64, end_time_millis_exc: u64) -> MarketCandle {
+    serde_json::from_value(serde_json::json!({
+        "start_time_millis_inc": start_time_millis_inc,
+        "end_time_millis_exc": end_time_millis_exc,
+        "is_candle_closed": true,
+        "ohlcv": ohlcv_at(1.0),
+        "trade_count": 3,
+    }))
+    .unwrap()
+}
+
 #[test]
 fn new_rejects_duplicate_windows() {
     let market = MarketAlignedWindow::new([
-        (AlignedWindow::Minutes1, vec![candle_at(2, 2.0)]),
-        (AlignedWindow::Minutes1, vec![candle_at(1, 1.0)]),
+        (AlignedWindow::Seconds1, vec![candle_at(2_000, 2.0)]),
+        (AlignedWindow::Seconds1, vec![candle_at(1_000, 1.0)]),
     ]);
 
     assert!(market.is_err());
@@ -61,8 +72,8 @@ fn new_rejects_duplicate_windows() {
 #[test]
 fn new_rejects_duplicate_candle_intervals() {
     let market = MarketAlignedWindow::new([(
-        AlignedWindow::Minutes1,
-        vec![candle_at(2, 2.0), candle_at(2, 3.0)],
+        AlignedWindow::Seconds1,
+        vec![candle_at(2_000, 2.0), candle_at(2_000, 3.0)],
     )]);
 
     assert!(market.is_err());
@@ -71,39 +82,65 @@ fn new_rejects_duplicate_candle_intervals() {
 #[test]
 fn new_sorts_candles_chronologically() {
     let market = MarketAlignedWindow::new(BTreeMap::from([(
-        AlignedWindow::Minutes1,
-        vec![candle_at(2, 2.0), candle_at(1, 1.0)],
+        AlignedWindow::Seconds1,
+        vec![candle_at(2_000, 2.0), candle_at(1_000, 1.0)],
     )]))
     .unwrap();
 
-    assert_eq!(market.opens(AlignedWindow::Minutes1), Some(vec![1.0, 2.0]));
+    assert_eq!(market.opens(AlignedWindow::Seconds1), Some(vec![1.0, 2.0]));
+}
+
+#[test]
+fn new_rejects_candles_that_do_not_match_their_window() {
+    assert!(
+        MarketAlignedWindow::new([(
+            AlignedWindow::Minutes1,
+            vec![candle_from_interval(0, 1_000)],
+        )])
+        .is_err()
+    );
+    assert!(
+        MarketAlignedWindow::new([(
+            AlignedWindow::Minutes1,
+            vec![candle_from_interval(1_000, 60_000)],
+        )])
+        .is_err()
+    );
+}
+
+#[test]
+fn new_rejects_zero_duration_candles() {
+    assert!(
+        MarketAlignedWindow::new([(AlignedWindow::Seconds1, vec![candle_from_interval(0, 0)],)])
+            .is_err()
+    );
 }
 
 #[test]
 fn serde_json_round_trip() {
     let market =
-        MarketAlignedWindow::new(BTreeMap::from([(AlignedWindow::Minutes1, vec![candle()])]))
+        MarketAlignedWindow::new(BTreeMap::from([(AlignedWindow::Seconds1, vec![candle()])]))
             .unwrap();
     let json = serde_json::to_string(&market).unwrap();
     let deserialized: MarketAlignedWindow = serde_json::from_str(&json).unwrap();
 
-    assert_eq!(deserialized.opens(AlignedWindow::Minutes1), Some(vec![1.0]));
+    assert_eq!(deserialized.opens(AlignedWindow::Seconds1), Some(vec![1.0]));
 }
 
 #[test]
 fn deserialization_sorts_candles_chronologically() {
     let json = serde_json::json!({
         "candles": {
-            "1m": [
-                candle_at(2, 2.0),
-                candle_at(1, 1.0),
+            "1s": [
+                candle_at(2_000, 2.0),
+                candle_at(1_000, 1.0),
             ]
         }
     });
     let deserialized: MarketAlignedWindow = serde_json::from_value(json).unwrap();
 
     assert_eq!(
-        deserialized.opens(AlignedWindow::Minutes1),
+        deserialized.opens(AlignedWindow::Seconds1),
         Some(vec![1.0, 2.0])
     );
 }
@@ -112,10 +149,21 @@ fn deserialization_sorts_candles_chronologically() {
 fn deserialization_rejects_duplicate_candle_intervals() {
     let json = serde_json::json!({
         "candles": {
-            "1m": [
-                candle_at(2, 2.0),
-                candle_at(2, 3.0),
+            "1s": [
+                candle_at(2_000, 2.0),
+                candle_at(2_000, 3.0),
             ]
+        }
+    });
+
+    assert!(serde_json::from_value::<MarketAlignedWindow>(json).is_err());
+}
+
+#[test]
+fn deserialization_rejects_candles_that_do_not_match_their_window() {
+    let json = serde_json::json!({
+        "candles": {
+            "1m": [candle_at(0, 1.0)]
         }
     });
 
