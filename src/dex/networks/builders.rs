@@ -34,12 +34,13 @@ impl Blockchain {
 impl AssetOnChain {
     pub(super) fn evm(
         blockchain_name: &str,
-        network: impl TryInto<NetworkId, Error = StockTrekError> + Into<u64> + Copy,
+        network: impl TryInto<NetworkId, Error = StockTrekError> + Copy,
+        chain_id: ChainId,
         asset_kind: AssetKind,
     ) -> StockTrekResult<Self> {
         let blockchain = Blockchain::evm(blockchain_name)?;
         let network_id = network.try_into()?;
-        let network = Network::new(network_id, Some(ChainId::new(network.into())));
+        let network = Network::new(network_id, Some(chain_id));
         Self::new(blockchain, network, asset_kind)
     }
 }
