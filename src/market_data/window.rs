@@ -7,7 +7,7 @@
 /// `Minutes5 => "5m"`. The macro generates [`Self::label`],
 /// [`std::fmt::Display`], [`serde::Serialize`], [`serde::Deserialize`],
 /// [`TryFrom<&str>`], and [`std::str::FromStr`].
-macro_rules! window_label_funcs {
+macro_rules! window_enum {
     (
         $(#[$meta:meta])*
         $name:ident,
@@ -95,4 +95,4 @@ macro_rules! window_label_funcs {
     };
 }
 
-pub(crate) use window_label_funcs;
+pub(crate) use window_enum;

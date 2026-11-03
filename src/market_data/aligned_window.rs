@@ -1,12 +1,12 @@
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
-    market_data::{millis::*, timestamp::TimestampMillis, window_label::window_label_funcs},
+    market_data::{millis::*, timestamp::TimestampMillis, window::window_enum},
     validation::Validation,
 };
 use chrono::{DateTime, Datelike, Months, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 
-window_label_funcs!(
+window_enum!(
     /// A window aligned to fixed or calendar boundaries.
     ///
     /// Variants up to and including `Weeks4` have fixed lengths. Month and year

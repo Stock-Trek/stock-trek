@@ -1,6 +1,6 @@
-use crate::market_data::{millis::*, window_label::window_label_funcs};
+use crate::market_data::{millis::*, window::window_enum};
 
-window_label_funcs!(
+window_enum!(
     /// A fixed-length rolling time window.
     ///
     /// Variants are named after their length, so `Minutes5` is five minutes and
