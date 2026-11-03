@@ -9,7 +9,7 @@ use crate::{
     },
     validation::Validation,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 const INCREMENT_TOLERANCE: f64 = 1e-9;
 const INCREMENT_TOLERANCE_ULPS: f64 = 4.0;
@@ -172,7 +172,6 @@ impl MarketBuilder {
         }
 
         for (window, candles) in &self.aligned {
-            let mut intervals = BTreeSet::new();
             for candle in candles {
                 let start = candle.start_time_millis_inc();
                 let end = candle.end_time_millis_exc();
@@ -194,13 +193,8 @@ impl MarketBuilder {
                         ),
                     ));
                 }
-                if !intervals.insert((start, end)) {
-                    return Err(Validation::error(
-                        function,
-                        format!("duplicate candle interval {start}..{end} for the {window} window"),
-                    ));
-                }
             }
+            MarketAlignedWindow::validate_intervals(function, *window, candles)?;
         }
 
         for quote in &self.order_book_bids {

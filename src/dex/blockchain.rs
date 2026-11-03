@@ -109,9 +109,7 @@ impl Blockchain {
 
     /// Returns whether `contract_address` fully matches the blockchain's address format.
     pub fn is_valid_address(&self, contract_address: &str) -> bool {
-        self.address_regex
-            .find(contract_address)
-            .is_some_and(|matched| matched.start() == 0 && matched.end() == contract_address.len())
+        self.address_regex.is_match(contract_address)
     }
 
     fn has_anchors(hir: &Hir) -> bool {
