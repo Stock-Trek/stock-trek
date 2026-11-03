@@ -330,47 +330,22 @@ impl MarketAlignedWindow {
         ohlcv: MarketOhlcv,
         trade_count: u64,
     ) -> StockTrekResult<MarketCandle> {
-        let end = match window {
-            AlignedWindow::Weeks1 | AlignedWindow::Weeks2 | AlignedWindow::Weeks4 => {
-                let millis = window.millis_exact().ok_or_else(|| {
-                    Validation::error(
-                        "MarketAlignedWindow::aligned_candle",
-                        format!("the {window} window has no fixed length"),
-                    )
-                })?;
-                start.checked_add(TimestampMillis::new(millis)).ok_or_else(
-                    || {
-                        Validation::error(
-                            "MarketAlignedWindow::aligned_candle",
-                            format!(
-                                "the {window} window starting at {start} with duration {millis} ms overflows the timestamp range"
-                            ),
-                        )
-                    },
-                )?
-            }
-            _ => {
-                let bounds = window.bounds_for(start).map_err(|error| {
-                    Validation::error(
-                        "MarketAlignedWindow::aligned_candle",
-                        format!(
-                            "could not determine the {window} window bounds at {start}: {error}"
-                        ),
-                    )
-                })?;
-                if bounds.lower() != start {
-                    return Err(Validation::error(
-                        "MarketAlignedWindow::aligned_candle",
-                        format!(
-                            "{start} is not the start of a {window} window: the window containing it starts at {}",
-                            bounds.lower()
-                        ),
-                    ));
-                }
-                bounds.upper()
-            }
-        };
-        MarketCandle::from_interval(start, end, true, ohlcv, trade_count)
+        let bounds = window.bounds_for(start).map_err(|error| {
+            Validation::error(
+                "MarketAlignedWindow::aligned_candle",
+                format!("could not determine the {window} window bounds at {start}: {error}"),
+            )
+        })?;
+        if bounds.lower() != start {
+            return Err(Validation::error(
+                "MarketAlignedWindow::aligned_candle",
+                format!(
+                    "{start} is not the start of a {window} window: the window containing it starts at {}",
+                    bounds.lower()
+                ),
+            ));
+        }
+        MarketCandle::from_interval(start, bounds.upper(), true, ohlcv, trade_count)
     }
 
     fn window_start_at(

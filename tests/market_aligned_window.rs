@@ -200,52 +200,57 @@ fn month_constructors_reject_months_that_do_not_start_a_window() {
 }
 
 #[test]
-fn weeks1_accepts_any_start_date() {
+fn weeks1_rejects_dates_that_do_not_start_a_window() {
+    assert!(MarketAlignedWindow::weeks1(2024, 2, 2, [(ohlcv_at(1.0), 3)]).is_err());
+
     let market =
-        MarketAlignedWindow::weeks1(2024, 2, 2, [(ohlcv_at(1.0), 3), (ohlcv_at(2.0), 4)]).unwrap();
+        MarketAlignedWindow::weeks1(2024, 2, 15, [(ohlcv_at(1.0), 3), (ohlcv_at(2.0), 4)]).unwrap();
     let candles = market.candles_for(AlignedWindow::Weeks1).unwrap();
 
     assert_eq!(candles.len(), 2);
     assert_eq!(
         candles[0].start_time_millis_inc(),
-        millis_at(2024, 2, 2, 0, 0, 0)
+        millis_at(2024, 2, 15, 0, 0, 0)
     );
     assert_eq!(
         candles[0].end_time_millis_exc(),
-        millis_at(2024, 2, 9, 0, 0, 0)
+        millis_at(2024, 2, 22, 0, 0, 0)
     );
     assert_eq!(
         candles[1].start_time_millis_inc(),
-        millis_at(2024, 2, 9, 0, 0, 0)
+        millis_at(2024, 2, 22, 0, 0, 0)
     );
     assert_eq!(
         candles[1].end_time_millis_exc(),
-        millis_at(2024, 2, 16, 0, 0, 0)
+        millis_at(2024, 2, 29, 0, 0, 0)
     );
 }
 
 #[test]
-fn week_constructors_accept_any_start_date() {
-    let market = MarketAlignedWindow::weeks2(2024, 2, 2, [(ohlcv_at(1.0), 3)]).unwrap();
+fn week_constructors_reject_dates_that_do_not_start_a_window() {
+    assert!(MarketAlignedWindow::weeks2(2024, 2, 2, [(ohlcv_at(1.0), 3)]).is_err());
+    assert!(MarketAlignedWindow::weeks4(2024, 2, 2, [(ohlcv_at(1.0), 3)]).is_err());
+
+    let market = MarketAlignedWindow::weeks2(2024, 2, 15, [(ohlcv_at(1.0), 3)]).unwrap();
     let candles = market.candles_for(AlignedWindow::Weeks2).unwrap();
     assert_eq!(
         candles[0].start_time_millis_inc(),
-        millis_at(2024, 2, 2, 0, 0, 0)
+        millis_at(2024, 2, 15, 0, 0, 0)
     );
     assert_eq!(
         candles[0].end_time_millis_exc(),
-        millis_at(2024, 2, 16, 0, 0, 0)
+        millis_at(2024, 2, 29, 0, 0, 0)
     );
 
-    let market = MarketAlignedWindow::weeks4(2024, 2, 2, [(ohlcv_at(1.0), 3)]).unwrap();
+    let market = MarketAlignedWindow::weeks4(2024, 2, 15, [(ohlcv_at(1.0), 3)]).unwrap();
     let candles = market.candles_for(AlignedWindow::Weeks4).unwrap();
     assert_eq!(
         candles[0].start_time_millis_inc(),
-        millis_at(2024, 2, 2, 0, 0, 0)
+        millis_at(2024, 2, 15, 0, 0, 0)
     );
     assert_eq!(
         candles[0].end_time_millis_exc(),
-        millis_at(2024, 3, 1, 0, 0, 0)
+        millis_at(2024, 3, 14, 0, 0, 0)
     );
 }
 
