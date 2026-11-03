@@ -45,7 +45,7 @@ impl Portfolio {
         })
     }
     /// Whether an account exists.
-    pub fn has_cex_account(&self, cex_id: &CexId, account_id: &AccountId) -> bool {
+    pub fn has_cex_account(&self, cex_id: CexId, account_id: &AccountId) -> bool {
         self.cex_account(cex_id, account_id).is_some()
     }
 
@@ -68,9 +68,9 @@ impl Portfolio {
     }
 
     /// Iterates over the account identifiers in a specific CEX.
-    pub fn accounts_in_cex(&self, cex_id: &CexId) -> impl Iterator<Item = &AccountId> {
+    pub fn accounts_in_cex(&self, cex_id: CexId) -> impl Iterator<Item = &AccountId> {
         self.portfolios
-            .get(cex_id)
+            .get(&cex_id)
             .into_iter()
             .flat_map(|accounts| accounts.keys())
     }
@@ -78,11 +78,11 @@ impl Portfolio {
     /// Returns the portfolio for a specific CEX account, if it exists.
     pub fn cex_account(
         &self,
-        cex_id: &CexId,
+        cex_id: CexId,
         account_id: &AccountId,
     ) -> Option<&CexAccountPortfolio> {
         self.portfolios
-            .get(cex_id)
+            .get(&cex_id)
             .and_then(|accounts| accounts.get(account_id))
     }
 
@@ -102,7 +102,7 @@ impl Portfolio {
     /// Iterates over the asset balances in a specific CEX account.
     pub fn assets_in_cex_account_iter(
         &self,
-        cex_id: &CexId,
+        cex_id: CexId,
         account_id: &AccountId,
     ) -> impl Iterator<Item = (&AssetId, &f64)> {
         self.cex_account(cex_id, account_id)
@@ -127,7 +127,7 @@ impl Portfolio {
     /// Iterates over the pending orders in a specific CEX account.
     pub fn pending_orders_in_cex_account_iter(
         &self,
-        cex_id: &CexId,
+        cex_id: CexId,
         account_id: &AccountId,
     ) -> impl Iterator<Item = (&Tag, &PendingOrder)> {
         self.cex_account(cex_id, account_id)
@@ -138,7 +138,7 @@ impl Portfolio {
     /// Iterates over the pending orders with `tag` in a specific CEX account.
     pub fn pending_orders_in_cex_account_with_tag_iter<'a>(
         &'a self,
-        cex_id: &CexId,
+        cex_id: CexId,
         account_id: &AccountId,
         tag: &'a Tag,
     ) -> impl Iterator<Item = &'a PendingOrder> {
@@ -162,7 +162,7 @@ impl Portfolio {
     /// Number of pending orders in a specific CEX account.
     pub fn pending_orders_in_cex_account_count(
         &self,
-        cex_id: &CexId,
+        cex_id: CexId,
         account_id: &AccountId,
     ) -> usize {
         self.pending_orders_in_cex_account_iter(cex_id, account_id)
@@ -171,7 +171,7 @@ impl Portfolio {
     /// Number of pending orders with the given `tag` in a specific CEX account.
     pub fn pending_orders_in_cex_account_with_tag_count(
         &self,
-        cex_id: &CexId,
+        cex_id: CexId,
         account_id: &AccountId,
         tag: &Tag,
     ) -> usize {
@@ -180,9 +180,9 @@ impl Portfolio {
     }
 
     /// Total `asset_id` held across **all** accounts (counts available and reserved).
-    pub fn asset_total(&self, asset_id: &AssetId) -> f64 {
+    pub fn asset_total(&self, asset_id: AssetId) -> f64 {
         self.assets_iter()
-            .filter(|(_, _, id, _)| *id == asset_id)
+            .filter(|(_, _, id, _)| **id == asset_id)
             .map(|(_, _, _, total)| *total)
             .sum()
     }
@@ -192,9 +192,9 @@ impl Portfolio {
     /// Returns zero when the account does not exist.
     pub fn asset_total_in_cex_account(
         &self,
-        cex_id: &CexId,
+        cex_id: CexId,
         account_id: &AccountId,
-        asset_id: &AssetId,
+        asset_id: AssetId,
     ) -> f64 {
         self.cex_account(cex_id, account_id)
             .map_or(0.0, |portfolio| portfolio.asset_total(asset_id))
