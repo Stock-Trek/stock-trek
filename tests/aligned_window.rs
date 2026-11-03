@@ -257,6 +257,30 @@ fn calendar_months_returns_months_for_calendar_windows_only() {
     }
 }
 
+#[test]
+fn bounds_for_handles_timestamps_far_beyond_normal_range() {
+    let timestamp = TimestampMillis::new(8_000_000_000_000_000);
+
+    for window in AlignedWindow::iter() {
+        let bounds = bounds_for(window, timestamp);
+
+        assert!(bounds.lower() <= timestamp);
+        assert!(timestamp < bounds.upper());
+    }
+}
+
+#[test]
+fn bounds_for_rejects_calendar_timestamps_outside_the_supported_range() {
+    for timestamp in [
+        TimestampMillis::new(i64::MAX as u64),
+        TimestampMillis::new(u64::MAX),
+    ] {
+        for window in AlignedWindow::iter().filter(|window| window.months_exact().is_some()) {
+            assert!(window.bounds_for(timestamp).is_err());
+        }
+    }
+}
+
 window_tests!(
     AlignedWindow,
     AlignedWindow::Seconds1 => "1s",
