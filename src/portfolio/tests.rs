@@ -80,12 +80,12 @@ fn totals_are_deterministic_across_insertion_order() {
     let reverse = determinism_portfolio(true);
 
     assert_eq!(
-        forward.asset_total(&AssetId::Bitcoin).to_bits(),
-        reverse.asset_total(&AssetId::Bitcoin).to_bits()
+        forward.asset_total(AssetId::Bitcoin).to_bits(),
+        reverse.asset_total(AssetId::Bitcoin).to_bits()
     );
     assert_eq!(
-        forward.asset_reserved(&AssetId::Bitcoin).to_bits(),
-        reverse.asset_reserved(&AssetId::Bitcoin).to_bits()
+        forward.asset_reserved(AssetId::Bitcoin).to_bits(),
+        reverse.asset_reserved(AssetId::Bitcoin).to_bits()
     );
 }
 
@@ -122,18 +122,18 @@ fn asset_iterators_report_balances_for_each_account() {
 
     assert_eq!(
         portfolio
-            .assets_in_cex_account_iter(&CexId::Binance, &account_a)
+            .assets_in_cex_account_iter(CexId::Binance, &account_a)
             .count(),
         2
     );
     assert_eq!(
         portfolio
-            .cex_account(&CexId::Binance, &account_b)
+            .cex_account(CexId::Binance, &account_b)
             .unwrap()
-            .asset_total(&AssetId::Bitcoin),
+            .asset_total(AssetId::Bitcoin),
         4.0
     );
-    assert_eq!(portfolio.asset_total(&AssetId::Bitcoin), 6.0);
+    assert_eq!(portfolio.asset_total(AssetId::Bitcoin), 6.0);
 }
 
 #[test]
@@ -164,7 +164,7 @@ fn pending_order_count_helpers_agree_with_their_iterators() {
         0
     );
     assert_eq!(
-        portfolio.pending_orders_in_cex_account_count(&CexId::Binance, &account_a),
+        portfolio.pending_orders_in_cex_account_count(CexId::Binance, &account_a),
         1
     );
 }
@@ -173,10 +173,10 @@ fn pending_order_count_helpers_agree_with_their_iterators() {
 fn reserved_quantity_is_clamped_when_filled_exceeds_ordered() {
     let portfolio = portfolio_with(limit_sell(Quantity::OfBase(10.0), 100.0), 15.0, 0.0);
 
-    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 0.0);
+    assert_eq!(portfolio.asset_reserved(AssetId::Bitcoin), 0.0);
     assert_eq!(
-        portfolio.asset_available(&AssetId::Bitcoin),
-        portfolio.asset_total(&AssetId::Bitcoin)
+        portfolio.asset_available(AssetId::Bitcoin),
+        portfolio.asset_total(AssetId::Bitcoin)
     );
 }
 
@@ -198,7 +198,7 @@ fn portfolio_builder_rejects_zero_price_quote_limited_sell() {
 fn partial_fill_reserves_remaining_quantity() {
     let portfolio = portfolio_with(limit_sell(Quantity::OfBase(10.0), 100.0), 4.0, 0.0);
 
-    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 6.0);
+    assert_eq!(portfolio.asset_reserved(AssetId::Bitcoin), 6.0);
 }
 
 #[test]
@@ -211,7 +211,7 @@ fn market_orders_reserve_quantities_are_clamped() {
         tag: Tag::new("tag"),
     };
     let portfolio = portfolio_with(market_buy, 0.0, 150.0);
-    assert_eq!(portfolio.asset_reserved(&AssetId::TetherUSD), 0.0);
+    assert_eq!(portfolio.asset_reserved(AssetId::TetherUSD), 0.0);
 
     let market_sell = OrderRequest::MarketSell {
         base: AssetId::Bitcoin,
@@ -221,7 +221,7 @@ fn market_orders_reserve_quantities_are_clamped() {
         tag: Tag::new("tag"),
     };
     let portfolio = portfolio_with(market_sell, 15.0, 0.0);
-    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 0.0);
+    assert_eq!(portfolio.asset_reserved(AssetId::Bitcoin), 0.0);
 }
 
 #[test]
@@ -237,17 +237,17 @@ fn asset_total_in_cex_account_returns_balance_or_zero() {
 
     assert_eq!(
         portfolio.asset_total_in_cex_account(
-            &CexId::Binance,
+            CexId::Binance,
             &AccountId::new("account"),
-            &AssetId::Bitcoin,
+            AssetId::Bitcoin,
         ),
         100.0
     );
     assert_eq!(
         portfolio.asset_total_in_cex_account(
-            &CexId::Binance,
+            CexId::Binance,
             &AccountId::new("missing"),
-            &AssetId::Bitcoin,
+            AssetId::Bitcoin,
         ),
         0.0
     );
@@ -257,13 +257,13 @@ fn asset_total_in_cex_account_returns_balance_or_zero() {
 fn asset_available_is_clamped_when_reservations_exceed_balance() {
     let portfolio = portfolio_with(limit_sell(Quantity::OfBase(150.0), 100.0), 0.0, 0.0);
 
-    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 150.0);
-    assert_eq!(portfolio.asset_available(&AssetId::Bitcoin), 0.0);
+    assert_eq!(portfolio.asset_reserved(AssetId::Bitcoin), 150.0);
+    assert_eq!(portfolio.asset_available(AssetId::Bitcoin), 0.0);
     assert_eq!(
         portfolio.asset_available_in_cex_account(
-            &CexId::Binance,
+            CexId::Binance,
             &AccountId::new("account"),
-            &AssetId::Bitcoin,
+            AssetId::Bitcoin,
         ),
         0.0
     );
@@ -285,17 +285,17 @@ fn asset_available_clamps_reservations_per_account() {
     builder.asset_total(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 100.0);
     let portfolio = builder.build().unwrap();
 
-    assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 150.0);
-    assert_eq!(portfolio.asset_available(&AssetId::Bitcoin), 100.0);
+    assert_eq!(portfolio.asset_reserved(AssetId::Bitcoin), 150.0);
+    assert_eq!(portfolio.asset_available(AssetId::Bitcoin), 100.0);
     assert_eq!(
-        portfolio.asset_available(&AssetId::Bitcoin),
+        portfolio.asset_available(AssetId::Bitcoin),
         portfolio
             .cex_accounts()
             .map(
                 |(cex_id, account_id, _)| portfolio.asset_available_in_cex_account(
-                    cex_id,
+                    *cex_id,
                     account_id,
-                    &AssetId::Bitcoin
+                    AssetId::Bitcoin
                 )
             )
             .sum::<f64>()
@@ -316,7 +316,7 @@ fn pending_orders_are_grouped_by_the_order_request_tag() {
 
     assert_eq!(
         portfolio.pending_orders_in_cex_account_with_tag_count(
-            &CexId::Binance,
+            CexId::Binance,
             &AccountId::new("account"),
             &Tag::new("tag"),
         ),
@@ -324,7 +324,7 @@ fn pending_orders_are_grouped_by_the_order_request_tag() {
     );
     assert_eq!(
         portfolio.pending_orders_in_cex_account_with_tag_count(
-            &CexId::Binance,
+            CexId::Binance,
             &AccountId::new("account"),
             &Tag::new("other"),
         ),
@@ -349,8 +349,8 @@ fn cex_account_portfolio_accepts_non_negative_asset_balances() {
     let pending_orders = std::iter::empty::<(Tag, Vec<crate::pending_order::PendingOrder>)>();
     let portfolio = CexAccountPortfolio::new(asset_totals, pending_orders).unwrap();
 
-    assert_eq!(portfolio.asset_total(&AssetId::Bitcoin), 0.0);
-    assert_eq!(portfolio.asset_total(&AssetId::TetherUSD), 100.0);
+    assert_eq!(portfolio.asset_total(AssetId::Bitcoin), 0.0);
+    assert_eq!(portfolio.asset_total(AssetId::TetherUSD), 100.0);
 }
 
 #[test]

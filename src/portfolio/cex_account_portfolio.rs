@@ -67,8 +67,8 @@ impl CexAccountPortfolio {
     /// Returns the total balance (available and reserved) of an asset.
     ///
     /// Returns zero when the account does not hold the asset.
-    pub fn asset_total(&self, asset_id: &AssetId) -> f64 {
-        self.asset_totals.get(asset_id).copied().unwrap_or(0.0)
+    pub fn asset_total(&self, asset_id: AssetId) -> f64 {
+        self.asset_totals.get(&asset_id).copied().unwrap_or(0.0)
     }
 
     /// Iterates over all pending orders grouped by tag.

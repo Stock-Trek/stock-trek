@@ -257,7 +257,7 @@ impl NumberValue {
             } => {
                 let (cex_id, account_id) =
                     Self::resolve_cex_account(c, cex_id_value, account_id_value)?;
-                Ok(portfolio.pending_orders_in_cex_account_count(&cex_id, &account_id) as f64)
+                Ok(portfolio.pending_orders_in_cex_account_count(cex_id, &account_id) as f64)
             }
             Self::PendingOrdersInCexAccountWithTag {
                 cex_id_value,
@@ -267,15 +267,12 @@ impl NumberValue {
                 let (cex_id, account_id) =
                     Self::resolve_cex_account(c, cex_id_value, account_id_value)?;
                 Ok(
-                    portfolio.pending_orders_in_cex_account_with_tag_count(
-                        &cex_id,
-                        &account_id,
-                        tag,
-                    ) as f64,
+                    portfolio.pending_orders_in_cex_account_with_tag_count(cex_id, &account_id, tag)
+                        as f64,
                 )
             }
             Self::AssetTotal { asset_id_value } => {
-                Ok(portfolio.asset_total(&asset_id_value.asset_id(c)?))
+                Ok(portfolio.asset_total(asset_id_value.asset_id(c)?))
             }
             Self::AssetTotalInCexAccount {
                 cex_id_value,
@@ -285,10 +282,10 @@ impl NumberValue {
                 let (cex_id, account_id) =
                     Self::resolve_cex_account(c, cex_id_value, account_id_value)?;
                 let asset_id = asset_id_value.asset_id(c)?;
-                Ok(portfolio.asset_total_in_cex_account(&cex_id, &account_id, &asset_id))
+                Ok(portfolio.asset_total_in_cex_account(cex_id, &account_id, asset_id))
             }
             Self::AssetAvailable { asset_id_value } => {
-                Ok(portfolio.asset_available(&asset_id_value.asset_id(c)?))
+                Ok(portfolio.asset_available(asset_id_value.asset_id(c)?))
             }
             Self::AssetAvailableInCexAccount {
                 cex_id_value,
@@ -298,10 +295,10 @@ impl NumberValue {
                 let (cex_id, account_id) =
                     Self::resolve_cex_account(c, cex_id_value, account_id_value)?;
                 let asset_id = asset_id_value.asset_id(c)?;
-                Ok(portfolio.asset_available_in_cex_account(&cex_id, &account_id, &asset_id))
+                Ok(portfolio.asset_available_in_cex_account(cex_id, &account_id, asset_id))
             }
             Self::AssetReserved { asset_id_value } => {
-                Ok(portfolio.asset_reserved(&asset_id_value.asset_id(c)?))
+                Ok(portfolio.asset_reserved(asset_id_value.asset_id(c)?))
             }
             Self::AssetReservedInCexAccount {
                 cex_id_value,
@@ -311,7 +308,7 @@ impl NumberValue {
                 let (cex_id, account_id) =
                     Self::resolve_cex_account(c, cex_id_value, account_id_value)?;
                 let asset_id = asset_id_value.asset_id(c)?;
-                Ok(portfolio.asset_reserved_in_cex_account(&cex_id, &account_id, &asset_id))
+                Ok(portfolio.asset_reserved_in_cex_account(cex_id, &account_id, asset_id))
             }
             Self::BinaryCalculation {
                 left,
