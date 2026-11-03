@@ -1,5 +1,5 @@
 use super::{CexAccountPortfolio, Portfolio};
-use crate::{error::result::StockTrekResult, pending_order::PendingOrder, validation::Validation};
+use crate::{error::result::StockTrekResult, pending_order::PendingOrder};
 use std::collections::BTreeMap;
 use stock_trek_types::cex::{
     account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest, tag::Tag,
@@ -94,38 +94,33 @@ impl PortfolioBuilder {
     /// Returns an error when an asset count is negative or not finite, or when
     /// a pending order is invalid.
     pub fn build(self) -> StockTrekResult<Portfolio> {
-        let function = "PortfolioBuilder::build";
-        let mut portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>> =
-            BTreeMap::new();
-        for (cex_id, accounts) in self.portfolios {
-            let accounts_by_id = portfolios.entry(cex_id).or_default();
-            for (account_id, data) in accounts {
-                let mut asset_counts = BTreeMap::new();
-                for (asset_id, count) in data.asset_counts {
-                    Validation::non_negative(function, "asset count", count)?;
-                    asset_counts.insert(asset_id, count);
-                }
-                let mut pending_orders = BTreeMap::new();
-                for (tag, orders) in data.pending_orders {
-                    let mut validated_orders = Vec::with_capacity(orders.len());
-                    for order in orders {
-                        validated_orders.push(PendingOrder::new(
-                            order.order_request,
-                            order.filled_base_quantity,
-                            order.filled_quote_quantity,
-                        )?);
-                    }
-                    pending_orders.insert(tag, validated_orders);
-                }
-                accounts_by_id.insert(
+        let mut accounts = Vec::new();
+        for (cex_id, accounts_by_id) in self.portfolios {
+            for (account_id, data) in accounts_by_id {
+                let pending_orders = data
+                    .pending_orders
+                    .into_iter()
+                    .map(|(tag, orders)| {
+                        let orders = orders
+                            .into_iter()
+                            .map(|order| {
+                                PendingOrder::new(
+                                    order.order_request,
+                                    order.filled_base_quantity,
+                                    order.filled_quote_quantity,
+                                )
+                            })
+                            .collect::<StockTrekResult<Vec<_>>>()?;
+                        Ok((tag, orders))
+                    })
+                    .collect::<StockTrekResult<BTreeMap<_, _>>>()?;
+                accounts.push((
+                    cex_id,
                     account_id,
-                    CexAccountPortfolio {
-                        asset_counts,
-                        pending_orders,
-                    },
-                );
+                    CexAccountPortfolio::new(data.asset_counts, pending_orders)?,
+                ));
             }
         }
-        Ok(Portfolio { portfolios })
+        Portfolio::new(accounts)
     }
 }
