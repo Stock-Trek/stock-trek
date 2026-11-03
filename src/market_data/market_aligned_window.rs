@@ -149,7 +149,7 @@ mod tests {
     }
 
     fn candle_at(start_time_millis_inc: u64, open: f64) -> MarketCandle {
-        MarketCandle::new(
+        MarketCandle::from_interval(
             TimestampMillis::new(start_time_millis_inc),
             TimestampMillis::new(start_time_millis_inc + 1),
             true,

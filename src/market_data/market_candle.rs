@@ -1,6 +1,8 @@
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
-    market_data::{market_ohlcv::MarketOhlcv, timestamp::TimestampMillis},
+    market_data::{
+        market_ohlcv::MarketOhlcv, rolling_window::RollingWindow, timestamp::TimestampMillis,
+    },
     validation::Validation,
 };
 use serde::{Deserialize, Serialize};
@@ -9,7 +11,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// The start is inclusive and the end is exclusive. `is_candle_closed` marks
 /// candles that will no longer receive updates. The end timestamp is validated
-/// against the start when the candle is created or deserialized.
+/// against the start when the candle is deserialized.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(try_from = "MarketCandleData")]
 pub struct MarketCandle {
@@ -21,10 +23,40 @@ pub struct MarketCandle {
 }
 
 impl MarketCandle {
-    /// Creates a market candle from its timestamp, OHLCV, and trade count.
+    /// Creates a market candle that covers exactly one rolling window
+    /// starting at `start_time_millis_inc`.
     ///
-    /// Returns an error when the end precedes the start.
+    /// The end timestamp is derived from the window length, so the candle
+    /// duration always matches the window. Returns an error when the end
+    /// timestamp would overflow the timestamp range.
     pub fn new(
+        window: RollingWindow,
+        start_time_millis_inc: TimestampMillis,
+        is_candle_closed: bool,
+        ohlcv: MarketOhlcv,
+        trade_count: u64,
+    ) -> StockTrekResult<Self> {
+        let window_millis = window.millis_exact();
+        let end_time_millis_exc = start_time_millis_inc
+            .checked_add(TimestampMillis::new(window_millis))
+            .ok_or_else(|| {
+                Self::error(
+                    "MarketCandle::new",
+                    format!(
+                        "start time {start_time_millis_inc} plus the {window} window duration {window_millis} ms overflows the timestamp range"
+                    ),
+                )
+            })?;
+        Self::from_interval(
+            start_time_millis_inc,
+            end_time_millis_exc,
+            is_candle_closed,
+            ohlcv,
+            trade_count,
+        )
+    }
+
+    pub(super) fn from_interval(
         start_time_millis_inc: TimestampMillis,
         end_time_millis_exc: TimestampMillis,
         is_candle_closed: bool,
@@ -34,9 +66,12 @@ impl MarketCandle {
         end_time_millis_exc
             .checked_sub(start_time_millis_inc)
             .ok_or_else(|| {
-                Self::error(format!(
-                    "end time {end_time_millis_exc} precedes start time {start_time_millis_inc}"
-                ))
+                Self::error(
+                    "MarketCandle::from_interval",
+                    format!(
+                        "end time {end_time_millis_exc} precedes start time {start_time_millis_inc}"
+                    ),
+                )
             })?;
 
         Ok(Self {
@@ -48,8 +83,8 @@ impl MarketCandle {
         })
     }
 
-    fn error(message: String) -> StockTrekError {
-        Validation::error("MarketCandle::new", message)
+    fn error(function: &'static str, message: String) -> StockTrekError {
+        Validation::error(function, message)
     }
 
     /// Returns the inclusive start time of the candle.
@@ -102,7 +137,7 @@ impl TryFrom<MarketCandleData> for MarketCandle {
     type Error = StockTrekError;
 
     fn try_from(data: MarketCandleData) -> Result<Self, Self::Error> {
-        Self::new(
+        Self::from_interval(
             data.start_time_millis_inc,
             data.end_time_millis_exc,
             data.is_candle_closed,
@@ -122,8 +157,8 @@ mod tests {
 
     fn candle() -> MarketCandle {
         MarketCandle::new(
+            RollingWindow::Seconds1,
             TimestampMillis::new(1_000),
-            TimestampMillis::new(2_000),
             true,
             ohlcv(),
             3,
@@ -132,7 +167,38 @@ mod tests {
     }
 
     #[test]
-    fn derives_the_duration_from_the_interval() {
+    fn new_derives_the_end_from_the_window_length() {
+        let candle = MarketCandle::new(
+            RollingWindow::Minutes1,
+            TimestampMillis::new(1_000),
+            true,
+            ohlcv(),
+            3,
+        )
+        .unwrap();
+
+        assert_eq!(candle.start_time_millis_inc(), TimestampMillis::new(1_000));
+        assert_eq!(candle.end_time_millis_exc(), TimestampMillis::new(61_000));
+        assert_eq!(candle.duration_millis(), 60_000);
+        assert!(candle.is_candle_closed());
+    }
+
+    #[test]
+    fn new_rejects_an_end_that_overflows_the_timestamp_range() {
+        assert!(
+            MarketCandle::new(
+                RollingWindow::Days1,
+                TimestampMillis::new(u64::MAX),
+                true,
+                ohlcv(),
+                3,
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn derives_the_duration_from_the_window() {
         let candle = candle();
 
         assert_eq!(candle.duration_millis(), 1_000);
@@ -145,8 +211,8 @@ mod tests {
     }
 
     #[test]
-    fn accepts_a_zero_length_interval() {
-        let candle = MarketCandle::new(
+    fn from_interval_accepts_a_zero_length_interval() {
+        let candle = MarketCandle::from_interval(
             TimestampMillis::new(1_000),
             TimestampMillis::new(1_000),
             true,
@@ -159,8 +225,8 @@ mod tests {
     }
 
     #[test]
-    fn rejects_an_end_that_precedes_the_start() {
-        let error = MarketCandle::new(
+    fn from_interval_rejects_an_end_that_precedes_the_start() {
+        let error = MarketCandle::from_interval(
             TimestampMillis::new(2_000),
             TimestampMillis::new(1_000),
             true,
