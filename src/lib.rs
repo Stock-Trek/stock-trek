@@ -82,8 +82,9 @@ pub mod capabilities {
 
 /// Error types returned by stock-trek operations.
 pub mod errors {
+    #[cfg(feature = "dex")]
+    pub use crate::error::dex::DexError;
     pub use crate::error::{
-        dex::DexError,
         domain::DomainError,
         result::{StockTrekError, StockTrekResult},
         stats::StatsError,
@@ -164,10 +165,12 @@ pub mod values {
 
 /// Commonly used imports for writing algorithms.
 pub mod prelude {
+    #[cfg(feature = "dex")]
+    pub use super::errors::DexError;
     pub use super::{
         Algorithm, Command, Preferences, RoundingStrategy, StrategyContext,
         actions::{ActionErrorCause, ActionErrorResponse, RecoveryPolicy},
-        errors::{DexError, DomainError, StatsError, StockTrekError, StockTrekResult, ValueError},
+        errors::{DomainError, StatsError, StockTrekError, StockTrekResult, ValueError},
         pending_order::PendingOrder,
         portfolio::{CexAccountPortfolio, Portfolio},
         register_algorithm,

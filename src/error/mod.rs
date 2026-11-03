@@ -1,3 +1,4 @@
+#[cfg(feature = "dex")]
 pub mod dex;
 pub mod domain;
 pub mod result;
