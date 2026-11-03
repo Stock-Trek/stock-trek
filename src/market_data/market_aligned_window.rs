@@ -13,35 +13,26 @@ use std::collections::{BTreeMap, BTreeSet};
 /// Generates constructors that take the components of a window's aligned UTC
 /// start instead of timestamps.
 ///
-/// Each generated constructor accepts an iterator of `(components..., is
-/// candle closed, OHLCV, trade count)` tuples and rejects entries whose
-/// components do not identify the exact start of the window.
+/// Each generated constructor takes the components of the first window's
+/// start, followed by an iterator of `(OHLCV, trade count)` tuples, and adds
+/// one candle per tuple: the first candle starts at the given start, each
+/// following candle starts where the previous one ends, and every created
+/// candle is marked closed.
 macro_rules! aligned_window_constructor {
     ($($(#[$doc:meta])* $name:ident, $variant:ident, [year]);* $(;)?) => {
         $(
             $(#[$doc])*
             ///
-            /// Each entry is a `(year, is candle closed, OHLCV, trade count)`
-            /// tuple in UTC. Returns an error when the components do not
-            /// identify the exact start of a window.
+            /// The first candle starts at the start of `year` in UTC, each
+            /// following candle starts where the previous one ends, and every
+            /// created candle is marked closed. Returns an error when the
+            /// start does not begin a window.
             pub fn $name(
-                candles: impl IntoIterator<Item = (i32, bool, MarketOhlcv, u64)>,
+                year: i32,
+                candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let window = AlignedWindow::$variant;
-                let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> =
-                    BTreeMap::new();
-                for (year, is_candle_closed, ohlcv, trade_count) in candles {
-                    let start = Self::window_start_at(year, 1, 1, 0, 0, 0)?;
-                    Self::push_aligned_candle(
-                        &mut candles_by_window,
-                        window,
-                        start,
-                        is_candle_closed,
-                        ohlcv,
-                        trade_count,
-                    )?;
-                }
-                Self::new(candles_by_window)
+                let start = Self::window_start_at(year, 1, 1, 0, 0, 0)?;
+                Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
     };
@@ -49,27 +40,17 @@ macro_rules! aligned_window_constructor {
         $(
             $(#[$doc])*
             ///
-            /// Each entry is a `(year, month, is candle closed, OHLCV, trade
-            /// count)` tuple in UTC. Returns an error when the components do
-            /// not identify the exact start of a window.
+            /// The first candle starts at the start of `year`-`month` in UTC,
+            /// each following candle starts where the previous one ends, and
+            /// every created candle is marked closed. Returns an error when
+            /// the start does not begin a window.
             pub fn $name(
-                candles: impl IntoIterator<Item = (i32, u32, bool, MarketOhlcv, u64)>,
+                year: i32,
+                month: u32,
+                candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let window = AlignedWindow::$variant;
-                let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> =
-                    BTreeMap::new();
-                for (year, month, is_candle_closed, ohlcv, trade_count) in candles {
-                    let start = Self::window_start_at(year, month, 1, 0, 0, 0)?;
-                    Self::push_aligned_candle(
-                        &mut candles_by_window,
-                        window,
-                        start,
-                        is_candle_closed,
-                        ohlcv,
-                        trade_count,
-                    )?;
-                }
-                Self::new(candles_by_window)
+                let start = Self::window_start_at(year, month, 1, 0, 0, 0)?;
+                Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
     };
@@ -77,27 +58,18 @@ macro_rules! aligned_window_constructor {
         $(
             $(#[$doc])*
             ///
-            /// Each entry is a `(year, month, day, is candle closed, OHLCV,
-            /// trade count)` tuple in UTC. Returns an error when the
-            /// components do not identify the exact start of a window.
+            /// The first candle starts at the start of `year`-`month`-`day`
+            /// in UTC, each following candle starts where the previous one
+            /// ends, and every created candle is marked closed. Returns an
+            /// error when the start does not begin a window.
             pub fn $name(
-                candles: impl IntoIterator<Item = (i32, u32, u32, bool, MarketOhlcv, u64)>,
+                year: i32,
+                month: u32,
+                day: u32,
+                candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let window = AlignedWindow::$variant;
-                let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> =
-                    BTreeMap::new();
-                for (year, month, day, is_candle_closed, ohlcv, trade_count) in candles {
-                    let start = Self::window_start_at(year, month, day, 0, 0, 0)?;
-                    Self::push_aligned_candle(
-                        &mut candles_by_window,
-                        window,
-                        start,
-                        is_candle_closed,
-                        ohlcv,
-                        trade_count,
-                    )?;
-                }
-                Self::new(candles_by_window)
+                let start = Self::window_start_at(year, month, day, 0, 0, 0)?;
+                Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
     };
@@ -105,27 +77,19 @@ macro_rules! aligned_window_constructor {
         $(
             $(#[$doc])*
             ///
-            /// Each entry is a `(year, month, day, hour, is candle closed,
-            /// OHLCV, trade count)` tuple in UTC. Returns an error when the
-            /// components do not identify the exact start of a window.
+            /// The first candle starts at `year`-`month`-`day` `hour`:00 in
+            /// UTC, each following candle starts where the previous one ends,
+            /// and every created candle is marked closed. Returns an error
+            /// when the start does not begin a window.
             pub fn $name(
-                candles: impl IntoIterator<Item = (i32, u32, u32, u32, bool, MarketOhlcv, u64)>,
+                year: i32,
+                month: u32,
+                day: u32,
+                hour: u32,
+                candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let window = AlignedWindow::$variant;
-                let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> =
-                    BTreeMap::new();
-                for (year, month, day, hour, is_candle_closed, ohlcv, trade_count) in candles {
-                    let start = Self::window_start_at(year, month, day, hour, 0, 0)?;
-                    Self::push_aligned_candle(
-                        &mut candles_by_window,
-                        window,
-                        start,
-                        is_candle_closed,
-                        ohlcv,
-                        trade_count,
-                    )?;
-                }
-                Self::new(candles_by_window)
+                let start = Self::window_start_at(year, month, day, hour, 0, 0)?;
+                Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
     };
@@ -133,47 +97,20 @@ macro_rules! aligned_window_constructor {
         $(
             $(#[$doc])*
             ///
-            /// Each entry is a `(year, month, day, hour, minute, is candle
-            /// closed, OHLCV, trade count)` tuple in UTC. Returns an error
-            /// when the components do not identify the exact start of a
-            /// window.
+            /// The first candle starts at `year`-`month`-`day` `hour`:`minute`
+            /// in UTC, each following candle starts where the previous one
+            /// ends, and every created candle is marked closed. Returns an
+            /// error when the start does not begin a window.
             pub fn $name(
-                candles: impl IntoIterator<Item = (
-                    i32,
-                    u32,
-                    u32,
-                    u32,
-                    u32,
-                    bool,
-                    MarketOhlcv,
-                    u64,
-                )>,
+                year: i32,
+                month: u32,
+                day: u32,
+                hour: u32,
+                minute: u32,
+                candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let window = AlignedWindow::$variant;
-                let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> =
-                    BTreeMap::new();
-                for (
-                    year,
-                    month,
-                    day,
-                    hour,
-                    minute,
-                    is_candle_closed,
-                    ohlcv,
-                    trade_count,
-                ) in candles
-                {
-                    let start = Self::window_start_at(year, month, day, hour, minute, 0)?;
-                    Self::push_aligned_candle(
-                        &mut candles_by_window,
-                        window,
-                        start,
-                        is_candle_closed,
-                        ohlcv,
-                        trade_count,
-                    )?;
-                }
-                Self::new(candles_by_window)
+                let start = Self::window_start_at(year, month, day, hour, minute, 0)?;
+                Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
     };
@@ -181,49 +118,22 @@ macro_rules! aligned_window_constructor {
         $(
             $(#[$doc])*
             ///
-            /// Each entry is a `(year, month, day, hour, minute, second, is
-            /// candle closed, OHLCV, trade count)` tuple in UTC. Returns an
-            /// error when the components do not identify the exact start of
-            /// a window.
+            /// The first candle starts at `year`-`month`-`day`
+            /// `hour`:`minute`:`second` in UTC, each following candle starts
+            /// where the previous one ends, and every created candle is marked
+            /// closed. Returns an error when the start does not begin a
+            /// window.
             pub fn $name(
-                candles: impl IntoIterator<Item = (
-                    i32,
-                    u32,
-                    u32,
-                    u32,
-                    u32,
-                    u32,
-                    bool,
-                    MarketOhlcv,
-                    u64,
-                )>,
+                year: i32,
+                month: u32,
+                day: u32,
+                hour: u32,
+                minute: u32,
+                second: u32,
+                candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let window = AlignedWindow::$variant;
-                let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> =
-                    BTreeMap::new();
-                for (
-                    year,
-                    month,
-                    day,
-                    hour,
-                    minute,
-                    second,
-                    is_candle_closed,
-                    ohlcv,
-                    trade_count,
-                ) in candles
-                {
-                    let start = Self::window_start_at(year, month, day, hour, minute, second)?;
-                    Self::push_aligned_candle(
-                        &mut candles_by_window,
-                        window,
-                        start,
-                        is_candle_closed,
-                        ohlcv,
-                        trade_count,
-                    )?;
-                }
-                Self::new(candles_by_window)
+                let start = Self::window_start_at(year, month, day, hour, minute, second)?;
+                Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
     };
@@ -329,52 +239,56 @@ impl MarketAlignedWindow {
 
     aligned_window_constructor!(
         /// Creates an aligned-window collection with candles for 1-day
-        /// windows. The date identifies the calendar day the window covers.
+        /// windows. The date identifies the calendar day the first window
+        /// covers.
         days1, Days1, [year, month, day];
         /// Creates an aligned-window collection with candles for 1-week
-        /// windows. The date must be the start of the window: weeks start on
-        /// Thursday, counting from the Unix epoch.
+        /// windows. The date must be the start of the first window: weeks
+        /// start on Thursday, counting from the Unix epoch.
         weeks1, Weeks1, [year, month, day];
         /// Creates an aligned-window collection with candles for 2-week
-        /// windows. The date must be the start of the window: 2-week windows
-        /// start on every second Thursday, counting from the Unix epoch.
+        /// windows. The date must be the start of the first window: 2-week
+        /// windows start on every second Thursday, counting from the Unix
+        /// epoch.
         weeks2, Weeks2, [year, month, day];
         /// Creates an aligned-window collection with candles for 4-week
-        /// windows. The date must be the start of the window: 4-week windows
-        /// start on every fourth Thursday, counting from the Unix epoch.
+        /// windows. The date must be the start of the first window: 4-week
+        /// windows start on every fourth Thursday, counting from the Unix
+        /// epoch.
         weeks4, Weeks4, [year, month, day];
     );
 
     aligned_window_constructor!(
         /// Creates an aligned-window collection with candles for 1-month
-        /// windows. The month identifies the calendar month the window
+        /// windows. The month identifies the calendar month the first window
         /// covers.
         months1, Months1, [year, month];
         /// Creates an aligned-window collection with candles for 2-month
-        /// windows. The month must start the window: 2-month windows start
-        /// in January, March, May, July, September, and November.
+        /// windows. The month must start the first window: 2-month windows
+        /// start in January, March, May, July, September, and November.
         months2, Months2, [year, month];
         /// Creates an aligned-window collection with candles for 3-month
-        /// windows. The month must start the window: 3-month windows start
-        /// in January, April, July, and October.
+        /// windows. The month must start the first window: 3-month windows
+        /// start in January, April, July, and October.
         months3, Months3, [year, month];
         /// Creates an aligned-window collection with candles for 4-month
-        /// windows. The month must start the window: 4-month windows start
-        /// in January, May, and September.
+        /// windows. The month must start the first window: 4-month windows
+        /// start in January, May, and September.
         months4, Months4, [year, month];
         /// Creates an aligned-window collection with candles for 6-month
-        /// windows. The month must start the window: 6-month windows start
-        /// in January and July.
+        /// windows. The month must start the first window: 6-month windows
+        /// start in January and July.
         months6, Months6, [year, month];
     );
 
     aligned_window_constructor!(
         /// Creates an aligned-window collection with candles for 1-year
-        /// windows. The year identifies the calendar year the window covers.
+        /// windows. The year identifies the calendar year the first window
+        /// covers.
         years1, Years1, [year];
         /// Creates an aligned-window collection with candles for 2-year
-        /// windows. The year must start the window: 2-year windows start in
-        /// even years.
+        /// windows. The year must start the first window: 2-year windows
+        /// start in even years.
         years2, Years2, [year];
     );
 
@@ -395,23 +309,24 @@ impl MarketAlignedWindow {
         Ok(())
     }
 
-    fn push_aligned_candle(
-        candles_by_window: &mut BTreeMap<AlignedWindow, Vec<MarketCandle>>,
+    fn with_consecutive_candles(
         window: AlignedWindow,
         start: TimestampMillis,
-        is_candle_closed: bool,
-        ohlcv: MarketOhlcv,
-        trade_count: u64,
-    ) -> StockTrekResult<()> {
-        let candle = Self::aligned_candle(window, start, is_candle_closed, ohlcv, trade_count)?;
-        candles_by_window.entry(window).or_default().push(candle);
-        Ok(())
+        candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
+    ) -> StockTrekResult<Self> {
+        let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> = BTreeMap::new();
+        let mut start = start;
+        for (ohlcv, trade_count) in candles {
+            let candle = Self::aligned_candle(window, start, ohlcv, trade_count)?;
+            start = candle.end_time_millis_exc();
+            candles_by_window.entry(window).or_default().push(candle);
+        }
+        Self::new(candles_by_window)
     }
 
     fn aligned_candle(
         window: AlignedWindow,
         start: TimestampMillis,
-        is_candle_closed: bool,
         ohlcv: MarketOhlcv,
         trade_count: u64,
     ) -> StockTrekResult<MarketCandle> {
@@ -430,7 +345,7 @@ impl MarketAlignedWindow {
                 ),
             ));
         }
-        MarketCandle::from_interval(start, bounds.upper(), is_candle_closed, ohlcv, trade_count)
+        MarketCandle::from_interval(start, bounds.upper(), true, ohlcv, trade_count)
     }
 
     fn window_start_at(
@@ -668,7 +583,7 @@ mod tests {
 
     #[test]
     fn years1_creates_candles_for_calendar_years() {
-        let market = MarketAlignedWindow::years1([(2024, true, ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::years1(2024, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Years1).unwrap();
 
         assert_eq!(candles.len(), 1);
@@ -686,9 +601,9 @@ mod tests {
 
     #[test]
     fn years2_rejects_years_that_do_not_start_a_window() {
-        assert!(MarketAlignedWindow::years2([(2025, true, ohlcv_at(1.0), 3)]).is_err());
+        assert!(MarketAlignedWindow::years2(2025, [(ohlcv_at(1.0), 3)]).is_err());
 
-        let market = MarketAlignedWindow::years2([(2024, false, ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::years2(2024, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Years2).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
@@ -702,7 +617,7 @@ mod tests {
 
     #[test]
     fn months1_creates_candles_for_calendar_months() {
-        let market = MarketAlignedWindow::months1([(2024, 2, false, ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::months1(2024, 2, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Months1).unwrap();
 
         assert_eq!(
@@ -717,10 +632,10 @@ mod tests {
 
     #[test]
     fn month_constructors_reject_months_that_do_not_start_a_window() {
-        assert!(MarketAlignedWindow::months2([(2024, 2, true, ohlcv_at(1.0), 3)]).is_err());
-        assert!(MarketAlignedWindow::months6([(2024, 2, true, ohlcv_at(1.0), 3)]).is_err());
+        assert!(MarketAlignedWindow::months2(2024, 2, [(ohlcv_at(1.0), 3)]).is_err());
+        assert!(MarketAlignedWindow::months6(2024, 2, [(ohlcv_at(1.0), 3)]).is_err());
 
-        let market = MarketAlignedWindow::months2([(2024, 3, true, ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::months2(2024, 3, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Months2).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
@@ -731,7 +646,7 @@ mod tests {
             millis_at(2024, 5, 1, 0, 0, 0)
         );
 
-        let market = MarketAlignedWindow::months6([(2024, 7, true, ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::months6(2024, 7, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Months6).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
@@ -745,9 +660,9 @@ mod tests {
 
     #[test]
     fn weeks1_requires_window_start_dates() {
-        assert!(MarketAlignedWindow::weeks1([(2024, 2, 2, true, ohlcv_at(1.0), 3)]).is_err());
+        assert!(MarketAlignedWindow::weeks1(2024, 2, 2, [(ohlcv_at(1.0), 3)]).is_err());
 
-        let market = MarketAlignedWindow::weeks1([(2024, 2, 1, true, ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::weeks1(2024, 2, 1, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Weeks1).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
@@ -761,9 +676,9 @@ mod tests {
 
     #[test]
     fn week_constructors_require_epoch_aligned_week_starts() {
-        assert!(MarketAlignedWindow::weeks4([(2024, 2, 1, true, ohlcv_at(1.0), 3)]).is_err());
+        assert!(MarketAlignedWindow::weeks4(2024, 2, 1, [(ohlcv_at(1.0), 3)]).is_err());
 
-        let market = MarketAlignedWindow::weeks2([(2024, 2, 1, true, ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::weeks2(2024, 2, 1, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Weeks2).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
@@ -774,7 +689,7 @@ mod tests {
             millis_at(2024, 2, 15, 0, 0, 0)
         );
 
-        let market = MarketAlignedWindow::weeks4([(2024, 2, 15, true, ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::weeks4(2024, 2, 15, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Weeks4).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
@@ -788,9 +703,9 @@ mod tests {
 
     #[test]
     fn days1_creates_candles_for_calendar_days_and_rejects_invalid_dates() {
-        assert!(MarketAlignedWindow::days1([(2024, 2, 30, true, ohlcv_at(1.0), 3)]).is_err());
+        assert!(MarketAlignedWindow::days1(2024, 2, 30, [(ohlcv_at(1.0), 3)]).is_err());
 
-        let market = MarketAlignedWindow::days1([(2024, 2, 15, true, ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::days1(2024, 2, 15, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Days1).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
@@ -804,10 +719,9 @@ mod tests {
 
     #[test]
     fn hours12_rejects_hours_that_do_not_start_a_window() {
-        assert!(MarketAlignedWindow::hours12([(2024, 2, 15, 9, true, ohlcv_at(1.0), 3)]).is_err());
+        assert!(MarketAlignedWindow::hours12(2024, 2, 15, 9, [(ohlcv_at(1.0), 3)]).is_err());
 
-        let market =
-            MarketAlignedWindow::hours12([(2024, 2, 15, 12, true, ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::hours12(2024, 2, 15, 12, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Hours12).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
@@ -821,12 +735,10 @@ mod tests {
 
     #[test]
     fn minutes5_rejects_minutes_that_do_not_start_a_window() {
-        assert!(
-            MarketAlignedWindow::minutes5([(2024, 2, 15, 12, 7, true, ohlcv_at(1.0), 3)]).is_err()
-        );
+        assert!(MarketAlignedWindow::minutes5(2024, 2, 15, 12, 7, [(ohlcv_at(1.0), 3)]).is_err());
 
         let market =
-            MarketAlignedWindow::minutes5([(2024, 2, 15, 12, 5, true, ohlcv_at(1.0), 3)]).unwrap();
+            MarketAlignedWindow::minutes5(2024, 2, 15, 12, 5, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Minutes5).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
@@ -841,13 +753,11 @@ mod tests {
     #[test]
     fn seconds30_rejects_seconds_that_do_not_start_a_window() {
         assert!(
-            MarketAlignedWindow::seconds30([(2024, 2, 15, 12, 30, 45, true, ohlcv_at(1.0), 3)])
-                .is_err()
+            MarketAlignedWindow::seconds30(2024, 2, 15, 12, 30, 45, [(ohlcv_at(1.0), 3)]).is_err()
         );
 
         let market =
-            MarketAlignedWindow::seconds30([(2024, 2, 15, 12, 30, 30, true, ohlcv_at(1.0), 3)])
-                .unwrap();
+            MarketAlignedWindow::seconds30(2024, 2, 15, 12, 30, 30, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Seconds30).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
@@ -860,24 +770,50 @@ mod tests {
     }
 
     #[test]
-    fn aligned_constructors_sort_candles_chronologically() {
-        let market = MarketAlignedWindow::years1([
-            (2025, true, ohlcv_at(2.0), 3),
-            (2024, true, ohlcv_at(1.0), 3),
-        ])
-        .unwrap();
+    fn aligned_constructors_add_one_consecutive_window_per_entry() {
+        let market =
+            MarketAlignedWindow::years1(2024, [(ohlcv_at(1.0), 3), (ohlcv_at(2.0), 4)]).unwrap();
+        let candles = market.candles_for(AlignedWindow::Years1).unwrap();
 
+        assert_eq!(candles.len(), 2);
+        assert_eq!(
+            candles[0].start_time_millis_inc(),
+            millis_at(2024, 1, 1, 0, 0, 0)
+        );
+        assert_eq!(
+            candles[0].end_time_millis_exc(),
+            millis_at(2025, 1, 1, 0, 0, 0)
+        );
+        assert_eq!(
+            candles[1].start_time_millis_inc(),
+            millis_at(2025, 1, 1, 0, 0, 0)
+        );
+        assert_eq!(
+            candles[1].end_time_millis_exc(),
+            millis_at(2026, 1, 1, 0, 0, 0)
+        );
         assert_eq!(market.opens(AlignedWindow::Years1), Some(vec![1.0, 2.0]));
     }
 
     #[test]
-    fn aligned_constructors_reject_duplicate_starts() {
-        let market = MarketAlignedWindow::months1([
-            (2024, 2, true, ohlcv_at(1.0), 3),
-            (2024, 2, false, ohlcv_at(2.0), 3),
-        ]);
+    fn calendar_window_constructors_follow_calendar_lengths() {
+        let market =
+            MarketAlignedWindow::months1(2024, 1, [(ohlcv_at(1.0), 3), (ohlcv_at(2.0), 4)])
+                .unwrap();
+        let candles = market.candles_for(AlignedWindow::Months1).unwrap();
 
-        assert!(market.is_err());
+        assert_eq!(
+            candles[0].end_time_millis_exc(),
+            millis_at(2024, 2, 1, 0, 0, 0)
+        );
+        assert_eq!(
+            candles[1].start_time_millis_inc(),
+            millis_at(2024, 2, 1, 0, 0, 0)
+        );
+        assert_eq!(
+            candles[1].end_time_millis_exc(),
+            millis_at(2024, 3, 1, 0, 0, 0)
+        );
     }
 
     #[test]
@@ -885,135 +821,128 @@ mod tests {
         let ohlcv = ohlcv_at(1.0);
         let cases = vec![
             (
-                MarketAlignedWindow::seconds1([(2024, 2, 15, 12, 30, 45, true, ohlcv.clone(), 3)])
+                MarketAlignedWindow::seconds1(2024, 2, 15, 12, 30, 45, [(ohlcv.clone(), 3)])
                     .unwrap(),
                 AlignedWindow::Seconds1,
             ),
             (
-                MarketAlignedWindow::seconds5([(2024, 2, 15, 12, 30, 45, true, ohlcv.clone(), 3)])
+                MarketAlignedWindow::seconds5(2024, 2, 15, 12, 30, 45, [(ohlcv.clone(), 3)])
                     .unwrap(),
                 AlignedWindow::Seconds5,
             ),
             (
-                MarketAlignedWindow::seconds10([(2024, 2, 15, 12, 30, 50, true, ohlcv.clone(), 3)])
+                MarketAlignedWindow::seconds10(2024, 2, 15, 12, 30, 50, [(ohlcv.clone(), 3)])
                     .unwrap(),
                 AlignedWindow::Seconds10,
             ),
             (
-                MarketAlignedWindow::seconds15([(2024, 2, 15, 12, 30, 45, true, ohlcv.clone(), 3)])
+                MarketAlignedWindow::seconds15(2024, 2, 15, 12, 30, 45, [(ohlcv.clone(), 3)])
                     .unwrap(),
                 AlignedWindow::Seconds15,
             ),
             (
-                MarketAlignedWindow::seconds30([(2024, 2, 15, 12, 30, 30, true, ohlcv.clone(), 3)])
+                MarketAlignedWindow::seconds30(2024, 2, 15, 12, 30, 30, [(ohlcv.clone(), 3)])
                     .unwrap(),
                 AlignedWindow::Seconds30,
             ),
             (
-                MarketAlignedWindow::minutes1([(2024, 2, 15, 12, 45, true, ohlcv.clone(), 3)])
-                    .unwrap(),
+                MarketAlignedWindow::minutes1(2024, 2, 15, 12, 45, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Minutes1,
             ),
             (
-                MarketAlignedWindow::minutes2([(2024, 2, 15, 12, 44, true, ohlcv.clone(), 3)])
-                    .unwrap(),
+                MarketAlignedWindow::minutes2(2024, 2, 15, 12, 44, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Minutes2,
             ),
             (
-                MarketAlignedWindow::minutes3([(2024, 2, 15, 12, 45, true, ohlcv.clone(), 3)])
-                    .unwrap(),
+                MarketAlignedWindow::minutes3(2024, 2, 15, 12, 45, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Minutes3,
             ),
             (
-                MarketAlignedWindow::minutes5([(2024, 2, 15, 12, 45, true, ohlcv.clone(), 3)])
-                    .unwrap(),
+                MarketAlignedWindow::minutes5(2024, 2, 15, 12, 45, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Minutes5,
             ),
             (
-                MarketAlignedWindow::minutes10([(2024, 2, 15, 12, 50, true, ohlcv.clone(), 3)])
-                    .unwrap(),
+                MarketAlignedWindow::minutes10(2024, 2, 15, 12, 50, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Minutes10,
             ),
             (
-                MarketAlignedWindow::minutes15([(2024, 2, 15, 12, 45, true, ohlcv.clone(), 3)])
-                    .unwrap(),
+                MarketAlignedWindow::minutes15(2024, 2, 15, 12, 45, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Minutes15,
             ),
             (
-                MarketAlignedWindow::minutes30([(2024, 2, 15, 12, 30, true, ohlcv.clone(), 3)])
-                    .unwrap(),
+                MarketAlignedWindow::minutes30(2024, 2, 15, 12, 30, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Minutes30,
             ),
             (
-                MarketAlignedWindow::hours1([(2024, 2, 15, 12, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::hours1(2024, 2, 15, 12, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Hours1,
             ),
             (
-                MarketAlignedWindow::hours2([(2024, 2, 15, 12, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::hours2(2024, 2, 15, 12, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Hours2,
             ),
             (
-                MarketAlignedWindow::hours3([(2024, 2, 15, 12, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::hours3(2024, 2, 15, 12, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Hours3,
             ),
             (
-                MarketAlignedWindow::hours4([(2024, 2, 15, 12, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::hours4(2024, 2, 15, 12, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Hours4,
             ),
             (
-                MarketAlignedWindow::hours6([(2024, 2, 15, 12, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::hours6(2024, 2, 15, 12, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Hours6,
             ),
             (
-                MarketAlignedWindow::hours8([(2024, 2, 15, 16, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::hours8(2024, 2, 15, 16, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Hours8,
             ),
             (
-                MarketAlignedWindow::hours12([(2024, 2, 15, 12, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::hours12(2024, 2, 15, 12, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Hours12,
             ),
             (
-                MarketAlignedWindow::days1([(2024, 2, 15, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::days1(2024, 2, 15, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Days1,
             ),
             (
-                MarketAlignedWindow::weeks1([(2024, 2, 15, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::weeks1(2024, 2, 15, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Weeks1,
             ),
             (
-                MarketAlignedWindow::weeks2([(2024, 2, 15, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::weeks2(2024, 2, 15, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Weeks2,
             ),
             (
-                MarketAlignedWindow::weeks4([(2024, 2, 15, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::weeks4(2024, 2, 15, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Weeks4,
             ),
             (
-                MarketAlignedWindow::months1([(2024, 2, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::months1(2024, 2, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Months1,
             ),
             (
-                MarketAlignedWindow::months2([(2024, 3, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::months2(2024, 3, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Months2,
             ),
             (
-                MarketAlignedWindow::months3([(2024, 4, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::months3(2024, 4, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Months3,
             ),
             (
-                MarketAlignedWindow::months4([(2024, 5, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::months4(2024, 5, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Months4,
             ),
             (
-                MarketAlignedWindow::months6([(2024, 7, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::months6(2024, 7, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Months6,
             ),
             (
-                MarketAlignedWindow::years1([(2024, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::years1(2024, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Years1,
             ),
             (
-                MarketAlignedWindow::years2([(2024, true, ohlcv.clone(), 3)]).unwrap(),
+                MarketAlignedWindow::years2(2024, [(ohlcv.clone(), 3)]).unwrap(),
                 AlignedWindow::Years2,
             ),
         ];
