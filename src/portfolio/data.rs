@@ -31,7 +31,8 @@ impl Portfolio {
     where
         I: IntoIterator<Item = (CexId, AccountId, CexAccountPortfolio)>,
     {
-        let mut portfolios_by_cex = BTreeMap::new();
+        let mut portfolios_by_cex: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>> =
+            BTreeMap::new();
         for (cex_id, account_id, portfolio) in portfolios {
             let accounts_by_id = portfolios_by_cex.entry(cex_id).or_default();
             if accounts_by_id.contains_key(&account_id) {
