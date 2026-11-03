@@ -91,24 +91,26 @@ impl SignalContextBuilder {
     /// Returns an error when the market for a CEX and base/quote pair has
     /// been added more than once.
     pub fn build(self) -> StockTrekResult<SignalContext> {
-        let function = "SignalContextBuilder::build";
-        let mut cex_market_data: BTreeMap<CexId, CexMarketDataByBaseContext> = BTreeMap::new();
+        let mut markets: BTreeMap<CexId, BTreeMap<AssetId, Vec<(AssetId, Market)>>> =
+            BTreeMap::new();
         for (cex_id, base, quote, market) in self.cex_market_data {
-            let markets_by_quote = &mut cex_market_data
+            markets
                 .entry(cex_id)
                 .or_default()
-                .markets_by_base
                 .entry(base)
                 .or_default()
-                .markets_by_quote;
-            if markets_by_quote.insert(quote, market).is_some() {
-                return Err(Validation::error(
-                    function,
-                    format!("duplicate market for {base}/{quote} on CEX {cex_id}"),
-                ));
-            }
+                .push((quote, market));
         }
-        Ok(SignalContext { cex_market_data })
+
+        let mut cex_market_data = Vec::with_capacity(markets.len());
+        for (cex_id, markets_by_base) in markets {
+            let mut bases = Vec::with_capacity(markets_by_base.len());
+            for (base, markets_by_quote) in markets_by_base {
+                bases.push((base, CexMarketDataByQuoteContext::new(markets_by_quote)?));
+            }
+            cex_market_data.push((cex_id, CexMarketDataByBaseContext::new(bases)?));
+        }
+        SignalContext::new(cex_market_data)
     }
 }
 
