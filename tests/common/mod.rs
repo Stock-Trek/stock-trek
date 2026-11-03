@@ -97,6 +97,17 @@ macro_rules! window_tests {
         }
 
         #[test]
+        fn unknown_labels_report_domain_errors() {
+            let error = <$window>::try_from("bogus").unwrap_err();
+
+            assert!(matches!(
+                error,
+                stock_trek::errors::StockTrekError::Domain(_)
+            ));
+            assert!(error.to_string().contains("bogus"));
+        }
+
+        #[test]
         fn checked_add_and_sub_use_the_window_length() {
             let date_time =
                 chrono::DateTime::from_timestamp_millis(1_700_000_000_123).unwrap();

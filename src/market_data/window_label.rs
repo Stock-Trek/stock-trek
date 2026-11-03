@@ -50,11 +50,11 @@ macro_rules! window_label_funcs {
             fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
                 match value {
                     $($label => Ok(Self::$variant),)+
-                    _ => Err($crate::error::result::StockTrekError::Value(
-                        $crate::error::value::ValueError::IncorrectType {
-                            expected: stringify!($name).into(),
-                            found: value.into(),
-                        },
+                    _ => Err($crate::error::result::StockTrekError::Domain(
+                        $crate::error::domain::DomainError::new(
+                            concat!(stringify!($name), "::try_from"),
+                            format!("unknown window label '{value}'"),
+                        ),
                     )),
                 }
             }
