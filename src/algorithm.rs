@@ -15,7 +15,7 @@ use crate::{
 ///   returns the [`Command`] tree that the platform interprets on every
 ///   evaluation thereafter. Values are resolved anew on each interpretation, so
 ///   must use [`StrategyContext`] factories (eg. `c.conditions.signal(MY_KEY)`)
-///   rather captured when the strategy phase runs.
+///   rather than captured when the strategy phase runs.
 pub trait Algorithm: Send + Sync {
     /// A stable identifier for the algorithm, used in registration and when
     /// selecting among registered algorithms.

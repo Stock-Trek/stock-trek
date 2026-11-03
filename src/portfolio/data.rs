@@ -93,7 +93,7 @@ impl Portfolio {
             portfolios: portfolios_by_cex,
         })
     }
-    /// Whether an account exists
+    /// Whether an account exists.
     pub fn has_cex_account(&self, cex_id: &CexId, account_id: &AccountId) -> bool {
         self.cex_account(cex_id, account_id).is_some()
     }
