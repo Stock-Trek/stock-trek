@@ -11,9 +11,9 @@ use strum::Display;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoverableAction {
     /// The action to enqueue.
-    pub action: Action,
+    action: Action,
     /// The responses applied when the action errors.
-    pub recovery_policy: RecoveryPolicy,
+    recovery_policy: RecoveryPolicy,
 }
 
 impl RecoverableAction {
@@ -23,6 +23,14 @@ impl RecoverableAction {
             action,
             recovery_policy,
         }
+    }
+    /// Returns the action to enqueue.
+    pub fn action(&self) -> &Action {
+        &self.action
+    }
+    /// Returns the responses applied when the action errors.
+    pub fn recovery_policy(&self) -> &RecoveryPolicy {
+        &self.recovery_policy
     }
     /// Resolves and enqueues the action on the resolved context.
     pub fn enqueue(&self, c: &mut ResolvedContext) -> StockTrekResult<()> {
