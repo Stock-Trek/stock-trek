@@ -6,7 +6,7 @@ use crate::{
     validation::Validation,
 };
 use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Candles grouped by aligned windows.
 ///
@@ -22,12 +22,14 @@ impl MarketAlignedWindow {
     /// Creates an aligned-window collection from candles grouped by window.
     ///
     /// Candles are sorted chronologically by start time. Returns an error when
-    /// the same window appears more than once.
+    /// the same window appears more than once or a window contains duplicate
+    /// candle intervals.
     pub fn new(
         candles: impl IntoIterator<Item = (AlignedWindow, Vec<MarketCandle>)>,
     ) -> StockTrekResult<Self> {
         let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> = BTreeMap::new();
         for (window, window_candles) in candles {
+            Self::validate_intervals(window, &window_candles)?;
             if candles_by_window.insert(window, window_candles).is_some() {
                 return Err(Validation::error(
                     "MarketAlignedWindow::new",
@@ -36,6 +38,23 @@ impl MarketAlignedWindow {
             }
         }
         Ok(Self::from_map(candles_by_window))
+    }
+
+    fn validate_intervals(window: AlignedWindow, candles: &[MarketCandle]) -> StockTrekResult<()> {
+        let mut intervals = BTreeSet::new();
+        for candle in candles {
+            let start = candle.start_time_millis_inc();
+            let end = candle.end_time_millis_exc();
+            if !intervals.insert((start, end)) {
+                return Err(Validation::error(
+                    "MarketAlignedWindow::new",
+                    format!(
+                        "duplicate candle interval {start}..{end} for aligned window {window:?}"
+                    ),
+                ));
+            }
+        }
+        Ok(())
     }
 
     /// Creates an aligned-window collection from candles already grouped by
@@ -160,6 +179,16 @@ mod tests {
     }
 
     #[test]
+    fn new_rejects_duplicate_candle_intervals() {
+        let market = MarketAlignedWindow::new([(
+            AlignedWindow::Minutes1,
+            vec![candle_at(2, 2.0), candle_at(2, 3.0)],
+        )]);
+
+        assert!(market.is_err());
+    }
+
+    #[test]
     fn new_sorts_candles_chronologically() {
         let market = MarketAlignedWindow::new(BTreeMap::from([(
             AlignedWindow::Minutes1,
@@ -197,6 +226,20 @@ mod tests {
             deserialized.opens(AlignedWindow::Minutes1),
             Some(vec![1.0, 2.0])
         );
+    }
+
+    #[test]
+    fn deserialization_rejects_duplicate_candle_intervals() {
+        let json = serde_json::json!({
+            "candles": {
+                "1m": [
+                    candle_at(2, 2.0),
+                    candle_at(2, 3.0),
+                ]
+            }
+        });
+
+        assert!(serde_json::from_value::<MarketAlignedWindow>(json).is_err());
     }
 
     #[test]

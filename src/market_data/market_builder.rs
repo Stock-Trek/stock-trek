@@ -129,7 +129,8 @@ impl MarketBuilder {
     /// Appends a candle to an aligned window.
     ///
     /// Returns an error unless the candle exactly covers the window that
-    /// contains its start time.
+    /// contains its start time and its interval is not already present in the
+    /// window.
     pub fn aligned_push_candle(
         &mut self,
         window: AlignedWindow,
@@ -137,21 +138,31 @@ impl MarketBuilder {
     ) -> StockTrekResult<&mut Self> {
         let function = "MarketBuilder::aligned_push_candle";
         let start = candle.start_time_millis_inc();
+        let end = candle.end_time_millis_exc();
         let bounds = window.bounds_for(start).map_err(|error| {
             Validation::error(
                 function,
                 format!("could not determine the {window} window bounds at {start}: {error}"),
             )
         })?;
-        if start != bounds.lower() || candle.end_time_millis_exc() != bounds.upper() {
+        if start != bounds.lower() || end != bounds.upper() {
             return Err(Validation::error(
                 function,
                 format!(
-                    "candle interval {start}..{} does not match the {window} window bounds {}..{}",
-                    candle.end_time_millis_exc(),
+                    "candle interval {start}..{end} does not match the {window} window bounds {}..{}",
                     bounds.lower(),
                     bounds.upper()
                 ),
+            ));
+        }
+        if self.aligned.get(&window).is_some_and(|candles| {
+            candles.iter().any(|existing| {
+                existing.start_time_millis_inc() == start && existing.end_time_millis_exc() == end
+            })
+        }) {
+            return Err(Validation::error(
+                function,
+                format!("duplicate candle interval {start}..{end} for the {window} window"),
             ));
         }
 

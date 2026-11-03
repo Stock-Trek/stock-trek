@@ -328,6 +328,30 @@ mod tests {
     }
 
     #[test]
+    fn rejects_duplicate_aligned_candle_intervals() {
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
+        builder
+            .aligned_push_candle(AlignedWindow::Minutes1, candle(0, 60_000))
+            .unwrap();
+
+        assert!(
+            builder
+                .aligned_push_candle(AlignedWindow::Minutes1, candle(0, 60_000))
+                .is_err()
+        );
+
+        let market = builder.build();
+        assert_eq!(
+            market
+                .aligned()
+                .candles_for(AlignedWindow::Minutes1)
+                .unwrap()
+                .len(),
+            1
+        );
+    }
+
+    #[test]
     fn accepts_calendar_aligned_candles_that_match_their_bounds() {
         let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
         let bounds = AlignedWindow::Months1
