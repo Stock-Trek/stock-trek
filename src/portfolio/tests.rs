@@ -225,6 +225,35 @@ fn market_orders_reserve_quantities_are_clamped() {
 }
 
 #[test]
+fn asset_total_in_cex_account_returns_balance_or_zero() {
+    let mut builder = PortfolioBuilder::new();
+    builder.asset_total(
+        CexId::Binance,
+        AccountId::new("account"),
+        AssetId::Bitcoin,
+        100.0,
+    );
+    let portfolio = builder.build().unwrap();
+
+    assert_eq!(
+        portfolio.asset_total_in_cex_account(
+            &CexId::Binance,
+            &AccountId::new("account"),
+            &AssetId::Bitcoin,
+        ),
+        100.0
+    );
+    assert_eq!(
+        portfolio.asset_total_in_cex_account(
+            &CexId::Binance,
+            &AccountId::new("missing"),
+            &AssetId::Bitcoin,
+        ),
+        0.0
+    );
+}
+
+#[test]
 fn asset_available_is_clamped_when_reservations_exceed_balance() {
     let portfolio = portfolio_with(limit_sell(Quantity::OfBase(150.0), 100.0), 0.0, 0.0);
 
