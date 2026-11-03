@@ -120,12 +120,6 @@ fn quantity_of_partial_short_circuits_after_true_and_false() {
 }
 
 #[test]
-fn quantity_of_empty_does_not_evaluate_conditions() {
-    assert!(quantity_of(QuantityOf::Empty, vec![]).unwrap());
-    assert!(!quantity_of(QuantityOf::Empty, vec![failing_condition()]).unwrap());
-}
-
-#[test]
 fn quantity_of_propagates_errors_when_the_result_is_not_determined() {
     assert!(quantity_of(QuantityOf::All, vec![failing_condition()]).is_err());
     assert!(quantity_of(QuantityOf::None, vec![failing_condition()]).is_err());

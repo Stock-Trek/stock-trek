@@ -141,7 +141,6 @@ impl Condition {
                     }
                     Ok(true)
                 }
-                QuantityOf::Empty => Ok(conditions.is_empty()),
             },
             Condition::Signal { signal } => c.signals().read(signal),
         }
@@ -162,8 +161,6 @@ pub enum QuantityOf {
     Partial,
     /// No conditions may be true.
     None,
-    /// The condition list must be empty.
-    Empty,
 }
 
 /// Factory for constructing conditions.
