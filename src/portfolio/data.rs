@@ -13,56 +13,6 @@ pub struct Portfolio {
     pub(super) portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
 }
 
-/// A single entry accepted by [`Portfolio::new`].
-///
-/// An entry is either a `(cex_id, accounts)` pair, where `accounts` is any
-/// iterator of account portfolios, or a flattened
-/// `(cex_id, account_id, portfolio)` tuple.
-pub trait PortfolioEntry {
-    /// Inserts this entry into `portfolios`.
-    ///
-    /// Returns an error when the entry duplicates an existing CEX account.
-    fn insert_into(
-        self,
-        portfolios: &mut BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
-    ) -> StockTrekResult<()>;
-}
-
-impl<A> PortfolioEntry for (CexId, A)
-where
-    A: IntoIterator<Item = (AccountId, CexAccountPortfolio)>,
-{
-    fn insert_into(
-        self,
-        portfolios: &mut BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
-    ) -> StockTrekResult<()> {
-        let (cex_id, accounts) = self;
-        let accounts_by_id = portfolios.entry(cex_id).or_default();
-        for (account_id, portfolio) in accounts {
-            if accounts_by_id.contains_key(&account_id) {
-                return Err(duplicate_account_error(cex_id, &account_id));
-            }
-            accounts_by_id.insert(account_id, portfolio);
-        }
-        Ok(())
-    }
-}
-
-impl PortfolioEntry for (CexId, AccountId, CexAccountPortfolio) {
-    fn insert_into(
-        self,
-        portfolios: &mut BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
-    ) -> StockTrekResult<()> {
-        let (cex_id, account_id, portfolio) = self;
-        let accounts_by_id = portfolios.entry(cex_id).or_default();
-        if accounts_by_id.contains_key(&account_id) {
-            return Err(duplicate_account_error(cex_id, &account_id));
-        }
-        accounts_by_id.insert(account_id, portfolio);
-        Ok(())
-    }
-}
-
 fn duplicate_account_error(cex_id: CexId, account_id: &AccountId) -> StockTrekError {
     Validation::error(
         "Portfolio::new",
@@ -71,23 +21,24 @@ fn duplicate_account_error(cex_id: CexId, account_id: &AccountId) -> StockTrekEr
 }
 
 impl Portfolio {
-    /// Creates a portfolio from CEX and account portfolios.
+    /// Creates a portfolio from flattened `(cex_id, account_id, portfolio)` tuples.
     ///
-    /// Accepts any iterator of [`PortfolioEntry`] values. Entries can be
-    /// nested `(cex_id, accounts)` pairs, where each `accounts` value is
-    /// itself an iterator of `(account_id, portfolio)` pairs, or flattened
-    /// `(cex_id, account_id, portfolio)` tuples. For example, nested
-    /// `HashMap`s, `BTreeMap`s, or vectors can all be used.
+    /// Accepts any iterator of `(cex_id, account_id, portfolio)` tuples, such as
+    /// a `Vec`, an array, or the `flatten`ed output of a map.
     ///
     /// Returns an error when the same CEX account appears more than once.
-    pub fn new<I, E>(portfolios: I) -> StockTrekResult<Self>
+    pub fn new<I>(portfolios: I) -> StockTrekResult<Self>
     where
-        I: IntoIterator<Item = E>,
-        E: PortfolioEntry,
+        I: IntoIterator<Item = (CexId, AccountId, CexAccountPortfolio)>,
     {
-        let mut portfolios_by_cex = BTreeMap::new();
-        for entry in portfolios {
-            entry.insert_into(&mut portfolios_by_cex)?;
+        let mut portfolios_by_cex: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>> =
+            BTreeMap::new();
+        for (cex_id, account_id, portfolio) in portfolios {
+            let accounts_by_id = portfolios_by_cex.entry(cex_id).or_default();
+            if accounts_by_id.contains_key(&account_id) {
+                return Err(duplicate_account_error(cex_id, &account_id));
+            }
+            accounts_by_id.insert(account_id, portfolio);
         }
         Ok(Self {
             portfolios: portfolios_by_cex,
