@@ -5,54 +5,14 @@ use crate::{
 };
 use chrono::{DateTime, Datelike, Months, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
-use strum::{EnumCount, EnumIter, FromRepr};
-
-/// A window aligned to fixed or calendar boundaries.
-///
-/// Variants up to and including `Weeks4` have fixed lengths. Month and year
-/// variants align to calendar boundaries and vary in length. The short labels
-/// returned by [`Self::label`] are used when the window is displayed or
-/// serialized.
-#[derive(
-    Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash, EnumCount, EnumIter, FromRepr,
-)]
-#[allow(missing_docs)]
-#[non_exhaustive]
-#[repr(u8)]
-pub enum AlignedWindow {
-    Seconds1,
-    Seconds5,
-    Seconds10,
-    Seconds15,
-    Seconds30,
-    Minutes1,
-    Minutes2,
-    Minutes3,
-    Minutes5,
-    Minutes10,
-    Minutes15,
-    Minutes30,
-    Hours1,
-    Hours2,
-    Hours3,
-    Hours4,
-    Hours6,
-    Hours8,
-    Hours12,
-    Days1,
-    Weeks1,
-    Weeks2,
-    Weeks4,
-    Months1,
-    Months2,
-    Months3,
-    Months4,
-    Months6,
-    Years1,
-    Years2,
-}
 
 window_label_funcs!(
+    /// A window aligned to fixed or calendar boundaries.
+    ///
+    /// Variants up to and including `Weeks4` have fixed lengths. Month and year
+    /// variants align to calendar boundaries and vary in length. The short labels
+    /// returned by [`Self::label`] are used when the window is displayed or
+    /// serialized.
     AlignedWindow,
     Seconds1 => "1s",
     Seconds5 => "5s",
