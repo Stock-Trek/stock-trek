@@ -1,7 +1,7 @@
 mod common;
 
 use chrono::{TimeZone, Utc};
-use common::{CheckedWindow, window_tests};
+use common::window::{CheckedWindow, window_tests};
 use stock_trek::{
     errors::StockTrekError,
     markets::{

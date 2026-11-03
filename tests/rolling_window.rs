@@ -1,6 +1,6 @@
 mod common;
 
-use common::{CheckedWindow, window_tests};
+use common::window::{CheckedWindow, window_tests};
 use stock_trek::markets::RollingWindow;
 
 window_tests!(
