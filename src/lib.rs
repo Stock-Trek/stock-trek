@@ -33,6 +33,7 @@ mod algorithm;
 mod cex;
 mod commands;
 mod conditions;
+#[allow(unused)]
 #[cfg(feature = "dex")]
 mod dex;
 mod error;
