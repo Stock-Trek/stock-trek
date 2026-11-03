@@ -5,8 +5,8 @@ define_evm_network! {
     "arbitrum",
     {
         Mainnet => (42161, NetworkId::MAINNET),
-        Sepolia => (421614, NetworkId::new("sepolia")?),
-        Nova => (42170, NetworkId::new("nova")?),
+        Sepolia => (421614, NetworkId::SEPOLIA),
+        Nova => (42170, NetworkId::NOVA),
     }
 }
 
@@ -15,7 +15,7 @@ define_evm_network! {
     "avalanche",
     {
         Mainnet => (43114, NetworkId::MAINNET),
-        Fuji => (43113, NetworkId::new("fuji")?),
+        Fuji => (43113, NetworkId::FUJI),
     }
 }
 
@@ -24,7 +24,7 @@ define_evm_network! {
     "base",
     {
         Mainnet => (8453, NetworkId::MAINNET),
-        Sepolia => (84532, NetworkId::new("sepolia")?),
+        Sepolia => (84532, NetworkId::SEPOLIA),
     }
 }
 
@@ -42,7 +42,7 @@ define_evm_network! {
     "celo",
     {
         Mainnet => (42220, NetworkId::MAINNET),
-        Alfajores => (44787, NetworkId::new("alfajores")?),
+        Alfajores => (44787, NetworkId::ALFAJORES),
     }
 }
 
@@ -60,8 +60,8 @@ define_evm_network! {
     "ethereum",
     {
         Mainnet => (1, NetworkId::MAINNET),
-        Sepolia => (11155111, NetworkId::new("sepolia")?),
-        Holesky => (17000, NetworkId::new("holesky")?),
+        Sepolia => (11155111, NetworkId::SEPOLIA),
+        Holesky => (17000, NetworkId::HOLESKY),
     }
 }
 
@@ -79,7 +79,7 @@ define_evm_network! {
     "gnosis",
     {
         Mainnet => (100, NetworkId::MAINNET),
-        Chiado => (10200, NetworkId::new("chiado")?),
+        Chiado => (10200, NetworkId::CHIADO),
     }
 }
 
@@ -88,7 +88,7 @@ define_evm_network! {
     "moonbeam",
     {
         Mainnet => (1284, NetworkId::MAINNET),
-        Moonbase => (1287, NetworkId::new("moonbase")?),
+        Moonbase => (1287, NetworkId::MOONBASE),
     }
 }
 
@@ -97,7 +97,7 @@ define_evm_network! {
     "optimism",
     {
         Mainnet => (10, NetworkId::MAINNET),
-        Sepolia => (11155420, NetworkId::new("sepolia")?),
+        Sepolia => (11155420, NetworkId::SEPOLIA),
     }
 }
 
@@ -106,7 +106,7 @@ define_evm_network! {
     "polygon",
     {
         Mainnet => (137, NetworkId::MAINNET),
-        Amoy => (80002, NetworkId::new("amoy")?),
-        Mumbai => (80001, NetworkId::new("mumbai")?),
+        Amoy => (80002, NetworkId::AMOY),
+        Mumbai => (80001, NetworkId::MUMBAI),
     }
 }
