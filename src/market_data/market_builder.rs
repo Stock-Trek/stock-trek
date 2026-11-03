@@ -159,16 +159,7 @@ impl MarketBuilder {
         }
 
         for (window, candle) in &self.rolling {
-            let expected_duration = window.millis_exact();
-            let actual_duration = candle.duration_millis();
-            if actual_duration != expected_duration {
-                return Err(Validation::error(
-                    function,
-                    format!(
-                        "candle duration {actual_duration} ms does not match the {window} window duration {expected_duration} ms"
-                    ),
-                ));
-            }
+            MarketRollingWindow::validate_candle_duration(function, *window, candle)?;
         }
 
         for (window, candles) in &self.aligned {
