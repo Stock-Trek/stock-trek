@@ -246,6 +246,27 @@ mod tests {
     }
 
     #[test]
+    fn rejects_off_increment_quotes_at_large_magnitudes() {
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
+
+        assert!(
+            builder
+                .order_book_bid(MarketQuote::new(1_000_000_000.005, 1.0).unwrap())
+                .is_err()
+        );
+        assert!(
+            builder
+                .order_book_bid(MarketQuote::new(1_000_000_000.0, 1_000_000.000_000_5).unwrap())
+                .is_err()
+        );
+        assert!(
+            builder
+                .order_book_bid(MarketQuote::new(5_347_718_528.99, 1.0).unwrap())
+                .is_ok()
+        );
+    }
+
+    #[test]
     fn rejects_quotes_below_the_minimum_notional() {
         let mut builder = MarketBuilder::new(0.000_001, 0.01, 10.0).unwrap();
 

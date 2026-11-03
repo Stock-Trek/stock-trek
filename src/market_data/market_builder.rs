@@ -12,6 +12,8 @@ use crate::{
 use std::collections::BTreeMap;
 
 const INCREMENT_TOLERANCE: f64 = 1e-9;
+const INCREMENT_TOLERANCE_ULPS: f64 = 4.0;
+const MAX_INCREMENT_TOLERANCE: f64 = 0.25;
 
 /// Builder for constructing a [`Market`].
 ///
@@ -259,8 +261,12 @@ impl MarketBuilder {
 
     fn is_multiple_of(value: f64, increment: f64) -> bool {
         let steps = value / increment;
-        steps.is_finite()
-            && (steps - steps.round()).abs() <= INCREMENT_TOLERANCE * steps.abs().max(1.0)
+        if !steps.is_finite() {
+            return false;
+        }
+        let tolerance = (INCREMENT_TOLERANCE_ULPS * f64::EPSILON * steps.abs())
+            .clamp(INCREMENT_TOLERANCE, MAX_INCREMENT_TOLERANCE);
+        (steps - steps.round()).abs() <= tolerance
     }
 
     fn validate_bid_and_ask(
