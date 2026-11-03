@@ -255,7 +255,8 @@ impl NumberValue {
                 cex_id_value,
                 account_id_value,
             } => {
-                let (cex_id, account_id) = resolve_cex_account(c, cex_id_value, account_id_value)?;
+                let (cex_id, account_id) =
+                    Self::resolve_cex_account(c, cex_id_value, account_id_value)?;
                 Ok(portfolio.pending_orders_in_cex_account_count(&cex_id, &account_id) as f64)
             }
             Self::PendingOrdersInCexAccountWithTag {
@@ -263,12 +264,15 @@ impl NumberValue {
                 account_id_value,
                 tag,
             } => {
-                let (cex_id, account_id) = resolve_cex_account(c, cex_id_value, account_id_value)?;
-                Ok(c.portfolio().pending_orders_in_cex_account_with_tag_count(
-                    &cex_id,
-                    &account_id,
-                    tag,
-                ) as f64)
+                let (cex_id, account_id) =
+                    Self::resolve_cex_account(c, cex_id_value, account_id_value)?;
+                Ok(
+                    portfolio.pending_orders_in_cex_account_with_tag_count(
+                        &cex_id,
+                        &account_id,
+                        tag,
+                    ) as f64,
+                )
             }
             Self::AssetTotal { asset_id_value } => {
                 Ok(portfolio.asset_total(&asset_id_value.asset_id(c)?))
@@ -278,7 +282,8 @@ impl NumberValue {
                 account_id_value,
                 asset_id_value,
             } => {
-                let (cex_id, account_id) = resolve_cex_account(c, cex_id_value, account_id_value)?;
+                let (cex_id, account_id) =
+                    Self::resolve_cex_account(c, cex_id_value, account_id_value)?;
                 let asset_id = asset_id_value.asset_id(c)?;
                 Ok(portfolio.asset_total_in_cex_account(&cex_id, &account_id, &asset_id))
             }
@@ -290,7 +295,8 @@ impl NumberValue {
                 account_id_value,
                 asset_id_value,
             } => {
-                let (cex_id, account_id) = resolve_cex_account(c, cex_id_value, account_id_value)?;
+                let (cex_id, account_id) =
+                    Self::resolve_cex_account(c, cex_id_value, account_id_value)?;
                 let asset_id = asset_id_value.asset_id(c)?;
                 Ok(portfolio.asset_available_in_cex_account(&cex_id, &account_id, &asset_id))
             }
@@ -302,7 +308,8 @@ impl NumberValue {
                 account_id_value,
                 asset_id_value,
             } => {
-                let (cex_id, account_id) = resolve_cex_account(c, cex_id_value, account_id_value)?;
+                let (cex_id, account_id) =
+                    Self::resolve_cex_account(c, cex_id_value, account_id_value)?;
                 let asset_id = asset_id_value.asset_id(c)?;
                 Ok(portfolio.asset_reserved_in_cex_account(&cex_id, &account_id, &asset_id))
             }
@@ -321,13 +328,13 @@ impl NumberValue {
             }
         }
     }
-}
 
-/// Resolves the CEX and account identifiers held by a [`NumberValue`].
-fn resolve_cex_account(
-    c: &ResolvedContext,
-    cex_id_value: &CexIdValue,
-    account_id_value: &AccountIdValue,
-) -> StockTrekResult<(CexId, AccountId)> {
-    Ok((cex_id_value.cex_id(c)?, account_id_value.account_id(c)?))
+    /// Resolves the CEX and account identifiers held by a [`NumberValue`].
+    fn resolve_cex_account(
+        c: &ResolvedContext,
+        cex_id_value: &CexIdValue,
+        account_id_value: &AccountIdValue,
+    ) -> StockTrekResult<(CexId, AccountId)> {
+        Ok((cex_id_value.cex_id(c)?, account_id_value.account_id(c)?))
+    }
 }
