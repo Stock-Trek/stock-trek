@@ -9,7 +9,7 @@ use crate::{
     },
     validation::Validation,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 const INCREMENT_TOLERANCE: f64 = 1e-9;
 const INCREMENT_TOLERANCE_ULPS: f64 = 4.0;
@@ -18,16 +18,15 @@ const MAX_INCREMENT_TOLERANCE: f64 = 0.25;
 /// Builder for constructing a [`Market`].
 ///
 /// New markets start empty. Add ticks, candles, and order book quotes before
-/// calling [`MarketBuilder::build`]. Invalid parameters, quotes, candles, and
-/// order books are rejected immediately by the method that receives them.
-/// Setter methods borrow the builder mutably, so a rejected value can be
-/// corrected and retried without rebuilding the collected data.
+/// calling [`MarketBuilder::build`]. All validation happens at build time:
+/// [`MarketBuilder::build`] rejects invalid parameters, quotes, candles, and
+/// order books.
 #[derive(Debug, Clone)]
 pub struct MarketBuilder {
     base_increment: f64,
     quote_increment: f64,
     minimum_notional: f64,
-    ticks: Vec<MarketTick>,
+    ticks: Vec<(TimestampMillis, MarketQuote, MarketQuote, MarketQuote)>,
     rolling: BTreeMap<RollingWindow, MarketCandle>,
     aligned: BTreeMap<AlignedWindow, Vec<MarketCandle>>,
     order_book_asks: Vec<MarketQuote>,
@@ -37,20 +36,9 @@ pub struct MarketBuilder {
 impl MarketBuilder {
     /// Creates a builder with the market's trading increments and minimum notional.
     ///
-    /// Returns an error unless the increments are finite and positive and the
-    /// minimum notional is finite and non-negative.
-    pub fn new(
-        base_increment: f64,
-        quote_increment: f64,
-        minimum_notional: f64,
-    ) -> StockTrekResult<Self> {
-        Market::validate_parameters(
-            "MarketBuilder::new",
-            base_increment,
-            quote_increment,
-            minimum_notional,
-        )?;
-        Ok(Self {
+    /// The values are validated when [`MarketBuilder::build`] is called.
+    pub fn new(base_increment: f64, quote_increment: f64, minimum_notional: f64) -> Self {
+        Self {
             base_increment,
             quote_increment,
             minimum_notional,
@@ -59,178 +47,200 @@ impl MarketBuilder {
             aligned: BTreeMap::new(),
             order_book_bids: Vec::new(),
             order_book_asks: Vec::new(),
-        })
+        }
     }
 
     /// Adds a market tick with the given bid, ask, and last quotes.
     ///
-    /// Returns an error if a quote does not respect the market's increments, if
-    /// the bid or ask is below the minimum notional, or if the bid is not below
-    /// the ask. The last trade quote is not subject to the order minimum
-    /// notional.
+    /// The quotes are validated when [`MarketBuilder::build`] is called: each
+    /// quote must respect the market's increments, the bid and ask must meet
+    /// the minimum notional, and the bid must be below the ask. The last trade
+    /// quote is not subject to the order minimum notional.
     pub fn tick(
         &mut self,
         timestamp_millis: TimestampMillis,
         bid: MarketQuote,
         ask: MarketQuote,
         last: MarketQuote,
-    ) -> StockTrekResult<&mut Self> {
-        let function = "MarketBuilder::tick";
-        Self::validate_quote(
-            function,
-            "bid",
-            &bid,
-            self.base_increment,
-            self.quote_increment,
-            Some(self.minimum_notional),
-        )?;
-        Self::validate_quote(
-            function,
-            "ask",
-            &ask,
-            self.base_increment,
-            self.quote_increment,
-            Some(self.minimum_notional),
-        )?;
-        Self::validate_quote(
-            function,
-            "last",
-            &last,
-            self.base_increment,
-            self.quote_increment,
-            None,
-        )?;
-        Validation::bid_below_ask(function, bid.price(), ask.price())?;
-
-        self.ticks
-            .push(MarketTick::new(timestamp_millis, bid, ask, last)?);
-        Ok(self)
+    ) -> &mut Self {
+        self.ticks.push((timestamp_millis, bid, ask, last));
+        self
     }
 
     /// Sets the candle for a fixed-length rolling window.
     ///
-    /// Returns an error unless the candle duration matches the window length.
-    pub fn rolling_set_candle(
-        &mut self,
-        window: RollingWindow,
-        candle: MarketCandle,
-    ) -> StockTrekResult<&mut Self> {
-        let expected_duration = window.millis_exact();
-        let actual_duration = candle.duration_millis();
-        if actual_duration != expected_duration {
-            return Err(Validation::error(
-                "MarketBuilder::rolling_set_candle",
-                format!(
-                    "candle duration {actual_duration} ms does not match the {window} window duration {expected_duration} ms"
-                ),
-            ));
-        }
-
+    /// The candle is validated when [`MarketBuilder::build`] is called: its
+    /// duration must match the window length.
+    pub fn rolling_set_candle(&mut self, window: RollingWindow, candle: MarketCandle) -> &mut Self {
         self.rolling.insert(window, candle);
-        Ok(self)
+        self
     }
 
     /// Appends a candle to an aligned window.
     ///
-    /// Returns an error unless the candle exactly covers the window that
-    /// contains its start time and its interval is not already present in the
-    /// window.
+    /// The candle is validated when [`MarketBuilder::build`] is called: it
+    /// must exactly cover the window that contains its start time and its
+    /// interval must not already be present in the window.
     pub fn aligned_push_candle(
         &mut self,
         window: AlignedWindow,
         candle: MarketCandle,
-    ) -> StockTrekResult<&mut Self> {
-        let function = "MarketBuilder::aligned_push_candle";
-        let start = candle.start_time_millis_inc();
-        let end = candle.end_time_millis_exc();
-        let bounds = window.bounds_for(start).map_err(|error| {
-            Validation::error(
-                function,
-                format!("could not determine the {window} window bounds at {start}: {error}"),
-            )
-        })?;
-        if start != bounds.lower() || end != bounds.upper() {
-            return Err(Validation::error(
-                function,
-                format!(
-                    "candle interval {start}..{end} does not match the {window} window bounds {}..{}",
-                    bounds.lower(),
-                    bounds.upper()
-                ),
-            ));
-        }
-        if self.aligned.get(&window).is_some_and(|candles| {
-            candles.iter().any(|existing| {
-                existing.start_time_millis_inc() == start && existing.end_time_millis_exc() == end
-            })
-        }) {
-            return Err(Validation::error(
-                function,
-                format!("duplicate candle interval {start}..{end} for the {window} window"),
-            ));
-        }
-
+    ) -> &mut Self {
         self.aligned.entry(window).or_default().push(candle);
-        Ok(self)
+        self
     }
 
-    /// Adds a validated bid quote to the order book.
+    /// Adds a bid quote to the order book.
     ///
-    /// Returns an error unless the quote respects the market's increments and
-    /// minimum notional and its price is below every existing ask.
-    pub fn order_book_bid(&mut self, quote: MarketQuote) -> StockTrekResult<&mut Self> {
-        let function = "MarketBuilder::order_book_bid";
-        Self::validate_quote(
-            function,
-            "order book bid",
-            &quote,
-            self.base_increment,
-            self.quote_increment,
-            Some(self.minimum_notional),
-        )?;
-        if let Some(lowest_ask) = Self::lowest_price(&self.order_book_asks) {
-            Validation::bid_below_ask(function, quote.price(), lowest_ask)?;
-        }
-
+    /// The quote and the finished order book are validated when
+    /// [`MarketBuilder::build`] is called: the quote must respect the market's
+    /// increments and minimum notional, and every bid must be below every ask.
+    pub fn order_book_bid(&mut self, quote: MarketQuote) -> &mut Self {
         self.order_book_bids.push(quote);
-        Ok(self)
+        self
     }
 
-    /// Adds a validated ask quote to the order book.
+    /// Adds an ask quote to the order book.
     ///
-    /// Returns an error unless the quote respects the market's increments and
-    /// minimum notional and its price is above every existing bid.
-    pub fn order_book_ask(&mut self, quote: MarketQuote) -> StockTrekResult<&mut Self> {
-        let function = "MarketBuilder::order_book_ask";
-        Self::validate_quote(
-            function,
-            "order book ask",
-            &quote,
-            self.base_increment,
-            self.quote_increment,
-            Some(self.minimum_notional),
-        )?;
-        if let Some(highest_bid) = Self::highest_price(&self.order_book_bids) {
-            Validation::bid_below_ask(function, highest_bid, quote.price())?;
-        }
-
+    /// The quote and the finished order book are validated when
+    /// [`MarketBuilder::build`] is called: the quote must respect the market's
+    /// increments and minimum notional, and every bid must be below every ask.
+    pub fn order_book_ask(&mut self, quote: MarketQuote) -> &mut Self {
         self.order_book_asks.push(quote);
-        Ok(self)
+        self
     }
 
     /// Builds the [`Market`] from the collected data.
-    pub fn build(self) -> Market {
-        Market {
+    ///
+    /// Returns an error unless the market parameters are valid, every quote
+    /// respects the market's increments and notional rules, every bid is below
+    /// every ask, and every candle matches its window.
+    pub fn build(self) -> StockTrekResult<Market> {
+        let function = "MarketBuilder::build";
+        Market::validate_parameters(
+            function,
+            self.base_increment,
+            self.quote_increment,
+            self.minimum_notional,
+        )?;
+
+        let mut ticks = Vec::with_capacity(self.ticks.len());
+        for (timestamp_millis, bid, ask, last) in &self.ticks {
+            Self::validate_quote(
+                function,
+                "bid",
+                bid,
+                self.base_increment,
+                self.quote_increment,
+                Some(self.minimum_notional),
+            )?;
+            Self::validate_quote(
+                function,
+                "ask",
+                ask,
+                self.base_increment,
+                self.quote_increment,
+                Some(self.minimum_notional),
+            )?;
+            Self::validate_quote(
+                function,
+                "last",
+                last,
+                self.base_increment,
+                self.quote_increment,
+                None,
+            )?;
+            ticks.push(MarketTick::new(
+                *timestamp_millis,
+                bid.clone(),
+                ask.clone(),
+                last.clone(),
+            )?);
+        }
+
+        for (window, candle) in &self.rolling {
+            let expected_duration = window.millis_exact();
+            let actual_duration = candle.duration_millis();
+            if actual_duration != expected_duration {
+                return Err(Validation::error(
+                    function,
+                    format!(
+                        "candle duration {actual_duration} ms does not match the {window} window duration {expected_duration} ms"
+                    ),
+                ));
+            }
+        }
+
+        for (window, candles) in &self.aligned {
+            let mut intervals = BTreeSet::new();
+            for candle in candles {
+                let start = candle.start_time_millis_inc();
+                let end = candle.end_time_millis_exc();
+                let bounds = window.bounds_for(start).map_err(|error| {
+                    Validation::error(
+                        function,
+                        format!(
+                            "could not determine the {window} window bounds at {start}: {error}"
+                        ),
+                    )
+                })?;
+                if start != bounds.lower() || end != bounds.upper() {
+                    return Err(Validation::error(
+                        function,
+                        format!(
+                            "candle interval {start}..{end} does not match the {window} window bounds {}..{}",
+                            bounds.lower(),
+                            bounds.upper()
+                        ),
+                    ));
+                }
+                if !intervals.insert((start, end)) {
+                    return Err(Validation::error(
+                        function,
+                        format!("duplicate candle interval {start}..{end} for the {window} window"),
+                    ));
+                }
+            }
+        }
+
+        for quote in &self.order_book_bids {
+            Self::validate_quote(
+                function,
+                "order book bid",
+                quote,
+                self.base_increment,
+                self.quote_increment,
+                Some(self.minimum_notional),
+            )?;
+        }
+        for quote in &self.order_book_asks {
+            Self::validate_quote(
+                function,
+                "order book ask",
+                quote,
+                self.base_increment,
+                self.quote_increment,
+                Some(self.minimum_notional),
+            )?;
+        }
+        if let (Some(highest_bid), Some(lowest_ask)) = (
+            Self::highest_price(&self.order_book_bids),
+            Self::lowest_price(&self.order_book_asks),
+        ) {
+            Validation::bid_below_ask(function, highest_bid, lowest_ask)?;
+        }
+
+        Ok(Market {
             base_increment: self.base_increment,
             quote_increment: self.quote_increment,
             minimum_notional: self.minimum_notional,
-            ticks: MarketTicks::new(self.ticks),
+            ticks: MarketTicks::new(ticks),
             rolling: MarketRollingWindow {
                 candles: self.rolling,
             },
             aligned: MarketAlignedWindow::from_map(self.aligned),
             order_book: MarketOrderBook::new(self.order_book_bids, self.order_book_asks),
-        }
+        })
     }
 
     fn validate_quote(

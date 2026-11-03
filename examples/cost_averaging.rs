@@ -148,18 +148,16 @@ mod tests {
     const ASK: f64 = 200.0;
 
     fn market(asks: &[f64]) -> Market {
-        let mut builder = MarketBuilder::new(ORDER_QUANTITY, 0.01, 0.000_1).unwrap();
+        let mut builder = MarketBuilder::new(ORDER_QUANTITY, 0.01, 0.000_1);
         for (index, ask) in asks.iter().enumerate() {
-            builder
-                .tick(
-                    TimestampMillis::from(index as u64),
-                    MarketQuote::new(ask - 1.0, 1.0).unwrap(),
-                    MarketQuote::new(*ask, 1.0).unwrap(),
-                    MarketQuote::new(*ask, 1.0).unwrap(),
-                )
-                .unwrap();
+            builder.tick(
+                TimestampMillis::from(index as u64),
+                MarketQuote::new(ask - 1.0, 1.0).unwrap(),
+                MarketQuote::new(*ask, 1.0).unwrap(),
+                MarketQuote::new(*ask, 1.0).unwrap(),
+            );
         }
-        builder.build()
+        builder.build().unwrap()
     }
 
     fn context(markets: Vec<(CexId, Market)>) -> SignalContext {
