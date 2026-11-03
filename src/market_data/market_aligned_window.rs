@@ -6,7 +6,7 @@ use crate::{
     },
     validation::Validation,
 };
-use chrono::{TimeZone, Utc};
+use chrono::{Month, TimeZone, Utc};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -31,7 +31,7 @@ macro_rules! aligned_window_constructor {
                 year: i32,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let start = Self::window_start_at(year, 1, 1, 0, 0, 0)?;
+                let start = Self::window_start_at(year, Month::January, 1, 0, 0, 0)?;
                 Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
@@ -46,7 +46,7 @@ macro_rules! aligned_window_constructor {
             /// the start does not begin a window.
             pub fn $name(
                 year: i32,
-                month: u32,
+                month: Month,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
                 let start = Self::window_start_at(year, month, 1, 0, 0, 0)?;
@@ -64,7 +64,7 @@ macro_rules! aligned_window_constructor {
             /// error when the start does not begin a window.
             pub fn $name(
                 year: i32,
-                month: u32,
+                month: Month,
                 day: u32,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
@@ -83,12 +83,19 @@ macro_rules! aligned_window_constructor {
             /// when the start does not begin a window.
             pub fn $name(
                 year: i32,
-                month: u32,
+                month: Month,
                 day: u32,
                 hour: u32,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let start = Self::window_start_at(year, month, day, hour, 0, 0)?;
+                let start = Self::window_start_at(
+                    year,
+                    month,
+                    day,
+                    hour,
+                    0,
+                    0,
+                )?;
                 Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
@@ -103,13 +110,20 @@ macro_rules! aligned_window_constructor {
             /// error when the start does not begin a window.
             pub fn $name(
                 year: i32,
-                month: u32,
+                month: Month,
                 day: u32,
                 hour: u32,
                 minute: u32,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let start = Self::window_start_at(year, month, day, hour, minute, 0)?;
+                let start = Self::window_start_at(
+                    year,
+                    month,
+                    day,
+                    hour,
+                    minute,
+                    0,
+                )?;
                 Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
@@ -125,14 +139,21 @@ macro_rules! aligned_window_constructor {
             /// window.
             pub fn $name(
                 year: i32,
-                month: u32,
+                month: Month,
                 day: u32,
                 hour: u32,
                 minute: u32,
                 second: u32,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let start = Self::window_start_at(year, month, day, hour, minute, second)?;
+                let start = Self::window_start_at(
+                    year,
+                    month,
+                    day,
+                    hour,
+                    minute,
+                    second,
+                )?;
                 Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
@@ -350,12 +371,13 @@ impl MarketAlignedWindow {
 
     fn window_start_at(
         year: i32,
-        month: u32,
+        chrono_month: Month,
         day: u32,
         hour: u32,
         minute: u32,
         second: u32,
     ) -> StockTrekResult<TimestampMillis> {
+        let month = chrono_month.number_from_month();
         let components =
             format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z");
         let date_time = Utc
