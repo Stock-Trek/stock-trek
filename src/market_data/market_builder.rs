@@ -213,7 +213,7 @@ impl MarketBuilder {
             rolling: MarketRollingWindow {
                 candles: self.rolling,
             },
-            aligned: MarketAlignedWindow::new(self.aligned),
+            aligned: MarketAlignedWindow::from_map(self.aligned),
             order_book: MarketOrderBook::new(self.order_book_bids, self.order_book_asks),
         }
     }
