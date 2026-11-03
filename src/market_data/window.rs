@@ -1,5 +1,38 @@
 //! Shared label, duration, and string conversion implementation for window enums.
 
+/// The length of a window in milliseconds.
+///
+/// Fixed-length windows return [`WindowMillis::Exact`]. Calendar-based windows
+/// vary in length and only guarantee an upper bound, so they return
+/// [`WindowMillis::Upper`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum WindowMillis {
+    /// The exact window length in milliseconds.
+    Exact(u64),
+    /// An upper bound on the window length in milliseconds.
+    Upper(u64),
+}
+
+impl WindowMillis {
+    /// Returns the exact window length in milliseconds, or `None` when only an
+    /// upper bound is known.
+    pub fn exact(self) -> Option<u64> {
+        match self {
+            Self::Exact(millis) => Some(millis),
+            Self::Upper(_) => None,
+        }
+    }
+
+    /// Returns an upper bound on the window length in milliseconds.
+    ///
+    /// Exact lengths are also upper bounds.
+    pub fn upper_bound(self) -> u64 {
+        match self {
+            Self::Exact(millis) | Self::Upper(millis) => millis,
+        }
+    }
+}
+
 /// Declares a window enum and implements its label, duration, display,
 /// serialization, and parsing behaviour.
 ///
@@ -10,9 +43,9 @@
 ///
 /// The macro generates [`Self::label`], [`std::fmt::Display`],
 /// [`serde::Serialize`], [`serde::Deserialize`], [`TryFrom<&str>`], and
-/// [`std::str::FromStr`]. It also generates [`Self::millis_exact`] for enums
-/// whose variants all have a fixed length, or [`Self::millis_exact`] and
-/// [`Self::millis_upper_bound`] for enums that include calendar-based variants.
+/// [`std::str::FromStr`]. It also generates [`Self::millis`] returning the
+/// window length as a [`WindowMillis`], and [`Self::millis_exact`] for enums
+/// whose variants all have a fixed length.
 ///
 /// ```ignore
 /// window_enum!(
@@ -140,6 +173,18 @@ macro_rules! window_enum {
         );
 
         impl $name {
+            /// Returns the window length in milliseconds as a
+            /// [`WindowMillis`](crate::market_data::WindowMillis).
+            ///
+            /// Every variant of this enum has a fixed length, so the result is
+            /// always `WindowMillis::Exact`. Use [`Self::millis_exact`] when a
+            /// plain `u64` is preferred.
+            pub fn millis(&self) -> $crate::market_data::WindowMillis {
+                match self {
+                    $(Self::$variant => $crate::market_data::WindowMillis::Exact($millis),)+
+                }
+            }
+
             /// Returns the exact window length in milliseconds.
             pub fn millis_exact(&self) -> u64 {
                 match self {
@@ -170,26 +215,17 @@ macro_rules! window_enum {
         );
 
         impl $name {
-            /// Returns the exact window length in milliseconds for fixed-length
-            /// windows.
+            /// Returns the window length in milliseconds as a
+            /// [`WindowMillis`](crate::market_data::WindowMillis).
             ///
-            /// Calendar windows have no fixed length, so this returns `None` for
-            /// them.
-            pub fn millis_exact(&self) -> Option<u64> {
+            /// Fixed-length windows return `WindowMillis::Exact`. Calendar
+            /// windows have no fixed length, so they return
+            /// `WindowMillis::Upper` with an upper bound based on the longest
+            /// possible month or year.
+            pub fn millis(&self) -> $crate::market_data::WindowMillis {
                 match self {
-                    $(Self::$variant => Some($millis),)+
-                    $(Self::$upper_variant => None,)+
-                }
-            }
-
-            /// Returns an upper bound on the window length in milliseconds.
-            ///
-            /// Fixed-length windows return their exact length. Calendar windows
-            /// return an upper bound based on the longest possible month or year.
-            pub fn millis_upper_bound(&self) -> Option<u64> {
-                match self {
-                    $(Self::$variant => Some($millis),)+
-                    $(Self::$upper_variant => Some($upper_millis),)+
+                    $(Self::$variant => $crate::market_data::WindowMillis::Exact($millis),)+
+                    $(Self::$upper_variant => $crate::market_data::WindowMillis::Upper($upper_millis),)+
                 }
             }
         }

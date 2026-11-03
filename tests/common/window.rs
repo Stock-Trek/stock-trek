@@ -1,5 +1,5 @@
 use chrono::{DateTime, Duration, Months, Utc};
-use stock_trek::markets::{AlignedWindow, RollingWindow};
+use stock_trek::markets::{AlignedWindow, RollingWindow, WindowMillis};
 
 /// Test-only arithmetic helpers for the window enums.
 pub(crate) trait CheckedWindow {
@@ -31,24 +31,30 @@ impl CheckedWindow for RollingWindow {
 
 impl CheckedWindow for AlignedWindow {
     fn fixed_millis(&self) -> Option<u64> {
-        self.millis_exact()
+        self.millis().exact()
     }
 
     fn checked_add(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        if let Some(millis) = self.millis_exact() {
-            let millis = i64::try_from(millis).ok()?;
-            date_time.checked_add_signed(Duration::milliseconds(millis))
-        } else {
-            date_time.checked_add_months(Months::new(self.months_exact()?))
+        match self.millis() {
+            WindowMillis::Exact(millis) => {
+                let millis = i64::try_from(millis).ok()?;
+                date_time.checked_add_signed(Duration::milliseconds(millis))
+            }
+            WindowMillis::Upper(_) => {
+                date_time.checked_add_months(Months::new(self.months_exact()?))
+            }
         }
     }
 
     fn checked_sub(&self, date_time: DateTime<Utc>) -> Option<DateTime<Utc>> {
-        if let Some(millis) = self.millis_exact() {
-            let millis = i64::try_from(millis).ok()?;
-            date_time.checked_sub_signed(Duration::milliseconds(millis))
-        } else {
-            date_time.checked_sub_months(Months::new(self.months_exact()?))
+        match self.millis() {
+            WindowMillis::Exact(millis) => {
+                let millis = i64::try_from(millis).ok()?;
+                date_time.checked_sub_signed(Duration::milliseconds(millis))
+            }
+            WindowMillis::Upper(_) => {
+                date_time.checked_sub_months(Months::new(self.months_exact()?))
+            }
         }
     }
 }
