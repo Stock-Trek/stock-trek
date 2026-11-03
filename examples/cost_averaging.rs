@@ -163,11 +163,9 @@ mod tests {
     fn context(markets: Vec<(CexId, Market)>) -> SignalContext {
         let mut builder = SignalContextBuilder::new();
         for (cex, market) in markets {
-            builder
-                .cex_market(cex, AssetId::Bitcoin, AssetId::TetherUSD, market)
-                .unwrap();
+            builder.cex_market(cex, AssetId::Bitcoin, AssetId::TetherUSD, market);
         }
-        builder.build()
+        builder.build().unwrap()
     }
 
     fn execute(
@@ -178,20 +176,18 @@ mod tests {
         let actions = Rc::new(RefCell::new(Vec::new()));
         let enqueued_actions = Rc::clone(&actions);
         let mut portfolio = PortfolioBuilder::new();
-        portfolio
-            .asset_count(
-                CexId::Binance,
-                AccountId::new(CEX_ACCOUNT_ID),
-                AssetId::TetherUSD,
-                available_usdt,
-            )
-            .unwrap();
+        portfolio.asset_count(
+            CexId::Binance,
+            AccountId::new(CEX_ACCOUNT_ID),
+            AssetId::TetherUSD,
+            available_usdt,
+        );
         let mut resolved = ResolvedContext::new(
             Box::new(move |action, _| {
                 enqueued_actions.borrow_mut().push(action.clone());
                 Ok(())
             }),
-            portfolio.build(),
+            portfolio.build().unwrap(),
             signals,
         );
         algorithm
