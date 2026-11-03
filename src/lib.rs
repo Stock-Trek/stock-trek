@@ -55,7 +55,7 @@ pub use cex::order_factory::OrderFactory;
 pub use commands::{Command, CommandFactory};
 pub use conditions::{Condition, ConditionFactory, QuantityOf};
 pub use pending_order::PendingOrder;
-pub use portfolio::{CexAccountPortfolio, Portfolio, PortfolioBuilder, PortfolioEntry};
+pub use portfolio::{CexAccountPortfolio, Portfolio, PortfolioBuilder};
 pub use preferences::Preferences;
 pub use resolved_context::{EnqueueActionFn, ResolvedContext};
 pub use rust_decimal::RoundingStrategy;

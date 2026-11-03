@@ -441,7 +441,7 @@ fn portfolio_builder_rejects_an_invalid_pending_order_next_to_a_valid_one() {
 }
 
 #[test]
-fn portfolio_new_accepts_nested_iterators() {
+fn portfolio_new_accepts_flattened_entries() {
     let cex_id = CexId::Binance;
     let account_id = AccountId::new("account");
     let account = CexAccountPortfolio::new(
@@ -450,7 +450,7 @@ fn portfolio_new_accepts_nested_iterators() {
     )
     .unwrap();
 
-    let portfolio = Portfolio::new([(cex_id, [(account_id.clone(), account.clone())])]).unwrap();
+    let portfolio = Portfolio::new([(cex_id, account_id.clone(), account.clone())]).unwrap();
     assert!(portfolio.has_cex_account(&cex_id, &account_id));
     assert_eq!(
         portfolio.asset_total_in_cex_account(&cex_id, &account_id, &AssetId::Bitcoin),
@@ -459,18 +459,12 @@ fn portfolio_new_accepts_nested_iterators() {
 
     let other_account_id = AccountId::new("other");
     let merged = Portfolio::new([
-        (cex_id, [(account_id.clone(), account.clone())]),
-        (cex_id, [(other_account_id.clone(), account.clone())]),
+        (cex_id, account_id.clone(), account.clone()),
+        (cex_id, other_account_id.clone(), account),
     ])
     .unwrap();
     assert!(merged.has_cex_account(&cex_id, &account_id));
     assert!(merged.has_cex_account(&cex_id, &other_account_id));
-
-    let flattened = Portfolio::new([(cex_id, account_id.clone(), account.clone())]).unwrap();
-    assert_eq!(
-        flattened.asset_total_in_cex_account(&cex_id, &account_id, &AssetId::Bitcoin),
-        2.0
-    );
 }
 
 #[test]
@@ -483,15 +477,9 @@ fn portfolio_new_rejects_duplicate_accounts() {
     )
     .unwrap();
 
-    let nested = Portfolio::new([
-        (cex_id, [(account_id.clone(), account.clone())]),
-        (cex_id, [(account_id.clone(), account.clone())]),
-    ]);
-    assert!(nested.is_err());
-
-    let flattened = Portfolio::new([
+    let duplicate = Portfolio::new([
         (cex_id, account_id.clone(), account.clone()),
         (cex_id, account_id, account),
     ]);
-    assert!(flattened.is_err());
+    assert!(duplicate.is_err());
 }
