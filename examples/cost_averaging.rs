@@ -150,12 +150,14 @@ mod tests {
     fn market(asks: &[f64]) -> Market {
         let mut builder = MarketBuilder::new(ORDER_QUANTITY, 0.01, 0.000_1).unwrap();
         for (index, ask) in asks.iter().enumerate() {
-            builder = builder.tick(
-                TimestampMillis::from(index as u64),
-                MarketQuote::new(ask - 1.0, 1.0).unwrap(),
-                MarketQuote::new(*ask, 1.0).unwrap(),
-                MarketQuote::new(*ask, 1.0).unwrap(),
-            );
+            builder = builder
+                .tick(
+                    TimestampMillis::from(index as u64),
+                    MarketQuote::new(ask - 1.0, 1.0).unwrap(),
+                    MarketQuote::new(*ask, 1.0).unwrap(),
+                    MarketQuote::new(*ask, 1.0).unwrap(),
+                )
+                .unwrap();
         }
         builder.build()
     }
