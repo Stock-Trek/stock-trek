@@ -6,12 +6,17 @@ use stock_trek_types::cex::{
 };
 
 impl Portfolio {
-    /// Total available (free) amount of `asset_id` across all accounts (total - reserved).
+    /// Total available (free) amount of `asset_id` across all accounts.
     ///
-    /// The result is clamped to zero when pending orders reserve more than the
-    /// portfolio holds.
+    /// Availability is calculated and clamped to zero per account before being
+    /// summed, so an over-reserved account cannot reduce the free funds
+    /// reported for other accounts.
     pub fn asset_available(&self, asset_id: &AssetId) -> f64 {
-        Self::available_quantity(self.asset_total(asset_id), self.asset_reserved(asset_id))
+        self.cex_accounts()
+            .map(|(cex_id, account_id, _)| {
+                self.asset_available_in_cex_account(cex_id, account_id, asset_id)
+            })
+            .sum()
     }
     /// Available (free) amount of `asset_id` in a specific CEX account (total - reserved).
     ///
