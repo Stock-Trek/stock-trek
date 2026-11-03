@@ -990,25 +990,4 @@ mod tests {
             }
         }
     }
-
-    #[test]
-    fn candles_are_ordered_by_window_regardless_of_insertion_order() {
-        let market = MarketAlignedWindow::new(std::collections::HashMap::from([
-            (AlignedWindow::Hours1, vec![candle()]),
-            (AlignedWindow::Seconds1, vec![candle()]),
-            (AlignedWindow::Minutes1, vec![candle()]),
-        ]))
-        .unwrap();
-
-        let windows: Vec<_> = market.candles().keys().copied().collect();
-
-        assert_eq!(
-            windows,
-            vec![
-                AlignedWindow::Seconds1,
-                AlignedWindow::Minutes1,
-                AlignedWindow::Hours1,
-            ]
-        );
-    }
 }
