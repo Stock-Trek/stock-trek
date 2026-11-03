@@ -154,9 +154,10 @@ impl Portfolio {
     }
     /// Number of pending orders with the given `tag` across all accounts.
     pub fn pending_orders_with_tag_count(&self, tag: &Tag) -> usize {
-        self.pending_orders_iter()
-            .filter(|(_, _, order_tag, _)| *order_tag == tag)
-            .count()
+        self.cex_accounts()
+            .filter_map(|(_, _, portfolio)| portfolio.pending_orders_with_tag(tag))
+            .map(<[PendingOrder]>::len)
+            .sum()
     }
     /// Number of pending orders in a specific CEX account.
     pub fn pending_orders_in_cex_account_count(
