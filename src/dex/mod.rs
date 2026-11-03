@@ -13,3 +13,10 @@ pub mod network;
 pub mod networks;
 /// Shared implementation for string-backed identifiers.
 mod string_id;
+
+#[cfg(test)]
+mod asset_on_chain_tests;
+#[cfg(test)]
+mod blockchain_tests;
+#[cfg(test)]
+mod network_tests;

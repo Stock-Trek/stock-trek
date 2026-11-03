@@ -182,3 +182,12 @@ pub mod prelude {
         },
     };
 }
+
+#[cfg(test)]
+mod conditions_tests;
+#[cfg(test)]
+mod pending_order_tests;
+#[cfg(test)]
+mod signal_context_tests;
+#[cfg(test)]
+mod validation_tests;
