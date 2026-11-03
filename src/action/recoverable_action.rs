@@ -35,7 +35,7 @@ impl RecoverableAction {
     /// Resolves and enqueues the action on the resolved context.
     pub fn enqueue(&self, c: &mut ResolvedContext) -> StockTrekResult<()> {
         let resolved_action = self.action.try_resolve(c)?;
-        (c.enqueue_action)(&resolved_action, &self.recovery_policy)?;
+        (c.enqueue_action())(&resolved_action, &self.recovery_policy)?;
         Ok(())
     }
 }

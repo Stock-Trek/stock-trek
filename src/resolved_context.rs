@@ -12,12 +12,12 @@ use crate::{
 pub struct ResolvedContext {
     /// Receives each action as it is enqueued, together with the recovery
     /// policy the action should follow on error.
-    pub enqueue_action: EnqueueActionFn,
+    enqueue_action: EnqueueActionFn,
     /// The latest portfolio snapshot.
-    pub portfolio: Portfolio,
+    portfolio: Portfolio,
     /// The signals from the latest
     /// [`Algorithm::signals`](crate::Algorithm::signals) evaluation.
-    pub signals: Signals,
+    signals: Signals,
 }
 
 /// Receives a resolved action and its recovery policy during interpretation.
@@ -31,6 +31,19 @@ impl ResolvedContext {
             portfolio,
             signals,
         }
+    }
+    /// Returns the callback that receives each enqueued action.
+    pub fn enqueue_action(&mut self) -> &mut EnqueueActionFn {
+        &mut self.enqueue_action
+    }
+    /// Returns the latest portfolio snapshot.
+    pub fn portfolio(&self) -> &Portfolio {
+        &self.portfolio
+    }
+    /// Returns the signals from the latest
+    /// [`Algorithm::signals`](crate::Algorithm::signals) evaluation.
+    pub fn signals(&self) -> &Signals {
+        &self.signals
     }
 }
 
