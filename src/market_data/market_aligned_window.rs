@@ -243,18 +243,16 @@ impl MarketAlignedWindow {
         /// covers.
         days1, Days1, [year, month, day];
         /// Creates an aligned-window collection with candles for 1-week
-        /// windows. The date must be the start of the first window: weeks
-        /// start on Thursday, counting from the Unix epoch.
+        /// windows. The date identifies the calendar day the first window
+        /// covers.
         weeks1, Weeks1, [year, month, day];
         /// Creates an aligned-window collection with candles for 2-week
-        /// windows. The date must be the start of the first window: 2-week
-        /// windows start on every second Thursday, counting from the Unix
-        /// epoch.
+        /// windows. The date identifies the calendar day the first window
+        /// covers.
         weeks2, Weeks2, [year, month, day];
         /// Creates an aligned-window collection with candles for 4-week
-        /// windows. The date must be the start of the first window: 4-week
-        /// windows start on every fourth Thursday, counting from the Unix
-        /// epoch.
+        /// windows. The date identifies the calendar day the first window
+        /// covers.
         weeks4, Weeks4, [year, month, day];
     );
 
@@ -330,22 +328,44 @@ impl MarketAlignedWindow {
         ohlcv: MarketOhlcv,
         trade_count: u64,
     ) -> StockTrekResult<MarketCandle> {
-        let bounds = window.bounds_for(start).map_err(|error| {
-            Validation::error(
-                "MarketAlignedWindow::aligned_candle",
-                format!("could not determine the {window} window bounds at {start}: {error}"),
-            )
-        })?;
-        if bounds.lower() != start {
-            return Err(Validation::error(
-                "MarketAlignedWindow::aligned_candle",
-                format!(
-                    "{start} is not the start of a {window} window: the window containing it starts at {}",
-                    bounds.lower()
-                ),
-            ));
-        }
-        MarketCandle::from_interval(start, bounds.upper(), true, ohlcv, trade_count)
+        let end = match window {
+            AlignedWindow::Weeks1 | AlignedWindow::Weeks2 | AlignedWindow::Weeks4 => {
+                let millis = window
+                    .millis_exact()
+                    .expect("week windows have a fixed length");
+                start.checked_add(TimestampMillis::new(millis)).ok_or_else(
+                    || {
+                        Validation::error(
+                            "MarketAlignedWindow::aligned_candle",
+                            format!(
+                                "the {window} window starting at {start} with duration {millis} ms overflows the timestamp range"
+                            ),
+                        )
+                    },
+                )?
+            }
+            _ => {
+                let bounds = window.bounds_for(start).map_err(|error| {
+                    Validation::error(
+                        "MarketAlignedWindow::aligned_candle",
+                        format!(
+                            "could not determine the {window} window bounds at {start}: {error}"
+                        ),
+                    )
+                })?;
+                if bounds.lower() != start {
+                    return Err(Validation::error(
+                        "MarketAlignedWindow::aligned_candle",
+                        format!(
+                            "{start} is not the start of a {window} window: the window containing it starts at {}",
+                            bounds.lower()
+                        ),
+                    ));
+                }
+                bounds.upper()
+            }
+        };
+        MarketCandle::from_interval(start, end, true, ohlcv, trade_count)
     }
 
     fn window_start_at(
@@ -659,45 +679,53 @@ mod tests {
     }
 
     #[test]
-    fn weeks1_requires_window_start_dates() {
-        assert!(MarketAlignedWindow::weeks1(2024, 2, 2, [(ohlcv_at(1.0), 3)]).is_err());
-
-        let market = MarketAlignedWindow::weeks1(2024, 2, 1, [(ohlcv_at(1.0), 3)]).unwrap();
+    fn weeks1_accepts_any_start_date() {
+        let market =
+            MarketAlignedWindow::weeks1(2024, 2, 2, [(ohlcv_at(1.0), 3), (ohlcv_at(2.0), 4)])
+                .unwrap();
         let candles = market.candles_for(AlignedWindow::Weeks1).unwrap();
+
+        assert_eq!(candles.len(), 2);
         assert_eq!(
             candles[0].start_time_millis_inc(),
-            millis_at(2024, 2, 1, 0, 0, 0)
+            millis_at(2024, 2, 2, 0, 0, 0)
         );
         assert_eq!(
             candles[0].end_time_millis_exc(),
-            millis_at(2024, 2, 8, 0, 0, 0)
+            millis_at(2024, 2, 9, 0, 0, 0)
+        );
+        assert_eq!(
+            candles[1].start_time_millis_inc(),
+            millis_at(2024, 2, 9, 0, 0, 0)
+        );
+        assert_eq!(
+            candles[1].end_time_millis_exc(),
+            millis_at(2024, 2, 16, 0, 0, 0)
         );
     }
 
     #[test]
-    fn week_constructors_require_epoch_aligned_week_starts() {
-        assert!(MarketAlignedWindow::weeks4(2024, 2, 1, [(ohlcv_at(1.0), 3)]).is_err());
-
-        let market = MarketAlignedWindow::weeks2(2024, 2, 1, [(ohlcv_at(1.0), 3)]).unwrap();
+    fn week_constructors_accept_any_start_date() {
+        let market = MarketAlignedWindow::weeks2(2024, 2, 2, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Weeks2).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
-            millis_at(2024, 2, 1, 0, 0, 0)
+            millis_at(2024, 2, 2, 0, 0, 0)
         );
         assert_eq!(
             candles[0].end_time_millis_exc(),
-            millis_at(2024, 2, 15, 0, 0, 0)
+            millis_at(2024, 2, 16, 0, 0, 0)
         );
 
-        let market = MarketAlignedWindow::weeks4(2024, 2, 15, [(ohlcv_at(1.0), 3)]).unwrap();
+        let market = MarketAlignedWindow::weeks4(2024, 2, 2, [(ohlcv_at(1.0), 3)]).unwrap();
         let candles = market.candles_for(AlignedWindow::Weeks4).unwrap();
         assert_eq!(
             candles[0].start_time_millis_inc(),
-            millis_at(2024, 2, 15, 0, 0, 0)
+            millis_at(2024, 2, 2, 0, 0, 0)
         );
         assert_eq!(
             candles[0].end_time_millis_exc(),
-            millis_at(2024, 3, 14, 0, 0, 0)
+            millis_at(2024, 3, 1, 0, 0, 0)
         );
     }
 
