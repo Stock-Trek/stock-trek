@@ -20,7 +20,7 @@ impl DomainError {
 
 impl fmt::Display for DomainError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Domain error in '{}': {}", self.function, self.message)
+        write!(f, "In '{}': {}", self.function, self.message)
     }
 }
 
