@@ -6,7 +6,7 @@ use crate::{
     },
     validation::Validation,
 };
-use chrono::{TimeZone, Utc};
+use chrono::{Month, TimeZone, Utc};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -46,10 +46,10 @@ macro_rules! aligned_window_constructor {
             /// the start does not begin a window.
             pub fn $name(
                 year: i32,
-                month: u32,
+                month: Month,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let start = Self::window_start_at(year, month, 1, 0, 0, 0)?;
+                let start = Self::window_start_at(year, month.number_from_month(), 1, 0, 0, 0)?;
                 Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
@@ -64,11 +64,11 @@ macro_rules! aligned_window_constructor {
             /// error when the start does not begin a window.
             pub fn $name(
                 year: i32,
-                month: u32,
+                month: Month,
                 day: u32,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let start = Self::window_start_at(year, month, day, 0, 0, 0)?;
+                let start = Self::window_start_at(year, month.number_from_month(), day, 0, 0, 0)?;
                 Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
@@ -83,12 +83,19 @@ macro_rules! aligned_window_constructor {
             /// when the start does not begin a window.
             pub fn $name(
                 year: i32,
-                month: u32,
+                month: Month,
                 day: u32,
                 hour: u32,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let start = Self::window_start_at(year, month, day, hour, 0, 0)?;
+                let start = Self::window_start_at(
+                    year,
+                    month.number_from_month(),
+                    day,
+                    hour,
+                    0,
+                    0,
+                )?;
                 Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
@@ -103,13 +110,20 @@ macro_rules! aligned_window_constructor {
             /// error when the start does not begin a window.
             pub fn $name(
                 year: i32,
-                month: u32,
+                month: Month,
                 day: u32,
                 hour: u32,
                 minute: u32,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let start = Self::window_start_at(year, month, day, hour, minute, 0)?;
+                let start = Self::window_start_at(
+                    year,
+                    month.number_from_month(),
+                    day,
+                    hour,
+                    minute,
+                    0,
+                )?;
                 Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
@@ -125,14 +139,21 @@ macro_rules! aligned_window_constructor {
             /// window.
             pub fn $name(
                 year: i32,
-                month: u32,
+                month: Month,
                 day: u32,
                 hour: u32,
                 minute: u32,
                 second: u32,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let start = Self::window_start_at(year, month, day, hour, minute, second)?;
+                let start = Self::window_start_at(
+                    year,
+                    month.number_from_month(),
+                    day,
+                    hour,
+                    minute,
+                    second,
+                )?;
                 Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
