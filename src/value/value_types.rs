@@ -9,119 +9,125 @@ use serde::{Deserialize, Serialize};
 use stock_trek_types::cex::{account_id::AccountId, asset_id::AssetId, cex_id::CexId, tag::Tag};
 use strum::Display;
 
-/// A value that resolves to a CEX account identifier.
-#[derive(Debug, Display, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
-#[serde(tag = "type")]
-#[non_exhaustive]
-pub enum AccountIdValue {
-    /// A literal account identifier.
-    Literal {
-        /// The account identifier.
-        literal: AccountId,
-    },
-    /// An account identifier read from a signal.
-    Signal {
-        /// The key of the signal holding the account identifier.
-        signal: SignalKey<AccountId>,
-    },
+/// Declares a value enum that resolves a literal or a signal-backed value.
+///
+/// `resolve` selects how a literal is read: `copy` dereferences it and `clone`
+/// clones it. The remaining parameters provide the documentation for the
+/// generated items.
+macro_rules! value_enum {
+    (
+        $(#[$meta:meta])*
+        $name:ident {
+            method: $method:ident,
+            ty: $ty:ty,
+            resolve: $resolve:ident,
+            docs: {
+                literal: $literal_doc:literal,
+                literal_field: $literal_field_doc:literal,
+                signal: $signal_doc:literal,
+                signal_field: $signal_field_doc:literal,
+                method: $method_doc:literal $(,)?
+            } $(,)?
+        } $(,)?
+    ) => {
+        $(#[$meta])*
+        #[derive(Debug, Display, Clone, Serialize, Deserialize)]
+        #[serde(rename_all = "snake_case")]
+        #[strum(serialize_all = "snake_case")]
+        #[serde(tag = "type")]
+        #[non_exhaustive]
+        pub enum $name {
+            #[doc = $literal_doc]
+            Literal {
+                #[doc = $literal_field_doc]
+                literal: $ty,
+            },
+            #[doc = $signal_doc]
+            Signal {
+                #[doc = $signal_field_doc]
+                signal: SignalKey<$ty>,
+            },
+        }
+
+        impl $name {
+            #[doc = $method_doc]
+            pub fn $method(&self, c: &ResolvedContext) -> StockTrekResult<$ty> {
+                match self {
+                    Self::Literal { literal } => Ok(value_enum!(@resolve $resolve literal)),
+                    Self::Signal { signal } => signal.read(c),
+                }
+            }
+        }
+    };
+    (@resolve copy $literal:ident) => {
+        *$literal
+    };
+    (@resolve clone $literal:ident) => {
+        $literal.clone()
+    };
 }
 
-impl AccountIdValue {
-    /// Resolves the account identifier against the resolved context.
-    pub fn account_id(&self, c: &ResolvedContext) -> StockTrekResult<AccountId> {
-        match self {
-            Self::Literal { literal } => Ok(literal.clone()),
-            Self::Signal { signal } => signal.read(c),
-        }
+value_enum! {
+    /// A value that resolves to a CEX account identifier.
+    AccountIdValue {
+        method: account_id,
+        ty: AccountId,
+        resolve: clone,
+        docs: {
+            literal: "A literal account identifier.",
+            literal_field: "The account identifier.",
+            signal: "An account identifier read from a signal.",
+            signal_field: "The key of the signal holding the account identifier.",
+            method: "Resolves the account identifier against the resolved context.",
+        },
     }
 }
 
-/// A value that resolves to a CEX identifier.
-#[derive(Debug, Display, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
-#[serde(tag = "type")]
-#[non_exhaustive]
-pub enum CexIdValue {
-    /// A literal CEX identifier.
-    Literal {
-        /// The CEX identifier.
-        literal: CexId,
-    },
-    /// A CEX identifier read from a signal.
-    Signal {
-        /// The key of the signal holding the CEX identifier.
-        signal: SignalKey<CexId>,
-    },
-}
-
-impl CexIdValue {
-    /// Resolves the CEX identifier against the resolved context.
-    pub fn cex_id(&self, c: &ResolvedContext) -> StockTrekResult<CexId> {
-        match self {
-            Self::Literal { literal } => Ok(*literal),
-            Self::Signal { signal } => signal.read(c),
-        }
+value_enum! {
+    /// A value that resolves to a CEX identifier.
+    CexIdValue {
+        method: cex_id,
+        ty: CexId,
+        resolve: copy,
+        docs: {
+            literal: "A literal CEX identifier.",
+            literal_field: "The CEX identifier.",
+            signal: "A CEX identifier read from a signal.",
+            signal_field: "The key of the signal holding the CEX identifier.",
+            method: "Resolves the CEX identifier against the resolved context.",
+        },
     }
 }
 
-/// A value that resolves to an asset identifier.
-#[derive(Debug, Display, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
-#[serde(tag = "type")]
-#[non_exhaustive]
-pub enum AssetIdValue {
-    /// A literal asset identifier.
-    Literal {
-        /// The asset identifier.
-        literal: AssetId,
-    },
-    /// An asset identifier read from a signal.
-    Signal {
-        /// The key of the signal holding the asset identifier.
-        signal: SignalKey<AssetId>,
-    },
-}
-
-impl AssetIdValue {
-    /// Resolves the asset identifier against the resolved context.
-    pub fn asset_id(&self, c: &ResolvedContext) -> StockTrekResult<AssetId> {
-        match self {
-            Self::Literal { literal } => Ok(*literal),
-            Self::Signal { signal } => signal.read(c),
-        }
+value_enum! {
+    /// A value that resolves to an asset identifier.
+    AssetIdValue {
+        method: asset_id,
+        ty: AssetId,
+        resolve: copy,
+        docs: {
+            literal: "A literal asset identifier.",
+            literal_field: "The asset identifier.",
+            signal: "An asset identifier read from a signal.",
+            signal_field: "The key of the signal holding the asset identifier.",
+            method: "Resolves the asset identifier against the resolved context.",
+        },
     }
 }
 
-/// A value that resolves to a boolean flag.
-#[derive(Debug, Display, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
-#[serde(tag = "type")]
-#[non_exhaustive]
-pub enum FlagValue {
-    /// A literal boolean flag.
-    Literal {
-        /// The flag.
-        literal: bool,
-    },
-    /// A boolean flag read from a signal.
-    Signal {
-        /// The key of the signal holding the flag.
-        signal: SignalKey<bool>,
-    },
-}
-
-impl FlagValue {
-    /// Resolves the flag against the resolved context.
-    pub fn flag(&self, c: &ResolvedContext) -> StockTrekResult<bool> {
-        match self {
-            Self::Literal { literal } => Ok(*literal),
-            Self::Signal { signal } => signal.read(c),
-        }
+value_enum! {
+    /// A value that resolves to a boolean flag.
+    FlagValue {
+        method: flag,
+        ty: bool,
+        resolve: copy,
+        docs: {
+            literal: "A literal boolean flag.",
+            literal_field: "The flag.",
+            signal: "A boolean flag read from a signal.",
+            signal_field: "The key of the signal holding the flag.",
+            method: "Resolves the flag against the resolved context.",
+        },
     }
 }
 
