@@ -2,7 +2,7 @@ use crate::{
     error::result::StockTrekResult,
     market_data::{
         aligned_window::AlignedWindow,
-        aligned_window_constructor::{
+        aligned_window_macros::{
             aligned_window_constructor, aligned_window_containing_constructor,
         },
         market_candle::MarketCandle,
