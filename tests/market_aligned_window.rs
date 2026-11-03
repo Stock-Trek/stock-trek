@@ -232,6 +232,100 @@ fn weeks1_rejects_dates_that_do_not_start_a_window() {
 }
 
 #[test]
+fn weeks1_auto_aligned_snaps_to_the_containing_window() {
+    let market = MarketAlignedWindow::weeks1_auto_aligned(
+        2024,
+        Month::February,
+        13,
+        [(ohlcv_at(1.0), 3), (ohlcv_at(2.0), 4)],
+    )
+    .unwrap();
+    let candles = market.candles_for(AlignedWindow::Weeks1).unwrap();
+
+    assert_eq!(candles.len(), 2);
+    assert_eq!(
+        candles[0].start_time_millis_inc(),
+        millis_at(2024, Month::February, 8, 0, 0, 0)
+    );
+    assert_eq!(
+        candles[0].end_time_millis_exc(),
+        millis_at(2024, Month::February, 15, 0, 0, 0)
+    );
+    assert_eq!(
+        candles[1].start_time_millis_inc(),
+        millis_at(2024, Month::February, 15, 0, 0, 0)
+    );
+    assert_eq!(
+        candles[1].end_time_millis_exc(),
+        millis_at(2024, Month::February, 22, 0, 0, 0)
+    );
+}
+
+#[test]
+fn weeks_auto_aligned_accepts_dates_that_start_a_window() {
+    let aligned = MarketAlignedWindow::weeks1(2024, Month::February, 15, [(ohlcv_at(1.0), 3)])
+        .unwrap()
+        .candles_for(AlignedWindow::Weeks1)
+        .unwrap()
+        .to_vec();
+    let auto_aligned =
+        MarketAlignedWindow::weeks1_auto_aligned(2024, Month::February, 15, [(ohlcv_at(1.0), 3)])
+            .unwrap()
+            .candles_for(AlignedWindow::Weeks1)
+            .unwrap()
+            .to_vec();
+
+    assert_eq!(aligned.len(), auto_aligned.len());
+    for (aligned, auto_aligned) in aligned.iter().zip(auto_aligned.iter()) {
+        assert_eq!(
+            aligned.start_time_millis_inc(),
+            auto_aligned.start_time_millis_inc()
+        );
+        assert_eq!(
+            aligned.end_time_millis_exc(),
+            auto_aligned.end_time_millis_exc()
+        );
+    }
+}
+
+#[test]
+fn weeks2_and_weeks4_auto_aligned_snap_to_the_containing_windows() {
+    let market =
+        MarketAlignedWindow::weeks2_auto_aligned(2024, Month::February, 13, [(ohlcv_at(1.0), 3)])
+            .unwrap();
+    let candles = market.candles_for(AlignedWindow::Weeks2).unwrap();
+    assert_eq!(
+        candles[0].start_time_millis_inc(),
+        millis_at(2024, Month::February, 1, 0, 0, 0)
+    );
+    assert_eq!(
+        candles[0].end_time_millis_exc(),
+        millis_at(2024, Month::February, 15, 0, 0, 0)
+    );
+
+    let market =
+        MarketAlignedWindow::weeks4_auto_aligned(2024, Month::February, 13, [(ohlcv_at(1.0), 3)])
+            .unwrap();
+    let candles = market.candles_for(AlignedWindow::Weeks4).unwrap();
+    assert_eq!(
+        candles[0].start_time_millis_inc(),
+        millis_at(2024, Month::January, 18, 0, 0, 0)
+    );
+    assert_eq!(
+        candles[0].end_time_millis_exc(),
+        millis_at(2024, Month::February, 15, 0, 0, 0)
+    );
+}
+
+#[test]
+fn weeks_auto_aligned_rejects_invalid_dates() {
+    assert!(
+        MarketAlignedWindow::weeks1_auto_aligned(2024, Month::February, 30, [(ohlcv_at(1.0), 3)])
+            .is_err()
+    );
+}
+
+#[test]
 fn week_constructors_reject_dates_that_do_not_start_a_window() {
     assert!(MarketAlignedWindow::weeks2(2024, Month::February, 2, [(ohlcv_at(1.0), 3)]).is_err());
     assert!(MarketAlignedWindow::weeks4(2024, Month::February, 2, [(ohlcv_at(1.0), 3)]).is_err());
@@ -542,6 +636,36 @@ fn every_aligned_constructor_covers_exactly_its_window() {
         ),
         (
             MarketAlignedWindow::weeks4(2024, Month::February, 15, [(ohlcv.clone(), 3)]).unwrap(),
+            AlignedWindow::Weeks4,
+        ),
+        (
+            MarketAlignedWindow::weeks1_auto_aligned(
+                2024,
+                Month::February,
+                13,
+                [(ohlcv.clone(), 3)],
+            )
+            .unwrap(),
+            AlignedWindow::Weeks1,
+        ),
+        (
+            MarketAlignedWindow::weeks2_auto_aligned(
+                2024,
+                Month::February,
+                13,
+                [(ohlcv.clone(), 3)],
+            )
+            .unwrap(),
+            AlignedWindow::Weeks2,
+        ),
+        (
+            MarketAlignedWindow::weeks4_auto_aligned(
+                2024,
+                Month::February,
+                13,
+                [(ohlcv.clone(), 3)],
+            )
+            .unwrap(),
             AlignedWindow::Weeks4,
         ),
         (

@@ -151,3 +151,30 @@ macro_rules! aligned_window_constructor {
 }
 
 pub(crate) use aligned_window_constructor;
+
+/// Generates constructors that take any date within the first window instead
+/// of the window's aligned start.
+///
+/// Each generated constructor takes a date, followed by an iterator of
+/// `(OHLCV, trade count)` tuples, and adds one candle per tuple: the first
+/// candle starts at the start of the window containing the given date, each
+/// following candle starts where the previous one ends, and every created
+/// candle is marked closed.
+macro_rules! aligned_window_containing_constructor {
+    ($($(#[$doc:meta])* $name:ident, $variant:ident);* $(;)?) => {
+        $(
+            $(#[$doc])*
+            pub fn $name(
+                year: i32,
+                month: Month,
+                day: u32,
+                candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
+            ) -> StockTrekResult<Self> {
+                let requested = Self::window_start_at(year, month, day, 0, 0, 0)?;
+                Self::with_window_containing(AlignedWindow::$variant, requested, candles)
+            }
+        )*
+    };
+}
+
+pub(crate) use aligned_window_containing_constructor;
