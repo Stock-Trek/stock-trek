@@ -330,9 +330,12 @@ impl MarketAlignedWindow {
     ) -> StockTrekResult<MarketCandle> {
         let end = match window {
             AlignedWindow::Weeks1 | AlignedWindow::Weeks2 | AlignedWindow::Weeks4 => {
-                let millis = window
-                    .millis_exact()
-                    .expect("week windows have a fixed length");
+                let millis = window.millis_exact().ok_or_else(|| {
+                    Validation::error(
+                        "MarketAlignedWindow::aligned_candle",
+                        format!("the {window} window has no fixed length"),
+                    )
+                })?;
                 start.checked_add(TimestampMillis::new(millis)).ok_or_else(
                     || {
                         Validation::error(
