@@ -3,7 +3,10 @@ use crate::{
     error::result::StockTrekResult, resolvable::Resolvable, resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, fmt::Debug};
+use std::{
+    collections::{BTreeMap, HashSet},
+    fmt::Debug,
+};
 use stock_trek_types::cex::capability::CexCapability;
 use strum::Display;
 
@@ -41,7 +44,7 @@ impl RecoverableAction {
 }
 
 impl HasRequiredCapabilities for RecoverableAction {
-    fn required_capabilities(&self) -> Vec<CexCapability> {
+    fn required_capabilities(&self) -> HashSet<CexCapability> {
         self.action.required_capabilities()
     }
 }
