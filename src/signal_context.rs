@@ -61,9 +61,12 @@ impl SignalContext {
 }
 
 /// Builder for constructing a [`SignalContext`].
+///
+/// Setter methods only collect data. All validation happens at build time:
+/// [`SignalContextBuilder::build`] rejects duplicate markets.
 #[derive(Debug, Clone, Default)]
 pub struct SignalContextBuilder {
-    cex_market_data: BTreeMap<CexId, CexMarketDataByBaseContext>,
+    cex_market_data: Vec<(CexId, AssetId, AssetId, Market)>,
 }
 
 impl SignalContextBuilder {
@@ -74,44 +77,43 @@ impl SignalContextBuilder {
 
     /// Adds a market for a base/quote pair on a CEX.
     ///
-    /// Returns an error when the market for this CEX and base/quote pair has
-    /// already been added.
+    /// The market is validated when [`SignalContextBuilder::build`] is
+    /// called: the market for the same CEX and base/quote pair must not have
+    /// been added already.
     pub fn cex_market(
         &mut self,
         cex_id: CexId,
         base: AssetId,
         quote: AssetId,
         market: Market,
-    ) -> StockTrekResult<&mut Self> {
-        let already_exists = self
-            .cex_market_data
-            .get(&cex_id)
-            .and_then(|by_base| by_base.markets_by_base.get(&base))
-            .and_then(|by_quote| by_quote.markets_by_quote.get(&quote))
-            .is_some();
-        if already_exists {
-            return Err(Validation::error(
-                "SignalContextBuilder::cex_market",
-                format!("duplicate market for {base}/{quote} on CEX {cex_id}"),
-            ));
-        }
-
-        self.cex_market_data
-            .entry(cex_id)
-            .or_default()
-            .markets_by_base
-            .entry(base)
-            .or_default()
-            .markets_by_quote
-            .insert(quote, market);
-        Ok(self)
+    ) -> &mut Self {
+        self.cex_market_data.push((cex_id, base, quote, market));
+        self
     }
 
     /// Builds the [`SignalContext`] from the collected market data.
-    pub fn build(self) -> SignalContext {
-        SignalContext {
-            cex_market_data: self.cex_market_data,
+    ///
+    /// Returns an error when the market for a CEX and base/quote pair has
+    /// been added more than once.
+    pub fn build(self) -> StockTrekResult<SignalContext> {
+        let function = "SignalContextBuilder::build";
+        let mut cex_market_data: BTreeMap<CexId, CexMarketDataByBaseContext> = BTreeMap::new();
+        for (cex_id, base, quote, market) in self.cex_market_data {
+            let markets_by_quote = &mut cex_market_data
+                .entry(cex_id)
+                .or_default()
+                .markets_by_base
+                .entry(base)
+                .or_default()
+                .markets_by_quote;
+            if markets_by_quote.insert(quote, market).is_some() {
+                return Err(Validation::error(
+                    function,
+                    format!("duplicate market for {base}/{quote} on CEX {cex_id}"),
+                ));
+            }
         }
+        Ok(SignalContext { cex_market_data })
     }
 }
 
@@ -183,22 +185,19 @@ mod tests {
     #[test]
     fn markets_are_indexed_by_cex_base_and_quote() {
         let mut builder = SignalContextBuilder::new();
-        builder
-            .cex_market(
-                CexId::Binance,
-                AssetId::Bitcoin,
-                AssetId::TetherUSD,
-                market(),
-            )
-            .unwrap()
-            .cex_market(
-                CexId::Binance,
-                AssetId::Ethereum,
-                AssetId::TetherUSD,
-                market(),
-            )
-            .unwrap();
-        let context = builder.build();
+        builder.cex_market(
+            CexId::Binance,
+            AssetId::Bitcoin,
+            AssetId::TetherUSD,
+            market(),
+        );
+        builder.cex_market(
+            CexId::Binance,
+            AssetId::Ethereum,
+            AssetId::TetherUSD,
+            market(),
+        );
+        let context = builder.build().unwrap();
 
         assert!(
             context
@@ -247,22 +246,19 @@ mod tests {
     #[test]
     fn builder_rejects_duplicate_markets() {
         let mut builder = SignalContextBuilder::new();
-        builder
-            .cex_market(
-                CexId::Binance,
-                AssetId::Bitcoin,
-                AssetId::TetherUSD,
-                market(),
-            )
-            .unwrap();
-
-        let duplicate = builder.cex_market(
+        builder.cex_market(
+            CexId::Binance,
+            AssetId::Bitcoin,
+            AssetId::TetherUSD,
+            market(),
+        );
+        builder.cex_market(
             CexId::Binance,
             AssetId::Bitcoin,
             AssetId::TetherUSD,
             market(),
         );
 
-        assert!(duplicate.is_err());
+        assert!(builder.build().is_err());
     }
 }
