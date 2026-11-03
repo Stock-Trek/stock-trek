@@ -16,8 +16,6 @@ pub mod timestamp;
 mod window;
 
 #[cfg(test)]
-mod market_tests;
-#[cfg(test)]
 mod market_candle_tests;
 #[cfg(test)]
 mod market_ohlcv_tests;
@@ -27,6 +25,8 @@ mod market_order_book_tests;
 mod market_quote_tests;
 #[cfg(test)]
 mod market_rolling_window_tests;
+#[cfg(test)]
+mod market_tests;
 #[cfg(test)]
 mod market_tick_tests;
 #[cfg(test)]
