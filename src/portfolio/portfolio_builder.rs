@@ -2,7 +2,7 @@ use super::{CexAccountPortfolio, Portfolio};
 use crate::{error::result::StockTrekResult, pending_order::PendingOrder, validation::Validation};
 use std::collections::BTreeMap;
 use stock_trek_types::cex::{
-    account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest, tag::Tag,
+    account_id::AccountId, asset_id::AssetId, cex_id::CexId, order_request::OrderRequest,
 };
 
 /// Builder for constructing a [`Portfolio`].
@@ -56,7 +56,7 @@ impl PortfolioBuilder {
     ) -> StockTrekResult<Self> {
         let pending_order =
             PendingOrder::new(order_request, filled_base_quantity, filled_quote_quantity)?;
-        let tag = Self::order_request_tag(pending_order.order_request()).clone();
+        let tag = pending_order.tag().clone();
         let mut portfolios = self.portfolios;
         portfolios
             .entry(cex_id)
@@ -74,14 +74,6 @@ impl PortfolioBuilder {
     pub fn build(self) -> Portfolio {
         Portfolio {
             portfolios: self.portfolios,
-        }
-    }
-
-    fn order_request_tag(order_request: &OrderRequest<AssetId, f64>) -> &Tag {
-        match order_request {
-            OrderRequest::Limit { tag, .. }
-            | OrderRequest::MarketBuy { tag, .. }
-            | OrderRequest::MarketSell { tag, .. } => tag,
         }
     }
 }

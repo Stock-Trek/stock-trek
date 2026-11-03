@@ -1,6 +1,7 @@
 use crate::{error::result::StockTrekResult, validation::Validation};
 use stock_trek_types::cex::{
     activation::Activation, asset_id::AssetId, order_request::OrderRequest, quantity::Quantity,
+    tag::Tag,
 };
 
 /// An order with the quantities that have already been filled.
@@ -43,6 +44,14 @@ impl PendingOrder {
     /// Returns the order request that created this pending order.
     pub fn order_request(&self) -> &OrderRequest<AssetId, f64> {
         &self.order_request
+    }
+
+    pub(crate) fn tag(&self) -> &Tag {
+        match &self.order_request {
+            OrderRequest::Limit { tag, .. }
+            | OrderRequest::MarketBuy { tag, .. }
+            | OrderRequest::MarketSell { tag, .. } => tag,
+        }
     }
 
     /// Returns the quantity of the base asset that has been filled.

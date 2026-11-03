@@ -13,7 +13,8 @@ impl CexAccountPortfolio {
     /// Creates an account portfolio from asset balances and pending orders.
     ///
     /// Both arguments accept any iterator of key/value pairs. Returns an error
-    /// when any asset balance is negative or not finite.
+    /// when any asset balance is negative or not finite, or when a pending
+    /// order's tag does not match the key of the group it is listed under.
     pub fn new<A, P>(asset_counts: A, pending_orders: P) -> StockTrekResult<Self>
     where
         A: IntoIterator<Item = (AssetId, f64)>,
@@ -24,9 +25,25 @@ impl CexAccountPortfolio {
             Validation::non_negative("CexAccountPortfolio::new", "asset balance", count)?;
             balances.insert(asset_id, count);
         }
+
+        let mut orders_by_tag = BTreeMap::new();
+        for (tag, orders) in pending_orders {
+            if let Some(order) = orders.iter().find(|order| order.tag() != &tag) {
+                return Err(Validation::error(
+                    "CexAccountPortfolio::new",
+                    format!(
+                        "pending order tag {:?} does not match group tag {:?}",
+                        order.tag(),
+                        tag
+                    ),
+                ));
+            }
+            orders_by_tag.insert(tag, orders);
+        }
+
         Ok(Self {
             asset_counts: balances,
-            pending_orders: pending_orders.into_iter().collect(),
+            pending_orders: orders_by_tag,
         })
     }
 
