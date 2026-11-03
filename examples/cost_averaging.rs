@@ -150,7 +150,7 @@ mod tests {
     fn market(asks: &[f64]) -> Market {
         let mut builder = MarketBuilder::new(ORDER_QUANTITY, 0.01, 0.000_1).unwrap();
         for (index, ask) in asks.iter().enumerate() {
-            builder = builder
+            builder
                 .tick(
                     TimestampMillis::from(index as u64),
                     MarketQuote::new(ask - 1.0, 1.0).unwrap(),
@@ -177,7 +177,8 @@ mod tests {
     ) -> Vec<ResolvedAction> {
         let actions = Rc::new(RefCell::new(Vec::new()));
         let enqueued_actions = Rc::clone(&actions);
-        let portfolio = PortfolioBuilder::new()
+        let mut portfolio = PortfolioBuilder::new();
+        portfolio
             .asset_count(
                 CexId::Binance,
                 AccountId::new(CEX_ACCOUNT_ID),

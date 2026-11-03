@@ -9,6 +9,8 @@ use stock_trek_types::cex::{
 ///
 /// Invalid asset counts and pending orders are rejected immediately by the
 /// method that adds them, so an invalid builder can never be constructed.
+/// Setter methods borrow the builder mutably, so a rejected value can be
+/// corrected and retried without rebuilding the collected data.
 #[derive(Debug, Clone, Default)]
 pub struct PortfolioBuilder {
     portfolios: BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
@@ -24,22 +26,21 @@ impl PortfolioBuilder {
     ///
     /// Returns an error when `count` is negative or not finite.
     pub fn asset_count(
-        self,
+        &mut self,
         cex_id: CexId,
         account_id: AccountId,
         asset_id: AssetId,
         count: f64,
-    ) -> StockTrekResult<Self> {
+    ) -> StockTrekResult<&mut Self> {
         Validation::non_negative("PortfolioBuilder::asset_count", "asset count", count)?;
-        let mut portfolios = self.portfolios;
-        portfolios
+        self.portfolios
             .entry(cex_id)
             .or_default()
             .entry(account_id)
             .or_default()
             .asset_counts
             .insert(asset_id, count);
-        Ok(Self { portfolios })
+        Ok(self)
     }
 
     /// Adds a pending order to a CEX account.
@@ -47,18 +48,17 @@ impl PortfolioBuilder {
     /// The order is grouped under the tag embedded in `order_request`. Returns
     /// an error when the pending order is invalid.
     pub fn pending_order(
-        self,
+        &mut self,
         cex_id: CexId,
         account_id: AccountId,
         order_request: OrderRequest<AssetId, f64>,
         filled_base_quantity: f64,
         filled_quote_quantity: f64,
-    ) -> StockTrekResult<Self> {
+    ) -> StockTrekResult<&mut Self> {
         let pending_order =
             PendingOrder::new(order_request, filled_base_quantity, filled_quote_quantity)?;
         let tag = pending_order.tag().clone();
-        let mut portfolios = self.portfolios;
-        portfolios
+        self.portfolios
             .entry(cex_id)
             .or_default()
             .entry(account_id)
@@ -67,7 +67,7 @@ impl PortfolioBuilder {
             .entry(tag)
             .or_default()
             .push(pending_order);
-        Ok(Self { portfolios })
+        Ok(self)
     }
 
     /// Builds the [`Portfolio`] from the collected data.
