@@ -27,7 +27,7 @@ impl fmt::Display for StockTrekError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             StockTrekError::Dex(e) => write!(f, "DEX error: {}", e),
-            StockTrekError::Domain(e) => write!(f, "{}", e),
+            StockTrekError::Domain(e) => write!(f, "Domain error: {}", e),
             StockTrekError::Stats(e) => write!(f, "Stats error: {}", e),
             StockTrekError::Value(e) => write!(f, "Value error: {}", e),
         }
