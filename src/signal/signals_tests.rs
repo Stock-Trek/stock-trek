@@ -70,15 +70,15 @@ fn read_rejects_a_non_finite_stored_value() {
 }
 
 #[test]
-fn read_rejects_a_non_finite_optional_default() {
-    let key = SignalKey::<f64>::new_optional("number", f64::INFINITY);
-
-    assert!(Signals::new().read(&key).is_err());
+fn new_optional_rejects_a_non_finite_default() {
+    for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        assert!(SignalKey::<f64>::new_optional("number", value).is_err());
+    }
 }
 
 #[test]
 fn read_accepts_a_finite_optional_default() {
-    let key = SignalKey::<f64>::new_optional("number", 1.0);
+    let key = SignalKey::<f64>::new_optional("number", 1.0).unwrap();
 
     assert_eq!(Signals::new().read(&key).unwrap(), 1.0);
 }

@@ -43,12 +43,18 @@ where
         }
     }
     /// Creates an optional signal key with a default value.
-    pub fn new_optional(key: impl AsRef<str>, default: T) -> Self {
-        Self {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when a numeric default is not finite.
+    pub fn new_optional(key: impl AsRef<str>, default: T) -> StockTrekResult<Self> {
+        let default_value: SignalValue = default.clone().into();
+        default_value.validate()?;
+        Ok(Self {
             key: key.as_ref().to_string(),
             default: Some(default),
             _phantom: PhantomData,
-        }
+        })
     }
     /// The name the signal is stored under.
     pub fn key(&self) -> &str {
