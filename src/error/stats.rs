@@ -11,13 +11,6 @@ pub enum StatsError {
         /// Details about the failed operation.
         detail: String,
     },
-    /// Two values could not be compared.
-    IncomparableValues {
-        /// The left-hand value.
-        left: f64,
-        /// The right-hand value.
-        right: f64,
-    },
 }
 
 impl fmt::Display for StatsError {
@@ -25,9 +18,6 @@ impl fmt::Display for StatsError {
         match self {
             StatsError::DivisionByZero { function, detail } => {
                 write!(f, "Division by zero in '{}': {}", function, detail)
-            }
-            StatsError::IncomparableValues { left, right } => {
-                write!(f, "Incomparable values {} and {} (NaN?)", left, right)
             }
         }
     }
