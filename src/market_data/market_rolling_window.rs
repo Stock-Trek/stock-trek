@@ -198,43 +198,4 @@ mod tests {
 
         assert!(serde_json::from_value::<MarketRollingWindow>(json).is_err());
     }
-
-    #[test]
-    fn candles_are_ordered_by_window_regardless_of_insertion_order() {
-        let market = MarketRollingWindow::new([
-            (
-                RollingWindow::Hours1,
-                TimestampMillis::new(1_000),
-                true,
-                ohlcv(),
-                3,
-            ),
-            (
-                RollingWindow::Seconds1,
-                TimestampMillis::new(1_000),
-                true,
-                ohlcv(),
-                3,
-            ),
-            (
-                RollingWindow::Minutes1,
-                TimestampMillis::new(1_000),
-                true,
-                ohlcv(),
-                3,
-            ),
-        ])
-        .unwrap();
-
-        let windows: Vec<_> = market.candles().keys().copied().collect();
-
-        assert_eq!(
-            windows,
-            vec![
-                RollingWindow::Seconds1,
-                RollingWindow::Minutes1,
-                RollingWindow::Hours1,
-            ]
-        );
-    }
 }

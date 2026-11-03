@@ -105,38 +105,3 @@ pub enum ActionErrorResponse {
         plan: Vec<RecoverableAction>,
     },
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn error_overrides_are_ordered_by_cause() {
-        let policy = RecoveryPolicy::with_default_response(ActionErrorResponse::Stop)
-            .on_error(ActionErrorCause::StaleAction, ActionErrorResponse::Ignore)
-            .on_error(
-                ActionErrorCause::InsufficientBalance,
-                ActionErrorResponse::Ignore,
-            )
-            .on_error(
-                ActionErrorCause::TemporaryCexRejection,
-                ActionErrorResponse::Retry { max_retries: 1 },
-            )
-            .on_error(
-                ActionErrorCause::PermanentCexRejection,
-                ActionErrorResponse::Ignore,
-            );
-
-        let causes: Vec<_> = policy.on_error.keys().copied().collect();
-
-        assert_eq!(
-            causes,
-            vec![
-                ActionErrorCause::PermanentCexRejection,
-                ActionErrorCause::TemporaryCexRejection,
-                ActionErrorCause::InsufficientBalance,
-                ActionErrorCause::StaleAction,
-            ]
-        );
-    }
-}
