@@ -181,7 +181,6 @@ pub mod prelude {
         portfolio::{CexAccountPortfolio, Portfolio},
         register_algorithm,
         signals::{SignalContext, SignalContextBuilder, SignalKey, Signals},
-        traitreg,
         types::{
             AccountId, Activation, AssetId, CexId, CexPreferences, CexRoundingPreferences,
             Quantity, Side, Tag, TimeInForce,
