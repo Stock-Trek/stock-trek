@@ -54,7 +54,7 @@ macro_rules! value_enum {
             pub fn $method(&self, c: &ResolvedContext) -> StockTrekResult<$ty> {
                 match self {
                     Self::Literal { literal } => Ok(value_enum!(@resolve $resolve literal)),
-                    Self::Signal { signal } => signal.read(c),
+                    Self::Signal { signal } => c.signals().read(signal),
                 }
             }
         }
@@ -244,9 +244,11 @@ impl NumberValue {
             Self::Literal { literal } => {
                 Validation::finite("NumberValue::Literal", "literal", *literal)
             }
-            Self::Signal { signal } => {
-                Validation::finite("NumberValue::Signal", "signal value", signal.read(c)?)
-            }
+            Self::Signal { signal } => Validation::finite(
+                "NumberValue::Signal",
+                "signal value",
+                c.signals().read(signal)?,
+            ),
             Self::PendingOrders => Ok(portfolio.pending_orders_count() as f64),
             Self::PendingOrdersWithTag { tag } => {
                 Ok(portfolio.pending_orders_with_tag_count(tag) as f64)

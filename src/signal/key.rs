@@ -1,6 +1,5 @@
 use crate::{
     error::result::{StockTrekError, StockTrekResult},
-    resolved_context::ResolvedContext,
     signal::value::SignalValue,
 };
 use serde::{Deserialize, Serialize};
@@ -104,10 +103,6 @@ where
     /// optional.
     pub fn default(&self) -> Option<T> {
         self.default.clone()
-    }
-    /// Reads the signal value from the resolved context.
-    pub fn read(&self, c: &ResolvedContext) -> StockTrekResult<T> {
-        c.signals().read(self)
     }
 }
 
