@@ -8,8 +8,6 @@ pub trait HasRequiredCapabilities {
 }
 
 /// Combines the required capabilities of all values produced by `values`.
-///
-/// Duplicate capabilities are removed.
 pub fn combine_capabilities<'a, T, I>(values: I) -> HashSet<CexCapability>
 where
     T: HasRequiredCapabilities + ?Sized + 'a,
