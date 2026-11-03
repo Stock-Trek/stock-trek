@@ -1,0 +1,301 @@
+use super::*;
+
+use crate::market_data::{
+    aligned_window::AlignedWindow, market_candle::MarketCandle, market_ohlcv::MarketOhlcv,
+    market_quote::MarketQuote, rolling_window::RollingWindow, timestamp::TimestampMillis,
+};
+
+fn market() -> Market {
+    MarketBuilder::new(0.000_001, 0.01, 1.0).build().unwrap()
+}
+
+fn candle(start_millis: u64, duration_millis: u64) -> MarketCandle {
+    MarketCandle::from_interval(
+        TimestampMillis::new(start_millis),
+        TimestampMillis::new(start_millis + duration_millis),
+        true,
+        MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap(),
+        3,
+    )
+    .unwrap()
+}
+
+#[test]
+fn builds_a_market_with_valid_parameters() {
+    let market = market();
+
+    assert_eq!(market.base_increment(), 0.000_001);
+    assert_eq!(market.quote_increment(), 0.01);
+    assert_eq!(market.minimum_notional(), 1.0);
+}
+
+#[test]
+fn builder_methods_can_be_combined() {
+    let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0);
+    builder
+        .tick(
+            TimestampMillis::new(1),
+            MarketQuote::new(100.0, 1.0).unwrap(),
+            MarketQuote::new(101.0, 2.0).unwrap(),
+            MarketQuote::new(100.5, 3.0).unwrap(),
+        )
+        .rolling_set_candle(RollingWindow::Minutes1, candle(0, 60_000))
+        .aligned_push_candle(AlignedWindow::Minutes1, candle(0, 60_000))
+        .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
+        .order_book_ask(MarketQuote::new(101.0, 2.0).unwrap());
+    let market = builder.build().unwrap();
+
+    assert_eq!(market.base_increment(), 0.000_001);
+    assert_eq!(market.quote_increment(), 0.01);
+    assert_eq!(market.minimum_notional(), 1.0);
+    assert_eq!(market.ticks().ticks().len(), 1);
+    assert_eq!(market.rolling().candles().len(), 1);
+    assert_eq!(market.aligned().candles().len(), 1);
+    assert_eq!(market.order_book().bids().len(), 1);
+    assert_eq!(market.order_book().asks().len(), 1);
+}
+
+#[test]
+fn rejects_non_finite_and_non_positive_parameters() {
+    for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, 0.0, -1.0] {
+        assert!(MarketBuilder::new(value, 0.01, 1.0).build().is_err());
+        assert!(MarketBuilder::new(0.000_001, value, 1.0).build().is_err());
+    }
+    for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -1.0] {
+        assert!(MarketBuilder::new(0.000_001, 0.01, value).build().is_err());
+    }
+}
+
+#[test]
+fn order_book_problems_are_reported_at_build_time() {
+    let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0);
+    builder
+        .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
+        .order_book_ask(MarketQuote::new(99.0, 1.0).unwrap());
+
+    assert!(builder.build().is_err());
+}
+
+#[test]
+fn rejects_quotes_that_do_not_respect_increments() {
+    let mut off_price_increment = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    off_price_increment.order_book_bid(MarketQuote::new(100.005, 1.0).unwrap());
+    assert!(off_price_increment.build().is_err());
+
+    let mut off_base_increment = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    off_base_increment.order_book_bid(MarketQuote::new(100.0, 0.000_000_5).unwrap());
+    assert!(off_base_increment.build().is_err());
+
+    let mut off_tick_price_increment = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    off_tick_price_increment.tick(
+        TimestampMillis::new(1),
+        MarketQuote::new(100.005, 1.0).unwrap(),
+        MarketQuote::new(101.0, 1.0).unwrap(),
+        MarketQuote::new(100.5, 1.0).unwrap(),
+    );
+    assert!(off_tick_price_increment.build().is_err());
+}
+
+#[test]
+fn rejects_off_increment_quotes_at_large_magnitudes() {
+    let mut off_price_increment = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    off_price_increment.order_book_bid(MarketQuote::new(1_000_000_000.005, 1.0).unwrap());
+    assert!(off_price_increment.build().is_err());
+
+    let mut off_base_increment = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    off_base_increment
+        .order_book_bid(MarketQuote::new(1_000_000_000.0, 1_000_000.000_000_5).unwrap());
+    assert!(off_base_increment.build().is_err());
+
+    let mut on_increment = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    on_increment.order_book_bid(MarketQuote::new(5_347_718_528.99, 1.0).unwrap());
+    assert!(on_increment.build().is_ok());
+}
+
+#[test]
+fn rejects_quotes_below_the_minimum_notional() {
+    let mut below_minimum_notional = MarketBuilder::new(0.000_001, 0.01, 10.0);
+    below_minimum_notional.order_book_bid(MarketQuote::new(100.0, 0.01).unwrap());
+    assert!(below_minimum_notional.build().is_err());
+
+    let mut above_minimum_notional = MarketBuilder::new(0.000_001, 0.01, 10.0);
+    above_minimum_notional.order_book_bid(MarketQuote::new(100.0, 1.0).unwrap());
+    assert!(above_minimum_notional.build().is_ok());
+}
+
+#[test]
+fn accepts_last_trades_below_the_minimum_notional() {
+    let mut builder = MarketBuilder::new(0.000_001, 0.01, 10.0);
+
+    let mut with_small_bid = builder.clone();
+    with_small_bid.tick(
+        TimestampMillis::new(1),
+        MarketQuote::new(100.0, 0.01).unwrap(),
+        MarketQuote::new(101.0, 1.0).unwrap(),
+        MarketQuote::new(100.5, 1.0).unwrap(),
+    );
+    assert!(with_small_bid.build().is_err());
+
+    let mut with_small_ask = builder.clone();
+    with_small_ask.tick(
+        TimestampMillis::new(1),
+        MarketQuote::new(100.0, 1.0).unwrap(),
+        MarketQuote::new(101.0, 0.01).unwrap(),
+        MarketQuote::new(100.5, 1.0).unwrap(),
+    );
+    assert!(with_small_ask.build().is_err());
+
+    builder.tick(
+        TimestampMillis::new(1),
+        MarketQuote::new(100.0, 1.0).unwrap(),
+        MarketQuote::new(101.0, 1.0).unwrap(),
+        MarketQuote::new(100.5, 0.01).unwrap(),
+    );
+
+    let market = builder.build().unwrap();
+    assert_eq!(market.ticks().ticks()[0].last().quantity(), 0.01);
+}
+
+#[test]
+fn rejects_crossed_order_books() {
+    let mut equal_prices = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    equal_prices
+        .order_book_bid(MarketQuote::new(101.0, 1.0).unwrap())
+        .order_book_ask(MarketQuote::new(101.0, 1.0).unwrap());
+    assert!(equal_prices.build().is_err());
+
+    let mut crossed_bids = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    crossed_bids
+        .order_book_bid(MarketQuote::new(102.0, 1.0).unwrap())
+        .order_book_ask(MarketQuote::new(101.0, 1.0).unwrap());
+    assert!(crossed_bids.build().is_err());
+
+    let mut crossed_asks = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    crossed_asks
+        .order_book_ask(MarketQuote::new(100.0, 1.0).unwrap())
+        .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap());
+    assert!(crossed_asks.build().is_err());
+}
+
+#[test]
+fn rejects_ticks_with_a_crossed_bid_and_ask() {
+    let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0);
+
+    builder.tick(
+        TimestampMillis::new(1),
+        MarketQuote::new(101.0, 1.0).unwrap(),
+        MarketQuote::new(100.0, 1.0).unwrap(),
+        MarketQuote::new(100.5, 1.0).unwrap(),
+    );
+
+    assert!(builder.build().is_err());
+}
+
+#[test]
+fn rejects_candles_that_do_not_match_their_window() {
+    let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0);
+
+    let mut with_bad_rolling = builder.clone();
+    with_bad_rolling.rolling_set_candle(RollingWindow::Minutes1, candle(0, 1_000));
+    assert!(with_bad_rolling.build().is_err());
+
+    let mut with_bad_aligned = builder.clone();
+    with_bad_aligned.aligned_push_candle(AlignedWindow::Minutes1, candle(1_000, 59_000));
+    assert!(with_bad_aligned.build().is_err());
+
+    builder.aligned_push_candle(AlignedWindow::Minutes1, candle(0, 60_000));
+    assert!(builder.build().is_ok());
+}
+
+#[test]
+fn rejects_duplicate_aligned_candle_intervals() {
+    let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    builder.aligned_push_candle(AlignedWindow::Minutes1, candle(0, 60_000));
+
+    let mut with_duplicate = builder.clone();
+    with_duplicate.aligned_push_candle(AlignedWindow::Minutes1, candle(0, 60_000));
+    assert!(with_duplicate.build().is_err());
+
+    let market = builder.build().unwrap();
+    assert_eq!(
+        market
+            .aligned()
+            .candles_for(AlignedWindow::Minutes1)
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[test]
+fn accepts_calendar_aligned_candles_that_match_their_bounds() {
+    let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    let bounds = AlignedWindow::Months1
+        .bounds_for(TimestampMillis::new(0))
+        .unwrap();
+    let duration = bounds.upper().as_millis() - bounds.lower().as_millis();
+    let candle = candle(bounds.lower().as_millis(), duration);
+
+    builder.aligned_push_candle(AlignedWindow::Months1, candle);
+    assert!(builder.build().is_ok());
+}
+
+#[test]
+fn serde_json_round_trip_preserves_the_market() {
+    let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0);
+    builder
+        .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
+        .order_book_ask(MarketQuote::new(101.0, 1.0).unwrap());
+    let market = builder.build().unwrap();
+
+    let json = serde_json::to_string(&market).unwrap();
+    let deserialized: Market = serde_json::from_str(&json).unwrap();
+
+    assert_eq!(deserialized.base_increment(), market.base_increment());
+    assert_eq!(deserialized.order_book().bids(), market.order_book().bids());
+}
+
+#[test]
+fn deserialization_rejects_invalid_parameters() {
+    let mut value = serde_json::to_value(market()).unwrap();
+    value["base_increment"] = serde_json::json!(-1.0);
+
+    assert!(serde_json::from_value::<Market>(value).is_err());
+}
+
+#[test]
+fn deserialization_rejects_invalid_nested_quotes() {
+    let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0);
+    builder.order_book_bid(MarketQuote::new(100.0, 1.0).unwrap());
+    let market = builder.build().unwrap();
+    let mut value = serde_json::to_value(market).unwrap();
+    value["order_book"]["bids"][0]["quantity"] = serde_json::json!(0.0);
+
+    assert!(serde_json::from_value::<Market>(value).is_err());
+}
+
+#[test]
+fn deserialization_rejects_semantically_inconsistent_data() {
+    let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0);
+    builder
+        .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
+        .order_book_ask(MarketQuote::new(101.0, 1.0).unwrap());
+    let market = builder.build().unwrap();
+    let value = serde_json::to_value(market).unwrap();
+
+    let mut crossed = value.clone();
+    crossed["order_book"]["bids"][0]["price"] = serde_json::json!(102.0);
+    assert!(serde_json::from_value::<Market>(crossed).is_err());
+
+    let mut off_increment = value.clone();
+    off_increment["order_book"]["bids"][0]["price"] = serde_json::json!(100.005);
+    assert!(serde_json::from_value::<Market>(off_increment).is_err());
+
+    let mut wrong_candle = value;
+    wrong_candle["rolling"] = serde_json::json!({
+        "candles": {
+            "1m": candle(0, 1_000),
+        }
+    });
+    assert!(serde_json::from_value::<Market>(wrong_candle).is_err());
+}
