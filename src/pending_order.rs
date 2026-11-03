@@ -136,4 +136,5 @@ impl PendingOrder {
 }
 
 #[cfg(test)]
+#[path = "pending_order_tests.rs"]
 mod tests;

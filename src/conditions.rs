@@ -238,4 +238,5 @@ impl ConditionFactory {
 }
 
 #[cfg(test)]
+#[path = "conditions_tests.rs"]
 mod tests;

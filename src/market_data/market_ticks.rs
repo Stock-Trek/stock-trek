@@ -69,4 +69,5 @@ impl<'de> Deserialize<'de> for MarketTicks {
 }
 
 #[cfg(test)]
+#[path = "market_ticks_tests.rs"]
 mod tests;

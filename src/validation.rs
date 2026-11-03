@@ -81,4 +81,5 @@ impl Validation {
 }
 
 #[cfg(test)]
+#[path = "validation_tests.rs"]
 mod tests;

@@ -91,4 +91,5 @@ impl<'de> Deserialize<'de> for MarketRollingWindow {
 }
 
 #[cfg(test)]
+#[path = "market_rolling_window_tests.rs"]
 mod tests;

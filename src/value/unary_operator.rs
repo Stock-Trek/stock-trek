@@ -171,4 +171,5 @@ impl UnaryOperator {
 }
 
 #[cfg(test)]
+#[path = "unary_operator_tests.rs"]
 mod tests;

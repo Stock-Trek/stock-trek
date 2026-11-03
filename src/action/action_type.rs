@@ -99,4 +99,5 @@ impl HasRequiredCapabilities for Action {
 }
 
 #[cfg(test)]
+#[path = "action_type_tests.rs"]
 mod tests;

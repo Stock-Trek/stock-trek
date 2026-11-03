@@ -171,4 +171,5 @@ impl TryFrom<MarketOhlcvData> for MarketOhlcv {
 }
 
 #[cfg(test)]
+#[path = "market_ohlcv_tests.rs"]
 mod tests;

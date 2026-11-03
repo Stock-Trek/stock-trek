@@ -64,4 +64,5 @@ impl TryFrom<MarketOrderBookData> for MarketOrderBook {
 }
 
 #[cfg(test)]
+#[path = "market_order_book_tests.rs"]
 mod tests;

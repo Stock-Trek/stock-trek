@@ -58,4 +58,5 @@ impl MarketTick {
 }
 
 #[cfg(test)]
+#[path = "market_tick_tests.rs"]
 mod tests;

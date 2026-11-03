@@ -94,4 +94,5 @@ impl BinaryOperator {
 }
 
 #[cfg(test)]
+#[path = "binary_operator_tests.rs"]
 mod tests;

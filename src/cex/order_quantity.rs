@@ -22,4 +22,5 @@ impl Resolvable<Quantity<f64>> for Quantity<NumberValue> {
 }
 
 #[cfg(test)]
+#[path = "order_quantity_tests.rs"]
 mod tests;

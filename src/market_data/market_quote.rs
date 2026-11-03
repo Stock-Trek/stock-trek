@@ -121,4 +121,5 @@ impl TryFrom<MarketQuoteData> for MarketQuote {
 }
 
 #[cfg(test)]
+#[path = "market_quote_tests.rs"]
 mod tests;

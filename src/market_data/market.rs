@@ -125,4 +125,5 @@ impl TryFrom<MarketData> for Market {
 }
 
 #[cfg(test)]
+#[path = "market_tests.rs"]
 mod tests;

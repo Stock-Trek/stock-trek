@@ -158,4 +158,5 @@ impl std::fmt::Display for Blockchain {
 }
 
 #[cfg(test)]
+#[path = "blockchain_tests.rs"]
 mod tests;

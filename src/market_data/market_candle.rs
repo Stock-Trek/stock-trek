@@ -148,4 +148,5 @@ impl TryFrom<MarketCandleData> for MarketCandle {
 }
 
 #[cfg(test)]
+#[path = "market_candle_tests.rs"]
 mod tests;

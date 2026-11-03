@@ -86,4 +86,5 @@ impl Signals {
 }
 
 #[cfg(test)]
+#[path = "signals_tests.rs"]
 mod tests;

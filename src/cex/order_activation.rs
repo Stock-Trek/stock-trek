@@ -43,4 +43,5 @@ impl Resolvable<Activation<f64>> for Activation<NumberValue> {
 }
 
 #[cfg(test)]
+#[path = "order_activation_tests.rs"]
 mod tests;

@@ -171,4 +171,5 @@ impl CexMarketDataByQuoteContext {
 }
 
 #[cfg(test)]
+#[path = "signal_context_tests.rs"]
 mod tests;

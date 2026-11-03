@@ -97,4 +97,5 @@ impl fmt::Display for TimestampMillis {
 }
 
 #[cfg(test)]
+#[path = "timestamp_tests.rs"]
 mod tests;

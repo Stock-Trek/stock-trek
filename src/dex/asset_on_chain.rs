@@ -75,4 +75,5 @@ impl<'de> Deserialize<'de> for AssetOnChain {
 }
 
 #[cfg(test)]
+#[path = "asset_on_chain_tests.rs"]
 mod tests;

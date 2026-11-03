@@ -45,4 +45,5 @@ impl Visitor<'_> for OrderingVisitor {
 }
 
 #[cfg(test)]
+#[path = "serde_ordering_tests.rs"]
 mod tests;
