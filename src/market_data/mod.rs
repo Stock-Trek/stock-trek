@@ -1,4 +1,5 @@
 pub mod aligned_window;
+mod aligned_window_constructor;
 pub mod market;
 pub mod market_aligned_window;
 mod market_builder;
