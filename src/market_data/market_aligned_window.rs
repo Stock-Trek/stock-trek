@@ -31,7 +31,7 @@ macro_rules! aligned_window_constructor {
                 year: i32,
                 candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
             ) -> StockTrekResult<Self> {
-                let start = Self::window_start_at(year, chrono::Month::January, 1, 0, 0, 0)?;
+                let start = Self::window_start_at(year, Month::January, 1, 0, 0, 0)?;
                 Self::with_consecutive_candles(AlignedWindow::$variant, start, candles)
             }
         )*
@@ -371,7 +371,7 @@ impl MarketAlignedWindow {
 
     fn window_start_at(
         year: i32,
-        chrono_month: chrono::Month,
+        chrono_month: Month,
         day: u32,
         hour: u32,
         minute: u32,
