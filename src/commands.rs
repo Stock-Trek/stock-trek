@@ -6,6 +6,7 @@ use crate::{
     resolved_context::ResolvedContext,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use stock_trek_types::cex::capability::CexCapability;
 use strum::Display;
 
@@ -80,13 +81,13 @@ impl Command {
 }
 
 impl HasRequiredCapabilities for Command {
-    fn required_capabilities(&self) -> Vec<CexCapability> {
+    fn required_capabilities(&self) -> HashSet<CexCapability> {
         match self {
             Command::If {
                 if_true, if_false, ..
             } => combine_capabilities([if_true.as_ref(), if_false.as_ref()]),
             Command::List { commands } => combine_capabilities(commands),
-            Command::NoOp => Vec::new(),
+            Command::NoOp => HashSet::new(),
             Command::Plan { actions } => combine_capabilities(actions),
         }
     }

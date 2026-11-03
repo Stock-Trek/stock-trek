@@ -6,6 +6,7 @@ use crate::{
     validation::Validation,
     value::value_types::{AssetIdValue, NumberValue},
 };
+use std::collections::HashSet;
 use stock_trek_types::cex::{
     asset_id::AssetId, capability::CexCapability, order_request::OrderRequest, quantity::Quantity,
 };
@@ -87,15 +88,13 @@ impl<A, N> HasRequiredCapabilities for OrderRequest<A, N> {
     /// Limit orders sized in the quote asset are only supported by some CEXes,
     /// so they require the `QuoteQuantityOnLimitOrders` capability; every
     /// other order request requires none.
-    fn required_capabilities(&self) -> Vec<CexCapability> {
+    fn required_capabilities(&self) -> HashSet<CexCapability> {
         match self {
             Self::Limit {
                 quantity: Quantity::OfQuote(..),
                 ..
-            } => {
-                vec![CexCapability::QuoteQuantityOnLimitOrders]
-            }
-            _ => vec![],
+            } => HashSet::from([CexCapability::QuoteQuantityOnLimitOrders]),
+            _ => HashSet::new(),
         }
     }
 }

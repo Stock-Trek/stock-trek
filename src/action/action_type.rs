@@ -7,6 +7,7 @@ use crate::{
     value::value_types::{AccountIdValue, AssetIdValue, CexIdValue, NumberValue},
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use stock_trek_types::cex::{capability::CexCapability, order_request::OrderRequest, tag::Tag};
 use strum::Display;
 
@@ -88,12 +89,12 @@ impl Resolvable<ResolvedAction> for Action {
 }
 
 impl HasRequiredCapabilities for Action {
-    fn required_capabilities(&self) -> Vec<CexCapability> {
+    fn required_capabilities(&self) -> HashSet<CexCapability> {
         match self {
             Action::PlaceOrder { order_request, .. } => order_request.required_capabilities(),
             Action::CancelAllOrders { .. }
             | Action::CancelAllOrdersInCex { .. }
-            | Action::CancelAllOrdersInCexAccount { .. } => vec![],
+            | Action::CancelAllOrdersInCexAccount { .. } => HashSet::new(),
         }
     }
 }
