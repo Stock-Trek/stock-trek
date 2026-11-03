@@ -57,6 +57,13 @@ fn is_calendar_window(window: AlignedWindow) -> bool {
     )
 }
 
+fn is_week_window(window: AlignedWindow) -> bool {
+    matches!(
+        window,
+        AlignedWindow::Weeks1 | AlignedWindow::Weeks2 | AlignedWindow::Weeks4
+    )
+}
+
 #[test]
 fn bounds_for_returns_containing_bounds() {
     let timestamps: [TimestampMillis; 5] = [
@@ -76,7 +83,7 @@ fn bounds_for_returns_containing_bounds() {
             assert!(lower <= timestamp);
             assert!(timestamp < upper);
 
-            if !is_calendar_window(window) {
+            if !is_calendar_window(window) && !is_week_window(window) {
                 let window_millis = window.millis_upper_bound().unwrap();
                 assert_eq!(upper.checked_sub(lower).unwrap().as_millis(), window_millis);
                 assert_eq!(lower.as_millis() % window_millis, 0);
@@ -102,6 +109,53 @@ fn bounds_for_aligns_seconds_and_minutes() {
     assert_eq!(
         bounds_for(AlignedWindow::Minutes5, 360_123),
         timestamps(300_000, 600_000)
+    );
+}
+
+#[test]
+fn bounds_for_week_windows_align_to_monday() {
+    let timestamp = millis_at(2024, 2, 15, 12, 34, 56);
+
+    assert_eq!(
+        bounds_for(AlignedWindow::Weeks1, timestamp),
+        timestamps(
+            millis_at(2024, 2, 12, 0, 0, 0),
+            millis_at(2024, 2, 19, 0, 0, 0)
+        )
+    );
+    assert_eq!(
+        bounds_for(AlignedWindow::Weeks2, timestamp),
+        timestamps(
+            millis_at(2024, 2, 12, 0, 0, 0),
+            millis_at(2024, 2, 26, 0, 0, 0)
+        )
+    );
+    assert_eq!(
+        bounds_for(AlignedWindow::Weeks4, timestamp),
+        timestamps(
+            millis_at(2024, 2, 12, 0, 0, 0),
+            millis_at(2024, 3, 11, 0, 0, 0)
+        )
+    );
+}
+
+#[test]
+fn bounds_for_week_windows_include_window_boundaries() {
+    let monday = millis_at(2024, 2, 12, 0, 0, 0);
+    let next_monday = millis_at(2024, 2, 19, 0, 0, 0);
+    let last_millis_of_the_week = monday
+        .checked_add(TimestampMillis::new(MILLIS_PER_WEEK - 1))
+        .unwrap();
+    let expected = timestamps(monday, next_monday);
+
+    assert_eq!(bounds_for(AlignedWindow::Weeks1, monday), expected);
+    assert_eq!(
+        bounds_for(AlignedWindow::Weeks1, last_millis_of_the_week),
+        expected
+    );
+    assert_eq!(
+        bounds_for(AlignedWindow::Weeks1, next_monday),
+        timestamps(next_monday, millis_at(2024, 2, 26, 0, 0, 0))
     );
 }
 

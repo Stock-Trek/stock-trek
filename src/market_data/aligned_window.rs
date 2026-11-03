@@ -9,10 +9,11 @@ use strum::{EnumCount, EnumIter, FromRepr};
 
 /// A window aligned to fixed or calendar boundaries.
 ///
-/// Variants up to and including `Weeks4` have fixed lengths. Month and year
-/// variants align to calendar boundaries and vary in length. The short labels
-/// returned by [`Self::label`] are used when the window is displayed or
-/// serialized.
+/// Variants up to and including `Days1` have fixed lengths aligned to the Unix
+/// epoch. Week variants have fixed lengths aligned to Monday, the start of an
+/// ISO week. Month and year variants align to calendar boundaries and vary in
+/// length. The short labels returned by [`Self::label`] are used when the
+/// window is displayed or serialized.
 #[derive(
     Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash, EnumCount, EnumIter, FromRepr,
 )]
@@ -143,13 +144,17 @@ impl AlignedWindow {
     /// Returns the inclusive lower bound and exclusive upper bound of the
     /// aligned window containing `timestamp`.
     ///
-    /// Month and year windows follow calendar boundaries, so their lengths vary
-    /// with the actual number of days in each month or year.
+    /// Fixed windows are aligned to the Unix epoch and week windows are
+    /// aligned to Monday in UTC. Month and year windows follow calendar
+    /// boundaries, so their lengths vary with the actual number of days in
+    /// each month or year.
     pub fn bounds_for(
         &self,
         timestamp: TimestampMillis,
     ) -> StockTrekResult<AlignedTimestampBounds> {
-        if let Some(exact_millis) = self.millis_exact() {
+        if let Some(exact_millis) = self.weeks_exact() {
+            self.week_bounds(timestamp, exact_millis)
+        } else if let Some(exact_millis) = self.millis_exact() {
             self.fixed_bounds(timestamp, exact_millis)
         } else if let Some(exact_months) = self.months_exact() {
             self.calendar_bounds(timestamp, exact_months)
@@ -176,6 +181,43 @@ impl AlignedWindow {
             TimestampMillis::new(lower_millis),
             TimestampMillis::new(upper_millis),
         )
+    }
+
+    fn week_bounds(
+        &self,
+        timestamp: TimestampMillis,
+        exact_millis: u64,
+    ) -> StockTrekResult<AlignedTimestampBounds> {
+        // 1969-12-29 is the Monday that starts the ISO week containing the
+        // Unix epoch.
+        const WEEK_ALIGNMENT_REFERENCE_MILLIS: i128 = -3 * (MILLIS_PER_DAY as i128);
+
+        let timestamp_millis = i128::from(timestamp.as_millis());
+        let window_millis = i128::from(exact_millis);
+        let offset = timestamp_millis - WEEK_ALIGNMENT_REFERENCE_MILLIS;
+        let lower_millis =
+            WEEK_ALIGNMENT_REFERENCE_MILLIS + offset.div_euclid(window_millis) * window_millis;
+        let upper_millis = lower_millis.checked_add(window_millis).ok_or_else(|| {
+            Self::bounds_error(format!(
+                "upper bound for timestamp {timestamp} could not be represented"
+            ))
+        })?;
+
+        // The week containing the Unix epoch starts before the representable
+        // timestamp range, so clamp its lower bound to the start of the range.
+        let lower_millis = lower_millis.max(0);
+        let lower = u64::try_from(lower_millis).map_err(|_| {
+            Self::bounds_error(format!(
+                "lower bound for timestamp {timestamp} could not be represented"
+            ))
+        })?;
+        let upper = u64::try_from(upper_millis).map_err(|_| {
+            Self::bounds_error(format!(
+                "upper bound for timestamp {timestamp} could not be represented"
+            ))
+        })?;
+
+        AlignedTimestampBounds::new(TimestampMillis::new(lower), TimestampMillis::new(upper))
     }
 
     fn bounds_error(message: String) -> StockTrekError {
@@ -229,6 +271,15 @@ impl AlignedWindow {
         AlignedTimestampBounds::new(lower, upper)
     }
 
+    fn weeks_exact(&self) -> Option<u64> {
+        match self {
+            AlignedWindow::Weeks1 => Some(MILLIS_PER_WEEK),
+            AlignedWindow::Weeks2 => Some(2 * MILLIS_PER_WEEK),
+            AlignedWindow::Weeks4 => Some(4 * MILLIS_PER_WEEK),
+            _ => None,
+        }
+    }
+
     /// Returns the exact number of months for calendar-based windows.
     pub fn months_exact(&self) -> Option<u32> {
         match self {
@@ -268,9 +319,9 @@ impl AlignedWindow {
             AlignedWindow::Hours8 => 8 * MILLIS_PER_HOUR,
             AlignedWindow::Hours12 => 12 * MILLIS_PER_HOUR,
             AlignedWindow::Days1 => MILLIS_PER_DAY,
-            AlignedWindow::Weeks1 => MILLIS_PER_WEEK,
-            AlignedWindow::Weeks2 => 2 * MILLIS_PER_WEEK,
-            AlignedWindow::Weeks4 => 4 * MILLIS_PER_WEEK,
+            AlignedWindow::Weeks1 | AlignedWindow::Weeks2 | AlignedWindow::Weeks4 => {
+                return self.weeks_exact();
+            }
             AlignedWindow::Months1
             | AlignedWindow::Months2
             | AlignedWindow::Months3
