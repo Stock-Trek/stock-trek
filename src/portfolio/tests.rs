@@ -1,4 +1,5 @@
 use super::*;
+use crate::pending_order::PendingOrder;
 use stock_trek_types::cex::{
     account_id::AccountId, activation::Activation, asset_id::AssetId, cex_id::CexId,
     order_request::OrderRequest, quantity::Quantity, side::Side, tag::Tag,
@@ -331,6 +332,39 @@ fn cex_account_portfolio_accepts_non_negative_asset_balances() {
 
     assert_eq!(portfolio.asset_count(&AssetId::Bitcoin), 0.0);
     assert_eq!(portfolio.asset_count(&AssetId::TetherUSD), 100.0);
+}
+
+#[test]
+fn cex_account_portfolio_accepts_pending_orders_grouped_by_their_embedded_tag() {
+    let order = PendingOrder::new(limit_sell(Quantity::OfBase(1.0), 100.0), 0.0, 0.0).unwrap();
+
+    let portfolio =
+        CexAccountPortfolio::new([(AssetId::Bitcoin, 10.0)], [(Tag::new("tag"), vec![order])])
+            .unwrap();
+
+    assert_eq!(
+        portfolio
+            .pending_orders_with_tag(&Tag::new("tag"))
+            .map(|orders| orders.len()),
+        Some(1)
+    );
+    assert!(
+        portfolio
+            .pending_orders_with_tag(&Tag::new("other"))
+            .is_none()
+    );
+}
+
+#[test]
+fn cex_account_portfolio_rejects_pending_orders_grouped_under_a_mismatched_tag() {
+    let order = PendingOrder::new(limit_sell(Quantity::OfBase(1.0), 100.0), 0.0, 0.0).unwrap();
+
+    let result = CexAccountPortfolio::new(
+        [(AssetId::Bitcoin, 10.0)],
+        [(Tag::new("other"), vec![order])],
+    );
+
+    assert!(result.is_err());
 }
 
 #[test]
