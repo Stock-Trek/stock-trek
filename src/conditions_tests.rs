@@ -9,11 +9,11 @@ use std::cmp::Ordering;
 use crate::{portfolio::Portfolio, signal::signals::Signals};
 
 fn context() -> ResolvedContext {
-    ResolvedContext {
-        enqueue_action: Box::new(|_, _| Ok(())),
-        portfolio: Portfolio::default(),
-        signals: Signals::new(),
-    }
+    ResolvedContext::new(
+        Box::new(|_, _| Ok(())),
+        Portfolio::default(),
+        Signals::new(),
+    )
 }
 
 fn compare(left: f64, comparison: Ordering, right: f64) -> bool {

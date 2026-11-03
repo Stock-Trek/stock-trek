@@ -83,19 +83,19 @@ impl Condition {
                 Ok(matches)
             }
             Condition::HasCexAccount { cex_id, account_id } => {
-                Ok(c.portfolio.has_cex_account(cex_id, account_id))
+                Ok(c.portfolio().has_cex_account(cex_id, account_id))
             }
             Condition::Not { condition } => {
                 let test_result = condition.test(c)?;
                 Ok(!test_result)
             }
-            Condition::OwnsAsset { asset_id } => Ok(c.portfolio.asset_total(asset_id) > 0.0),
+            Condition::OwnsAsset { asset_id } => Ok(c.portfolio().asset_total(asset_id) > 0.0),
             Condition::OwnsAssetInCexAccount {
                 cex_id,
                 account_id,
                 asset_id,
             } => Ok(c
-                .portfolio
+                .portfolio()
                 .cex_account(cex_id, account_id)
                 .is_some_and(|portfolio| portfolio.asset_total(asset_id) > 0.0)),
             Condition::QuantityOf {
@@ -143,7 +143,7 @@ impl Condition {
                 }
                 QuantityOf::Empty => Ok(conditions.is_empty()),
             },
-            Condition::Signal { signal } => c.signals.read(signal),
+            Condition::Signal { signal } => c.signals().read(signal),
         }
     }
 }

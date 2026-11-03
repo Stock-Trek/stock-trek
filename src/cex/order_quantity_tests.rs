@@ -6,11 +6,11 @@ use stock_trek_types::cex::quantity::Quantity;
 use crate::{portfolio::Portfolio, signal::signals::Signals};
 
 fn context() -> ResolvedContext {
-    ResolvedContext {
-        enqueue_action: Box::new(|_, _| Ok(())),
-        portfolio: Portfolio::default(),
-        signals: Signals::new(),
-    }
+    ResolvedContext::new(
+        Box::new(|_, _| Ok(())),
+        Portfolio::default(),
+        Signals::new(),
+    )
 }
 
 #[test]
