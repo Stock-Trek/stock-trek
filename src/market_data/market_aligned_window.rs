@@ -17,15 +17,24 @@ pub struct MarketAlignedWindow {
 impl MarketAlignedWindow {
     /// Creates an aligned-window collection from candles grouped by window.
     ///
-    /// Candles are sorted chronologically by start time.
+    /// Candles are sorted chronologically by start time. Candles for the
+    /// same window are merged.
     pub fn new(candles: impl IntoIterator<Item = (AlignedWindow, Vec<MarketCandle>)>) -> Self {
-        let mut candles: BTreeMap<AlignedWindow, Vec<MarketCandle>> = candles.into_iter().collect();
-        for window_candles in candles.values_mut() {
+        let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> = BTreeMap::new();
+        for (window, window_candles) in candles {
+            candles_by_window
+                .entry(window)
+                .or_default()
+                .extend(window_candles);
+        }
+        for window_candles in candles_by_window.values_mut() {
             window_candles.sort_by_key(|candle| {
                 (candle.start_time_millis_inc(), candle.end_time_millis_exc())
             });
         }
-        Self { candles }
+        Self {
+            candles: candles_by_window,
+        }
     }
     /// Returns all candles grouped by aligned window, ordered by window.
     pub fn candles(&self) -> &BTreeMap<AlignedWindow, Vec<MarketCandle>> {
@@ -122,6 +131,16 @@ mod tests {
             3,
         )
         .unwrap()
+    }
+
+    #[test]
+    fn new_merges_duplicate_windows() {
+        let market = MarketAlignedWindow::new([
+            (AlignedWindow::Minutes1, vec![candle_at(2, 2.0)]),
+            (AlignedWindow::Minutes1, vec![candle_at(1, 1.0)]),
+        ]);
+
+        assert_eq!(market.opens(AlignedWindow::Minutes1), Some(vec![1.0, 2.0]));
     }
 
     #[test]
