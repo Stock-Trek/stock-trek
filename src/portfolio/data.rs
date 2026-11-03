@@ -15,28 +15,47 @@ pub struct Portfolio {
 
 /// A single entry accepted by [`Portfolio::new`].
 ///
-/// An entry is either a `(cex_id, accounts)` pair, where `accounts` is any
-/// iterator of account portfolios, or a flattened
-/// `(cex_id, account_id, portfolio)` tuple.
-pub trait PortfolioEntry {
+/// Converted from either a nested `(cex_id, accounts)` pair, where `accounts`
+/// is any iterator of account portfolios, or a flattened
+/// `(cex_id, account_id, portfolio)` tuple. Both shapes can be mixed in one
+/// call to [`Portfolio::new`].
+#[derive(Debug, Clone)]
+pub enum PortfolioEntry {
+    /// A CEX together with any number of account portfolios.
+    Nested(CexId, Vec<(AccountId, CexAccountPortfolio)>),
+    /// A single CEX account portfolio.
+    Flattened(CexId, AccountId, CexAccountPortfolio),
+}
+
+impl<A> From<(CexId, A)> for PortfolioEntry
+where
+    A: IntoIterator<Item = (AccountId, CexAccountPortfolio)>,
+{
+    fn from((cex_id, accounts): (CexId, A)) -> Self {
+        Self::Nested(cex_id, accounts.into_iter().collect())
+    }
+}
+
+impl From<(CexId, AccountId, CexAccountPortfolio)> for PortfolioEntry {
+    fn from((cex_id, account_id, portfolio): (CexId, AccountId, CexAccountPortfolio)) -> Self {
+        Self::Flattened(cex_id, account_id, portfolio)
+    }
+}
+
+impl PortfolioEntry {
     /// Inserts this entry into `portfolios`.
     ///
     /// Returns an error when the entry duplicates an existing CEX account.
     fn insert_into(
         self,
         portfolios: &mut BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
-    ) -> StockTrekResult<()>;
-}
-
-impl<A> PortfolioEntry for (CexId, A)
-where
-    A: IntoIterator<Item = (AccountId, CexAccountPortfolio)>,
-{
-    fn insert_into(
-        self,
-        portfolios: &mut BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
     ) -> StockTrekResult<()> {
-        let (cex_id, accounts) = self;
+        let (cex_id, accounts) = match self {
+            PortfolioEntry::Nested(cex_id, accounts) => (cex_id, accounts),
+            PortfolioEntry::Flattened(cex_id, account_id, portfolio) => {
+                (cex_id, vec![(account_id, portfolio)])
+            }
+        };
         let accounts_by_id = portfolios.entry(cex_id).or_default();
         for (account_id, portfolio) in accounts {
             if accounts_by_id.contains_key(&account_id) {
@@ -44,21 +63,6 @@ where
             }
             accounts_by_id.insert(account_id, portfolio);
         }
-        Ok(())
-    }
-}
-
-impl PortfolioEntry for (CexId, AccountId, CexAccountPortfolio) {
-    fn insert_into(
-        self,
-        portfolios: &mut BTreeMap<CexId, BTreeMap<AccountId, CexAccountPortfolio>>,
-    ) -> StockTrekResult<()> {
-        let (cex_id, account_id, portfolio) = self;
-        let accounts_by_id = portfolios.entry(cex_id).or_default();
-        if accounts_by_id.contains_key(&account_id) {
-            return Err(duplicate_account_error(cex_id, &account_id));
-        }
-        accounts_by_id.insert(account_id, portfolio);
         Ok(())
     }
 }
@@ -76,14 +80,14 @@ impl Portfolio {
     /// Accepts any iterator of [`PortfolioEntry`] values. Entries can be
     /// nested `(cex_id, accounts)` pairs, where each `accounts` value is
     /// itself an iterator of `(account_id, portfolio)` pairs, or flattened
-    /// `(cex_id, account_id, portfolio)` tuples. For example, nested
-    /// `HashMap`s, `BTreeMap`s, or vectors can all be used.
+    /// `(cex_id, account_id, portfolio)` tuples, and both shapes can be
+    /// mixed in one call by converting each tuple with [`Into::into`]. For
+    /// example, nested `HashMap`s, `BTreeMap`s, or vectors can all be used.
     ///
     /// Returns an error when the same CEX account appears more than once.
-    pub fn new<I, E>(portfolios: I) -> StockTrekResult<Self>
+    pub fn new<I>(portfolios: I) -> StockTrekResult<Self>
     where
-        I: IntoIterator<Item = E>,
-        E: PortfolioEntry,
+        I: IntoIterator<Item = PortfolioEntry>,
     {
         let mut portfolios_by_cex = BTreeMap::new();
         for entry in portfolios {

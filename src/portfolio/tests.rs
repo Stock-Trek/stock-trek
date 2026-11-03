@@ -450,7 +450,8 @@ fn portfolio_new_accepts_nested_iterators() {
     )
     .unwrap();
 
-    let portfolio = Portfolio::new([(cex_id, [(account_id.clone(), account.clone())])]).unwrap();
+    let portfolio =
+        Portfolio::new([(cex_id, [(account_id.clone(), account.clone())]).into()]).unwrap();
     assert!(portfolio.has_cex_account(&cex_id, &account_id));
     assert_eq!(
         portfolio.asset_total_in_cex_account(&cex_id, &account_id, &AssetId::Bitcoin),
@@ -459,18 +460,54 @@ fn portfolio_new_accepts_nested_iterators() {
 
     let other_account_id = AccountId::new("other");
     let merged = Portfolio::new([
-        (cex_id, [(account_id.clone(), account.clone())]),
-        (cex_id, [(other_account_id.clone(), account.clone())]),
+        (cex_id, [(account_id.clone(), account.clone())]).into(),
+        (cex_id, [(other_account_id.clone(), account.clone())]).into(),
     ])
     .unwrap();
     assert!(merged.has_cex_account(&cex_id, &account_id));
     assert!(merged.has_cex_account(&cex_id, &other_account_id));
 
-    let flattened = Portfolio::new([(cex_id, account_id.clone(), account.clone())]).unwrap();
+    let flattened = Portfolio::new([(cex_id, account_id.clone(), account.clone()).into()]).unwrap();
     assert_eq!(
         flattened.asset_total_in_cex_account(&cex_id, &account_id, &AssetId::Bitcoin),
         2.0
     );
+}
+
+#[test]
+fn portfolio_new_accepts_nested_and_flattened_entries_in_one_call() {
+    let cex_id = CexId::Binance;
+    let account_id = AccountId::new("account");
+    let other_account_id = AccountId::new("other");
+    let account = CexAccountPortfolio::new(
+        [(AssetId::Bitcoin, 2.0)],
+        std::iter::empty::<(Tag, Vec<crate::pending_order::PendingOrder>)>(),
+    )
+    .unwrap();
+
+    let mixed = Portfolio::new([
+        (cex_id, [(account_id.clone(), account.clone())]).into(),
+        (cex_id, other_account_id.clone(), account.clone()).into(),
+    ])
+    .unwrap();
+    assert!(mixed.has_cex_account(&cex_id, &account_id));
+    assert!(mixed.has_cex_account(&cex_id, &other_account_id));
+    assert_eq!(
+        mixed.asset_total_in_cex_account(&cex_id, &account_id, &AssetId::Bitcoin),
+        2.0
+    );
+    assert_eq!(
+        mixed.asset_total_in_cex_account(&cex_id, &other_account_id, &AssetId::Bitcoin),
+        2.0
+    );
+
+    let mixed_the_other_way = Portfolio::new([
+        (cex_id, account_id.clone(), account.clone()).into(),
+        (cex_id, [(other_account_id.clone(), account.clone())]).into(),
+    ])
+    .unwrap();
+    assert!(mixed_the_other_way.has_cex_account(&cex_id, &account_id));
+    assert!(mixed_the_other_way.has_cex_account(&cex_id, &other_account_id));
 }
 
 #[test]
@@ -484,14 +521,20 @@ fn portfolio_new_rejects_duplicate_accounts() {
     .unwrap();
 
     let nested = Portfolio::new([
-        (cex_id, [(account_id.clone(), account.clone())]),
-        (cex_id, [(account_id.clone(), account.clone())]),
+        (cex_id, [(account_id.clone(), account.clone())]).into(),
+        (cex_id, [(account_id.clone(), account.clone())]).into(),
     ]);
     assert!(nested.is_err());
 
     let flattened = Portfolio::new([
-        (cex_id, account_id.clone(), account.clone()),
-        (cex_id, account_id, account),
+        (cex_id, account_id.clone(), account.clone()).into(),
+        (cex_id, account_id.clone(), account.clone()).into(),
     ]);
     assert!(flattened.is_err());
+
+    let mixed = Portfolio::new([
+        (cex_id, [(account_id.clone(), account.clone())]).into(),
+        (cex_id, account_id, account).into(),
+    ]);
+    assert!(mixed.is_err());
 }
