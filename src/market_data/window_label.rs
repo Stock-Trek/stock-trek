@@ -1,14 +1,39 @@
 //! Shared label and string conversion implementation for window enums.
 
-/// Implements the label, display, serialization, and parsing behaviour shared
-/// by the window enums.
+/// Declares a window enum and implements its label, display, serialization, and
+/// parsing behaviour.
 ///
-/// The type must be an enum whose variants are listed with their short labels,
-/// for example `Minutes5 => "5m"`. The macro generates [`Self::label`],
+/// The enum variants are listed with their short labels, for example
+/// `Minutes5 => "5m"`. The macro generates [`Self::label`],
 /// [`std::fmt::Display`], [`serde::Serialize`], [`serde::Deserialize`],
 /// [`TryFrom<&str>`], and [`std::str::FromStr`].
 macro_rules! window_label_funcs {
-    ($name:ident, $($variant:ident => $label:literal),+ $(,)?) => {
+    (
+        $(#[$meta:meta])*
+        $name:ident,
+        $($variant:ident => $label:literal),+ $(,)?
+    ) => {
+        $(#[$meta])*
+        #[derive(
+            Debug,
+            Clone,
+            Copy,
+            PartialOrd,
+            Ord,
+            PartialEq,
+            Eq,
+            Hash,
+            ::strum::EnumCount,
+            ::strum::EnumIter,
+            ::strum::FromRepr,
+        )]
+        #[allow(missing_docs)]
+        #[non_exhaustive]
+        #[repr(u8)]
+        pub enum $name {
+            $($variant,)+
+        }
+
         impl $name {
             /// Returns the short label for the window, such as `1h` or `7d`.
             pub fn label(self) -> &'static str {

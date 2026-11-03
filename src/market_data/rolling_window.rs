@@ -1,57 +1,11 @@
 use crate::market_data::{millis::*, window_label::window_label_funcs};
-use strum::{EnumCount, EnumIter, FromRepr};
-
-/// A fixed-length rolling time window.
-///
-/// Variants are named after their length, so `Minutes5` is five minutes and
-/// `Weeks1` is one week. The short labels returned by [`Self::label`] are used
-/// when the window is displayed or serialized.
-#[derive(
-    Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash, EnumCount, EnumIter, FromRepr,
-)]
-#[allow(missing_docs)]
-#[non_exhaustive]
-#[repr(u8)]
-pub enum RollingWindow {
-    Seconds1,
-    Seconds5,
-    Seconds10,
-    Seconds15,
-    Seconds30,
-    Minutes1,
-    Minutes2,
-    Minutes3,
-    Minutes5,
-    Minutes10,
-    Minutes15,
-    Minutes30,
-    Minutes45,
-    Minutes90,
-    Hours1,
-    Hours2,
-    Hours3,
-    Hours4,
-    Hours6,
-    Hours8,
-    Hours12,
-    Days1,
-    Days2,
-    Days3,
-    Days30,
-    Days45,
-    Days60,
-    Days90,
-    Days180,
-    Days360,
-    Weeks1,
-    Weeks2,
-    Weeks4,
-    Weeks10,
-    Weeks20,
-    Weeks40,
-}
 
 window_label_funcs!(
+    /// A fixed-length rolling time window.
+    ///
+    /// Variants are named after their length, so `Minutes5` is five minutes and
+    /// `Weeks1` is one week. The short labels returned by [`Self::label`] are used
+    /// when the window is displayed or serialized.
     RollingWindow,
     Seconds1 => "1s",
     Seconds5 => "5s",
