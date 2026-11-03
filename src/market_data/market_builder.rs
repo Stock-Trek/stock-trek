@@ -210,8 +210,10 @@ impl MarketBuilder {
             quote_increment: self.quote_increment,
             minimum_notional: self.minimum_notional,
             ticks: MarketTicks::new(self.ticks),
-            rolling: MarketRollingWindow::new(self.rolling),
-            aligned: MarketAlignedWindow::new(self.aligned),
+            rolling: MarketRollingWindow {
+                candles: self.rolling,
+            },
+            aligned: MarketAlignedWindow::from_map(self.aligned),
             order_book: MarketOrderBook::new(self.order_book_bids, self.order_book_asks),
         }
     }

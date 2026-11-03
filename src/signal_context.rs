@@ -1,4 +1,4 @@
-use crate::market_data::market::Market;
+use crate::{error::result::StockTrekResult, market_data::market::Market, validation::Validation};
 use std::collections::BTreeMap;
 use stock_trek_types::cex::{asset_id::AssetId, cex_id::CexId};
 
@@ -10,12 +10,23 @@ pub struct SignalContext {
 
 impl SignalContext {
     /// Creates a signal context from market data grouped by CEX.
+    ///
+    /// Returns an error when the same CEX appears more than once.
     pub fn new(
         cex_market_data: impl IntoIterator<Item = (CexId, CexMarketDataByBaseContext)>,
-    ) -> Self {
-        Self {
-            cex_market_data: cex_market_data.into_iter().collect(),
+    ) -> StockTrekResult<Self> {
+        let mut markets_by_cex = BTreeMap::new();
+        for (cex_id, cex_market_data) in cex_market_data {
+            if markets_by_cex.insert(cex_id, cex_market_data).is_some() {
+                return Err(Validation::error(
+                    "SignalContext::new",
+                    format!("duplicate market data for CEX {cex_id}"),
+                ));
+            }
         }
+        Ok(Self {
+            cex_market_data: markets_by_cex,
+        })
     }
     /// Iterates over the markets for a base/quote pair on every CEX.
     ///
@@ -82,7 +93,9 @@ impl SignalContextBuilder {
 
     /// Builds the [`SignalContext`] from the collected market data.
     pub fn build(self) -> SignalContext {
-        SignalContext::new(self.cex_market_data)
+        SignalContext {
+            cex_market_data: self.cex_market_data,
+        }
     }
 }
 
@@ -94,12 +107,23 @@ pub struct CexMarketDataByBaseContext {
 
 impl CexMarketDataByBaseContext {
     /// Creates base-asset market data from markets grouped by quote asset.
+    ///
+    /// Returns an error when the same base asset appears more than once.
     pub fn new(
         markets_by_base: impl IntoIterator<Item = (AssetId, CexMarketDataByQuoteContext)>,
-    ) -> Self {
-        Self {
-            markets_by_base: markets_by_base.into_iter().collect(),
+    ) -> StockTrekResult<Self> {
+        let mut markets_by_base_map = BTreeMap::new();
+        for (base, markets) in markets_by_base {
+            if markets_by_base_map.insert(base, markets).is_some() {
+                return Err(Validation::error(
+                    "CexMarketDataByBaseContext::new",
+                    format!("duplicate market data for base asset {base}"),
+                ));
+            }
         }
+        Ok(Self {
+            markets_by_base: markets_by_base_map,
+        })
     }
 }
 
@@ -111,10 +135,23 @@ pub struct CexMarketDataByQuoteContext {
 
 impl CexMarketDataByQuoteContext {
     /// Creates quote-asset market data from markets keyed by quote asset.
-    pub fn new(markets_by_quote: impl IntoIterator<Item = (AssetId, Market)>) -> Self {
-        Self {
-            markets_by_quote: markets_by_quote.into_iter().collect(),
+    ///
+    /// Returns an error when the same quote asset appears more than once.
+    pub fn new(
+        markets_by_quote: impl IntoIterator<Item = (AssetId, Market)>,
+    ) -> StockTrekResult<Self> {
+        let mut markets_by_quote_map = BTreeMap::new();
+        for (quote, market) in markets_by_quote {
+            if markets_by_quote_map.insert(quote, market).is_some() {
+                return Err(Validation::error(
+                    "CexMarketDataByQuoteContext::new",
+                    format!("duplicate market for quote asset {quote}"),
+                ));
+            }
         }
+        Ok(Self {
+            markets_by_quote: markets_by_quote_map,
+        })
     }
 }
 
@@ -166,5 +203,26 @@ mod tests {
                 .count(),
             1
         );
+    }
+
+    #[test]
+    fn constructors_reject_duplicate_keys() {
+        let by_quote = CexMarketDataByQuoteContext::new([
+            (AssetId::TetherUSD, market()),
+            (AssetId::TetherUSD, market()),
+        ]);
+        assert!(by_quote.is_err());
+
+        let by_quote = CexMarketDataByQuoteContext::new([(AssetId::TetherUSD, market())]).unwrap();
+        let by_base = CexMarketDataByBaseContext::new([
+            (AssetId::Bitcoin, by_quote.clone()),
+            (AssetId::Bitcoin, by_quote.clone()),
+        ]);
+        assert!(by_base.is_err());
+
+        let by_base = CexMarketDataByBaseContext::new([(AssetId::Bitcoin, by_quote)]).unwrap();
+        let context =
+            SignalContext::new([(CexId::Binance, by_base.clone()), (CexId::Binance, by_base)]);
+        assert!(context.is_err());
     }
 }

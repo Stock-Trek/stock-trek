@@ -1,5 +1,9 @@
-use crate::market_data::{
-    aligned_window::AlignedWindow, market_candle::MarketCandle, market_ohlcv::MarketOhlcv,
+use crate::{
+    error::result::StockTrekResult,
+    market_data::{
+        aligned_window::AlignedWindow, market_candle::MarketCandle, market_ohlcv::MarketOhlcv,
+    },
+    validation::Validation,
 };
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;
@@ -17,15 +21,36 @@ pub struct MarketAlignedWindow {
 impl MarketAlignedWindow {
     /// Creates an aligned-window collection from candles grouped by window.
     ///
-    /// Candles are sorted chronologically by start time.
-    pub fn new(candles: impl IntoIterator<Item = (AlignedWindow, Vec<MarketCandle>)>) -> Self {
-        let mut candles: BTreeMap<AlignedWindow, Vec<MarketCandle>> = candles.into_iter().collect();
-        for window_candles in candles.values_mut() {
+    /// Candles are sorted chronologically by start time. Returns an error when
+    /// the same window appears more than once.
+    pub fn new(
+        candles: impl IntoIterator<Item = (AlignedWindow, Vec<MarketCandle>)>,
+    ) -> StockTrekResult<Self> {
+        let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> = BTreeMap::new();
+        for (window, window_candles) in candles {
+            if candles_by_window.insert(window, window_candles).is_some() {
+                return Err(Validation::error(
+                    "MarketAlignedWindow::new",
+                    format!("duplicate candles for aligned window {window:?}"),
+                ));
+            }
+        }
+        Ok(Self::from_map(candles_by_window))
+    }
+
+    /// Creates an aligned-window collection from candles already grouped by
+    /// window, sorting each window's candles chronologically.
+    pub(super) fn from_map(
+        mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>>,
+    ) -> Self {
+        for window_candles in candles_by_window.values_mut() {
             window_candles.sort_by_key(|candle| {
                 (candle.start_time_millis_inc(), candle.end_time_millis_exc())
             });
         }
-        Self { candles }
+        Self {
+            candles: candles_by_window,
+        }
     }
     /// Returns all candles grouped by aligned window, ordered by window.
     pub fn candles(&self) -> &BTreeMap<AlignedWindow, Vec<MarketCandle>> {
@@ -91,7 +116,7 @@ impl<'de> Deserialize<'de> for MarketAlignedWindow {
         }
 
         let data = MarketAlignedWindowData::deserialize(deserializer)?;
-        Ok(Self::new(data.candles))
+        Self::new(data.candles).map_err(serde::de::Error::custom)
     }
 }
 
@@ -125,11 +150,22 @@ mod tests {
     }
 
     #[test]
+    fn new_rejects_duplicate_windows() {
+        let market = MarketAlignedWindow::new([
+            (AlignedWindow::Minutes1, vec![candle_at(2, 2.0)]),
+            (AlignedWindow::Minutes1, vec![candle_at(1, 1.0)]),
+        ]);
+
+        assert!(market.is_err());
+    }
+
+    #[test]
     fn new_sorts_candles_chronologically() {
         let market = MarketAlignedWindow::new(BTreeMap::from([(
             AlignedWindow::Minutes1,
             vec![candle_at(2, 2.0), candle_at(1, 1.0)],
-        )]));
+        )]))
+        .unwrap();
 
         assert_eq!(market.opens(AlignedWindow::Minutes1), Some(vec![1.0, 2.0]));
     }
@@ -137,7 +173,8 @@ mod tests {
     #[test]
     fn serde_json_round_trip() {
         let market =
-            MarketAlignedWindow::new(BTreeMap::from([(AlignedWindow::Minutes1, vec![candle()])]));
+            MarketAlignedWindow::new(BTreeMap::from([(AlignedWindow::Minutes1, vec![candle()])]))
+                .unwrap();
         let json = serde_json::to_string(&market).unwrap();
         let deserialized: MarketAlignedWindow = serde_json::from_str(&json).unwrap();
 
@@ -168,7 +205,8 @@ mod tests {
             (AlignedWindow::Hours1, vec![candle()]),
             (AlignedWindow::Seconds1, vec![candle()]),
             (AlignedWindow::Minutes1, vec![candle()]),
-        ]));
+        ]))
+        .unwrap();
 
         let windows: Vec<_> = market.candles().keys().copied().collect();
 

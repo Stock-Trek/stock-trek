@@ -1,5 +1,7 @@
-use crate::market_data::{
-    market_candle::MarketCandle, market_ohlcv::MarketOhlcv, rolling_window::RollingWindow,
+use crate::{
+    error::result::StockTrekResult, market_data::market_candle::MarketCandle,
+    market_data::market_ohlcv::MarketOhlcv, market_data::rolling_window::RollingWindow,
+    validation::Validation,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -7,15 +9,28 @@ use std::collections::BTreeMap;
 /// Candles for fixed-length rolling windows.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketRollingWindow {
-    candles: BTreeMap<RollingWindow, MarketCandle>,
+    pub(super) candles: BTreeMap<RollingWindow, MarketCandle>,
 }
 
 impl MarketRollingWindow {
     /// Creates a rolling-window collection from candles grouped by window.
-    pub fn new(candles: impl IntoIterator<Item = (RollingWindow, MarketCandle)>) -> Self {
-        Self {
-            candles: candles.into_iter().collect(),
+    ///
+    /// Returns an error when the same window appears more than once.
+    pub fn new(
+        candles: impl IntoIterator<Item = (RollingWindow, MarketCandle)>,
+    ) -> StockTrekResult<Self> {
+        let mut candles_by_window = BTreeMap::new();
+        for (window, candle) in candles {
+            if candles_by_window.insert(window, candle).is_some() {
+                return Err(Validation::error(
+                    "MarketRollingWindow::new",
+                    format!("duplicate candle for rolling window {window:?}"),
+                ));
+            }
         }
+        Ok(Self {
+            candles: candles_by_window,
+        })
     }
 
     /// Returns the candle for a rolling window, if present.
@@ -51,9 +66,21 @@ mod tests {
     }
 
     #[test]
+    fn new_rejects_duplicate_windows() {
+        assert!(
+            MarketRollingWindow::new([
+                (RollingWindow::Minutes1, candle()),
+                (RollingWindow::Minutes1, candle()),
+            ])
+            .is_err()
+        );
+    }
+
+    #[test]
     fn serde_json_round_trip() {
         let market =
-            MarketRollingWindow::new(BTreeMap::from([(RollingWindow::Minutes1, candle())]));
+            MarketRollingWindow::new(BTreeMap::from([(RollingWindow::Minutes1, candle())]))
+                .unwrap();
         let json = serde_json::to_string(&market).unwrap();
         let deserialized: MarketRollingWindow = serde_json::from_str(&json).unwrap();
 
@@ -69,7 +96,8 @@ mod tests {
             (RollingWindow::Hours1, candle()),
             (RollingWindow::Seconds1, candle()),
             (RollingWindow::Minutes1, candle()),
-        ]));
+        ]))
+        .unwrap();
 
         let windows: Vec<_> = market.candles().keys().copied().collect();
 
