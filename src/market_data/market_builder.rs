@@ -18,6 +18,8 @@ const INCREMENT_TOLERANCE: f64 = 1e-9;
 /// New markets start empty. Add ticks, candles, and order book quotes before
 /// calling [`MarketBuilder::build`]. Invalid parameters, quotes, candles, and
 /// order books are rejected immediately by the method that receives them.
+/// Setter methods borrow the builder mutably, so a rejected value can be
+/// corrected and retried without rebuilding the collected data.
 #[derive(Debug, Clone)]
 pub struct MarketBuilder {
     base_increment: f64,
@@ -63,12 +65,12 @@ impl MarketBuilder {
     /// Returns an error if a quote does not respect the market's increments or
     /// minimum notional, or if the bid is not below the ask.
     pub fn tick(
-        mut self,
+        &mut self,
         timestamp_millis: TimestampMillis,
         bid: MarketQuote,
         ask: MarketQuote,
         last: MarketQuote,
-    ) -> StockTrekResult<Self> {
+    ) -> StockTrekResult<&mut Self> {
         let function = "MarketBuilder::tick";
         Self::validate_quote(
             function,
@@ -105,10 +107,10 @@ impl MarketBuilder {
     ///
     /// Returns an error unless the candle duration matches the window length.
     pub fn rolling_set_candle(
-        mut self,
+        &mut self,
         window: RollingWindow,
         candle: MarketCandle,
-    ) -> StockTrekResult<Self> {
+    ) -> StockTrekResult<&mut Self> {
         let expected_duration = window.millis_exact();
         let actual_duration = candle.duration_millis();
         if actual_duration != expected_duration {
@@ -129,10 +131,10 @@ impl MarketBuilder {
     /// Returns an error unless the candle exactly covers the window that
     /// contains its start time.
     pub fn aligned_push_candle(
-        mut self,
+        &mut self,
         window: AlignedWindow,
         candle: MarketCandle,
-    ) -> StockTrekResult<Self> {
+    ) -> StockTrekResult<&mut Self> {
         let function = "MarketBuilder::aligned_push_candle";
         let start = candle.start_time_millis_inc();
         let bounds = window.bounds_for(start).map_err(|error| {
@@ -157,13 +159,12 @@ impl MarketBuilder {
         Ok(self)
     }
 
-    /// Adds a bid quote to the order book.
+    /// Adds a validated bid quote to the order book.
     ///
     /// Returns an error unless the quote respects the market's increments and
     /// minimum notional and its price is below every existing ask.
-    pub fn order_book_bid(mut self, price: f64, quantity: f64) -> StockTrekResult<Self> {
+    pub fn order_book_bid(&mut self, quote: MarketQuote) -> StockTrekResult<&mut Self> {
         let function = "MarketBuilder::order_book_bid";
-        let quote = MarketQuote::new(price, quantity)?;
         Self::validate_quote(
             function,
             "order book bid",
@@ -180,13 +181,12 @@ impl MarketBuilder {
         Ok(self)
     }
 
-    /// Adds an ask quote to the order book.
+    /// Adds a validated ask quote to the order book.
     ///
     /// Returns an error unless the quote respects the market's increments and
     /// minimum notional and its price is above every existing bid.
-    pub fn order_book_ask(mut self, price: f64, quantity: f64) -> StockTrekResult<Self> {
+    pub fn order_book_ask(&mut self, quote: MarketQuote) -> StockTrekResult<&mut Self> {
         let function = "MarketBuilder::order_book_ask";
-        let quote = MarketQuote::new(price, quantity)?;
         Self::validate_quote(
             function,
             "order book ask",

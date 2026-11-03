@@ -98,7 +98,7 @@ impl TryFrom<MarketData> for Market {
         )?;
 
         for tick in data.ticks.ticks() {
-            builder = builder.tick(
+            builder.tick(
                 tick.timestamp_millis(),
                 tick.bid().clone(),
                 tick.ask().clone(),
@@ -106,18 +106,18 @@ impl TryFrom<MarketData> for Market {
             )?;
         }
         for (window, candle) in data.rolling.candles() {
-            builder = builder.rolling_set_candle(*window, candle.clone())?;
+            builder.rolling_set_candle(*window, candle.clone())?;
         }
         for (window, candles) in data.aligned.candles() {
             for candle in candles {
-                builder = builder.aligned_push_candle(*window, candle.clone())?;
+                builder.aligned_push_candle(*window, candle.clone())?;
             }
         }
         for quote in data.order_book.bids() {
-            builder = builder.order_book_bid(quote.price(), quote.quantity())?;
+            builder.order_book_bid(quote.clone())?;
         }
         for quote in data.order_book.asks() {
-            builder = builder.order_book_ask(quote.price(), quote.quantity())?;
+            builder.order_book_ask(quote.clone())?;
         }
 
         Ok(builder.build())
@@ -157,9 +157,9 @@ mod tests {
     }
 
     #[test]
-    fn builder_methods_can_be_chained() {
-        let market = MarketBuilder::new(0.000_001, 0.01, 1.0)
-            .unwrap()
+    fn builder_methods_can_be_combined() {
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0).unwrap();
+        builder
             .tick(
                 TimestampMillis::new(1),
                 MarketQuote::new(100.0, 1.0).unwrap(),
@@ -171,11 +171,11 @@ mod tests {
             .unwrap()
             .aligned_push_candle(AlignedWindow::Minutes1, candle(0, 60_000))
             .unwrap()
-            .order_book_bid(100.0, 1.0)
+            .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
             .unwrap()
-            .order_book_ask(101.0, 2.0)
-            .unwrap()
-            .build();
+            .order_book_ask(MarketQuote::new(101.0, 2.0).unwrap())
+            .unwrap();
+        let market = builder.build();
 
         assert_eq!(market.base_increment(), 0.000_001);
         assert_eq!(market.quote_increment(), 0.01);
@@ -199,19 +199,40 @@ mod tests {
     }
 
     #[test]
-    fn rejects_invalid_order_book_quotes() {
-        let builder = MarketBuilder::new(0.000_001, 0.01, 1.0).unwrap();
+    fn order_book_rejections_leave_the_builder_usable() {
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0).unwrap();
+        builder
+            .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
+            .unwrap();
 
-        assert!(builder.clone().order_book_bid(f64::NAN, 1.0).is_err());
-        assert!(builder.order_book_ask(101.0, f64::INFINITY).is_err());
+        assert!(
+            builder
+                .order_book_ask(MarketQuote::new(99.0, 1.0).unwrap())
+                .is_err()
+        );
+        builder
+            .order_book_ask(MarketQuote::new(101.0, 1.0).unwrap())
+            .unwrap();
+
+        let market = builder.build();
+        assert_eq!(market.order_book().bids().len(), 1);
+        assert_eq!(market.order_book().asks().len(), 1);
     }
 
     #[test]
     fn rejects_quotes_that_do_not_respect_increments() {
-        let builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
 
-        assert!(builder.clone().order_book_bid(100.005, 1.0).is_err());
-        assert!(builder.clone().order_book_bid(100.0, 0.000_000_5).is_err());
+        assert!(
+            builder
+                .order_book_bid(MarketQuote::new(100.005, 1.0).unwrap())
+                .is_err()
+        );
+        assert!(
+            builder
+                .order_book_bid(MarketQuote::new(100.0, 0.000_000_5).unwrap())
+                .is_err()
+        );
         assert!(
             builder
                 .tick(
@@ -226,44 +247,50 @@ mod tests {
 
     #[test]
     fn rejects_quotes_below_the_minimum_notional() {
-        let builder = MarketBuilder::new(0.000_001, 0.01, 10.0).unwrap();
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 10.0).unwrap();
 
-        assert!(builder.clone().order_book_bid(100.0, 0.01).is_err());
-        assert!(builder.order_book_bid(100.0, 1.0).is_ok());
+        assert!(
+            builder
+                .order_book_bid(MarketQuote::new(100.0, 0.01).unwrap())
+                .is_err()
+        );
+        assert!(
+            builder
+                .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
+                .is_ok()
+        );
     }
 
     #[test]
     fn rejects_crossed_order_books() {
-        let builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
+        let builder = || MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
 
         assert!(
-            builder
-                .clone()
-                .order_book_bid(101.0, 1.0)
+            builder()
+                .order_book_bid(MarketQuote::new(101.0, 1.0).unwrap())
                 .unwrap()
-                .order_book_ask(101.0, 1.0)
+                .order_book_ask(MarketQuote::new(101.0, 1.0).unwrap())
                 .is_err()
         );
         assert!(
-            builder
-                .clone()
-                .order_book_bid(102.0, 1.0)
+            builder()
+                .order_book_bid(MarketQuote::new(102.0, 1.0).unwrap())
                 .unwrap()
-                .order_book_ask(101.0, 1.0)
+                .order_book_ask(MarketQuote::new(101.0, 1.0).unwrap())
                 .is_err()
         );
         assert!(
-            builder
-                .order_book_ask(100.0, 1.0)
+            builder()
+                .order_book_ask(MarketQuote::new(100.0, 1.0).unwrap())
                 .unwrap()
-                .order_book_bid(100.0, 1.0)
+                .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
                 .is_err()
         );
     }
 
     #[test]
     fn rejects_ticks_with_a_crossed_bid_and_ask() {
-        let builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
 
         assert!(
             builder
@@ -279,7 +306,7 @@ mod tests {
 
     #[test]
     fn rejects_candles_that_do_not_match_their_window() {
-        let builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
 
         assert!(
             builder
@@ -302,7 +329,7 @@ mod tests {
 
     #[test]
     fn accepts_calendar_aligned_candles_that_match_their_bounds() {
-        let builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
         let bounds = AlignedWindow::Months1
             .bounds_for(TimestampMillis::new(0))
             .unwrap();
@@ -318,13 +345,13 @@ mod tests {
 
     #[test]
     fn serde_json_round_trip_preserves_the_market() {
-        let market = MarketBuilder::new(0.000_001, 0.01, 1.0)
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0).unwrap();
+        builder
+            .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
             .unwrap()
-            .order_book_bid(100.0, 1.0)
-            .unwrap()
-            .order_book_ask(101.0, 1.0)
-            .unwrap()
-            .build();
+            .order_book_ask(MarketQuote::new(101.0, 1.0).unwrap())
+            .unwrap();
+        let market = builder.build();
 
         let json = serde_json::to_string(&market).unwrap();
         let deserialized: Market = serde_json::from_str(&json).unwrap();
@@ -343,11 +370,11 @@ mod tests {
 
     #[test]
     fn deserialization_rejects_invalid_nested_quotes() {
-        let market = MarketBuilder::new(0.000_001, 0.01, 1.0)
-            .unwrap()
-            .order_book_bid(100.0, 1.0)
-            .unwrap()
-            .build();
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 1.0).unwrap();
+        builder
+            .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
+            .unwrap();
+        let market = builder.build();
         let mut value = serde_json::to_value(market).unwrap();
         value["order_book"]["bids"][0]["quantity"] = serde_json::json!(0.0);
 
@@ -356,13 +383,13 @@ mod tests {
 
     #[test]
     fn deserialization_rejects_semantically_inconsistent_data() {
-        let market = MarketBuilder::new(0.000_001, 0.01, 0.0)
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
+        builder
+            .order_book_bid(MarketQuote::new(100.0, 1.0).unwrap())
             .unwrap()
-            .order_book_bid(100.0, 1.0)
-            .unwrap()
-            .order_book_ask(101.0, 1.0)
-            .unwrap()
-            .build();
+            .order_book_ask(MarketQuote::new(101.0, 1.0).unwrap())
+            .unwrap();
+        let market = builder.build();
         let value = serde_json::to_value(market).unwrap();
 
         let mut crossed = value.clone();

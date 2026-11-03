@@ -11,7 +11,8 @@ fn portfolio_with(
     filled_base_quantity: f64,
     filled_quote_quantity: f64,
 ) -> Portfolio {
-    PortfolioBuilder::new()
+    let mut builder = PortfolioBuilder::new();
+    builder
         .asset_count(
             CexId::Binance,
             AccountId::new("account"),
@@ -26,8 +27,8 @@ fn portfolio_with(
             filled_base_quantity,
             filled_quote_quantity,
         )
-        .unwrap()
-        .build()
+        .unwrap();
+    builder.build()
 }
 
 fn limit_sell(quantity: Quantity<f64>, limit_price: f64) -> OrderRequest<AssetId, f64> {
@@ -59,7 +60,7 @@ fn determinism_portfolio(reverse: bool) -> Portfolio {
 
     let mut builder = PortfolioBuilder::new();
     for (account, count) in entries {
-        builder = builder
+        builder
             .asset_count(
                 CexId::Binance,
                 AccountId::new(account),
@@ -98,14 +99,15 @@ fn totals_are_deterministic_across_insertion_order() {
 fn asset_iterators_report_balances_for_each_account() {
     let account_a = AccountId::new("a");
     let account_b = AccountId::new("b");
-    let portfolio = PortfolioBuilder::new()
+    let mut builder = PortfolioBuilder::new();
+    builder
         .asset_count(CexId::Binance, account_a.clone(), AssetId::Bitcoin, 2.0)
         .unwrap()
         .asset_count(CexId::Binance, account_a.clone(), AssetId::TetherUSD, 3.0)
         .unwrap()
         .asset_count(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 4.0)
-        .unwrap()
-        .build();
+        .unwrap();
+    let portfolio = builder.build();
 
     let balances: std::collections::HashMap<_, _> = portfolio
         .assets_iter()
@@ -145,7 +147,8 @@ fn asset_iterators_report_balances_for_each_account() {
 fn pending_order_count_helpers_agree_with_their_iterators() {
     let account_a = AccountId::new("a");
     let account_b = AccountId::new("b");
-    let portfolio = PortfolioBuilder::new()
+    let mut builder = PortfolioBuilder::new();
+    builder
         .pending_order(
             CexId::Binance,
             account_a.clone(),
@@ -161,8 +164,8 @@ fn pending_order_count_helpers_agree_with_their_iterators() {
             0.0,
             0.0,
         )
-        .unwrap()
-        .build();
+        .unwrap();
+    let portfolio = builder.build();
 
     assert_eq!(portfolio.pending_orders_count(), 2);
     assert_eq!(portfolio.pending_orders_with_tag_count(&Tag::new("tag")), 2);
@@ -189,7 +192,8 @@ fn reserved_quantity_is_clamped_when_filled_exceeds_ordered() {
 
 #[test]
 fn portfolio_builder_rejects_zero_price_quote_limited_sell() {
-    let result = PortfolioBuilder::new().pending_order(
+    let mut builder = PortfolioBuilder::new();
+    let result = builder.pending_order(
         CexId::Binance,
         AccountId::new("account"),
         limit_sell(Quantity::OfQuote(1_000.0), 0.0),
@@ -250,7 +254,8 @@ fn asset_available_is_clamped_when_reservations_exceed_balance() {
 fn asset_available_clamps_reservations_per_account() {
     let account_a = AccountId::new("a");
     let account_b = AccountId::new("b");
-    let portfolio = PortfolioBuilder::new()
+    let mut builder = PortfolioBuilder::new();
+    builder
         .asset_count(CexId::Binance, account_a.clone(), AssetId::Bitcoin, 100.0)
         .unwrap()
         .pending_order(
@@ -262,8 +267,8 @@ fn asset_available_clamps_reservations_per_account() {
         )
         .unwrap()
         .asset_count(CexId::Binance, account_b.clone(), AssetId::Bitcoin, 100.0)
-        .unwrap()
-        .build();
+        .unwrap();
+    let portfolio = builder.build();
 
     assert_eq!(portfolio.asset_reserved(&AssetId::Bitcoin), 150.0);
     assert_eq!(portfolio.asset_available(&AssetId::Bitcoin), 100.0);
@@ -284,7 +289,8 @@ fn asset_available_clamps_reservations_per_account() {
 
 #[test]
 fn pending_orders_are_grouped_by_the_order_request_tag() {
-    let portfolio = PortfolioBuilder::new()
+    let mut builder = PortfolioBuilder::new();
+    builder
         .pending_order(
             CexId::Binance,
             AccountId::new("account"),
@@ -292,8 +298,8 @@ fn pending_orders_are_grouped_by_the_order_request_tag() {
             0.0,
             0.0,
         )
-        .unwrap()
-        .build();
+        .unwrap();
+    let portfolio = builder.build();
 
     assert_eq!(
         portfolio.pending_orders_in_cex_account_with_tag_count(
@@ -369,7 +375,8 @@ fn cex_account_portfolio_rejects_pending_orders_grouped_under_a_mismatched_tag()
 
 #[test]
 fn portfolio_builder_rejects_invalid_asset_counts() {
-    let result = PortfolioBuilder::new().asset_count(
+    let mut builder = PortfolioBuilder::new();
+    let result = builder.asset_count(
         CexId::Binance,
         AccountId::new("account"),
         AssetId::Bitcoin,
@@ -381,7 +388,8 @@ fn portfolio_builder_rejects_invalid_asset_counts() {
 
 #[test]
 fn portfolio_builder_rejects_invalid_pending_orders() {
-    let result = PortfolioBuilder::new().pending_order(
+    let mut builder = PortfolioBuilder::new();
+    let result = builder.pending_order(
         CexId::Binance,
         AccountId::new("account"),
         limit_sell(Quantity::OfBase(1.0), 100.0),
@@ -390,6 +398,62 @@ fn portfolio_builder_rejects_invalid_pending_orders() {
     );
 
     assert!(result.is_err());
+}
+
+#[test]
+fn portfolio_builder_can_retry_after_a_rejected_asset_count() {
+    let mut builder = PortfolioBuilder::new();
+
+    assert!(
+        builder
+            .asset_count(
+                CexId::Binance,
+                AccountId::new("account"),
+                AssetId::Bitcoin,
+                -1.0,
+            )
+            .is_err()
+    );
+    builder
+        .asset_count(
+            CexId::Binance,
+            AccountId::new("account"),
+            AssetId::Bitcoin,
+            1.0,
+        )
+        .unwrap();
+
+    let portfolio = builder.build();
+    assert_eq!(portfolio.asset_total(&AssetId::Bitcoin), 1.0);
+}
+
+#[test]
+fn portfolio_builder_can_retry_after_a_rejected_pending_order() {
+    let mut builder = PortfolioBuilder::new();
+
+    assert!(
+        builder
+            .pending_order(
+                CexId::Binance,
+                AccountId::new("account"),
+                limit_sell(Quantity::OfBase(1.0), 100.0),
+                -1.0,
+                0.0,
+            )
+            .is_err()
+    );
+    builder
+        .pending_order(
+            CexId::Binance,
+            AccountId::new("account"),
+            limit_sell(Quantity::OfBase(1.0), 100.0),
+            0.0,
+            0.0,
+        )
+        .unwrap();
+
+    let portfolio = builder.build();
+    assert_eq!(portfolio.pending_orders_count(), 1);
 }
 
 #[test]
