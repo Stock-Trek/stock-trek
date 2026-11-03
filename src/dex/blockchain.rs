@@ -82,6 +82,20 @@ impl Blockchain {
         })
     }
 
+    pub(super) fn from_compiled_regex(
+        blockchain_id: BlockchainId,
+        family_id: FamilyId,
+        native_decimals: u8,
+        address_regex: Regex,
+    ) -> Self {
+        Self {
+            blockchain_id,
+            family_id,
+            native_decimals,
+            address_regex,
+        }
+    }
+
     /// The identifier of the blockchain.
     pub fn blockchain_id(&self) -> &BlockchainId {
         &self.blockchain_id

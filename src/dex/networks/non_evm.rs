@@ -13,8 +13,8 @@ define_network! {
     {
         Mainnet => NetworkId::MAINNET,
         Testnet => NetworkId::TESTNET,
-        Signet => NetworkId::new("signet")?,
-        Regtest => NetworkId::new("regtest")?,
+        Signet => NetworkId::SIGNET,
+        Regtest => NetworkId::REGTEST,
     }
 }
 
@@ -99,7 +99,7 @@ define_network! {
     {
         Mainnet => NetworkId::MAINNET,
         Testnet => NetworkId::TESTNET,
-        Devnet => NetworkId::new("devnet")?,
+        Devnet => NetworkId::DEVNET,
     }
 }
 
@@ -111,7 +111,7 @@ define_network! {
     "^T[a-zA-HJ-NP-Z0-9]{33}$",
     {
         Mainnet => NetworkId::MAINNET,
-        Shasta => NetworkId::new("shasta")?,
-        Nile => NetworkId::new("nile")?,
+        Shasta => NetworkId::SHASTA,
+        Nile => NetworkId::NILE,
     }
 }

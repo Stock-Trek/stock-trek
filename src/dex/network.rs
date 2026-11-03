@@ -32,6 +32,48 @@ impl NetworkId {
 
     /// A test network of a blockchain.
     pub const TESTNET: Self = Self(std::borrow::Cow::Borrowed("testnet"));
+
+    /// The Alfajores test network on Celo.
+    pub const ALFAJORES: Self = Self(std::borrow::Cow::Borrowed("alfajores"));
+
+    /// The Amoy test network on Polygon.
+    pub const AMOY: Self = Self(std::borrow::Cow::Borrowed("amoy"));
+
+    /// The Chiado test network on Gnosis.
+    pub const CHIADO: Self = Self(std::borrow::Cow::Borrowed("chiado"));
+
+    /// The devnet network on Solana.
+    pub const DEVNET: Self = Self(std::borrow::Cow::Borrowed("devnet"));
+
+    /// The Fuji test network on Avalanche.
+    pub const FUJI: Self = Self(std::borrow::Cow::Borrowed("fuji"));
+
+    /// The Holesky test network on Ethereum.
+    pub const HOLESKY: Self = Self(std::borrow::Cow::Borrowed("holesky"));
+
+    /// The Moonbase test network on Moonbeam.
+    pub const MOONBASE: Self = Self(std::borrow::Cow::Borrowed("moonbase"));
+
+    /// The Mumbai test network on Polygon.
+    pub const MUMBAI: Self = Self(std::borrow::Cow::Borrowed("mumbai"));
+
+    /// The Nile test network on Tron.
+    pub const NILE: Self = Self(std::borrow::Cow::Borrowed("nile"));
+
+    /// The Nova network on Arbitrum.
+    pub const NOVA: Self = Self(std::borrow::Cow::Borrowed("nova"));
+
+    /// The Regtest network on Bitcoin.
+    pub const REGTEST: Self = Self(std::borrow::Cow::Borrowed("regtest"));
+
+    /// The Sepolia test network.
+    pub const SEPOLIA: Self = Self(std::borrow::Cow::Borrowed("sepolia"));
+
+    /// The Shasta test network on Tron.
+    pub const SHASTA: Self = Self(std::borrow::Cow::Borrowed("shasta"));
+
+    /// The Signet test network on Bitcoin.
+    pub const SIGNET: Self = Self(std::borrow::Cow::Borrowed("signet"));
 }
 
 string_id_funcs!(NetworkId);

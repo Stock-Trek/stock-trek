@@ -10,6 +10,14 @@ use crate::{
     },
     error::result::{StockTrekError, StockTrekResult},
 };
+use regex::Regex;
+use std::sync::LazyLock;
+
+const EVM_ADDRESS_FORMAT: &str = "^0x[a-fA-F0-9]{40}$";
+
+static EVM_ADDRESS_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(EVM_ADDRESS_FORMAT).expect("EVM address format must be a valid regex")
+});
 
 impl Blockchain {
     pub(super) fn from_ids(
@@ -27,7 +35,12 @@ impl Blockchain {
     }
 
     pub(super) fn evm(blockchain_name: &str) -> StockTrekResult<Self> {
-        Self::from_ids(blockchain_name, FAMILY_ID_EVM, 18, "^0x[a-fA-F0-9]{40}$")
+        Ok(Self::from_compiled_regex(
+            BlockchainId::new(blockchain_name)?,
+            FamilyId::new(FAMILY_ID_EVM)?,
+            18,
+            EVM_ADDRESS_REGEX.clone(),
+        ))
     }
 }
 
