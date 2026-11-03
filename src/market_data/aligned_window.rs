@@ -14,36 +14,40 @@ window_enum!(
     /// returned by [`Self::label`] are used when the window is displayed or
     /// serialized.
     AlignedWindow,
-    Seconds1 => "1s",
-    Seconds5 => "5s",
-    Seconds10 => "10s",
-    Seconds15 => "15s",
-    Seconds30 => "30s",
-    Minutes1 => "1m",
-    Minutes2 => "2m",
-    Minutes3 => "3m",
-    Minutes5 => "5m",
-    Minutes10 => "10m",
-    Minutes15 => "15m",
-    Minutes30 => "30m",
-    Hours1 => "1h",
-    Hours2 => "2h",
-    Hours3 => "3h",
-    Hours4 => "4h",
-    Hours6 => "6h",
-    Hours8 => "8h",
-    Hours12 => "12h",
-    Days1 => "1d",
-    Weeks1 => "1w",
-    Weeks2 => "2w",
-    Weeks4 => "4w",
-    Months1 => "1mo",
-    Months2 => "2mo",
-    Months3 => "3mo",
-    Months4 => "4mo",
-    Months6 => "6mo",
-    Years1 => "1y",
-    Years2 => "2y",
+    exact {
+        Seconds1 => "1s" => MILLIS_PER_SECOND,
+        Seconds5 => "5s" => 5 * MILLIS_PER_SECOND,
+        Seconds10 => "10s" => 10 * MILLIS_PER_SECOND,
+        Seconds15 => "15s" => 15 * MILLIS_PER_SECOND,
+        Seconds30 => "30s" => 30 * MILLIS_PER_SECOND,
+        Minutes1 => "1m" => MILLIS_PER_MINUTE,
+        Minutes2 => "2m" => 2 * MILLIS_PER_MINUTE,
+        Minutes3 => "3m" => 3 * MILLIS_PER_MINUTE,
+        Minutes5 => "5m" => 5 * MILLIS_PER_MINUTE,
+        Minutes10 => "10m" => 10 * MILLIS_PER_MINUTE,
+        Minutes15 => "15m" => 15 * MILLIS_PER_MINUTE,
+        Minutes30 => "30m" => 30 * MILLIS_PER_MINUTE,
+        Hours1 => "1h" => MILLIS_PER_HOUR,
+        Hours2 => "2h" => 2 * MILLIS_PER_HOUR,
+        Hours3 => "3h" => 3 * MILLIS_PER_HOUR,
+        Hours4 => "4h" => 4 * MILLIS_PER_HOUR,
+        Hours6 => "6h" => 6 * MILLIS_PER_HOUR,
+        Hours8 => "8h" => 8 * MILLIS_PER_HOUR,
+        Hours12 => "12h" => 12 * MILLIS_PER_HOUR,
+        Days1 => "1d" => MILLIS_PER_DAY,
+        Weeks1 => "1w" => MILLIS_PER_WEEK,
+        Weeks2 => "2w" => 2 * MILLIS_PER_WEEK,
+        Weeks4 => "4w" => 4 * MILLIS_PER_WEEK,
+    }
+    upper {
+        Months1 => "1mo" => MILLIS_PER_MONTH_UPPER_BOUND,
+        Months2 => "2mo" => 2 * MILLIS_PER_MONTH_UPPER_BOUND,
+        Months3 => "3mo" => 3 * MILLIS_PER_MONTH_UPPER_BOUND,
+        Months4 => "4mo" => 4 * MILLIS_PER_MONTH_UPPER_BOUND,
+        Months6 => "6mo" => 6 * MILLIS_PER_MONTH_UPPER_BOUND,
+        Years1 => "1y" => MILLIS_PER_YEAR_UPPER_BOUND,
+        Years2 => "2y" => 2 * MILLIS_PER_YEAR_UPPER_BOUND,
+    }
 );
 
 /// The bounds of an aligned window, both as [`TimestampMillis`].
@@ -209,84 +213,6 @@ impl AlignedWindow {
             AlignedWindow::Years1 => Some(12),
             AlignedWindow::Years2 => Some(24),
             _ => None,
-        }
-    }
-
-    /// Returns the exact window length in milliseconds for fixed-length windows.
-    ///
-    /// Calendar windows have no fixed length, so this returns `None` for them.
-    pub fn millis_exact(&self) -> Option<u64> {
-        let millis = match self {
-            AlignedWindow::Seconds1 => MILLIS_PER_SECOND,
-            AlignedWindow::Seconds5 => 5 * MILLIS_PER_SECOND,
-            AlignedWindow::Seconds10 => 10 * MILLIS_PER_SECOND,
-            AlignedWindow::Seconds15 => 15 * MILLIS_PER_SECOND,
-            AlignedWindow::Seconds30 => 30 * MILLIS_PER_SECOND,
-            AlignedWindow::Minutes1 => MILLIS_PER_MINUTE,
-            AlignedWindow::Minutes2 => 2 * MILLIS_PER_MINUTE,
-            AlignedWindow::Minutes3 => 3 * MILLIS_PER_MINUTE,
-            AlignedWindow::Minutes5 => 5 * MILLIS_PER_MINUTE,
-            AlignedWindow::Minutes10 => 10 * MILLIS_PER_MINUTE,
-            AlignedWindow::Minutes15 => 15 * MILLIS_PER_MINUTE,
-            AlignedWindow::Minutes30 => 30 * MILLIS_PER_MINUTE,
-            AlignedWindow::Hours1 => MILLIS_PER_HOUR,
-            AlignedWindow::Hours2 => 2 * MILLIS_PER_HOUR,
-            AlignedWindow::Hours3 => 3 * MILLIS_PER_HOUR,
-            AlignedWindow::Hours4 => 4 * MILLIS_PER_HOUR,
-            AlignedWindow::Hours6 => 6 * MILLIS_PER_HOUR,
-            AlignedWindow::Hours8 => 8 * MILLIS_PER_HOUR,
-            AlignedWindow::Hours12 => 12 * MILLIS_PER_HOUR,
-            AlignedWindow::Days1 => MILLIS_PER_DAY,
-            AlignedWindow::Weeks1 => MILLIS_PER_WEEK,
-            AlignedWindow::Weeks2 => 2 * MILLIS_PER_WEEK,
-            AlignedWindow::Weeks4 => 4 * MILLIS_PER_WEEK,
-            AlignedWindow::Months1
-            | AlignedWindow::Months2
-            | AlignedWindow::Months3
-            | AlignedWindow::Months4
-            | AlignedWindow::Months6
-            | AlignedWindow::Years1
-            | AlignedWindow::Years2 => return None,
-        };
-        Some(millis)
-    }
-
-    /// Returns an upper bound on the window length in milliseconds.
-    ///
-    /// Fixed-length windows return their exact length. Calendar windows
-    /// return an upper bound based on the longest possible month or year.
-    pub fn millis_upper_bound(&self) -> Option<u64> {
-        match self {
-            AlignedWindow::Seconds1
-            | AlignedWindow::Seconds5
-            | AlignedWindow::Seconds10
-            | AlignedWindow::Seconds15
-            | AlignedWindow::Seconds30
-            | AlignedWindow::Minutes1
-            | AlignedWindow::Minutes2
-            | AlignedWindow::Minutes3
-            | AlignedWindow::Minutes5
-            | AlignedWindow::Minutes10
-            | AlignedWindow::Minutes15
-            | AlignedWindow::Minutes30
-            | AlignedWindow::Hours1
-            | AlignedWindow::Hours2
-            | AlignedWindow::Hours3
-            | AlignedWindow::Hours4
-            | AlignedWindow::Hours6
-            | AlignedWindow::Hours8
-            | AlignedWindow::Hours12
-            | AlignedWindow::Days1
-            | AlignedWindow::Weeks1
-            | AlignedWindow::Weeks2
-            | AlignedWindow::Weeks4 => self.millis_exact(),
-            AlignedWindow::Months1 => Some(MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Months2 => Some(2 * MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Months3 => Some(3 * MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Months4 => Some(4 * MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Months6 => Some(6 * MILLIS_PER_MONTH_UPPER_BOUND),
-            AlignedWindow::Years1 => Some(MILLIS_PER_YEAR_UPPER_BOUND),
-            AlignedWindow::Years2 => Some(2 * MILLIS_PER_YEAR_UPPER_BOUND),
         }
     }
 }
