@@ -160,7 +160,7 @@ impl MarketAlignedWindow {
     ) -> StockTrekResult<Self> {
         let mut candles_by_window: BTreeMap<AlignedWindow, Vec<MarketCandle>> = BTreeMap::new();
         for (window, window_candles) in candles {
-            Self::validate_intervals(window, &window_candles)?;
+            Self::validate_intervals("MarketAlignedWindow::new", window, &window_candles)?;
             if candles_by_window.insert(window, window_candles).is_some() {
                 return Err(Validation::error(
                     "MarketAlignedWindow::new",
@@ -290,17 +290,19 @@ impl MarketAlignedWindow {
         years2, Years2, [year];
     );
 
-    fn validate_intervals(window: AlignedWindow, candles: &[MarketCandle]) -> StockTrekResult<()> {
+    pub(super) fn validate_intervals(
+        function: &'static str,
+        window: AlignedWindow,
+        candles: &[MarketCandle],
+    ) -> StockTrekResult<()> {
         let mut intervals = BTreeSet::new();
         for candle in candles {
             let start = candle.start_time_millis_inc();
             let end = candle.end_time_millis_exc();
             if !intervals.insert((start, end)) {
                 return Err(Validation::error(
-                    "MarketAlignedWindow::new",
-                    format!(
-                        "duplicate candle interval {start}..{end} for aligned window {window:?}"
-                    ),
+                    function,
+                    format!("duplicate candle interval {start}..{end} for the {window} window"),
                 ));
             }
         }
