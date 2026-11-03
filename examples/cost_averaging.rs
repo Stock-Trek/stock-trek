@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use stock_trek::{prelude::*, values::BinaryOperator};
+use stock_trek::prelude::*;
 
 /// The number of satoshis in one bitcoin.
 const SATOSHIS_PER_BITCOIN: f64 = 100_000_000.0;
