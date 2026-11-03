@@ -73,13 +73,29 @@ impl SignalContextBuilder {
     }
 
     /// Adds a market for a base/quote pair on a CEX.
+    ///
+    /// Returns an error when the market for this CEX and base/quote pair has
+    /// already been added.
     pub fn cex_market(
         &mut self,
         cex_id: CexId,
         base: AssetId,
         quote: AssetId,
         market: Market,
-    ) -> &mut Self {
+    ) -> StockTrekResult<&mut Self> {
+        let already_exists = self
+            .cex_market_data
+            .get(&cex_id)
+            .and_then(|by_base| by_base.markets_by_base.get(&base))
+            .and_then(|by_quote| by_quote.markets_by_quote.get(&quote))
+            .is_some();
+        if already_exists {
+            return Err(Validation::error(
+                "SignalContextBuilder::cex_market",
+                format!("duplicate market for {base}/{quote} on CEX {cex_id}"),
+            ));
+        }
+
         self.cex_market_data
             .entry(cex_id)
             .or_default()
@@ -88,7 +104,7 @@ impl SignalContextBuilder {
             .or_default()
             .markets_by_quote
             .insert(quote, market);
-        self
+        Ok(self)
     }
 
     /// Builds the [`SignalContext`] from the collected market data.
@@ -174,12 +190,14 @@ mod tests {
                 AssetId::TetherUSD,
                 market(),
             )
+            .unwrap()
             .cex_market(
                 CexId::Binance,
                 AssetId::Ethereum,
                 AssetId::TetherUSD,
                 market(),
-            );
+            )
+            .unwrap();
         let context = builder.build();
 
         assert!(
@@ -224,5 +242,27 @@ mod tests {
         let context =
             SignalContext::new([(CexId::Binance, by_base.clone()), (CexId::Binance, by_base)]);
         assert!(context.is_err());
+    }
+
+    #[test]
+    fn builder_rejects_duplicate_markets() {
+        let mut builder = SignalContextBuilder::new();
+        builder
+            .cex_market(
+                CexId::Binance,
+                AssetId::Bitcoin,
+                AssetId::TetherUSD,
+                market(),
+            )
+            .unwrap();
+
+        let duplicate = builder.cex_market(
+            CexId::Binance,
+            AssetId::Bitcoin,
+            AssetId::TetherUSD,
+            market(),
+        );
+
+        assert!(duplicate.is_err());
     }
 }

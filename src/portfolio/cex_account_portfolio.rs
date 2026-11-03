@@ -13,8 +13,10 @@ impl CexAccountPortfolio {
     /// Creates an account portfolio from asset balances and pending orders.
     ///
     /// Both arguments accept any iterator of key/value pairs. Returns an error
-    /// when any asset balance is negative or not finite, or when a pending
-    /// order's tag does not match the key of the group it is listed under.
+    /// when an asset balance appears more than once, when any asset balance is
+    /// negative or not finite, when a pending-order tag appears more than once,
+    /// or when a pending order's tag does not match the key of the group it is
+    /// listed under.
     pub fn new<A, P>(asset_counts: A, pending_orders: P) -> StockTrekResult<Self>
     where
         A: IntoIterator<Item = (AssetId, f64)>,
@@ -23,7 +25,12 @@ impl CexAccountPortfolio {
         let mut balances = BTreeMap::new();
         for (asset_id, count) in asset_counts {
             Validation::non_negative("CexAccountPortfolio::new", "asset balance", count)?;
-            balances.insert(asset_id, count);
+            if balances.insert(asset_id, count).is_some() {
+                return Err(Validation::error(
+                    "CexAccountPortfolio::new",
+                    format!("duplicate asset balance for asset {asset_id}"),
+                ));
+            }
         }
 
         let mut orders_by_tag = BTreeMap::new();
@@ -38,7 +45,12 @@ impl CexAccountPortfolio {
                     ),
                 ));
             }
-            orders_by_tag.insert(tag, orders);
+            if orders_by_tag.insert(tag.clone(), orders).is_some() {
+                return Err(Validation::error(
+                    "CexAccountPortfolio::new",
+                    format!("duplicate pending orders for tag {tag:?}"),
+                ));
+            }
         }
 
         Ok(Self {

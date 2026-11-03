@@ -374,6 +374,25 @@ fn cex_account_portfolio_rejects_pending_orders_grouped_under_a_mismatched_tag()
 }
 
 #[test]
+fn cex_account_portfolio_rejects_duplicate_assets_and_pending_order_tags() {
+    let duplicate_assets = CexAccountPortfolio::new(
+        [(AssetId::Bitcoin, 1.0), (AssetId::Bitcoin, 2.0)],
+        std::iter::empty::<(Tag, Vec<crate::pending_order::PendingOrder>)>(),
+    );
+    assert!(duplicate_assets.is_err());
+
+    let order = PendingOrder::new(limit_sell(Quantity::OfBase(1.0), 100.0), 0.0, 0.0).unwrap();
+    let duplicate_tags = CexAccountPortfolio::new(
+        [(AssetId::Bitcoin, 10.0)],
+        [
+            (Tag::new("tag"), vec![order.clone()]),
+            (Tag::new("tag"), vec![order]),
+        ],
+    );
+    assert!(duplicate_tags.is_err());
+}
+
+#[test]
 fn portfolio_builder_rejects_invalid_asset_counts() {
     let mut builder = PortfolioBuilder::new();
     let result = builder.asset_count(
