@@ -262,6 +262,46 @@ mod tests {
     }
 
     #[test]
+    fn accepts_last_trades_below_the_minimum_notional() {
+        let mut builder = MarketBuilder::new(0.000_001, 0.01, 10.0).unwrap();
+
+        assert!(
+            builder
+                .clone()
+                .tick(
+                    TimestampMillis::new(1),
+                    MarketQuote::new(100.0, 0.01).unwrap(),
+                    MarketQuote::new(101.0, 1.0).unwrap(),
+                    MarketQuote::new(100.5, 1.0).unwrap(),
+                )
+                .is_err()
+        );
+        assert!(
+            builder
+                .clone()
+                .tick(
+                    TimestampMillis::new(1),
+                    MarketQuote::new(100.0, 1.0).unwrap(),
+                    MarketQuote::new(101.0, 0.01).unwrap(),
+                    MarketQuote::new(100.5, 1.0).unwrap(),
+                )
+                .is_err()
+        );
+
+        builder
+            .tick(
+                TimestampMillis::new(1),
+                MarketQuote::new(100.0, 1.0).unwrap(),
+                MarketQuote::new(101.0, 1.0).unwrap(),
+                MarketQuote::new(100.5, 0.01).unwrap(),
+            )
+            .unwrap();
+
+        let market = builder.build();
+        assert_eq!(market.ticks().ticks()[0].last().quantity(), 0.01);
+    }
+
+    #[test]
     fn rejects_crossed_order_books() {
         let builder = || MarketBuilder::new(0.000_001, 0.01, 0.0).unwrap();
 

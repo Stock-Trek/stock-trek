@@ -62,8 +62,10 @@ impl MarketBuilder {
 
     /// Adds a market tick with the given bid, ask, and last quotes.
     ///
-    /// Returns an error if a quote does not respect the market's increments or
-    /// minimum notional, or if the bid is not below the ask.
+    /// Returns an error if a quote does not respect the market's increments, if
+    /// the bid or ask is below the minimum notional, or if the bid is not below
+    /// the ask. The last trade quote is not subject to the order minimum
+    /// notional.
     pub fn tick(
         &mut self,
         timestamp_millis: TimestampMillis,
@@ -78,7 +80,7 @@ impl MarketBuilder {
             &bid,
             self.base_increment,
             self.quote_increment,
-            self.minimum_notional,
+            Some(self.minimum_notional),
         )?;
         Self::validate_quote(
             function,
@@ -86,7 +88,7 @@ impl MarketBuilder {
             &ask,
             self.base_increment,
             self.quote_increment,
-            self.minimum_notional,
+            Some(self.minimum_notional),
         )?;
         Self::validate_quote(
             function,
@@ -94,7 +96,7 @@ impl MarketBuilder {
             &last,
             self.base_increment,
             self.quote_increment,
-            self.minimum_notional,
+            None,
         )?;
         Self::validate_bid_and_ask(function, bid.price(), ask.price())?;
 
@@ -171,7 +173,7 @@ impl MarketBuilder {
             &quote,
             self.base_increment,
             self.quote_increment,
-            self.minimum_notional,
+            Some(self.minimum_notional),
         )?;
         if let Some(lowest_ask) = Self::lowest_price(&self.order_book_asks) {
             Self::validate_bid_and_ask(function, quote.price(), lowest_ask)?;
@@ -193,7 +195,7 @@ impl MarketBuilder {
             &quote,
             self.base_increment,
             self.quote_increment,
-            self.minimum_notional,
+            Some(self.minimum_notional),
         )?;
         if let Some(highest_bid) = Self::highest_price(&self.order_book_bids) {
             Self::validate_bid_and_ask(function, highest_bid, quote.price())?;
@@ -224,7 +226,7 @@ impl MarketBuilder {
         quote: &MarketQuote,
         base_increment: f64,
         quote_increment: f64,
-        minimum_notional: f64,
+        minimum_notional: Option<f64>,
     ) -> StockTrekResult<()> {
         if !Self::is_multiple_of(quote.price(), quote_increment) {
             return Err(Validation::error(
@@ -246,11 +248,19 @@ impl MarketBuilder {
         }
 
         let notional = quote.price() * quote.quantity();
-        if !notional.is_finite() || notional < minimum_notional {
+        if !notional.is_finite() {
+            return Err(Validation::error(
+                function,
+                format!("{field} notional {notional} must be finite"),
+            ));
+        }
+        if let Some(minimum_notional) = minimum_notional
+            && notional < minimum_notional
+        {
             return Err(Validation::error(
                 function,
                 format!(
-                    "{field} notional {notional} must be finite and at least the minimum notional {minimum_notional}"
+                    "{field} notional {notional} must be at least the minimum notional {minimum_notional}"
                 ),
             ));
         }
