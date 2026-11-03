@@ -1,8 +1,13 @@
 use crate::{
     error::result::StockTrekResult,
     market_data::{
-        aligned_window::AlignedWindow, aligned_window_constructor::aligned_window_constructor,
-        market_candle::MarketCandle, market_ohlcv::MarketOhlcv, timestamp::TimestampMillis,
+        aligned_window::AlignedWindow,
+        aligned_window_macros::{
+            aligned_window_constructor, aligned_window_containing_constructor,
+        },
+        market_candle::MarketCandle,
+        market_ohlcv::MarketOhlcv,
+        timestamp::TimestampMillis,
     },
     validation::Validation,
 };
@@ -120,6 +125,27 @@ impl MarketAlignedWindow {
         weeks4, Weeks4, [year, month, day];
     );
 
+    aligned_window_containing_constructor!(
+        /// Creates an aligned-window collection with candles for 1-week windows.
+        /// The date identifies a calendar day within the first window: the
+        /// first candle starts at the start of the 1-week window containing
+        /// that day in UTC, so the start may be up to six days earlier than
+        /// the given date.
+        weeks1_auto_aligned, Weeks1;
+        /// Creates an aligned-window collection with candles for 2-week windows.
+        /// The date identifies a calendar day within the first window: the
+        /// first candle starts at the start of the 2-week window containing
+        /// that day in UTC, so the start may be up to thirteen days earlier
+        /// than the given date.
+        weeks2_auto_aligned, Weeks2;
+        /// Creates an aligned-window collection with candles for 4-week windows.
+        /// The date identifies a calendar day within the first window: the
+        /// first candle starts at the start of the 4-week window containing
+        /// that day in UTC, so the start may be up to twenty-seven days
+        /// earlier than the given date.
+        weeks4_auto_aligned, Weeks4;
+    );
+
     aligned_window_constructor!(
         /// Creates an aligned-window collection with candles for 1-month windows.
         /// The month identifies the calendar month the first window covers.
@@ -168,6 +194,20 @@ impl MarketAlignedWindow {
             }
         }
         Ok(())
+    }
+
+    fn with_window_containing(
+        window: AlignedWindow,
+        requested: TimestampMillis,
+        candles: impl IntoIterator<Item = (MarketOhlcv, u64)>,
+    ) -> StockTrekResult<Self> {
+        let bounds = window.bounds_for(requested).map_err(|error| {
+            Validation::error(
+                "MarketAlignedWindow::with_window_containing",
+                format!("could not determine the {window} window containing {requested}: {error}"),
+            )
+        })?;
+        Self::with_consecutive_candles(window, bounds.lower(), candles)
     }
 
     fn with_consecutive_candles(
