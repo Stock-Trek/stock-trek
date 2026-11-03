@@ -26,7 +26,8 @@ impl Default for CostAveraging {
         Self {
             key_cex: SignalKey::new_required("CEX"),
             key_account: SignalKey::new_required("ACCOUNT"),
-            key_market_exists: SignalKey::new_optional("MARKET_EXISTS", false),
+            key_market_exists: SignalKey::new_optional("MARKET_EXISTS", false)
+                .expect("false is a valid default"),
             key_cheapest_price: SignalKey::new_required("CHEAPEST_PRICE"),
             key_order_quantity: SignalKey::new_required("ORDER_QUANTITY"),
         }
