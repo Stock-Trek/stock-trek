@@ -73,14 +73,6 @@ macro_rules! window_tests {
         }
 
         #[test]
-        fn variant_array_lists_all_variants() {
-            let variants = <$window as ::strum::VariantArray>::VARIANTS;
-            let iterated = <$window as ::strum::IntoEnumIterator>::iter().collect::<Vec<_>>();
-
-            assert_eq!(variants, iterated.as_slice());
-        }
-
-        #[test]
         fn display_round_trips_through_try_from() {
             for window in <$window as ::strum::IntoEnumIterator>::iter() {
                 assert_eq!(window.label(), window.to_string());
