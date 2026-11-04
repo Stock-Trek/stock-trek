@@ -42,10 +42,10 @@ impl WindowMillis {
 /// variants with only an upper bound are listed under `upper`.
 ///
 /// The macro generates [`Self::label`], [`std::fmt::Display`],
-/// [`serde::Serialize`], [`serde::Deserialize`], [`TryFrom<&str>`], and
-/// [`std::str::FromStr`]. It also generates [`Self::millis`] returning the
-/// window length as a [`WindowMillis`], and [`Self::millis_exact`] for enums
-/// whose variants all have a fixed length.
+/// [`serde::Serialize`], [`serde::Deserialize`], [`TryFrom<&str>`],
+/// [`std::str::FromStr`], and [`strum::VariantArray`]. It also generates
+/// [`Self::millis`] returning the window length as a [`WindowMillis`], and
+/// [`Self::millis_exact`] for enums whose variants all have a fixed length.
 ///
 /// ```ignore
 /// window_enum!(
@@ -88,6 +88,7 @@ macro_rules! window_enum {
             ::strum::EnumCount,
             ::strum::EnumIter,
             ::strum::FromRepr,
+            ::strum::VariantArray,
         )]
         #[allow(missing_docs)]
         #[non_exhaustive]
