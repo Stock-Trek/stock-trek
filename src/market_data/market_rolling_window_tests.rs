@@ -1,12 +1,11 @@
 use super::market_rolling_window::*;
-
 use crate::market_data::{
     market_candle::MarketCandle, market_ohlcv::MarketOhlcv, rolling_window::RollingWindow,
     timestamp::TimestampMillis,
 };
 
 fn ohlcv() -> MarketOhlcv {
-    MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap()
+    MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0).unwrap()
 }
 
 #[test]
@@ -87,7 +86,7 @@ fn serde_json_round_trip() {
 
     assert_eq!(
         deserialized.ohlcv(RollingWindow::Minutes1),
-        Some(&MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap())
+        Some(&MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0).unwrap())
     );
 }
 

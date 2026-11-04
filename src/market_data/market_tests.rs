@@ -14,7 +14,7 @@ fn candle(start_millis: u64, duration_millis: u64) -> MarketCandle {
         TimestampMillis::new(start_millis),
         TimestampMillis::new(start_millis + duration_millis),
         true,
-        MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0, 1.4).unwrap(),
+        MarketOhlcv::new(1.0, 2.0, 0.5, 1.5, 10.0, 15.0).unwrap(),
         3,
     )
     .unwrap()

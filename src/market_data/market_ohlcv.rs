@@ -18,7 +18,6 @@ pub struct MarketOhlcv {
     close: f64,
     volume: f64,
     quote_volume: f64,
-    vwap: f64,
 }
 
 impl MarketOhlcv {
@@ -34,7 +33,6 @@ impl MarketOhlcv {
         close: f64,
         volume: f64,
         quote_volume: f64,
-        vwap: f64,
     ) -> StockTrekResult<Self> {
         Self::from_parts(
             "MarketOhlcv::new",
@@ -44,7 +42,6 @@ impl MarketOhlcv {
             close,
             volume,
             quote_volume,
-            vwap,
         )
     }
 
@@ -57,14 +54,12 @@ impl MarketOhlcv {
         close: f64,
         volume: f64,
         quote_volume: f64,
-        vwap: f64,
     ) -> StockTrekResult<Self> {
         for (field, value) in [
             ("open", open),
             ("high", high),
             ("low", low),
             ("close", close),
-            ("vwap", vwap),
         ] {
             Validation::non_negative(function, field, value)?;
         }
@@ -89,13 +84,6 @@ impl MarketOhlcv {
                 format!("close {close} must be between low {low} and high {high}"),
             ));
         }
-        if vwap < low || vwap > high {
-            return Err(Validation::error(
-                function,
-                format!("vwap {vwap} must be between low {low} and high {high}"),
-            ));
-        }
-
         Ok(Self {
             open,
             high,
@@ -103,7 +91,6 @@ impl MarketOhlcv {
             close,
             volume,
             quote_volume,
-            vwap,
         })
     }
 
@@ -139,7 +126,24 @@ impl MarketOhlcv {
 
     /// Returns the volume-weighted average price.
     pub fn vwap(&self) -> f64 {
-        self.vwap
+        if self.volume == 0.0 {
+            0.0
+        } else {
+            self.quote_volume / self.volume
+        }
+    }
+
+    /// Include the price/quantity for a trade
+    pub fn apply_trade(&mut self, price: f64, quantity: f64) -> Result<(), StockTrekError> {
+        let function = "apply_trade";
+        Validation::non_negative(function, "price", price)?;
+        Validation::non_negative(function, "quantity", quantity)?;
+        self.high = self.high.max(price);
+        self.low = self.low.min(price);
+        self.close = price;
+        self.volume += quantity;
+        self.quote_volume += price * quantity;
+        Ok(())
     }
 }
 
@@ -151,7 +155,6 @@ struct MarketOhlcvData {
     close: f64,
     volume: f64,
     quote_volume: f64,
-    vwap: f64,
 }
 
 impl TryFrom<MarketOhlcvData> for MarketOhlcv {
@@ -165,7 +168,6 @@ impl TryFrom<MarketOhlcvData> for MarketOhlcv {
             data.close,
             data.volume,
             data.quote_volume,
-            data.vwap,
         )
     }
 }

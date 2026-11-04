@@ -26,16 +26,7 @@ fn candle() -> MarketCandle {
 }
 
 fn ohlcv_at(open: f64) -> MarketOhlcv {
-    MarketOhlcv::new(
-        open,
-        open + 1.0,
-        open - 0.5,
-        open + 0.5,
-        10.0,
-        15.0,
-        open + 0.4,
-    )
-    .unwrap()
+    MarketOhlcv::new(open, open + 1.0, open - 0.5, open + 0.5, 10.0, 15.0).unwrap()
 }
 
 fn candle_at(start_time_millis_inc: u64, open: f64) -> MarketCandle {
