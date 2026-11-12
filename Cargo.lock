@@ -749,7 +749,7 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "stock-trek"
-version = "0.17.0"
+version = "0.18.0"
 dependencies = [
  "chrono",
  "regex",
@@ -765,9 +765,9 @@ dependencies = [
 
 [[package]]
 name = "stock-trek-types"
-version = "0.5.3"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e43999008125ca20b1da83a3b94bab28b83d176255a107a6d92475bd439591bb"
+checksum = "0846099d4bbfb9ec37afb08b1c2ee28c1b4579da31f0f6aad295170f6eba431f"
 dependencies = [
  "rust_decimal",
  "serde",
