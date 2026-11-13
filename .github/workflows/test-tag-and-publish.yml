@@ -57,7 +57,8 @@ jobs:
           if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "refs/tags/${TAG}"; then
             echo "Tag ${TAG} already exists"
           else
-            cargo publish
+            cargo publish -p stock-trek-macros
+            cargo publish -p stock-trek
             echo "Creating tag ${TAG}"
             git config user.name "github-actions[bot]"
             git config user.email 'CreateTags[bot]@users.noreply.github.com'
