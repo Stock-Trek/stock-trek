@@ -1,7 +1,7 @@
 //! Write trading algorithms that run on [stock-trek.com](https://stock-trek.com).
 //!
 //! An algorithm is a struct implementing [`Algorithm`] and registered with the
-//! `#[register_algorithm(default)]` annotation. The platform runs it in two
+//! `#[register_algorithm]` annotation. The platform runs it in two
 //! phases:
 //!
 //! 1. [`Algorithm::signals`] runs on every evaluation. It turns the market
@@ -28,6 +28,8 @@
 #![deny(unsafe_code)]
 #![deny(rustdoc::broken_intra_doc_links)]
 
+extern crate self as stock_trek;
+
 mod action;
 mod algorithm;
 mod cex;
@@ -41,6 +43,7 @@ mod market_data;
 mod pending_order;
 mod portfolio;
 mod preferences;
+mod registration;
 mod resolvable;
 mod resolved_context;
 mod signal;
@@ -57,11 +60,17 @@ pub use conditions::{Condition, ConditionFactory, QuantityOf};
 pub use pending_order::PendingOrder;
 pub use portfolio::{CexAccountPortfolio, Portfolio, PortfolioBuilder};
 pub use preferences::Preferences;
+pub use registration::RegisteredImpl;
 pub use resolved_context::{EnqueueActionFn, ResolvedContext};
 pub use rust_decimal::RoundingStrategy;
+pub use stock_trek_macros::register_algorithm;
 pub use strategy_context::StrategyContext;
-pub use traitreg;
-pub use traitreg::register as register_algorithm;
+
+/// Support used by the registration macro.
+#[doc(hidden)]
+pub mod __private {
+    pub use crate::registration::{RegisteredImpl, Registration};
+}
 
 /// Types for actions that can be enqueued by an algorithm.
 pub mod actions {
@@ -199,6 +208,8 @@ pub mod prelude {
 mod conditions_tests;
 #[cfg(test)]
 mod pending_order_tests;
+#[cfg(test)]
+mod registration_tests;
 #[cfg(test)]
 mod signal_context_tests;
 #[cfg(test)]

@@ -1,0 +1,17 @@
+[package]
+name = "stock-trek-macros"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "Registration macros for stock-trek"
+authors = ["stock-trek.com <stock-trek@proton.me>"]
+license = "MIT"
+repository = "https://github.com/Stock-Trek/stock-trek"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full"] }

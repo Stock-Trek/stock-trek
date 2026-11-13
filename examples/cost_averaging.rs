@@ -34,7 +34,7 @@ impl Default for CostAveraging {
     }
 }
 
-#[register_algorithm(default)]
+#[register_algorithm]
 impl Algorithm for CostAveraging {
     fn name(&self) -> &str {
         "CostAveraging"

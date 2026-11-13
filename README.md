@@ -15,7 +15,7 @@ cargo add stock-trek
 
 ## Usage
 
-Implement the `Algorithm` and `Default` traits for your algorithm and register it with the annotation `#[register_algorithm(default)]`.
+Implement the `Algorithm` and `Default` traits for your algorithm and register it with the annotation `#[register_algorithm]`.
 A complete cost-averaging algorithm is maintained in [`examples/cost_averaging.rs`](https://github.com/Stock-Trek/stock-trek/blob/master/examples/cost_averaging.rs). It selects the CEX with the lowest latest BTC/USDT ask, and places a limit order for 100 satoshis (0.000001 BTC) at that ask. It only places the order when the account's available USDT covers the order notional plus a fee and rounding buffer.
 
 Stock-Trek verifies code before running it and disallows certain syntax elements. To verify code locally, install the verifier [stock-trek-check](https://crates.io/crates/stock-trek-check) with
