@@ -1,6 +1,6 @@
 [package]
 name = "stock-trek"
-version = "0.18.0"
+version = "0.19.0"
 edition = "2024"
 rust-version = "1.88"
 description = "Stock Trek time-series analysis"
@@ -37,9 +37,9 @@ regex-syntax = { version = "0.8", optional = true }
 rust_decimal = "1"
 serde = { version = "1", features = ["derive"] }
 serde_with = { version = "3", optional = true }
+stock-trek-macros = { version = "0.1.0", path = "macros" }
 stock-trek-types = { version = "0.6", features = ["serde"] }
 strum = { version = "0.28", features = ["derive"] }
-stock-trek-macros = { version = "0.1.0", path = "macros" }
 
 [dev-dependencies]
 serde_json = { version = "1", features = ["float_roundtrip"] }
