@@ -52,13 +52,22 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ env.CARGO_REGISTRY_TOKEN }}
         run: |
-          VERSION=$(cargo pkgid | rev | cut -d '@' -f 1 | cut -d '#' -f 1 | rev)
-          TAG="v${VERSION}"
+          VERSION_MACROS=$(cargo pkgid -p stock-trek-macros | rev | cut -d '@' -f 1 | cut -d '#' -f 1 | rev)
+          VERSION_ROOT=$(cargo pkgid -p stock-trek | rev | cut -d '@' -f 1 | cut -d '#' -f 1 | rev)
+          TAG="v${VERSION_ROOT}"
           if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "refs/tags/${TAG}"; then
             echo "Tag ${TAG} already exists"
           else
-            cargo publish -p stock-trek-macros
-            cargo publish -p stock-trek
+            if curl -sfL -o /dev/null "https://crates.io/api/v1/crates/stock-trek-macros/${VERSION_MACROS}"; then
+              echo "stock-trek-macros ${VERSION_MACROS} already published, skipping."
+            else
+              cargo publish -p stock-trek-macros
+            fi
+            if curl -sfL -o /dev/null "https://crates.io/api/v1/crates/stock-trek/${VERSION_ROOT}"; then
+              echo "stock-trek ${VERSION_ROOT} already published, skipping."
+            else
+              cargo publish -p stock-trek
+            fi
             echo "Creating tag ${TAG}"
             git config user.name "github-actions[bot]"
             git config user.email 'CreateTags[bot]@users.noreply.github.com'
