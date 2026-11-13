@@ -1,7 +1,7 @@
 //! Write trading algorithms that run on [stock-trek.com](https://stock-trek.com).
 //!
 //! An algorithm is a struct implementing [`Algorithm`] and registered with the
-//! `#[register_algorithm(default)]` annotation. The platform runs it in two
+//! `#[register_algorithm]` annotation. The platform runs it in two
 //! phases:
 //!
 //! 1. [`Algorithm::signals`] runs on every evaluation. It turns the market
@@ -62,7 +62,7 @@ pub use portfolio::{CexAccountPortfolio, Portfolio, PortfolioBuilder};
 pub use preferences::Preferences;
 pub use resolved_context::{EnqueueActionFn, ResolvedContext};
 pub use rust_decimal::RoundingStrategy;
-pub use stock_trek_macros::register as register_algorithm;
+pub use stock_trek_macros::register_algorithm;
 pub use strategy_context::StrategyContext;
 
 /// Types for actions that can be enqueued by an algorithm.

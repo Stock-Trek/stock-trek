@@ -1,74 +1,79 @@
-use crate::parse::{RegisterAttribute, RegisterItem};
+use crate::parse::RegisterItem;
+use proc_macro2::TokenStream;
 use quote::quote;
 
-/// Expands a `register` attribute.
+/// Expands a registration attribute.
 pub(crate) struct RegisterExpansion {
-    attr: proc_macro2::TokenStream,
-    item: proc_macro2::TokenStream,
+    attr: TokenStream,
+    item: TokenStream,
 }
 
 impl RegisterExpansion {
     /// Captures the attribute and item token streams.
-    pub(crate) fn new(attr: proc_macro2::TokenStream, item: proc_macro2::TokenStream) -> Self {
+    pub(crate) fn new(attr: TokenStream, item: TokenStream) -> Self {
         Self { attr, item }
     }
 
     /// Builds the registration implementation and constructor.
-    pub(crate) fn expand(self) -> proc_macro2::TokenStream {
-        let constructor_fn = if self.attr.is_empty() {
-            None
-        } else {
-            Some(syn::parse2::<RegisterAttribute>(self.attr).expect("Invalid register attribute"))
+    pub(crate) fn expand(self) -> TokenStream {
+        if !self.attr.is_empty() {
+            return syn::Error::new_spanned(
+                self.attr,
+                "Registration does not accept arguments; use `#[register_algorithm]`.",
+            )
+            .to_compile_error();
+        }
+
+        let parsed_item = match syn::parse2::<RegisterItem>(self.item.clone()) {
+            Ok(parsed_item) => parsed_item,
+            Err(error) => return error.to_compile_error(),
         };
 
-        let has_constructor = constructor_fn.is_some();
-        let constructor_fn_call = match constructor_fn {
-            Some(attribute) => {
-                let ident = attribute.constructor_fn_ident;
-                quote! { Some(Box::new(Self::#ident())) }
+        let trait_path = match parsed_item.trait_path() {
+            Ok(trait_path) => trait_path,
+            Err(error) => return error.to_compile_error(),
+        };
+        let trait_ident = match trait_path.get_ident() {
+            Some(trait_ident) => trait_ident,
+            None => {
+                return syn::Error::new_spanned(
+                    trait_path,
+                    "Expected the trait in the implementation to have an identifier.",
+                )
+                .to_compile_error();
             }
-            None => quote! { None },
         };
 
-        let item_clone = self.item.clone();
-        let parsed_item =
-            syn::parse2::<RegisterItem>(self.item).unwrap_or_else(|error| panic!("{error}"));
-        let item_impl = &parsed_item.item;
+        let type_path = match parsed_item.self_type_path() {
+            Ok(type_path) => type_path,
+            Err(error) => return error.to_compile_error(),
+        };
+        let type_ident = match type_path.get_ident() {
+            Some(type_ident) => type_ident,
+            None => {
+                return syn::Error::new_spanned(
+                    type_path,
+                    "Expected the type in the implementation to have an identifier.",
+                )
+                .to_compile_error();
+            }
+        };
 
-        let (trait_not, trait_path, _) = item_impl
-            .trait_
-            .as_ref()
-            .expect("Can only register an implementation of a trait, 'impl <Trait> for <Type>'.");
-        assert!(
-            trait_not.is_none(),
-            "Cannot register inverted impl trait: 'impl !Trait for Type'."
-        );
-
-        let trait_ident = trait_path
-            .require_ident()
-            .expect("Expected trait in impl block to have an identifier.");
         let trait_name = trait_ident.to_string();
-
-        let type_path = parsed_item.self_type_path();
-        let type_ident = type_path
-            .require_ident()
-            .expect("Expected type in impl block to have an identifier.");
         let type_name = type_ident.to_string();
-
         let register_static_ident =
-            syn::parse_str::<syn::Ident>(format!("{type_ident}_{trait_ident}__Register").as_ref())
+            syn::parse_str::<syn::Ident>(&format!("{type_ident}_{trait_ident}__Register"))
                 .expect("Unable to create identifier");
-        let register_static_fn_ident = syn::parse_str::<syn::Ident>(
-            format!("{type_ident}_{trait_ident}__RegisterFn").as_ref(),
-        )
-        .expect("Unable to create identifier");
+        let register_static_fn_ident =
+            syn::parse_str::<syn::Ident>(&format!("{type_ident}_{trait_ident}__RegisterFn"))
+                .expect("Unable to create identifier");
 
         let mut result = quote! {
             impl ::stock_trek::traitreg::RegisteredImpl<Box<dyn #trait_path>> for #type_path {
                 const INSTANCIATE: fn() -> Option<Box<dyn #trait_path>> = || {
-                    #constructor_fn_call
+                    Some(Box::new(<#type_path as ::core::default::Default>::default()))
                 };
-                const HAS_CONSTRUCTOR: bool = #has_constructor;
+                const HAS_CONSTRUCTOR: bool = true;
                 const NAME: &'static str = #type_name;
                 const PATH: &'static str = stringify!(#type_path);
                 const FILE: &'static str = ::core::file!();
@@ -98,7 +103,7 @@ impl RegisterExpansion {
             };
         };
 
-        result.extend(item_clone);
+        result.extend(self.item);
         result
     }
 }

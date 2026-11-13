@@ -6,7 +6,7 @@ use crate::{
 /// A trading algorithm.
 ///
 /// Implement this trait and register the implementation with the
-/// `#[register_algorithm(default)]` annotation. The platform drives two
+/// `#[register_algorithm]` annotation. The platform drives two
 /// phases:
 ///
 /// - [`Self::signals`] runs on every evaluation and turns the market data in

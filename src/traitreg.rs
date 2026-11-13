@@ -1,13 +1,13 @@
 //! Trait registry runtime used by the registration macros.
 //!
-//! Implementations are registered by constructors emitted by
-//! [`register`] and collected lazily by
-//! [`registry`]. Lazy collection makes the order in
+//! Implementations are registered with `#[register_algorithm]` and collected
+//! lazily by [`registry`]. Every implementation is constructed through
+//! [`Default`] when the registry is read. Lazy collection makes the order in
 //! which constructors run irrelevant, including in WebAssembly where all
 //! constructors run from the module's `.init_array` before the host calls into
 //! the algorithm.
 
-pub use stock_trek_macros::{register, registry};
+pub use stock_trek_macros::registry;
 
 use std::{
     any::Any,
@@ -20,12 +20,12 @@ static REGISTRATIONS: Mutex<Vec<(&'static str, Box<dyn Any + Send>)>> = Mutex::n
 
 /// Metadata and constructor for a registered trait implementation.
 ///
-/// Implemented by [`register`] for each annotated
-/// implementation.
+/// Implemented by `#[register_algorithm]` for each annotated implementation.
+/// The implementing type must implement [`Default`].
 pub trait RegisteredImpl<Trait> {
-    /// Constructs the implementation when a constructor was registered.
+    /// Constructs the implementation through [`Default`].
     const INSTANCIATE: fn() -> Option<Trait>;
-    /// Whether the implementation was registered with a constructor.
+    /// Whether the implementation has a constructor.
     const HAS_CONSTRUCTOR: bool;
     /// The implementing type's name.
     const NAME: &'static str;
@@ -92,7 +92,7 @@ impl<Trait: 'static> TraitRegStorage<Trait> {
         self.impls.iter()
     }
 
-    /// Constructs every implementation that was registered with a constructor.
+    /// Constructs every implementation.
     pub fn instanciate_all(&self) -> impl Iterator<Item = Trait> + '_ {
         self.impls.iter().filter_map(|item| item.instanciate())
     }
@@ -119,12 +119,12 @@ pub struct RegisteredImplWrapper<Trait> {
 }
 
 impl<Trait> RegisteredImplWrapper<Trait> {
-    /// Constructs the implementation when a constructor was registered.
+    /// Constructs the implementation through [`Default`].
     pub fn instanciate(&self) -> Option<Trait> {
         (self.instanciate)()
     }
 
-    /// Whether the implementation was registered with a constructor.
+    /// Whether the implementation has a constructor.
     pub fn has_constructor(&self) -> bool {
         self.has_constructor
     }
