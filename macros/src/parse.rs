@@ -39,38 +39,34 @@ impl RegisterItem {
             "Cannot register an implementation on this type, expected a path type.",
         ))
     }
+
+    /// Returns the name shown for a path's final segment.
+    pub(crate) fn final_ident(path: &syn::Path) -> syn::Result<&Ident> {
+        path.segments
+            .last()
+            .map(|segment| &segment.ident)
+            .ok_or_else(|| {
+                syn::Error::new_spanned(path, "Expected a path with at least one segment.")
+            })
+    }
+
+    /// Rejects generic implementations, which cannot register a concrete type.
+    pub(crate) fn ensure_not_generic(&self) -> syn::Result<()> {
+        if self.item.generics.params.is_empty() {
+            return Ok(());
+        }
+
+        Err(syn::Error::new_spanned(
+            &self.item.generics,
+            "Cannot register a generic implementation; expected a concrete type.",
+        ))
+    }
 }
 
 impl Parse for RegisterItem {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(Self {
             item: syn::ItemImpl::parse(input)?,
-        })
-    }
-}
-
-/// The trait named by a registry attribute.
-pub(crate) struct RegistryAttribute {
-    pub(crate) trait_ident: Ident,
-}
-
-impl Parse for RegistryAttribute {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        Ok(Self {
-            trait_ident: Ident::parse(input)?,
-        })
-    }
-}
-
-/// The static item that a registry attribute is attached to.
-pub(crate) struct RegistryItem {
-    pub(crate) item: syn::ItemStatic,
-}
-
-impl Parse for RegistryItem {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        Ok(Self {
-            item: syn::ItemStatic::parse(input)?,
         })
     }
 }

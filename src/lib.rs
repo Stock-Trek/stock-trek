@@ -43,12 +43,12 @@ mod market_data;
 mod pending_order;
 mod portfolio;
 mod preferences;
+mod registration;
 mod resolvable;
 mod resolved_context;
 mod signal;
 mod signal_context;
 mod strategy_context;
-pub mod traitreg;
 mod util;
 mod validation;
 mod value;
@@ -60,10 +60,17 @@ pub use conditions::{Condition, ConditionFactory, QuantityOf};
 pub use pending_order::PendingOrder;
 pub use portfolio::{CexAccountPortfolio, Portfolio, PortfolioBuilder};
 pub use preferences::Preferences;
+pub use registration::RegisteredImpl;
 pub use resolved_context::{EnqueueActionFn, ResolvedContext};
 pub use rust_decimal::RoundingStrategy;
 pub use stock_trek_macros::register_algorithm;
 pub use strategy_context::StrategyContext;
+
+/// Support used by the registration macro.
+#[doc(hidden)]
+pub mod __private {
+    pub use crate::registration::{RegisteredImpl, Registration};
+}
 
 /// Types for actions that can be enqueued by an algorithm.
 pub mod actions {
@@ -202,8 +209,8 @@ mod conditions_tests;
 #[cfg(test)]
 mod pending_order_tests;
 #[cfg(test)]
-mod signal_context_tests;
+mod registration_tests;
 #[cfg(test)]
-mod trait_registry_tests;
+mod signal_context_tests;
 #[cfg(test)]
 mod validation_tests;

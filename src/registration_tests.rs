@@ -1,7 +1,4 @@
-use crate::{
-    register_algorithm,
-    traitreg::{self, RegisteredImplWrapper, TraitRegStorage},
-};
+use crate::{RegisteredImpl, register_algorithm};
 
 trait TestAlgorithm {
     fn value(&self) -> u8;
@@ -58,53 +55,52 @@ impl OtherAlgorithm for OtherAlgorithmImpl {
     }
 }
 
-#[traitreg::registry(TestAlgorithm)]
-static TEST_REGISTRY: () = ();
+struct RegistrationTest;
 
-#[traitreg::registry(OtherAlgorithm)]
-static OTHER_REGISTRY: () = ();
-
-struct RegistryTest;
-
-impl RegistryTest {
-    fn find<'a>(
-        registry: &'a TraitRegStorage<Box<dyn TestAlgorithm>>,
-        name: &str,
-    ) -> &'a RegisteredImplWrapper<Box<dyn TestAlgorithm>> {
-        registry
-            .iter()
-            .find(|registration| registration.name() == name)
-            .expect("registration should exist")
+impl RegistrationTest {
+    fn test_registrations() -> Vec<RegisteredImpl<Box<dyn TestAlgorithm>>> {
+        RegisteredImpl::<Box<dyn TestAlgorithm>>::all()
     }
 
     fn registered_names() -> Vec<&'static str> {
-        let mut names: Vec<_> = TEST_REGISTRY
+        let mut names: Vec<_> = Self::test_registrations()
             .iter()
             .map(|registration| registration.name())
             .collect();
         names.sort_unstable();
         names
     }
+
+    fn values() -> Vec<u8> {
+        let mut values: Vec<_> = Self::test_registrations()
+            .iter()
+            .map(|registration| registration.instantiate().value())
+            .collect();
+        values.sort_unstable();
+        values
+    }
 }
 
 #[test]
 fn registers_every_implementation_with_metadata() {
+    let registrations = RegistrationTest::test_registrations();
+
     assert_eq!(
-        RegistryTest::registered_names(),
+        RegistrationTest::registered_names(),
         ["FirstAlgorithm", "SecondAlgorithm", "ThirdAlgorithm"]
     );
     assert!(
-        TEST_REGISTRY
+        registrations
             .iter()
             .all(|registration| registration.trait_name() == "TestAlgorithm")
     );
     assert!(
-        TEST_REGISTRY
+        registrations
             .iter()
             .all(|registration| !registration.file().is_empty())
     );
     assert!(
-        TEST_REGISTRY
+        registrations
             .iter()
             .all(|registration| !registration.module_path().is_empty())
     );
@@ -112,34 +108,14 @@ fn registers_every_implementation_with_metadata() {
 
 #[test]
 fn instantiates_every_implementation_through_default() {
-    let second = RegistryTest::find(&TEST_REGISTRY, "SecondAlgorithm");
-
-    assert!(second.has_constructor());
-    assert_eq!(
-        second.instanciate().expect("default constructor").value(),
-        2
-    );
-
-    let mut values: Vec<_> = TEST_REGISTRY
-        .instanciate_all()
-        .map(|algorithm| algorithm.value())
-        .collect();
-    values.sort_unstable();
-    assert_eq!(values, [1, 2, 3]);
+    assert_eq!(RegistrationTest::values(), [1, 2, 3]);
 }
 
 #[test]
-fn keeps_registries_for_different_traits_separate() {
-    assert_eq!(TEST_REGISTRY.iter().count(), 3);
-    assert_eq!(OTHER_REGISTRY.iter().count(), 1);
-    assert_eq!(
-        OTHER_REGISTRY
-            .iter()
-            .next()
-            .expect("other registration")
-            .instanciate()
-            .expect("other constructor")
-            .value(),
-        9
-    );
+fn keeps_registrations_for_different_traits_separate() {
+    let other = RegisteredImpl::<Box<dyn OtherAlgorithm>>::all();
+
+    assert_eq!(RegistrationTest::test_registrations().len(), 3);
+    assert_eq!(other.len(), 1);
+    assert_eq!(other[0].instantiate().value(), 9);
 }
