@@ -39,7 +39,7 @@ serde = { version = "1", features = ["derive"] }
 serde_with = { version = "3", optional = true }
 stock-trek-types = { version = "0.6", features = ["serde"] }
 strum = { version = "0.28", features = ["derive"] }
-traitreg = "0.4"
+stock-trek-macros = { version = "0.1.0", path = "macros" }
 
 [dev-dependencies]
 serde_json = { version = "1", features = ["float_roundtrip"] }
@@ -53,3 +53,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 [[example]]
 name = "cost_averaging"
 test = true
+
+[workspace]
+members = ["macros"]
+resolver = "3"

@@ -28,6 +28,8 @@
 #![deny(unsafe_code)]
 #![deny(rustdoc::broken_intra_doc_links)]
 
+extern crate self as stock_trek;
+
 mod action;
 mod algorithm;
 mod cex;
@@ -46,6 +48,7 @@ mod resolved_context;
 mod signal;
 mod signal_context;
 mod strategy_context;
+pub mod traitreg;
 mod util;
 mod validation;
 mod value;
@@ -59,9 +62,8 @@ pub use portfolio::{CexAccountPortfolio, Portfolio, PortfolioBuilder};
 pub use preferences::Preferences;
 pub use resolved_context::{EnqueueActionFn, ResolvedContext};
 pub use rust_decimal::RoundingStrategy;
+pub use stock_trek_macros::register as register_algorithm;
 pub use strategy_context::StrategyContext;
-pub use traitreg;
-pub use traitreg::register as register_algorithm;
 
 /// Types for actions that can be enqueued by an algorithm.
 pub mod actions {
@@ -201,5 +203,7 @@ mod conditions_tests;
 mod pending_order_tests;
 #[cfg(test)]
 mod signal_context_tests;
+#[cfg(test)]
+mod trait_registry_tests;
 #[cfg(test)]
 mod validation_tests;

@@ -758,9 +758,18 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
+ "stock-trek-macros",
  "stock-trek-types",
  "strum",
- "traitreg",
+]
+
+[[package]]
+name = "stock-trek-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -904,26 +913,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2abe9b86193656635d2411dc43050282ca48aa31c2451210f4202550afb7526"
 dependencies = [
  "winnow",
-]
-
-[[package]]
-name = "traitreg"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ee5f6a15ac8ad481710cf3c1b1de4451f38f4f6a1f8dbc0249d9a02508db93b"
-dependencies = [
- "traitreg-macros",
-]
-
-[[package]]
-name = "traitreg-macros"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5714b78208e3da0c85d5683a933d843aa275c5fd301d7953b7ae523c7a4ea2a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
 ]
 
 [[package]]
