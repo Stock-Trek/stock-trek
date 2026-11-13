@@ -1,12 +1,13 @@
 [package]
 name = "stock-trek-macros"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.88"
 description = "Registration macros for stock-trek"
 authors = ["stock-trek.com <stock-trek@proton.me>"]
 license = "MIT"
 repository = "https://github.com/Stock-Trek/stock-trek"
+readme = "README.md"
 
 [lib]
 proc-macro = true
