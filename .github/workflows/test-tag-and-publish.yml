@@ -63,15 +63,16 @@ jobs:
           VERSION_MACROS=$(cargo pkgid -p stock-trek-macros | rev | cut -d '@' -f 1 | cut -d '#' -f 1 | rev)
           VERSION_ROOT=$(cargo pkgid -p stock-trek | rev | cut -d '@' -f 1 | cut -d '#' -f 1 | rev)
           TAG="v${VERSION_ROOT}"
+          USER_AGENT="stock-trek-cli/1.0 (ci@stock-trek.com)"
           if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "refs/tags/${TAG}"; then
             echo "Tag ${TAG} already exists"
           else
-            if curl -sfL -o /dev/null "https://crates.io/api/v1/crates/stock-trek-macros/v${VERSION_MACROS}"; then
+            if curl -sfL -o /dev/null -H "User-Agent: $USER_AGENT" "https://crates.io/api/v1/crates/stock-trek-macros/${VERSION_MACROS}"; then
               echo "stock-trek-macros ${VERSION_MACROS} already published, skipping."
             else
               cargo publish -p stock-trek-macros
             fi
-            if curl -sfL -o /dev/null "https://crates.io/api/v1/crates/stock-trek/v${VERSION_ROOT}"; then
+            if curl -sfL -o /dev/null -H "User-Agent: $USER_AGENT" "https://crates.io/api/v1/crates/stock-trek/${VERSION_ROOT}"; then
               echo "stock-trek ${VERSION_ROOT} already published, skipping."
             else
               cargo publish -p stock-trek
