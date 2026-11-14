@@ -1,0 +1,22 @@
+[advisories]
+ignore = ["RUSTSEC-2026-0235"]
+informational_warnings = ["unmaintained"]
+severity_threshold = "low"
+
+[database]
+url = "https://github.com/RustSec/advisory-db.git"
+fetch = true
+stale = false
+
+[output]
+format = "terminal"
+quiet = false
+show_tree = true
+
+[target]
+arch = ["x86_64", "aarch64"]
+os = ["linux", "macos", "windows"]
+
+[yanked]
+enabled = true
+update_index = true

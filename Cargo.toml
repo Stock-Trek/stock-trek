@@ -17,8 +17,10 @@ keywords = [
   "trading",
 ]
 exclude = [
+  ".cargo/**",
   ".github/**",
   ".gitignore",
+  "deny.toml",
   "rust-toolchain.toml",
   "tests/**",
 ]
