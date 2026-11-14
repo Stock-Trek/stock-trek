@@ -66,12 +66,12 @@ jobs:
           if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "refs/tags/${TAG}"; then
             echo "Tag ${TAG} already exists"
           else
-            if curl -sfL -o /dev/null "https://crates.io/api/v1/crates/stock-trek-macros/${VERSION_MACROS}"; then
+            if curl -sfL -o /dev/null "https://crates.io/api/v1/crates/stock-trek-macros/v${VERSION_MACROS}"; then
               echo "stock-trek-macros ${VERSION_MACROS} already published, skipping."
             else
               cargo publish -p stock-trek-macros
             fi
-            if curl -sfL -o /dev/null "https://crates.io/api/v1/crates/stock-trek/${VERSION_ROOT}"; then
+            if curl -sfL -o /dev/null "https://crates.io/api/v1/crates/stock-trek/v${VERSION_ROOT}"; then
               echo "stock-trek ${VERSION_ROOT} already published, skipping."
             else
               cargo publish -p stock-trek
