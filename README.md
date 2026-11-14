@@ -30,28 +30,6 @@ then run the verify command with
 stock-trek-check verify --file ./path/algorithm.rs
 ```
 
-## Dependency checks
-
-Install the dependency auditing tools once:
-
-```sh
-cargo install cargo-audit cargo-deny
-```
-
-Audit the dependency graph for security advisories:
-
-```sh
-cargo audit
-```
-
-Check advisories, licenses, banned crates, and dependency sources:
-
-```sh
-cargo deny check
-```
-
-The tools read their configuration from [`.cargo/audit.toml`](.cargo/audit.toml) and [`deny.toml`](deny.toml).
-
 ## Status
 
 This project is in early development (0.x). APIs may change.

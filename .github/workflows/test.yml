@@ -21,3 +21,5 @@ jobs:
           cargo test --all-features
           RUSTUP_TOOLCHAIN=1.88.0 cargo check --workspace
           RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
+          cargo audit
+          cargo deny check
